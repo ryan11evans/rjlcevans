@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evans Family — rjlcevans.com</title>
+<meta name="description" content="A simple, modern Evans Family page with a subtle day/night tint.">
+<link rel="stylesheet" href="styles.css">
+<script>
+function applyAmbient(){const h=new Date().getHours();const night=(h>=19||h<6);document.body.classList.toggle('night',night);}
+document.addEventListener('DOMContentLoaded',()=>{applyAmbient();setInterval(applyAmbient,60000);});
+</script>
+</head><body>
+<header><div class="header-inner"><div class="brand">🏡 Evans Family</div><a href="mailto:ryan@rjlcevans.com">Contact</a></div></header>
+<main><section class="photo card"><img src="assets/photos/family.jpg" alt="The Evans Family"><div class="caption">The Evans Family — 2025</div></section></main>
+<footer>© 2025 Evans Family · rjlcevans.com</footer>
+</body></html>

@@ -1,0 +1,15 @@
+:root{--bg-day:#cccccc;--bg-night:#2a2a3f;--ink-day:#1b1b1b;--ink-night:#e7e7e7;--card:#ffffff;--radius:18px;--shadow:0 14px 36px rgba(0,0,0,.18)}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg-day);color:var(--ink-day);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;transition:background-color 1s ease,color 1s ease}
+body.night{background:var(--bg-night);color:var(--ink-night)}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.6);backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid rgba(0,0,0,.06)}
+body.night header{background:rgba(30,30,45,.6);border-bottom-color:rgba(255,255,255,.08)}
+.header-inner{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:700;display:flex;align-items:center;gap:10px}
+header a{color:inherit;text-decoration:none}header a:hover{text-decoration:underline}
+main{max-width:1100px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:filter .6s ease,opacity .6s ease}
+.photo{max-width:980px;margin:0 auto}.photo img{display:block;width:100%;height:auto}
+.caption{text-align:center;padding:16px 18px 22px;font-size:1.4rem;color:inherit;transition:opacity .6s ease}
+body.night .card{filter:brightness(.88) contrast(.95)}body.night .caption{opacity:.9}
+footer{text-align:center;opacity:.75;padding:26px 16px;transition:opacity .6s ease}body.night footer{opacity:.85}
