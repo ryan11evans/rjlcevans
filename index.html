@@ -1,40 +1,132 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Evans Family — rjlcevans.com</title>
-<meta name="description" content="A simple, modern Evans Family page with a subtle day/night tint.">
-<link rel="stylesheet" href="styles.css">
-<script>
-async function loadSunData() {
-  try {
-    const res = await fetch('https://api.sunrise-sunset.org/json?lat=33.5539&lng=-117.2139&formatted=0');
-    const data = await res.json();
-    const sunrise = new Date(data.results.sunrise);
-    const sunset = new Date(data.results.sunset);
-    document.getElementById('sunrise').textContent = sunrise.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-    document.getElementById('sunset').textContent = sunset.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-  } catch (e) {
-    console.error('Error fetching sunrise/sunset', e);
-  }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evans Family — rjlcevans.com</title>
+  <meta name="description" content="A simple, modern Evans Family page with a subtle time-of-day background." />
+  <style>
+    :root{
+      --bg: #ececec;
+      --card-bg: #f7f7f7;
+      --text: #1f1f1f;
+      --muted: #6b6b6b;
+      --radius: 20px;
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+      --maxw: 980px;
+    }
+    * { box-sizing: border-box; }
+    html,body { height: 100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      transition: background 1.6s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    header{
+      width:100%;
+      max-width:var(--maxw);
+      padding:14px 18px;
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{ font-weight:700; letter-spacing:.2px; display:flex; gap:.4rem; align-items:center; }
+    .brand .logo{ font-size:1.15rem }
+    .contact a{
+      text-decoration:none;
+      color: var(--text);
+      border:1px solid rgba(0,0,0,.12);
+      padding:.45rem .7rem;
+      border-radius:12px;
+      background: #fff;
+    }
+    main{
+      width:100%;
+      max-width:var(--maxw);
+      padding:0 18px 28px;
+    }
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .photo{
+      padding:0;
+      overflow:hidden;
+    }
+    .photo img{
+      display:block;
+      width:100%;
+      height:auto;
+      object-fit:cover;
+    }
+    .caption{
+      color:#333;               /* darker for better contrast */
+      text-align:center;
+      font-size:1.2rem;
+      padding:14px 12px 18px;
+      border-top:1px solid rgba(0,0,0,.06);
+      background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.9));
+    }
+    footer{
+      width:100%;
+      max-width:var(--maxw);
+      color:var(--muted);
+      font-size:.9rem;
+      padding:14px 18px 36px;
+      text-align:center;
+    }
+    @media (prefers-reduced-motion: reduce){
+      * { transition:none !important; animation:none !important; }
+    }
+  </style>
 
-function applyAmbient() {
-  const h = new Date().getHours();
-  if (h >= 19 || h < 6) document.body.classList.add('night');
-}
+  <!-- Time-of-day background gradient -->
+  <script>
+    function applyTimeOfDayBackground(){
+      const h = new Date().getHours();
+      let bg;
+      if (h >= 5 && h < 10){
+        // Morning: soft warm → sky
+        bg = "linear-gradient(to bottom, #fef9e7 0%, #eaf4ff 100%)";
+      } else if (h >= 10 && h < 17){
+        // Midday: clean bright
+        bg = "linear-gradient(to bottom, #f2f7ff 0%, #ffffff 100%)";
+      } else if (h >= 17 && h < 20){
+        // Evening: gentle sunset hues
+        bg = "linear-gradient(to bottom, #ffd9b3 0%, #f0e6ff 100%)";
+      } else {
+        // Night: deep, calm blues
+        bg = "linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)";
+      }
+      document.body.style.background = bg;
+    }
+    document.addEventListener('DOMContentLoaded', applyTimeOfDayBackground);
+  </script>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="logo">🏡</span>Evans Family</div>
+    <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
+  </header>
 
-document.addEventListener('DOMContentLoaded', () => {
-  applyAmbient();
-  loadSunData();
-});
-</script>
-</head><body>
-<header><div class="header-inner"><div class="brand">🏡 Evans Family</div><a href="mailto:ryan@rjlcevans.com">Contact</a></div></header>
-<main><section class="photo card"><img src="family.jpg" alt="The Evans Family"><div class="caption">The Evans Family — 2025</div></section></main>
-<section class="card status">
-  <div class="status-row">
-    <div>🌅 <strong>Sunrise:</strong> <span id="sunrise">—</span></div>
-    <div>🌇 <strong>Sunset:</strong> <span id="sunset">—</span></div>
-  </div>
-</section>
+  <main>
+    <section class="photo card">
+      <!-- Keep your image named family.jpg at the repo root -->
+      <img src="family.jpg" alt="The Evans Family" loading="eager" />
+      <div class="caption">The Evans Family — 2025</div>
+    </section>
+  </main>
+
   <footer>© 2025 Evans Family · rjlcevans.com</footer>
-</body></html>
+</body>
+</html>
