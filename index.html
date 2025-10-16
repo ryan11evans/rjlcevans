@@ -92,26 +92,25 @@
 
   <!-- Time-of-day background gradient -->
   <script>
-    function applyTimeOfDayBackground(){
-      const h = new Date().getHours();
-      let bg;
-      if (h >= 5 && h < 10){
-        // Morning: soft warm → sky
-        bg = "linear-gradient(to bottom, #fef9e7 0%, #eaf4ff 100%)";
-      } else if (h >= 10 && h < 17){
-        // Midday: clean bright
-        bg = "linear-gradient(to bottom, #f2f7ff 0%, #ffffff 100%)";
-      } else if (h >= 17 && h < 20){
-        // Evening: gentle sunset hues
-        bg = "linear-gradient(to bottom, #ffd9b3 0%, #f0e6ff 100%)";
-      } else {
-        // Night: deep, calm blues
-        bg = "linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)";
-      }
-      document.body.style.background = bg;
+  function applyTimeOfDayBackground(){
+    const h = new Date().getHours();
+    let bg;
+    // Night if current hour is late evening or early morning
+    if (h >= 20 || h < 5) {
+      bg = "linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)";
+    } else if (h >= 5 && h < 10) {
+      bg = "linear-gradient(to bottom, #fef9e7 0%, #eaf4ff 100%)";
+    } else if (h >= 10 && h < 17) {
+      bg = "linear-gradient(to bottom, #f2f7ff 0%, #ffffff 100%)";
+    } else {
+      // 17–20 (evening)
+      bg = "linear-gradient(to bottom, #ffd9b3 0%, #f0e6ff 100%)";
     }
-    document.addEventListener('DOMContentLoaded', applyTimeOfDayBackground);
-  </script>
+    document.body.style.background = bg;
+  }
+
+  document.addEventListener('DOMContentLoaded', applyTimeOfDayBackground);
+</script>
 </head>
 <body>
   <header>
