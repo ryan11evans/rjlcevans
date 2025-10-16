@@ -1,199 +1,187 @@
-import pygame
-import sys
+import turtle
+import time
 
-# Initialize Pygame
-pygame.init()
+# Set up the screen
+screen = turtle.Screen()
+screen.title("Happy Dog Adventure - Turtle Edition")
+screen.bgcolor("skyblue")
+screen.setup(width=800, height=600)
+screen.tracer(0)  # Turn off animation for smoother updates
+screen.listen()
 
-# Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
+# Ground
+ground = turtle.Turtle()
+ground.speed(0)
+ground.penup()
+ground.goto(-400, -250)
+ground.pendown()
+ground.color("brown")
+ground.forward(800)
+ground.hideturtle()
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (135, 206, 235)  # Sky blue
-GREEN = (34, 139, 34)   # Forest green
-BROWN = (139, 69, 19)   # Saddle brown for ground
-YELLOW = (255, 255, 0)  # Yellow for dog
-RED = (255, 0, 0)       # Red for bats
-GRAY = (128, 128, 128)  # Gray for blocks
+# Blocks (simple rectangles)
+def draw_block(x, y):
+    block = turtle.Turtle()
+    block.speed(0)
+    block.penup()
+    block.goto(x, y)
+    block.pendown()
+    block.color("gray")
+    block.begin_fill()
+    for _ in range(2):
+        block.forward(40)
+        block.right(90)
+        block.forward(40)
+        block.right(90)
+    block.end_fill()
+    block.hideturtle()
+    return block
 
-# Game setup
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Happy Dog Adventure")
-clock = pygame.time.Clock()
+block1 = draw_block(-200, -200)
+block2 = draw_block(0, -150)
+pipe = turtle.Turtle()  # Simple pipe
+pipe.speed(0)
+pipe.penup()
+pipe.goto(200, -250)
+pipe.pendown()
+pipe.color("green")
+pipe.begin_fill()
+for _ in range(2):
+    pipe.left(90)
+    pipe.forward(50)
+    pipe.circle(25, 180)  # Top curve
+    pipe.forward(50)
+pipe.end_fill()
+pipe.hideturtle()
 
-# Player (Happy Dog) class
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.Surface((40, 40))
-        self.image.fill(YELLOW)
-        # Simple dog face: eyes and mouth
-        pygame.draw.circle(self.image, BLACK, (10, 15), 3)  # Left eye
-        pygame.draw.circle(self.image, BLACK, (30, 15), 3)  # Right eye
-        pygame.draw.arc(self.image, BLACK, (10, 20, 20, 10), 0, 3.14, 2)  # Smile
-        self.rect = self.image.get_rect()
-        self.rect.x = 50
-        self.rect.y = SCREEN_HEIGHT - 100
-        self.vel_x = 0
-        self.vel_y = 0
-        self.on_ground = False
-        self.jumping = False
+# Player: Happy Dog
+dog = turtle.Turtle()
+dog.shape("circle")
+dog.color("yellow")
+dog.shapesize(2)
+dog.penup()
+dog.goto(-350, -250)
+dog.dy = 0
+dog.on_ground = True
 
-    def update(self, platforms, enemies):
-        # Horizontal movement
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            self.vel_x = -5
-        elif keys[pygame.K_RIGHT]:
-            self.vel_x = 5
-        else:
-            self.vel_x = 0
+# Simple dog face on dog (separate turtle for overlay)
+face = turtle.Turtle()
+face.speed(0)
+face.penup()
+face.hideturtle()
 
-        # Jumping
-        if keys[pygame.K_SPACE] and self.on_ground:
-            self.vel_y = -15
-            self.on_ground = False
-            self.jumping = True
+def draw_dog_face():
+    face.clear()
+    face.goto(dog.xcor(), dog.ycor())
+    face.dot(40, "yellow")  # Body
+    face.goto(dog.xcor() - 10, dog.ycor() + 5)
+    face.dot(5, "black")  # Left eye
+    face.goto(dog.xcor() + 10, dog.ycor() + 5)
+    face.dot(5, "black")  # Right eye
+    face.goto(dog.xcor(), dog.ycor() - 5)
+    face.right(90)
+    face.circle(8, 180)  # Smile
 
-        # Apply gravity
-        self.vel_y += 0.8  # Gravity
-
-        # Horizontal collision
-        self.rect.x += self.vel_x
-        for platform in platforms:
-            if self.rect.colliderect(platform.rect):
-                if self.vel_x > 0:
-                    self.rect.right = platform.rect.left
-                elif self.vel_x < 0:
-                    self.rect.left = platform.rect.right
-
-        # Vertical collision
-        self.rect.y += self.vel_y
-        self.on_ground = False
-        for platform in platforms:
-            if self.rect.colliderect(platform.rect):
-                if self.vel_y > 0:
-                    self.rect.bottom = platform.rect.top
-                    self.on_ground = True
-                    self.jumping = False
-                    self.vel_y = 0
-                elif self.vel_y < 0:
-                    self.rect.top = platform.rect.bottom
-                    self.vel_y = 0
-
-        # Enemy collision
-        for enemy in enemies:
-            if self.rect.colliderect(enemy.rect):
-                if self.vel_y > 0 and self.rect.bottom < enemy.rect.centery:  # Jumping on enemy
-                    enemy.kill()
-                    self.vel_y = -10  # Bounce
-                else:
-                    # Game over or reset
-                    self.rect.x = 50
-                    self.rect.y = SCREEN_HEIGHT - 100
-                    self.vel_x = 0
-                    self.vel_y = 0
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-# Platform/Block class
-class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height, color=GRAY):
-        super().__init__()
-        self.image = pygame.Surface((width, height))
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-# Pipe class (simple green platform-like)
-class Pipe(Platform):
+# Bats (enemies)
+bats = []
+class Bat:
     def __init__(self, x, y):
-        super().__init__(x, y, 60, 100, GREEN)
+        self.t = turtle.Turtle()
+        self.t.shape("circle")
+        self.t.color("red")
+        self.t.shapesize(1.5, 0.5)
+        self.t.penup()
+        self.t.goto(x, y)
+        self.t.dx = -2
+        self.hideturtle()  # Wait, no
 
-# Enemy (Bat) class
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((30, 20))
-        self.image.fill(RED)
-        # Simple bat wings
-        pygame.draw.polygon(self.image, BLACK, [(0, 0), (10, 10), (0, 20)])
-        pygame.draw.polygon(self.image, BLACK, [(30, 0), (20, 10), (30, 20)])
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.vel_x = -2  # Moving left
+bat1 = Bat(100, -200)
+bat2 = Bat(300, -250)
+bats = [bat1, bat2]
 
-    def update(self, platforms):
-        self.rect.x += self.vel_x
-        # Reverse direction on platform edge (simple AI)
-        on_platform = False
-        for platform in platforms:
-            if self.rect.colliderect(platform.rect):
-                on_platform = True
-                break
-        if not on_platform or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
-            self.vel_x *= -1
+# Controls
+def left():
+    dog.goto(dog.xcor() - 20, dog.ycor())
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
+def right():
+    dog.goto(dog.xcor() + 20, dog.ycor())
 
-# Main game function
-def main():
-    player = Player()
-    all_sprites = pygame.sprite.Group()
-    all_sprites.add(player)
+def jump():
+    if dog.on_ground:
+        dog.dy = 15
+        dog.on_ground = False
 
-    # Platforms (ground and blocks)
-    platforms = pygame.sprite.Group()
-    ground = Platform(0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50, BROWN)
-    platforms.add(ground)
-    block1 = Platform(200, SCREEN_HEIGHT - 150, 50, 50)
-    platforms.add(block1)
-    block2 = Platform(400, SCREEN_HEIGHT - 200, 50, 50)
-    platforms.add(block2)
-    pipe1 = Pipe(600, SCREEN_HEIGHT - 150)
-    platforms.add(pipe1)
+screen.onkey(left, "Left")
+screen.onkey(right, "Right")
+screen.onkey(jump, "space")
 
-    # Enemies (bats)
-    enemies = pygame.sprite.Group()
-    bat1 = Enemy(300, SCREEN_HEIGHT - 200)
-    enemies.add(bat1)
-    bat2 = Enemy(500, SCREEN_HEIGHT - 250)
-    enemies.add(bat2)
+# Game loop
+def update():
+    global score
+    score = 0
+    
+    # Gravity and jump
+    dog.dy -= 1
+    y = dog.ycor() + dog.dy
+    dog.sety(y)
+    
+    # Ground collision
+    if dog.ycor() < -240:
+        dog.sety(-240)
+        dog.dy = 0
+        dog.on_ground = True
+    
+    # Block collisions (simple)
+    if -210 < dog.xcor() < -170 and -200 < dog.ycor() < -160:
+        if dog.dy > 0:
+            dog.sety(-160)
+            dog.dy = 0
+            dog.on_ground = True
+    if -10 < dog.xcor() < 30 and -150 < dog.ycor() < -110:
+        if dog.dy > 0:
+            dog.sety(-110)
+            dog.dy = 0
+            dog.on_ground = True
+    
+    # Pipe collision
+    if dog.xcor() > 170 and dog.ycor() < -240:
+        if dog.dy > 0:
+            dog.sety(-240)
+            dog.dy = 0
+            dog.on_ground = True
+    
+    # Bat updates and collisions
+    for bat in bats[:]:
+        bat.t.goto(bat.t.xcor() + bat.dx, bat.t.ycor())
+        if bat.t.xcor() < -400 or bat.t.xcor() > 400:
+            bat.dx *= -1
+        
+        # Collision with dog
+        if abs(dog.xcor() - bat.t.xcor()) < 30 and abs(dog.ycor() - bat.t.ycor()) < 30:
+            if dog.dy > 0 and dog.ycor() < bat.t.ycor():  # Stomp
+                bats.remove(bat)
+                bat.t.hideturtle()
+                dog.dy = 10
+                score += 10
+            else:
+                # Reset
+                dog.goto(-350, -240)
+                dog.dy = 0
+                dog.on_ground = True
+    
+    # Draw dog face
+    draw_dog_face()
+    
+    # Check win/lose
+    if len(bats) == 0:
+        turtle.write("You win! All bats gone!", align="center", font=("Arial", 16, "bold"))
+    
+    screen.update()
+    if len(bats) > 0:  # Continue if bats left
+        screen.ontimer(update, 50)
 
-    running = True
-    while running:
-        clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+# Start
+update()
 
-        # Updates
-        player.update(platforms, enemies)
-        for enemy in enemies:
-            enemy.update(platforms)
-
-        # Draw
-        screen.fill(BLUE)
-        for platform in platforms:
-            platform.draw(screen)
-        player.draw(screen)
-        for enemy in enemies:
-            enemy.draw(screen)
-
-        pygame.display.flip()
-
-    pygame.quit()
-    sys.exit()
-
-if __name__ == "__main__":
-    main()
+# Keep window open
+screen.mainloop()
