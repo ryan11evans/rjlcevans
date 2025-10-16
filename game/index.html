@@ -1,171 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Frogger++ — Fixed Slow Motion</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #eef2f7;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    #wrapper {
-      text-align: center;
-      position: relative;
-    }
-    canvas {
-      border: 2px solid #333;
-      background-color: #222;
-      border-radius: 8px;
-      touch-action: none;
-    }
-    h1 {
-      color: #444;
-      font-size: 1rem;
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Frogger++ — Smooth Slow Motion</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #eef2f7;
+    font-family: system-ui, sans-serif;
+  }
+  #wrapper { text-align: center; position: relative; }
+  canvas {
+    border: 2px solid #333;
+    background-color: #222;
+    border-radius: 8px;
+    touch-action: none;
+  }
+  h1 {
+    color: #444;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+</style>
 </head>
 <body>
   <div id="wrapper">
-    <h1>🐸 Frogger++ — Fixed Slow Motion Edition</h1>
+    <h1>🐸 Frogger++ — Smooth Slow Motion</h1>
     <canvas id="game" width="560" height="600"></canvas>
   </div>
 
-  <script>
-    const cvs = document.getElementById('game');
-    const ctx = cvs.getContext('2d');
-    const TILE = 40;
-    const COLS = cvs.width / TILE;
-    const ROWS = cvs.height / TILE;
+<script>
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d');
+const TILE = 40;
+const COLS = cvs.width / TILE;
+const ROWS = cvs.height / TILE;
 
-    // 0.38–0.45 range keeps motion visible but calm
-    const MOBILE = window.matchMedia('(max-width: 720px)').matches;
-    const GLOBAL_SPEED = MOBILE ? 0.38 : 0.42;
+// adjusted global speed — visible, calm motion
+const MOBILE = window.matchMedia('(max-width: 720px)').matches;
+const GLOBAL_SPEED = MOBILE ? 0.6 : 0.65;
 
-    const START_POS = { x: Math.floor(COLS / 2), y: ROWS - 1 };
-    const WATER_START = 1, WATER_END = 5, ROAD_START = 8, ROAD_END = 12;
-    let frog = { x: START_POS.x, y: START_POS.y };
+const START_POS = { x: Math.floor(COLS / 2), y: ROWS - 1 };
+const WATER_START = 1, WATER_END = 5, ROAD_START = 8, ROAD_END = 12;
+let frog = { x: START_POS.x, y: START_POS.y };
 
-    const carLanes = [], floatLanes = [];
+const carLanes = [], floatLanes = [];
 
-    function addCarLane(row, baseSpeed, dir, color, density) {
-      const cars = [];
-      const count = Math.floor(COLS * density);
-      for (let i = 0; i < count; i++) cars.push({ x: Math.random() * COLS, w: 1 + Math.random() * 2 });
-      carLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, cars });
-    }
+function addCarLane(row, baseSpeed, dir, color, density) {
+  const cars = [];
+  const count = Math.floor(COLS * density);
+  for (let i = 0; i < count; i++)
+    cars.push({ x: Math.random() * COLS, w: 1 + Math.random() * 2 });
+  carLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, cars });
+}
+function addFloatLane(row, baseSpeed, dir, color, density) {
+  const floats = [];
+  const count = Math.floor(COLS * density);
+  for (let i = 0; i < count; i++)
+    floats.push({ x: Math.random() * COLS, w: 2 + Math.random() * 3 });
+  floatLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, floats });
+}
 
-    function addFloatLane(row, baseSpeed, dir, color, density) {
-      const floats = [];
-      const count = Math.floor(COLS * density);
-      for (let i = 0; i < count; i++) floats.push({ x: Math.random() * COLS, w: 2 + Math.random() * 3 });
-      floatLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, floats });
-    }
+// Balanced speeds
+addFloatLane(1, 0.25, 1, '#8b5a2b', 0.15);
+addFloatLane(2, 0.33, -1, '#8b5a2b', 0.14);
+addFloatLane(3, 0.28, 1, '#8b5a2b', 0.15);
+addFloatLane(4, 0.35, -1, '#8b5a2b', 0.14);
+addFloatLane(5, 0.30, 1, '#8b5a2b', 0.15);
 
-    // Tuned slower movement
-    addFloatLane(1, 0.40, 1, '#8b5a2b', 0.15);
-    addFloatLane(2, 0.55, -1, '#8b5a2b', 0.14);
-    addFloatLane(3, 0.47, 1, '#8b5a2b', 0.15);
-    addFloatLane(4, 0.50, -1, '#8b5a2b', 0.14);
-    addFloatLane(5, 0.48, 1, '#8b5a2b', 0.15);
+addCarLane(8, 0.26, 1, '#ef476f', 0.25);
+addCarLane(9, 0.32, -1, '#ffd166', 0.22);
+addCarLane(10, 0.27, 1, '#06d6a0', 0.24);
+addCarLane(11, 0.34, -1, '#118ab2', 0.20);
+addCarLane(12, 0.28, 1, '#8338ec', 0.22);
 
-    addCarLane(8, 0.38, 1, '#ef476f', 0.25);
-    addCarLane(9, 0.55, -1, '#ffd166', 0.22);
-    addCarLane(10, 0.42, 1, '#06d6a0', 0.24);
-    addCarLane(11, 0.60, -1, '#118ab2', 0.20);
-    addCarLane(12, 0.45, 1, '#8338ec', 0.22);
+function drawBackground() {
+  for (let r = 0; r < ROWS; r++) {
+    ctx.fillStyle =
+      (r >= WATER_START && r <= WATER_END) ? '#3a86ff' :
+      (r >= ROAD_START && r <= ROAD_END) ? '#2b2b2b' : '#1d6b5f';
+    ctx.fillRect(0, r * TILE, cvs.width, TILE);
+  }
+}
 
-    function drawBackground() {
-      for (let r = 0; r < ROWS; r++) {
-        ctx.fillStyle =
-          (r >= WATER_START && r <= WATER_END) ? '#3a86ff' :
-          (r >= ROAD_START && r <= ROAD_END) ? '#2b2b2b' : '#1d6b5f';
-        ctx.fillRect(0, r * TILE, cvs.width, TILE);
-      }
-    }
-
-    function drawCars(dt) {
-      carLanes.forEach(l => {
-        l.cars.forEach(car => {
-          car.x += l.dir * l.speed * dt;
-          if (l.dir === 1 && car.x > COLS + 2) car.x = -2;
-          if (l.dir === -1 && car.x < -2) car.x = COLS + 2;
-          ctx.fillStyle = l.color;
-          ctx.fillRect(car.x * TILE, l.row * TILE + 6, car.w * TILE - 12, TILE - 12);
-        });
-      });
-    }
-
-    function drawFloats(dt) {
-      floatLanes.forEach(l => {
-        l.floats.forEach(f => {
-          f.x += l.dir * l.speed * dt;
-          if (l.dir === 1 && f.x > COLS + 4) f.x = -4;
-          if (l.dir === -1 && f.x < -4) f.x = COLS + 4;
-          ctx.fillStyle = l.color;
-          ctx.fillRect(f.x * TILE, l.row * TILE + 6, f.w * TILE - 12, TILE - 12);
-        });
-      });
-    }
-
-    function drawFrog() {
-      ctx.fillStyle = '#69e36e';
-      ctx.beginPath();
-      ctx.arc(frog.x * TILE + TILE / 2, frog.y * TILE + TILE / 2, TILE * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function move(dir) {
-      if (dir === 'up' && frog.y > 0) frog.y--;
-      if (dir === 'down' && frog.y < ROWS - 1) frog.y++;
-      if (dir === 'left' && frog.x > 0) frog.x--;
-      if (dir === 'right' && frog.x < COLS - 1) frog.x++;
-    }
-
-    document.addEventListener('keydown', e => {
-      const k = e.key.toLowerCase();
-      if (k === 'arrowup' || k === 'w') move('up');
-      if (k === 'arrowdown' || k === 's') move('down');
-      if (k === 'arrowleft' || k === 'a') move('left');
-      if (k === 'arrowright' || k === 'd') move('right');
+function drawCars(dt) {
+  carLanes.forEach(l => {
+    l.cars.forEach(car => {
+      car.x += l.dir * l.speed * dt * 0.8; // adjust dt scaling
+      if (l.dir === 1 && car.x > COLS + 2) car.x = -2;
+      if (l.dir === -1 && car.x < -2) car.x = COLS + 2;
+      ctx.fillStyle = l.color;
+      ctx.fillRect(car.x * TILE, l.row * TILE + 6, car.w * TILE - 12, TILE - 12);
     });
+  });
+}
 
-    // Swipe controls
-    let startX = 0, startY = 0;
-    cvs.addEventListener('touchstart', e => {
-      const t = e.touches[0]; startX = t.clientX; startY = t.clientY;
+function drawFloats(dt) {
+  floatLanes.forEach(l => {
+    l.floats.forEach(f => {
+      f.x += l.dir * l.speed * dt * 0.8;
+      if (l.dir === 1 && f.x > COLS + 4) f.x = -4;
+      if (l.dir === -1 && f.x < -4) f.x = COLS + 4;
+      ctx.fillStyle = l.color;
+      ctx.fillRect(f.x * TILE, l.row * TILE + 6, f.w * TILE - 12, TILE - 12);
     });
-    cvs.addEventListener('touchend', e => {
-      const t = e.changedTouches[0];
-      const dx = t.clientX - startX, dy = t.clientY - startY;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 30) move('right');
-        else if (dx < -30) move('left');
-      } else {
-        if (dy > 30) move('down');
-        else if (dy < -30) move('up');
-      }
-    });
+  });
+}
 
-    let last = performance.now();
-    function loop(t) {
-      const dt = Math.min(32, (t - last)) / 16.6667;
-      last = t;
-      drawBackground();
-      drawFloats(dt);
-      drawCars(dt);
-      drawFrog();
-      requestAnimationFrame(loop);
-    }
+function drawFrog() {
+  ctx.fillStyle = '#69e36e';
+  ctx.beginPath();
+  ctx.arc(frog.x * TILE + TILE / 2, frog.y * TILE + TILE / 2, TILE * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+}
 
-    loop();
-  </script>
+function move(dir) {
+  if (dir === 'up' && frog.y > 0) frog.y--;
+  if (dir === 'down' && frog.y < ROWS - 1) frog.y++;
+  if (dir === 'left' && frog.x > 0) frog.x--;
+  if (dir === 'right' && frog.x < COLS - 1) frog.x++;
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'arrowup' || k === 'w') move('up');
+  if (k === 'arrowdown' || k === 's') move('down');
+  if (k === 'arrowleft' || k === 'a') move('left');
+  if (k === 'arrowright' || k === 'd') move('right');
+});
+
+// Swipe controls
+let startX = 0, startY = 0;
+cvs.addEventListener('touchstart', e => {
+  const t = e.touches[0]; startX = t.clientX; startY = t.clientY;
+});
+cvs.addEventListener('touchend', e => {
+  const t = e.changedTouches[0];
+  const dx = t.clientX - startX, dy = t.clientY - startY;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 30) move('right');
+    else if (dx < -30) move('left');
+  } else {
+    if (dy > 30) move('down');
+    else if (dy < -30) move('up');
+  }
+});
+
+let last = performance.now();
+function loop(t) {
+  const dt = (t - last) / 16.6667;
+  last = t;
+  drawBackground();
+  drawFloats(dt);
+  drawCars(dt);
+  drawFrog();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
 </body>
 </html>
