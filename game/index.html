@@ -3,22 +3,49 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Frogger++ — Smooth, Relaxed (seconds-based)</title>
+<title>Frogger++ — Fast & Fair</title>
 <style>
   body{
     margin:0; padding:0; min-height:100vh;
     display:flex; align-items:center; justify-content:center;
     background:#eef2f7; font-family:system-ui,-apple-system,sans-serif;
   }
-  #wrap{ text-align:center }
-  h1{ margin:.2rem 0 .6rem; color:#444; font-size:1rem }
+  #wrap{ text-align:center; position:relative }
+  h1{ margin:.2rem 0 .4rem; color:#444; font-size:1rem }
+  .hud{ margin:.2rem 0 .6rem; font-weight:600 }
   canvas{ border:2px solid #333; background:#222; border-radius:8px; touch-action:none }
+
+  /* Overlay */
+  #overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.55);
+  }
+  #overlay.show{ display:flex }
+  .card{
+    background:#fff; color:#111; padding:18px 22px; border-radius:12px; text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.25); min-width:260px;
+  }
+  .card h2{ margin:6px 0 10px; font-size:1.25rem }
+  .card p{ margin:0 0 14px; color:#444 }
+  .card button{
+    padding:.7rem 1.1rem; border-radius:10px; border:1px solid #ddd; background:#0ea5e9; color:#fff; font-weight:700;
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
   <div id="wrap">
-    <h1>🐸 Frogger++ — Smooth, Relaxed</h1>
+    <h1>🐸 Frogger++ — Fast & Fair</h1>
+    <div class="hud">Lives: <span id="lives">3</span></div>
     <canvas id="game" width="560" height="600"></canvas>
+
+    <div id="overlay">
+      <div class="card">
+        <h2 id="ov-title">Game Over 💀</h2>
+        <p>Score: <span id="ov-score">0</span></p>
+        <button id="ov-btn">Play Again</button>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -29,26 +56,33 @@ const TILE = 40;                 // 14 cols x 15 rows (560x600)
 const COLS = cvs.width / TILE;   // 14
 const ROWS = cvs.height / TILE;  // 15
 
-// Relaxed pacing (affects all lanes equally)
+// BASE: earlier relaxed pacing × 3 (faster but still smooth)
 const MOBILE = matchMedia('(max-width: 720px)').matches;
-const SPEED_SCALE = MOBILE ? 0.55 : 0.6;  // gentle but clearly visible
+// previously ~0.55 / 0.60 → now ×3
+const SPEED_SCALE = MOBILE ? 1.65 : 1.8;
 
-// Rows (0 top): 0 goal, 1..5 WATER (logs/turtles), 6-7 grass, 8..12 ROAD (cars), 13 grass, 14 start
 const GOAL_ROW = 0;
 const WATER_START = 1, WATER_END = 5;
 const ROAD_START = 8, ROAD_END = 12;
 const START_POS = { x: Math.floor(COLS/2), y: ROWS-1 };
 
-let frog = { x: START_POS.x, y: START_POS.y };
+let frog = { x: START_POS.x, y: START_POS.y, subX: 0 }; // subX for log drift
+let lives = 3, score = 0, gameOver = false;
+
+const livesEl = document.getElementById('lives');
+const ov = document.getElementById('overlay');
+const ovTitle = document.getElementById('ov-title');
+const ovScore = document.getElementById('ov-score');
+const ovBtn = document.getElementById('ov-btn');
 
 // ----- Lanes -----
 const carLanes   = []; // cars
 const floatLanes = []; // logs + turtles
 
-// Helper: add lanes with velocities in *tiles per second* (not per frame)
+// tilesPerSec velocities; dir is +1 to the right, -1 to the left
 function addCarLane(row, tilesPerSec, dir, color, density){
   const cars = [];
-  const count = Math.max(2, Math.floor(COLS * density)); // at least 2 per lane
+  const count = Math.max(2, Math.floor(COLS * density));
   for(let i=0;i<count;i++){
     const w = 1 + Math.floor(Math.random()*2); // 1-2 tiles
     const x = Math.random()*COLS;
@@ -61,7 +95,7 @@ function addFloatLane(row, tilesPerSec, dir, color, density){
   const floats = [];
   const count = Math.max(2, Math.floor(COLS * density));
   for(let i=0;i<count;i++){
-    const isTurtle = Math.random() < 0.3;               // 30% turtles
+    const isTurtle = Math.random() < 0.3; // ~30% turtles
     const w = isTurtle ? (1 + Math.floor(Math.random()*2)) : (2 + Math.floor(Math.random()*3));
     const x = Math.random()*COLS;
     floats.push({ x, w, type: isTurtle ? 'turtle':'log', phase: Math.random()*Math.PI*2 });
@@ -69,7 +103,7 @@ function addFloatLane(row, tilesPerSec, dir, color, density){
   floatLanes.push({ row, v: tilesPerSec * SPEED_SCALE * dir, color, floats });
 }
 
-// Tuned “relaxed but visible” base speeds (tiles/second BEFORE scale)
+// Tuned base speeds (tiles/sec BEFORE scale)
 addFloatLane(1, 0.55, +1, '#8b5a2b', 0.18);
 addFloatLane(2, 0.70, -1, '#8b5a2b', 0.16);
 addFloatLane(3, 0.60, +1, '#8b5a2b', 0.18);
@@ -113,7 +147,7 @@ function drawBackground(){
 function drawCars(dtSec){
   carLanes.forEach(l=>{
     l.cars.forEach(c=>{
-      c.x += l.v * dtSec;                 // tiles per second → tiles moved this frame
+      c.x += l.v * dtSec;
       if(l.v > 0 && c.x > COLS + 2) c.x = -2;
       if(l.v < 0 && c.x < -2)       c.x = COLS + 2;
       ctx.fillStyle = l.color;
@@ -155,20 +189,68 @@ function drawFloats(dtSec, tMs){
   });
 }
 
-function drawFrog(){
-  ctx.fillStyle = '#69e36e';
-  ctx.beginPath();
-  ctx.arc(frog.x*TILE + TILE/2, frog.y*TILE + TILE/2, TILE*0.35, 0, Math.PI*2);
-  ctx.fill();
-}
-
-// ----- Input -----
+// ----- Mechanics -----
 function move(dir){
+  if(gameOver) return;
   if(dir==='up'   && frog.y>0)        frog.y--;
   if(dir==='down' && frog.y<ROWS-1)   frog.y++;
   if(dir==='left' && frog.x>0)        frog.x--;
   if(dir==='right'&& frog.x<COLS-1)   frog.x++;
+  frog.subX = 0; // reset sub-tile drift after user hop
 }
+
+function resetFrog(){ frog = { x: START_POS.x, y: START_POS.y, subX: 0 }; }
+
+function loseLife(){
+  lives--; livesEl.textContent = lives;
+  if(lives <= 0){
+    gameOver = true;
+    ovScore.textContent = score;
+    ovTitle.textContent = 'Game Over 💀';
+    ov.classList.add('show');
+  } else {
+    resetFrog();
+  }
+}
+
+// Check if frog is standing on a float (log/turtle). If so, drift with lane; else drown.
+function handleWater(dtSec){
+  if(frog.y < WATER_START || frog.y > WATER_END) return;
+  const lane = floatLanes.find(l => l.row === frog.y);
+  if(!lane){ loseLife(); return; }
+  let onSomething = false;
+  for(const f of lane.floats){
+    if(frog.x >= f.x && frog.x < f.x + f.w){
+      onSomething = true;
+      // drift with the float
+      frog.subX += lane.v * dtSec * TILE;
+      // move a tile when subX crosses a tile
+      if(Math.abs(frog.subX) >= TILE){
+        frog.x += Math.sign(frog.subX);
+        frog.subX = 0;
+      }
+      // if drift pushes frog off-screen, drown
+      if(frog.x < 0 || frog.x >= COLS){ loseLife(); }
+      break;
+    }
+  }
+  if(!onSomething){ loseLife(); } // in water with no support -> drown
+}
+
+// Check car collision on road rows
+function handleRoad(){
+  if(frog.y < ROAD_START || frog.y > ROAD_END) return;
+  const lane = carLanes.find(l => l.row === frog.y);
+  if(!lane) return;
+  for(const c of lane.cars){
+    if(frog.x < c.x + c.w && frog.x + 1 > c.x){
+      loseLife();
+      return;
+    }
+  }
+}
+
+// ----- Input -----
 document.addEventListener('keydown', e=>{
   const k = e.key.toLowerCase();
   if(k==='arrowup'||k==='w')    move('up');
@@ -185,7 +267,13 @@ cvs.addEventListener('touchend', e=>{
   else { if(dy>30) move('down'); else if(dy<-30) move('up'); }
 }, {passive:true});
 
-// ----- Main loop (seconds-based) -----
+// overlay button
+ovBtn.addEventListener('click', ()=>{
+  lives = 3; livesEl.textContent = lives; score = 0;
+  gameOver = false; resetFrog(); ov.classList.remove('show');
+});
+
+// ----- Main loop -----
 let last = performance.now();
 function loop(now){
   const dtSec = Math.min(0.05, (now - last)/1000); // clamp to avoid big jumps
@@ -194,9 +282,19 @@ function loop(now){
   drawBackground();
   drawFloats(dtSec, now);
   drawCars(dtSec);
-  drawFrog();
 
-  requestAnimationFrame(loop);
+  handleWater(dtSec);
+  handleRoad();
+
+  // draw frog
+  ctx.fillStyle = '#69e36e';
+  ctx.beginPath();
+  const fx = frog.x*TILE + frog.subX + TILE/2;
+  const fy = frog.y*TILE + TILE/2;
+  ctx.arc(fx, fy, TILE*0.35, 0, Math.PI*2);
+  ctx.fill();
+
+  if(!gameOver) requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 </script>
