@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Frogger++ — Relaxed Edition</title>
+  <title>Frogger++ — Super Relaxed Edition</title>
   <style>
     body {
       margin: 0;
@@ -60,7 +60,7 @@
 </head>
 <body>
   <div id="wrapper">
-    <h1>🐸 Frogger++ — Relaxed Edition</h1>
+    <h1>🐸 Frogger++ — Super Relaxed Edition</h1>
     <canvas id="game" width="560" height="600"></canvas>
     <div id="overlay">
       <div class="overlay-card">
@@ -79,7 +79,7 @@
     const ROWS = cvs.height / TILE;
 
     const MOBILE = window.matchMedia('(max-width: 720px)').matches;
-    const GLOBAL_SPEED = MOBILE ? 0.45 : 0.5; // 40% slower than casual
+    const GLOBAL_SPEED = MOBILE ? 0.25 : 0.3; // 2x slower than relaxed version
 
     const START_POS = { x: Math.floor(COLS / 2), y: ROWS - 1 };
     const WATER_START = 1, WATER_END = 5, ROAD_START = 8, ROAD_END = 12;
@@ -94,6 +94,7 @@
       for (let i = 0; i < count; i++) cars.push({ x: Math.random() * COLS, w: 1 + Math.random() * 2 });
       carLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, cars });
     }
+
     function addFloatLane(row, baseSpeed, dir, color, density) {
       const floats = [];
       const count = Math.floor(COLS * density);
@@ -101,7 +102,7 @@
       floatLanes.push({ row, speed: baseSpeed * GLOBAL_SPEED, dir, color, floats });
     }
 
-    // Balanced slow speeds
+    // Slower speeds
     addFloatLane(1, 0.38, 1, '#8b5a2b', 0.15);
     addFloatLane(2, 0.50, -1, '#8b5a2b', 0.14);
     addFloatLane(3, 0.42, 1, '#8b5a2b', 0.15);
@@ -169,7 +170,7 @@
       if (k === 'arrowright' || k === 'd') move('right');
     });
 
-    // Basic swipe controls
+    // Swipe controls
     let startX = 0, startY = 0;
     cvs.addEventListener('touchstart', e => {
       const t = e.touches[0]; startX = t.clientX; startY = t.clientY;
