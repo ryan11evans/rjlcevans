@@ -1,12 +1,11 @@
 import turtle
-import time
 
 # Set up the screen
 screen = turtle.Screen()
 screen.title("Happy Dog Adventure - Turtle Edition")
 screen.bgcolor("skyblue")
 screen.setup(width=800, height=600)
-screen.tracer(0)  # Turn off animation for smoother updates
+screen.tracer(0)  # Manual updates for smoothness
 screen.listen()
 
 # Ground
@@ -19,14 +18,23 @@ ground.color("brown")
 ground.forward(800)
 ground.hideturtle()
 
+# Score display
+score_turtle = turtle.Turtle()
+score_turtle.speed(0)
+score_turtle.penup()
+score_turtle.goto(-350, 200)
+score_turtle.hideturtle()
+score_turtle.color("black")
+score_turtle.write("Score: 0", align="left", font=("Arial", 16, "normal"))
+
 # Blocks (simple rectangles)
-def draw_block(x, y):
+def draw_block(x, y, color="gray"):
     block = turtle.Turtle()
     block.speed(0)
     block.penup()
     block.goto(x, y)
     block.pendown()
-    block.color("gray")
+    block.color(color)
     block.begin_fill()
     for _ in range(2):
         block.forward(40)
@@ -37,34 +45,40 @@ def draw_block(x, y):
     block.hideturtle()
     return block
 
-block1 = draw_block(-200, -200)
-block2 = draw_block(0, -150)
-pipe = turtle.Turtle()  # Simple pipe
-pipe.speed(0)
-pipe.penup()
-pipe.goto(200, -250)
-pipe.pendown()
-pipe.color("green")
-pipe.begin_fill()
-for _ in range(2):
-    pipe.left(90)
-    pipe.forward(50)
-    pipe.circle(25, 180)  # Top curve
-    pipe.forward(50)
-pipe.end_fill()
-pipe.hideturtle()
+block1 = draw_block(-100, -200)
+block2 = draw_block(50, -150)
+
+# Pipe (simple green rectangle with top)
+pipe_base = draw_block(250, -250, "green")
+pipe_top = turtle.Turtle()
+pipe_top.speed(0)
+pipe_top.penup()
+pipe_top.goto(250, -210)
+pipe_top.pendown()
+pipe_top.color("darkgreen")
+pipe_top.begin_fill()
+pipe_top.forward(60)
+pipe_top.right(90)
+pipe_top.forward(40)
+pipe_top.right(90)
+pipe_top.forward(60)
+pipe_top.right(90)
+pipe_top.forward(40)
+pipe_top.end_fill()
+pipe_top.hideturtle()
 
 # Player: Happy Dog
 dog = turtle.Turtle()
 dog.shape("circle")
 dog.color("yellow")
-dog.shapesize(2)
+dog.shapesize(1.5)
 dog.penup()
-dog.goto(-350, -250)
+dog.goto(-350, -240)
 dog.dy = 0
 dog.on_ground = True
+dog.lives = 3  # Simple reset counter
 
-# Simple dog face on dog (separate turtle for overlay)
+# Dog face overlay
 face = turtle.Turtle()
 face.speed(0)
 face.penup()
@@ -72,116 +86,141 @@ face.hideturtle()
 
 def draw_dog_face():
     face.clear()
-    face.goto(dog.xcor(), dog.ycor())
-    face.dot(40, "yellow")  # Body
-    face.goto(dog.xcor() - 10, dog.ycor() + 5)
-    face.dot(5, "black")  # Left eye
-    face.goto(dog.xcor() + 10, dog.ycor() + 5)
-    face.dot(5, "black")  # Right eye
-    face.goto(dog.xcor(), dog.ycor() - 5)
-    face.right(90)
-    face.circle(8, 180)  # Smile
+    fx, fy = dog.xcor(), dog.ycor()
+    face.goto(fx, fy)
+    face.dot(30, "yellow")  # Body circle
+    face.goto(fx - 8, fy + 4)
+    face.dot(3, "black")  # Left eye
+    face.goto(fx + 8, fy + 4)
+    face.dot(3, "black")  # Right eye
+    face.goto(fx, fy - 4)
+    face.pendown()
+    face.color("black")
+    face.circle(6, 180)  # Smile arc
+    face.penup()
 
 # Bats (enemies)
-bats = []
 class Bat:
     def __init__(self, x, y):
         self.t = turtle.Turtle()
-        self.t.shape("circle")
+        self.t.shape("triangle")
         self.t.color("red")
-        self.t.shapesize(1.5, 0.5)
+        self.t.shapesize(1, 1.5)
         self.t.penup()
         self.t.goto(x, y)
-        self.t.dx = -2
-        self.hideturtle()  # Wait, no
+        self.t.dx = -2  # Speed
 
-bat1 = Bat(100, -200)
-bat2 = Bat(300, -250)
+bat1 = Bat(0, -200)
+bat2 = Bat(200, -200)
 bats = [bat1, bat2]
 
 # Controls
-def left():
-    dog.goto(dog.xcor() - 20, dog.ycor())
+def go_left():
+    x = dog.xcor() - 10
+    dog.goto(max(-400, x), dog.ycor())  # Screen bounds
 
-def right():
-    dog.goto(dog.xcor() + 20, dog.ycor())
+def go_right():
+    x = dog.xcor() + 10
+    dog.goto(min(400, x), dog.ycor())
 
 def jump():
     if dog.on_ground:
-        dog.dy = 15
+        dog.dy = 12
         dog.on_ground = False
 
-screen.onkey(left, "Left")
-screen.onkey(right, "Right")
+screen.onkey(go_left, "Left")
+screen.onkey(go_right, "Right")
 screen.onkey(jump, "space")
+
+# Game vars
+score = 0
+game_over = False
 
 # Game loop
 def update():
-    global score
-    score = 0
-    
-    # Gravity and jump
-    dog.dy -= 1
+    global score, game_over
+    if game_over:
+        return
+
+    # Player physics
+    dog.dy -= 0.8  # Gravity
     y = dog.ycor() + dog.dy
     dog.sety(y)
-    
+
     # Ground collision
-    if dog.ycor() < -240:
+    if dog.ycor() <= -240:
         dog.sety(-240)
         dog.dy = 0
         dog.on_ground = True
-    
-    # Block collisions (simple)
-    if -210 < dog.xcor() < -170 and -200 < dog.ycor() < -160:
-        if dog.dy > 0:
-            dog.sety(-160)
-            dog.dy = 0
-            dog.on_ground = True
-    if -10 < dog.xcor() < 30 and -150 < dog.ycor() < -110:
-        if dog.dy > 0:
-            dog.sety(-110)
-            dog.dy = 0
-            dog.on_ground = True
-    
-    # Pipe collision
-    if dog.xcor() > 170 and dog.ycor() < -240:
-        if dog.dy > 0:
+
+    # Block collisions (landing or head bump)
+    blocks = [(block1, -200, -160), (block2, -150, -110)]  # (turtle, bottom_y, top_y)
+    for _, bottom, top in blocks:
+        if bottom < dog.ycor() < top + 20:  # Near block height
+            if dog.dy < 0:  # Falling: land on top
+                dog.sety(top)
+                dog.dy = 0
+                dog.on_ground = True
+            elif dog.dy > 0:  # Rising: bump head
+                dog.sety(bottom - 20)
+                dog.dy = 0
+
+    # Pipe collision (treat as wide platform)
+    if 250 < dog.xcor() < 310 and dog.ycor() < -240:
+        if dog.dy < 0:
             dog.sety(-240)
             dog.dy = 0
             dog.on_ground = True
-    
-    # Bat updates and collisions
+
+    # Bat updates
     for bat in bats[:]:
-        bat.t.goto(bat.t.xcor() + bat.dx, bat.t.ycor())
+        bat.t.goto(bat.t.xcor() + bat.t.dx, bat.t.ycor())
         if bat.t.xcor() < -400 or bat.t.xcor() > 400:
-            bat.dx *= -1
-        
-        # Collision with dog
-        if abs(dog.xcor() - bat.t.xcor()) < 30 and abs(dog.ycor() - bat.t.ycor()) < 30:
-            if dog.dy > 0 and dog.ycor() < bat.t.ycor():  # Stomp
+            bat.t.dx *= -1
+
+        # Dog-bat collision
+        if abs(dog.xcor() - bat.t.xcor()) < 25 and abs(dog.ycor() - bat.t.ycor()) < 25:
+            if dog.dy < 0 and dog.ycor() > bat.t.ycor():  # Stomp from above
                 bats.remove(bat)
                 bat.t.hideturtle()
-                dog.dy = 10
+                dog.dy = 8  # Bounce
                 score += 10
-            else:
-                # Reset
+            else:  # Hit from side/bottom
+                dog.lives -= 1
                 dog.goto(-350, -240)
                 dog.dy = 0
                 dog.on_ground = True
-    
-    # Draw dog face
+                if dog.lives <= 0:
+                    game_over = True
+                    msg = turtle.Turtle()
+                    msg.speed(0)
+                    msg.penup()
+                    msg.goto(0, 0)
+                    msg.color("red")
+                    msg.write("Game Over! Final Score: {}".format(score), align="center", font=("Arial", 24, "bold"))
+                    msg.hideturtle()
+
+    # Draw face and update score
     draw_dog_face()
-    
-    # Check win/lose
+    score_turtle.clear()
+    score_turtle.write("Score: {} | Lives: {}".format(score, dog.lives), align="left", font=("Arial", 16, "normal"))
+
+    # Win condition
     if len(bats) == 0:
-        turtle.write("You win! All bats gone!", align="center", font=("Arial", 16, "bold"))
-    
+        win_msg = turtle.Turtle()
+        win_msg.speed(0)
+        win_msg.penup()
+        win_msg.goto(0, 0)
+        win_msg.color("green")
+        win_msg.write("You Win! All bats defeated. Score: {}".format(score), align="center", font=("Arial", 24, "bold"))
+        win_msg.hideturtle()
+        game_over = True
+
     screen.update()
-    if len(bats) > 0:  # Continue if bats left
-        screen.ontimer(update, 50)
+    if not game_over:
+        screen.ontimer(update, 50)  # ~20 FPS
 
-# Start
+# Start the game
+draw_dog_face()  # Initial draw
 update()
-
-# Keep window open
 screen.mainloop()
