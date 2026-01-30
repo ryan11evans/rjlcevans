@@ -110,6 +110,7 @@
       text-align: center;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       border: 1px solid rgba(0,0,0,.05);
+      position: relative;
     }
     .widget-card:hover {
       transform: translateY(-3px);
@@ -133,6 +134,18 @@
       line-height: 1.5;
     }
     .weather-info strong { color: #2c3e50; }
+    .joke-text {
+      font-size: 1.1rem;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.8s ease;
+    }
+    .joke-text.fade {
+      opacity: 0;
+    }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
     }
@@ -162,8 +175,10 @@
       <div class="caption">The Evans Family — Murrieta, 2025</div>
     </section>
 
+    <!-- Widgets: 3 side-by-side (holiday, weather, dad jokes) -->
     <section class="widgets">
       <div class="widget-grid">
+        <!-- Holiday Countdown -->
         <div class="card widget-card">
           <h3>Next Holiday</h3>
           <div style="font-size: 1.9rem; font-weight: bold; color: #e74c3c; margin-bottom: 6px;">Presidents' Day</div>
@@ -173,6 +188,7 @@
           </p>
         </div>
 
+        <!-- Murrieta Weather Snapshot -->
         <div class="card widget-card">
           <h3>Murrieta Weather (Current Snapshot)</h3>
           <div class="weather-info">
@@ -185,12 +201,19 @@
             Or check live: <a href="https://weather.com/weather/today/l/Murrieta+CA?canonicalCityId=..." target="_blank" style="color: #3498db;">Weather.com</a> | <a href="https://www.accuweather.com/en/us/murrieta/92562/current-weather/2178890" target="_blank" style="color: #3498db;">AccuWeather</a>
           </p>
         </div>
+
+        <!-- Rotating Dad Jokes -->
+        <div class="card widget-card">
+          <h3>Dad Joke Time</h3>
+          <div id="joke-text" class="joke-text">Loading a groaner...</div>
+        </div>
       </div>
     </section>
   </main>
 
   <footer>© 2025 Evans Family · rjlcevans.com</footer>
 
+  <!-- Countdown script -->
   <script>
     function countdownToHoliday() {
       const holidayDate = new Date('2026-02-16T00:00:00-08:00');
@@ -210,19 +233,19 @@
     countdownToHoliday();
   </script>
 
-  <!-- Floating Murrieta Temp Pill (fixed, scrolls with viewport) - original liked style -->
+  <!-- Floating Murrieta Temp Pill (fixed viewport, your preferred style) -->
   <div id="temp-ticker" style="position: fixed; bottom: 16px; left: 16px; background: rgba(0,0,0,0.6); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 100; backdrop-filter: blur(4px); transition: opacity 0.5s;">
     Murrieta: <span id="current-temp">Loading...</span>°F
   </div>
 
-  <!-- BTC Price - bottom-right, scrolls with page (only visible at very bottom) -->
+  <!-- BTC Price - bottom-right, scrolls with page -->
   <div style="text-align: right; padding: 20px 18px; color: var(--muted); font-size: 0.85rem; margin-top: 40px;">
     BTC: <span id="btc-price">Loading...</span> USD
   </div>
 
   <!-- Scripts -->
   <script>
-    // Temp fetch (Open-Meteo - free, accurate for Murrieta coords)
+    // Temp fetch
     async function updateTemp() {
       try {
         const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=33.55&longitude=-117.18&current=temperature_2m&temperature_unit=fahrenheit');
@@ -234,7 +257,7 @@
       }
     }
     updateTemp();
-    setInterval(updateTemp, 1800000); // every 30 min
+    setInterval(updateTemp, 1800000); // 30 min
   </script>
 
   <script>
@@ -251,6 +274,39 @@
     }
     updateBtcPrice();
     setInterval(updateBtcPrice, 60000);
+  </script>
+
+  <!-- Dad Jokes Rotator -->
+  <script>
+    const dadJokes = [
+      "Why don't eggs tell jokes? They'd crack each other up.",
+      "I'm on a seafood diet. I see food and I eat it.",
+      "Why did the bicycle fall over? It was two tired.",
+      "What do you call fake spaghetti? An impasta.",
+      "Why don't skeletons fight each other? They don't have the guts.",
+      "I only know 25 letters of the alphabet. I don't know y.",
+      "What did one wall say to the other wall? I'll meet you at the corner.",
+      "Why couldn't the leopard play hide and seek? Because he was always spotted.",
+      "How does a penguin build its house? Igloos it together.",
+      "Why did the math book look sad? Because it had too many problems.",
+      "What do you call cheese that isn't yours? Nacho cheese.",
+      "Why do seagulls fly over the sea? Because if they flew over the bay, they'd be bagels."
+    ];
+
+    const jokeElement = document.getElementById('joke-text');
+
+    function showRandomJoke() {
+      jokeElement.classList.add('fade');
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * dadJokes.length);
+        jokeElement.textContent = dadJokes[randomIndex];
+        jokeElement.classList.remove('fade');
+      }, 800); // match fade transition time
+    }
+
+    // Start immediately + rotate every 10 seconds
+    showRandomJoke();
+    setInterval(showRandomJoke, 10000);
   </script>
 </body>
 </html>
