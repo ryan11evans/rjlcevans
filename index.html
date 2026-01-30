@@ -6,7 +6,7 @@
   <title>Evans Family — rjlcevans.com</title>
   <meta name="description" content="A simple, modern Evans Family page with a subtle time-of-day background." />
   <style>
-    :root{
+    :root {
       --bg: #ececec;
       --card-bg: #f7f7f7;
       --text: #1f1f1f;
@@ -16,85 +16,129 @@
       --maxw: 980px;
     }
     * { box-sizing: border-box; }
-    html,body { height: 100%; margin:0; }
-    body{
+    html, body { height: 100%; margin: 0; }
+    body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background: var(--bg);
       transition: background 1.6s ease;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    header{
-      width:100%;
-      max-width:var(--maxw);
-      padding:14px 18px;
-      margin-top:14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+    header {
+      width: 100%;
+      max-width: var(--maxw);
+      padding: 14px 18px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .brand{ font-weight:700; letter-spacing:.2px; display:flex; gap:.4rem; align-items:center; }
-    .brand .logo{ font-size:1.15rem }
-    .contact a{
-      text-decoration:none;
+    .brand {
+      font-weight: 700;
+      letter-spacing: .2px;
+      display: flex;
+      gap: .4rem;
+      align-items: center;
+    }
+    .brand .logo { font-size: 1.15rem; }
+    .contact a {
+      text-decoration: none;
       color: var(--text);
-      border:1px solid rgba(0,0,0,.12);
-      padding:.45rem .7rem;
-      border-radius:12px;
+      border: 1px solid rgba(0,0,0,.12);
+      padding: .45rem .7rem;
+      border-radius: 12px;
       background: #fff;
     }
-    main{
-      width:100%;
-      max-width:var(--maxw);
-      padding:0 18px 28px;
+    main {
+      width: 100%;
+      max-width: var(--maxw);
+      padding: 0 18px 28px;
     }
-    .card{
-      background:var(--card-bg);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
       margin: 24px 0;
     }
-    .photo img{
-      display:block;
-      width:100%;
-      height:auto;
-      object-fit:cover;
+    .photo img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
     }
-    .caption{
-      color:#333;
-      text-align:center;
-      font-size:1.2rem;
-      padding:14px 12px 18px;
-      border-top:1px solid rgba(0,0,0,.06);
+    .caption {
+      color: #333;
+      text-align: center;
+      font-size: 1.2rem;
+      padding: 14px 12px 18px;
+      border-top: 1px solid rgba(0,0,0,.06);
       background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.9));
     }
-    footer{
-      width:100%;
-      max-width:var(--maxw);
-      color:var(--muted);
-      font-size:.9rem;
-      padding:14px 18px 36px;
-      text-align:center;
+    footer {
+      width: 100%;
+      max-width: var(--maxw);
+      color: var(--muted);
+      font-size: .9rem;
+      padding: 14px 18px 36px;
+      text-align: center;
     }
-    /* Widget tweaks */
-    #timer { font-size: 2.2rem; font-weight: bold; color: #e74c3c; }
+    /* Widgets enhancements */
+    .widgets {
+      width: 100%;
+      max-width: var(--maxw);
+      padding: 0 18px;
+      margin: 24px 0;
+    }
+    .widget-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+    }
+    .widget-card {
+      flex: 1 1 320px;
+      min-width: 300px;
+      padding: 24px;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .widget-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.15);
+    }
+    #timer {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #c0392b;
+      margin: 8px 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
   </style>
+  <!-- Time-of-day background -->
   <script>
-  function applyTimeOfDayBackground(){
-    const h = new Date().getHours();
-    let bg;
-    if (h >= 20 || h < 5) bg = "linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)";
-    else if (h >= 5 && h < 10) bg = "linear-gradient(to bottom, #fef9e7 0%, #eaf4ff 100%)";
-    else if (h >= 10 && h < 17) bg = "linear-gradient(to bottom, #f2f7ff 0%, #ffffff 100%)";
-    else bg = "linear-gradient(to bottom, #ffd9b3 0%, #f0e6ff 100%)";
-    document.body.style.background = bg;
-  }
-  document.addEventListener('DOMContentLoaded', applyTimeOfDayBackground);
+    function applyTimeOfDayBackground() {
+      const h = new Date().getHours();
+      let bg;
+      if (h >= 20 || h < 5) {
+        bg = "linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)";
+      } else if (h >= 5 && h < 10) {
+        bg = "linear-gradient(to bottom, #fef9e7 0%, #eaf4ff 100%)";
+      } else if (h >= 10 && h < 17) {
+        bg = "linear-gradient(to bottom, #f2f7ff 0%, #ffffff 100%)";
+      } else {
+        bg = "linear-gradient(to bottom, #ffd9b3 0%, #f0e6ff 100%)";
+      }
+      document.body.style.background = bg;
+    }
+    document.addEventListener('DOMContentLoaded', applyTimeOfDayBackground);
   </script>
 </head>
 <body>
@@ -102,61 +146,81 @@
     <div class="brand"><span class="logo">🏡</span>Evans Family</div>
     <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
   </header>
+
   <main>
+    <!-- Widgets side-by-side, above the photo -->
+    <section class="widgets">
+      <div class="widget-grid">
+        <!-- Countdown Widget -->
+        <div class="card widget-card">
+          <h3 style="margin: 0 0 12px; font-size: 1.4rem; color: var(--muted);">Next Holiday</h3>
+          <div style="font-size: 2.2rem; font-weight: bold; color: #e74c3c; margin-bottom: 8px;">Presidents' Day</div>
+          <div id="timer">Calculating...</div>
+          <p style="margin: 12px 0 0; font-size: 1rem; color: var(--muted);">
+            Feb 16, 2026 • Perfect for Murrieta plans! 🌞
+          </p>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="card widget-card">
+          <h3 style="margin: 0 0 12px; font-size: 1.4rem; color: var(--muted);">Murrieta Weather</h3>
+          <div id="weather-embed" style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
+            <a id="ww_5f8e4b" href="https://www.weatherwidget.io/" target="_blank" style="font-family: system-ui; font-size: 14px; color: #333; text-decoration: none;">
+              Loading Murrieta Weather...
+            </a>
+          </div>
+          <script>
+            window.myWidgetParam = window.myWidgetParam || [];
+            window.myWidgetParam.push({
+              id: '5f8e4b',
+              cityid: '5375911',
+              name: 'Murrieta',
+              mainColor: '#2c3e50',
+              secondaryColor: '#ecf0f1',
+              units: 'imperial',
+              lang: 'en'
+            });
+            (function() {
+              var script = document.createElement('script');
+              script.type = 'text/javascript';
+              script.async = true;
+              script.src = "//widget.weatherwidget.io/js/widget.min.js";
+              document.getElementsByTagName('head')[0].appendChild(script);
+            })();
+          </script>
+          <p style="margin-top: 12px; font-size: 0.9rem;">
+            <a href="https://forecast.weather.gov/MapClick.php?lat=33.5500&lon=-117.1830" target="_blank" style="color: #3498db; text-decoration: underline;">
+              Full NWS Forecast →
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Epic family photo below widgets -->
     <section class="photo card">
       <img src="family.jpg" alt="The Evans Family" loading="eager" />
       <div class="caption">The Evans Family — Murrieta, 2025</div>
     </section>
-
-    <section class="card" style="padding: 24px; text-align: center;">
-      <h2 style="margin: 0 0 20px; font-size: 1.6rem;">Family Quick Links</h2>
-      
-      <div id="countdown" style="margin-bottom: 32px;">
-        <h3 style="margin: 0 0 12px; color: var(--muted);">Next Holiday: Presidents' Day</h3>
-        <div id="timer">Calculating...</div>
-        <p style="font-size: 0.95rem; color: var(--muted); margin-top: 8px;">
-          Feb 16, 2026 – Great for Murrieta long weekend plans!
-        </p>
-      </div>
-
-      <div>
-        <h3 style="margin: 0 0 12px; color: var(--muted);">Murrieta Weather Right Now</h3>
-        <!-- Weather embed - should load if script works -->
-        <a id="ww_5f8e4b" href="https://www.weatherwidget.io/" target="_blank" style="font-family: system-ui; font-size: 12px; color: #000; text-decoration: none;">Murrieta Weather</a>
-        <script>
-          window.myWidgetParam = window.myWidgetParam || [];
-          window.myWidgetParam.push({id: '5f8e4b', cityid: '5375911', name: 'Murrieta', mainColor: '#1f1f1f', secondaryColor: '#ffffff', units: 'imperial', lang: 'en'});
-          (function() {
-            var script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.async = true;
-            script.src = "//widget.weatherwidget.io/js/widget.min.js";
-            document.getElementsByTagName('head')[0].appendChild(script);
-          })();
-        </script>
-        <!-- Fallback link if embed fails -->
-        <p style="margin-top: 12px; font-size: 0.9rem;">
-          <a href="https://forecast.weather.gov/MapClick.php?lat=33.5500&lon=-117.1830" target="_blank" style="color: #3498db;">Or check full NWS forecast</a>
-        </p>
-      </div>
-    </section>
   </main>
+
   <footer>© 2025 Evans Family · rjlcevans.com</footer>
 
+  <!-- Countdown script -->
   <script>
     function countdownToHoliday() {
-      const holidayDate = new Date('2026-02-16T00:00:00-08:00'); // PST
+      const holidayDate = new Date('2026-02-16T00:00:00-08:00');
       const now = new Date();
       const diff = holidayDate - now;
       if (diff <= 0) {
-        document.getElementById('timer').innerHTML = "It's here! Happy Presidents' Day! 🎉";
+        document.getElementById('timer').innerHTML = "It's Here! 🎉";
         return;
       }
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      document.getElementById('timer').innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      document.getElementById('timer').innerHTML = `${days}d ${hours.toString().padStart(2,'0')}h ${minutes.toString().padStart(2,'0')}m ${seconds.toString().padStart(2,'0')}s`;
     }
     setInterval(countdownToHoliday, 1000);
     countdownToHoliday();
