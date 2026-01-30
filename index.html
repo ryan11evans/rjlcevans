@@ -39,17 +39,15 @@
     }
     .brand {
       font-weight: 800;
-      font-size: 2.2rem;          /* Much bigger now */
+      font-size: 2.2rem;
       letter-spacing: 0.04em;
-      color: #ffffff;             /* White for max visibility */
-      text-shadow: 0 2px 8px rgba(0,0,0,0.7);  /* Shadow helps on light/dark bgs */
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
       display: flex;
       gap: 0.6rem;
       align-items: center;
     }
-    .brand .logo {
-      font-size: 2.6rem;          /* Bigger house emoji */
-    }
+    .brand .logo { font-size: 2.6rem; }
     .contact a {
       text-decoration: none;
       color: var(--text);
@@ -129,6 +127,12 @@
       color: #c0392b;
       margin: 6px 0;
     }
+    .weather-info {
+      font-size: 1.1rem;
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+    .weather-info strong { color: #2c3e50; }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
     }
@@ -170,17 +174,15 @@
         </div>
 
         <div class="card widget-card">
-          <h3>Murrieta Weather</h3>
-          <div style="min-height: 140px; display: flex; align-items: center; justify-content: center;">
-            <iframe 
-              src="https://widget.tomorrow.io/?location=Murrieta%2C%20CA%2C%20USA&unit_system=imperial&skin=light&widgetType=upcoming&locale=en"
-              frameborder="0" scrolling="no" width="100%" height="100%" style="border:none; min-height:140px;">
-            </iframe>
+          <h3>Murrieta Weather (Current Snapshot)</h3>
+          <div class="weather-info">
+            <strong>Now:</strong> Around 47–53°F, clear/sunny skies (as of late evening Jan 29).<br>
+            <strong>Tonight:</strong> Low near 42–45°F, clear to partly cloudy.<br>
+            <strong>Tomorrow:</strong> Sunny, high 78–82°F, light winds.
           </div>
-          <p style="margin-top: 10px; font-size: 0.85rem;">
-            <a href="https://forecast.weather.gov/MapClick.php?lat=33.5500&lon=-117.1830" target="_blank" style="color: #3498db; text-decoration: underline;">
-              Full NWS Forecast →
-            </a>
+          <p style="margin-top: 12px; font-size: 0.9rem;">
+            Updated from NWS — <a href="https://forecast.weather.gov/MapClick.php?lat=33.5500&lon=-117.1830" target="_blank" style="color: #3498db; text-decoration: underline;">Full Forecast & Hourly →</a><br>
+            Or check live: <a href="https://weather.com/weather/today/l/Murrieta+CA?canonicalCityId=..." target="_blank" style="color: #3498db;">Weather.com</a> | <a href="https://www.accuweather.com/en/us/murrieta/92562/current-weather/2178890" target="_blank" style="color: #3498db;">AccuWeather</a>
           </p>
         </div>
       </div>
