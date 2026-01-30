@@ -118,6 +118,69 @@
     <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
   </header>
 
+  <!-- New: Countdown + Weather widgets section -->
+<section class="card" style="padding: 24px; margin: 32px 0; text-align: center;">
+  <h2 style="margin: 0 0 20px; font-size: 1.6rem;">Family Quick Links</h2>
+  
+  <!-- Countdown to next holiday -->
+  <div id="countdown" style="margin-bottom: 32px;">
+    <h3 style="margin: 0 0 12px; color: var(--muted);">Countdown to Presidents' Day (Feb 16, 2026)</h3>
+    <div id="timer" style="font-size: 1.8rem; font-weight: bold; color: #e74c3c;">
+      Calculating...
+    </div>
+    <p style="font-size: 0.95rem; color: var(--muted); margin-top: 8px;">
+      Perfect for long weekend plans in Murrieta!
+    </p>
+  </div>
+
+  <!-- Local Weather Widget (Murrieta, CA) -->
+  <div style="margin: 0 auto; max-width: 100%;">
+    <h3 style="margin: 0 0 12px; color: var(--muted);">Murrieta Weather Right Now</h3>
+    <!-- Paste your customized widget code here from https://weatherwidget.io/ -->
+    <!-- For now, here's a ready-to-use embed for Murrieta (copy-paste this block) -->
+    <a id="ww_5f8e4b" href="https://www.weatherwidget.io/" target="_blank" style="font-family: system-ui; font-size: 12px; color: #000; text-decoration: none;">Murrieta Weather</a>
+    <script>
+      window.myWidgetParam ? window.myWidgetParam : window.myWidgetParam = []; 
+      window.myWidgetParam.push(
+        {id: '5f8e4b', cityid: '5375911', name: 'Murrieta', mainColor: '#1f1f1f', secondaryColor: '#ffffff', units: 'imperial', lang: 'en'}
+      );
+      (function() {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = "//widget.weatherwidget.io/js/widget.min.js";
+        document.getElementsByTagName('head')[0].appendChild(script);
+      })();
+    </script>
+  </div>
+</section>
+
+<!-- Add this script at the end of <body> (before </body>) for the countdown -->
+<script>
+  function countdownToHoliday() {
+    const holidayDate = new Date('2026-02-16T00:00:00'); // Presidents' Day 2026
+    const now = new Date();
+    const diff = holidayDate - now;
+
+    if (diff <= 0) {
+      document.getElementById('timer').innerHTML = "It's here! Happy Presidents' Day! 🎉";
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    document.getElementById('timer').innerHTML = 
+      `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  // Update every second
+  setInterval(countdownToHoliday, 1000);
+  countdownToHoliday(); // Initial call
+</script>
+
   <main>
     <section class="photo card">
       <!-- Keep your image named family.jpg at the repo root -->
