@@ -238,10 +238,7 @@
     Murrieta: <span id="current-temp">Loading...</span>°F
   </div>
 
-  <!-- BTC Price - bottom-right, scrolls with page -->
-  <div style="text-align: right; padding: 20px 18px; color: var(--muted); font-size: 0.85rem; margin-top: 40px;">
-    BTC: <span id="btc-price">Loading...</span> USD
-  </div>
+  
 
   <!-- Scripts -->
   <script>
@@ -260,21 +257,7 @@
     setInterval(updateTemp, 1800000); // 30 min
   </script>
 
-  <script>
-    // BTC fetch
-    async function updateBtcPrice() {
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-        const data = await response.json();
-        const price = data.bitcoin.usd.toLocaleString(undefined, { minimumFractionDigits: 0 });
-        document.getElementById('btc-price').textContent = `$${price}`;
-      } catch (e) {
-        document.getElementById('btc-price').textContent = 'N/A';
-      }
-    }
-    updateBtcPrice();
-    setInterval(updateBtcPrice, 60000);
-  </script>
+  
 
   <!-- Dad Jokes Rotator -->
   <script>
