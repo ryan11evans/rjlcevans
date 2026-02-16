@@ -128,12 +128,6 @@
       color: #c0392b;
       margin: 6px 0;
     }
-    .weather-info {
-      font-size: 1.1rem;
-      margin: 8px 0;
-      line-height: 1.5;
-    }
-    .weather-info strong { color: #2c3e50; }
     .joke-text {
       font-size: 1.1rem;
       min-height: 80px;
@@ -150,24 +144,6 @@
       * { transition: none !important; }
     }
   </style>
-  <script>
-    async function fetchWeather() {
-      const apiKey = 'b85c7c50d498fde6ef6db03125747bf2'; // Your OpenWeather API key
-      const city = 'Murrieta'; // Change to your location
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const weatherInfo = `Now: Around ${data.main.temp}°F, ${data.weather[0].description}.`;
-        document.querySelector('.weather-info').innerHTML = weatherInfo;
-      } catch (error) {
-        document.querySelector('.weather-info').innerHTML = 'Failed to load weather data.';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', fetchWeather);
-  </script>
 </head>
 <body>
   <header>
@@ -187,7 +163,7 @@
 
     <section class="card" style="padding:18px;text-align:center"><h3 style="margin-top:0">Family Superpowers</h3><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"><div>Ryan — Vision &amp; patience 👓</div><div>Jadyn — Organization &amp; calm ✨</div><div>Landon — Humor &amp; curiosity 😄</div><div>Cody — Creativity &amp; speed ⚡</div></div></section>
 
-    <!-- Widgets: 3 side-by-side (holiday, weather, dad jokes) -->
+    <!-- Widgets: 3 side-by-side (holiday, jokes) -->
     <section class="widgets">
       <div class="widget-grid">
         <!-- Holiday Countdown -->
@@ -199,20 +175,4 @@
             Feb 16, 2026 • Murrieta getaway time! 🌞
           </p>
         </div>
-
-        <!-- New Weather Widget -->
-        <div class="card widget-card">
-          <h3>Murrieta Weather (Current Snapshot)</h3>
-          <div class="weather-info">
-            <strong>Loading...</strong> <span>— Please wait...</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2026 Ryan &amp; Jadyn Evans. All rights reserved.</p>
-  </footer>
-</body>
-</html>
+[1 more lines in file. Use offset=201 to continue.]
