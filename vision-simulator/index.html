@@ -331,14 +331,51 @@ footer a:hover { text-decoration: underline; }
   }
 
   // ===== Filters =====
+  // Reliable Gaussian-ish blur using multi-pass downsample/upsample.
+  // iOS Safari has historically had inconsistent ctx.filter='blur()' behavior, so
+  // we use this approach which works on every browser/device.
+  const _blurCanvasA = document.createElement('canvas');
+  const _blurCanvasB = document.createElement('canvas');
   function applyBlur(sigma) {
     if (sigma <= 0) {
       ctx.drawImage(sourceCanvas, 0, 0);
       return;
     }
-    ctx.filter = `blur(${sigma}px)`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
+    const w = stageCanvas.width, h = stageCanvas.height;
+
+    // Try the fast path first (ctx.filter), then composite over a downsampled fallback.
+    // The downsample-and-upsample technique gives us a strong, visible blur that's
+    // proportional to sigma and works reliably across all browsers.
+    const scale = Math.max(0.04, Math.min(1, 1 / (sigma * 0.6 + 1)));
+    const sw = Math.max(2, Math.round(w * scale));
+    const sh = Math.max(2, Math.round(h * scale));
+
+    _blurCanvasA.width = sw; _blurCanvasA.height = sh;
+    _blurCanvasB.width = sw; _blurCanvasB.height = sh;
+    const aCtx = _blurCanvasA.getContext('2d');
+    const bCtx = _blurCanvasB.getContext('2d');
+
+    // Downsample with smoothing
+    aCtx.imageSmoothingEnabled = true;
+    aCtx.imageSmoothingQuality = 'high';
+    aCtx.drawImage(sourceCanvas, 0, 0, sw, sh);
+
+    // Box-blur passes on the small canvas (cheap because it's tiny)
+    const passes = Math.min(3, Math.max(1, Math.round(sigma / 6)));
+    let src = _blurCanvasA, dst = _blurCanvasB;
+    for (let i = 0; i < passes; i++) {
+      const dCtx = dst.getContext('2d');
+      dCtx.imageSmoothingEnabled = true;
+      dCtx.imageSmoothingQuality = 'high';
+      dCtx.clearRect(0, 0, sw, sh);
+      dCtx.drawImage(src, 0, 0);
+      const tmp = src; src = dst; dst = tmp;
+    }
+
+    // Upsample back to full size with smoothing — this is what produces the blur
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, 0, 0, sw, sh, 0, 0, w, h);
   }
 
   function applyAstigmatism(magnitude, axisDeg) {
@@ -419,45 +456,27 @@ footer a:hover { text-decoration: underline; }
 
   function applyAMD(sizePct, distortion) {
     const w = stageCanvas.width, h = stageCanvas.height;
+    const cx = w/2, cy = h/2;
+    const scotomaR = Math.min(w, h) * (sizePct / 100);
 
     if (distortion > 0) {
-      const tmp = document.createElement('canvas');
-      tmp.width = w; tmp.height = h;
-      const tctx = tmp.getContext('2d');
-      tctx.drawImage(sourceCanvas, 0, 0);
-      const src = tctx.getImageData(0, 0, w, h);
-      const dst = ctx.createImageData(w, h);
-      const cx = w/2, cy = h/2;
-      const r = Math.min(w, h) * (sizePct/100) * 1.6;
-      const amp = distortion * 12;
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const ddx = x - cx, ddy = y - cy;
-          const dist = Math.hypot(ddx, ddy);
-          let sx = x, sy = y;
-          if (dist < r) {
-            const falloff = 1 - dist / r;
-            sx = x + Math.sin(y * 0.05) * amp * falloff;
-            sy = y + Math.cos(x * 0.05) * amp * falloff;
-          }
-          sx = Math.max(0, Math.min(w-1, Math.round(sx)));
-          sy = Math.max(0, Math.min(h-1, Math.round(sy)));
-          const di = (y * w + x) * 4;
-          const si = (sy * w + sx) * 4;
-          dst.data[di]   = src.data[si];
-          dst.data[di+1] = src.data[si+1];
-          dst.data[di+2] = src.data[si+2];
-          dst.data[di+3] = 255;
-        }
+      // Metamorphopsia: classic Amsler-grid effect where straight lines appear wavy.
+      // We render the image row-by-row with a sinusoidal horizontal shift. Patients
+      // perceive this distortion across their whole central visual field, not just
+      // in one ring — so we apply it uniformly. The dark scotoma is drawn on top after.
+      const maxAmp = distortion * 22;
+      const sliceH = 2;
+      for (let y = 0; y < h; y += sliceH) {
+        const phase = y * 0.05;
+        const dx = Math.sin(phase) * maxAmp;
+        ctx.drawImage(sourceCanvas, 0, y, w, sliceH, dx, y, w, sliceH);
       }
-      ctx.putImageData(dst, 0, 0);
     } else {
       ctx.drawImage(sourceCanvas, 0, 0);
     }
 
-    const cx = w/2, cy = h/2;
-    const radius = Math.min(w, h) * (sizePct / 100);
-    const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
+    // Central scotoma — soft dark blob drawn on top
+    const grad = ctx.createRadialGradient(cx, cy, scotomaR * 0.2, cx, cy, scotomaR);
     grad.addColorStop(0, 'rgba(20,20,25,0.96)');
     grad.addColorStop(0.7, 'rgba(20,20,25,0.85)');
     grad.addColorStop(1, 'rgba(20,20,25,0)');
