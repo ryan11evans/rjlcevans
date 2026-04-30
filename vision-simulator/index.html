@@ -1,157 +1,776 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Vision Impairment Simulator</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f4; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        video, canvas { max-width: 100%; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 15px auto; }
-        button, label { padding: 14px 20px; margin: 6px 4px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; }
-        .controls { margin: 20px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
-        label[for] { background: #eee; color: #333; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1620">
+<title>Vision Impairment Simulator — Dr. Ryan Evans, OD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1620;
+    --panel: #161e2a;
+    --panel-2: #1d2733;
+    --line: #2a3543;
+    --ink: #eef2f7;
+    --ink-dim: #9aa7b8;
+    --ink-mute: #6b7888;
+    --accent: #d4a574;
+    --accent-2: #5a8fb8;
+    --danger: #c87b6f;
+    --good: #7fa987;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(90,143,184,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(212,165,116,0.06), transparent 60%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
+
+header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(–line); margin-bottom: 24px; }
+.eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(–ink-mute); margin: 0 0 10px; }
+h1 {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-style: normal;
+font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em;
+margin: 0 0 8px; color: var(–ink);
+}
+h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.sub { color: var(–ink-dim); font-size: 14px; max-width: 60ch; line-height: 1.55; }
+.credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(–ink-mute); padding: 4px 10px; border: 1px solid var(–line); border-radius: 999px; }
+
+.stage-wrap { position: relative; background: #000; border-radius: var(–radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(–line); }
+.stage { position: absolute; inset: 0; display: grid; place-items: center; }
+#video, #sourceCanvas { display: none; }
+#stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(–ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
+.empty-state svg { opacity: 0.3; }
+
+.source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+.btn {
+appearance: none; border: 1px solid var(–line); background: var(–panel); color: var(–ink);
+padding: 11px 16px; border-radius: var(–radius-sm); font-family: inherit; font-size: 14px;
+font-weight: 500; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { border-color: var(–accent); background: var(–panel-2); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(–accent); color: #1a1208; border-color: var(–accent); }
+.btn.primary:hover { background: #e0b483; }
+.btn.ghost { background: transparent; }
+.btn-file { position: relative; overflow: hidden; }
+.btn-file input[type=“file”] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.section-title {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
+margin: 32px 0 12px; display: flex; align-items: center; gap: 12px;
+}
+.section-title::after { content: ‘’; flex: 1; height: 1px; background: var(–line); }
+
+.conditions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.cond {
+padding: 12px 10px; border: 1px solid var(–line); background: var(–panel); border-radius: var(–radius-sm);
+cursor: pointer; transition: all 0.15s ease; text-align: left; color: var(–ink); font-family: inherit;
+font-size: 13px; font-weight: 500;
+}
+.cond:hover { border-color: var(–accent-2); }
+.cond[aria-pressed=“true”] { background: var(–panel-2); border-color: var(–accent); box-shadow: inset 0 0 0 1px var(–accent); }
+.cond .name { display: block; }
+.cond .latin { display: block; font-family: ‘Fraunces’, serif; font-style: italic; font-size: 11px; color: var(–ink-mute); margin-top: 2px; font-weight: 400; }
+
+.controls { background: var(–panel); border: 1px solid var(–line); border-radius: var(–radius); padding: 18px; margin-top: 12px; }
+.ctrl-grid { display: grid; gap: 16px; }
+.ctrl { display: grid; gap: 6px; }
+.ctrl label { font-size: 12px; color: var(–ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
+.ctrl label .val { font-family: ‘Fraunces’, serif; font-style: italic; color: var(–accent); font-size: 13px; }
+input[type=“range”] {
+-webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(–line); border-radius: 2px; outline: none;
+}
+input[type=“range”]::-webkit-slider-thumb {
+-webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(–accent); cursor: pointer; border: 3px solid var(–panel); box-shadow: 0 0 0 1px var(–line);
+}
+input[type=“range”]::-moz-range-thumb {
+width: 18px; height: 18px; border-radius: 50%; background: var(–accent); cursor: pointer; border: 3px solid var(–panel); box-shadow: 0 0 0 1px var(–line);
+}
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.preset {
+padding: 6px 10px; border: 1px solid var(–line); background: transparent; color: var(–ink-dim);
+border-radius: 999px; font-size: 11px; font-family: ‘Fraunces’, serif; font-style: italic; cursor: pointer; transition: all 0.15s;
+}
+.preset:hover { color: var(–ink); border-color: var(–accent-2); }
+.preset[aria-pressed=“true”] { background: var(–accent); color: #1a1208; border-color: var(–accent); font-style: normal; font-weight: 600; font-family: ‘Inter Tight’; }
+
+.clinical-note {
+margin-top: 14px; padding: 12px 14px; background: rgba(90,143,184,0.06); border-left: 2px solid var(–accent-2);
+border-radius: 0 var(–radius-sm) var(–radius-sm) 0; font-size: 13px; color: var(–ink-dim); line-height: 1.55;
+}
+.clinical-note strong { color: var(–ink); font-weight: 600; }
+
+footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(–line); color: var(–ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+footer a { color: var(–accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+.toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(–ink-dim); cursor: pointer; user-select: none; }
+.toggle-row input { appearance: none; width: 36px; height: 20px; background: var(–line); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle-row input::after { content: ‘’; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(–ink); border-radius: 50%; transition: left 0.2s; }
+.toggle-row input:checked { background: var(–accent); }
+.toggle-row input:checked::after { left: 18px; background: #1a1208; }
+</style>
+
 </head>
 <body>
-    <div class="container">
-        <h1>Vision Impairment Simulator</h1>
-        <p><strong>Educational tool only.</strong> Not for clinical diagnosis. Built by Ryan Evans, Optometrist.</p>
+<div class="wrap">
 
-        <div style="text-align:center;">
-            <button onclick="startWebcam()">Start Camera</button>
-            <button onclick="stopWebcam()">Stop Camera</button>
-            <label>📸 Upload Image <input type="file" id="upload" accept="image/*" onchange="handleUpload(event)" style="display:none;"></label>
-        </div>
+  <header class="hero">
+    <p class="eyebrow">Patient education · Educational use only</p>
+    <h1>How the World Looks <em>Through Other Eyes</em></h1>
+    <p class="sub">A clinically-informed simulator for refractive error, cataract, glaucoma, age-related macular degeneration, and vitreous floaters. Use the camera or upload an image to explore.</p>
+    <span class="credit">Built by Dr. Ryan Evans, OD</span>
+  </header>
 
-        <video id="video" autoplay playsinline style="display:none; width:100%;"></video>
-        <canvas id="canvas" style="width:100%;"></canvas>
-
-        <div class="controls">
-            <div>
-                <label>Myopia Blur (px): <span id="blurVal">0</span></label>
-                <input type="range" id="blur" min="0" max="30" value="0" step="0.5" oninput="updateValues()">
-            </div>
-            <div>
-                <label>Cataract Haze: <span id="hazeVal">0</span></label>
-                <input type="range" id="haze" min="0" max="80" value="0" oninput="updateValues()">
-            </div>
-            <div>
-                <label>Color Deficiency:</label>
-                <select id="colorDef" onchange="updateValues()">
-                    <option value="none">None</option>
-                    <option value="protanopia">Protanopia</option>
-                    <option value="deuteranopia">Deuteranopia</option>
-                    <option value="tritanopia">Tritanopia</option>
-                </select>
-            </div>
-        </div>
-
-        <button onclick="resetFilters()" style="width:100%;">Reset All</button>
-        <p style="text-align:center;"><a href="https://rjlcevans.com/">← Return to Evans Family Home</a></p>
+  <div class="stage-wrap">
+    <div class="stage">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="sourceCanvas"></canvas>
+      <canvas id="stageCanvas"></canvas>
+      <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
+      <div class="empty-state" id="emptyState">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        <div>Start the camera or upload an image to begin.</div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        let stream = null;
-        let animationFrame = null;
+  <div class="source-row">
+    <button class="btn primary" id="startCam">Start Camera</button>
+    <button class="btn ghost" id="stopCam">Stop</button>
+    <button class="btn ghost" id="flipCam">Flip Camera</button>
+    <label class="btn btn-file">Upload Image
+      <input type="file" id="upload" accept="image/*">
+    </label>
+  </div>
 
-        function startWebcam() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                .then(s => {
-                    stream = s;
-                    video.srcObject = s;
-                    video.style.display = 'none';   // Hide raw video
-                    video.play();
-                    processFrame();
-                })
-                .catch(err => alert("Camera error: " + err.message));
+  <h2 class="section-title">Select Condition</h2>
+  <div class="conditions" id="conditions">
+    <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
+    <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
+    <button class="cond" data-cond="hyperopia"><span class="name">Hyperopia</span><span class="latin">farsighted</span></button>
+    <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
+    <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
+    <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
+    <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
+    <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
+    <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
+  </div>
+
+  <div class="controls" id="controlsPanel">
+    <div class="ctrl-grid" id="ctrlGrid"></div>
+    <div class="clinical-note" id="clinicalNote"></div>
+  </div>
+
+  <footer>
+    <span>© Dr. Ryan Evans, OD · For educational demonstration only · Not a diagnostic tool</span>
+    <a href="https://rjlcevans.com/">← Return to Evans Family Home</a>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Element refs ----------
+  const video = document.getElementById('video');
+  const sourceCanvas = document.getElementById('sourceCanvas');
+  const stageCanvas = document.getElementById('stageCanvas');
+  const overlay = document.getElementById('overlay');
+  const emptyState = document.getElementById('emptyState');
+  const ctrlGrid = document.getElementById('ctrlGrid');
+  const clinicalNote = document.getElementById('clinicalNote');
+  const conditionsEl = document.getElementById('conditions');
+
+  const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  const ctx = stageCanvas.getContext('2d');
+
+  // ---------- State ----------
+  let stream = null;
+  let rafId = null;
+  let currentSource = null; // 'camera' | 'image'
+  let uploadedImage = null;
+  let facingMode = 'user';
+  let condition = 'none';
+  const params = {
+    severity: 1,        // generic 0..3 (mild, mod, severe, profound)
+    axis: 90,           // astigmatism axis
+    glaucomaStage: 1,   // 1..4
+    amdSize: 25,        // % of frame
+    amdDistortion: 0,   // 0..1 metamorphopsia
+    floaterCount: 6,
+  };
+
+  // Snellen presets map to Gaussian blur sigma in pixels (calibrated to a ~600px wide stage)
+  // Approximate: 20/20=0, 20/40~3, 20/70~6, 20/100~9, 20/200~16, 20/400~28
+  const snellenBlur = {
+    '20/20': 0, '20/40': 3, '20/70': 6, '20/100': 9, '20/200': 16, '20/400': 28
+  };
+
+  // ---------- Sizing ----------
+  function resizeStage() {
+    const rect = stageCanvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    stageCanvas.width = Math.max(1, Math.round(rect.width * dpr));
+    stageCanvas.height = Math.max(1, Math.round(rect.height * dpr));
+  }
+  window.addEventListener('resize', resizeStage);
+
+  // ---------- Source handling ----------
+  async function startCamera() {
+    try {
+      stopCamera();
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: facingMode } }, audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
+      currentSource = 'camera';
+      uploadedImage = null;
+      emptyState.style.display = 'none';
+      resizeStage();
+      loop();
+    } catch (err) {
+      alert('Camera unavailable: ' + err.message);
+    }
+  }
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (currentSource === 'camera') {
+      currentSource = null;
+      ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+      emptyState.style.display = 'grid';
+    }
+  }
+  function flipCamera() {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (currentSource === 'camera') startCamera();
+  }
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    stopCamera();
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      currentSource = 'image';
+      emptyState.style.display = 'none';
+      resizeStage();
+      drawOnce();
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  // ---------- Source draw to source canvas ----------
+  function drawSourceToCanvas() {
+    let sw, sh;
+    if (currentSource === 'camera' && video.videoWidth) {
+      sw = video.videoWidth; sh = video.videoHeight;
+    } else if (currentSource === 'image' && uploadedImage) {
+      sw = uploadedImage.naturalWidth; sh = uploadedImage.naturalHeight;
+    } else return false;
+
+    // Cover the stage aspect
+    const stageW = stageCanvas.width, stageH = stageCanvas.height;
+    sourceCanvas.width = stageW; sourceCanvas.height = stageH;
+
+    const stageRatio = stageW / stageH;
+    const srcRatio = sw / sh;
+    let cropW, cropH, cropX, cropY;
+    if (srcRatio > stageRatio) {
+      cropH = sh; cropW = sh * stageRatio; cropX = (sw - cropW) / 2; cropY = 0;
+    } else {
+      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) / 2;
+    }
+    const src = currentSource === 'camera' ? video : uploadedImage;
+    sCtx.save();
+    if (currentSource === 'camera' && facingMode === 'user') {
+      sCtx.translate(stageW, 0); sCtx.scale(-1, 1);
+    }
+    sCtx.drawImage(src, cropX, cropY, cropW, cropH, 0, 0, stageW, stageH);
+    sCtx.restore();
+    return true;
+  }
+
+  // ---------- Filters ----------
+  // Gaussian blur via canvas filter
+  function applyBlur(sigma) {
+    if (sigma <= 0) {
+      ctx.drawImage(sourceCanvas, 0, 0);
+      return;
+    }
+    ctx.filter = `blur(${sigma}px)`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+  }
+
+  // Directional blur (astigmatism): heavy blur along axis, light perpendicular.
+  // We do this by stacking translated draws along the axis direction.
+  function applyAstigmatism(magnitude, axisDeg) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.clearRect(0, 0, w, h);
+    // Mild base blur to soften edges
+    ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+
+    const rad = (axisDeg * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    const steps = Math.max(4, Math.round(magnitude));
+    const span = magnitude * 1.2;
+    ctx.globalAlpha = 1 / (steps * 2 + 1);
+    for (let i = -steps; i <= steps; i++) {
+      const t = (i / steps) * span;
+      ctx.drawImage(sourceCanvas, dx * t, dy * t);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Cataract: yellow-brown tint, contrast loss, glare bloom
+  function applyCataract(severity) {
+    const s = severity; // 0..1
+    const w = stageCanvas.width, h = stageCanvas.height;
+
+    // Base: blurred + reduced contrast
+    const blurAmt = 2 + s * 7;
+    ctx.filter = `blur(${blurAmt}px) contrast(${1 - s * 0.35}) brightness(${1 + s * 0.05})`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+
+    // Yellow-brown tint (nuclear sclerotic)
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `rgba(${Math.round(255 - s * 10)}, ${Math.round(230 - s * 30)}, ${Math.round(170 - s * 90)}, ${0.25 + s * 0.45})`;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Glare bloom — soft white wash
+    ctx.globalCompositeOperation = 'screen';
+    const grad = ctx.createRadialGradient(w/2, h*0.45, 0, w/2, h*0.45, Math.max(w,h)*0.7);
+    grad.addColorStop(0, `rgba(255, 245, 220, ${0.15 + s * 0.35})`);
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Light scatter veil
+    ctx.fillStyle = `rgba(240, 220, 180, ${s * 0.1})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Glaucoma: peripheral vignette / tunnel
+  function applyGlaucoma(stage) {
+    // stage 1..4 → progressively smaller central island
+    const w = stageCanvas.width, h = stageCanvas.height;
+    // base: light blur for nerve damage softening
+    ctx.filter = `blur(${0.5 + stage * 0.3}px)`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+
+    // Stage parameters: clearRadius / fadeRadius as fraction of half-diagonal
+    const half = Math.hypot(w, h) / 2;
+    const stages = {
+      1: { clear: 0.78, fade: 0.95 }, // early — subtle peripheral
+      2: { clear: 0.55, fade: 0.78 }, // moderate arcuate
+      3: { clear: 0.32, fade: 0.55 }, // advanced
+      4: { clear: 0.15, fade: 0.32 }  // tunnel vision
+    };
+    const cfg = stages[stage] || stages[1];
+    const cx = w/2, cy = h/2;
+
+    const grad = ctx.createRadialGradient(cx, cy, half * cfg.clear, cx, cy, half * cfg.fade);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Pure black beyond fade
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, w, h);
+    ctx.arc(cx, cy, half * cfg.fade, 0, Math.PI * 2, true);
+    ctx.fillStyle = '#000';
+    ctx.fill('evenodd');
+    ctx.restore();
+  }
+
+  // AMD: central scotoma + optional metamorphopsia
+  function applyAMD(sizePct, distortion) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+
+    // Optional warp (metamorphopsia) — sample with sinusoidal displacement near center
+    if (distortion > 0) {
+      const tmp = document.createElement('canvas');
+      tmp.width = w; tmp.height = h;
+      const tctx = tmp.getContext('2d');
+      tctx.drawImage(sourceCanvas, 0, 0);
+      const src = tctx.getImageData(0, 0, w, h);
+      const dst = ctx.createImageData(w, h);
+      const cx = w/2, cy = h/2;
+      const r = Math.min(w, h) * (sizePct/100) * 1.6;
+      const amp = distortion * 12;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const ddx = x - cx, ddy = y - cy;
+          const dist = Math.hypot(ddx, ddy);
+          let sx = x, sy = y;
+          if (dist < r) {
+            const falloff = 1 - dist / r;
+            sx = x + Math.sin(y * 0.05) * amp * falloff;
+            sy = y + Math.cos(x * 0.05) * amp * falloff;
+          }
+          sx = Math.max(0, Math.min(w-1, Math.round(sx)));
+          sy = Math.max(0, Math.min(h-1, Math.round(sy)));
+          const di = (y * w + x) * 4;
+          const si = (sy * w + sx) * 4;
+          dst.data[di]   = src.data[si];
+          dst.data[di+1] = src.data[si+1];
+          dst.data[di+2] = src.data[si+2];
+          dst.data[di+3] = 255;
         }
+      }
+      ctx.putImageData(dst, 0, 0);
+    } else {
+      ctx.drawImage(sourceCanvas, 0, 0);
+    }
 
-        function stopWebcam() {
-            if (stream) stream.getTracks().forEach(t => t.stop());
-            if (animationFrame) cancelAnimationFrame(animationFrame);
-            video.style.display = 'none';
-        }
+    // Central scotoma — soft dark blob
+    const cx = w/2, cy = h/2;
+    const radius = Math.min(w, h) * (sizePct / 100);
+    const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(20,20,25,0.96)');
+    grad.addColorStop(0.7, 'rgba(20,20,25,0.85)');
+    grad.addColorStop(1, 'rgba(20,20,25,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
 
-        function handleUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-            };
-            img.src = URL.createObjectURL(file);
-        }
+  // Presbyopia: simulate near-vision blur. Without focal-distance data, we
+  // apply progressive blur on the lower half of the frame (where reading material
+  // typically sits), with severity scaling.
+  function applyPresbyopia(severity) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    // Sharp pass for upper region
+    ctx.drawImage(sourceCanvas, 0, 0);
 
-        function updateValues() {
-            document.getElementById('blurVal').textContent = document.getElementById('blur').value;
-            document.getElementById('hazeVal').textContent = document.getElementById('haze').value;
-        }
+    // Blurred pass masked to lower portion
+    const tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    const tctx = tmp.getContext('2d');
+    const blurAmt = 4 + severity * 8;
+    tctx.filter = `blur(${blurAmt}px)`;
+    tctx.drawImage(sourceCanvas, 0, 0);
+    tctx.filter = 'none';
 
-        function processFrame() {
-            if (video.videoWidth > 0) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
+    // Mask gradient: clear top → blurred bottom
+    const mask = document.createElement('canvas');
+    mask.width = w; mask.height = h;
+    const mctx = mask.getContext('2d');
+    mctx.drawImage(tmp, 0, 0);
+    const grad = mctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.45, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.85, 'rgba(0,0,0,1)');
+    grad.addColorStop(1, 'rgba(0,0,0,1)');
+    mctx.globalCompositeOperation = 'destination-in';
+    mctx.fillStyle = grad;
+    mctx.fillRect(0, 0, w, h);
 
-                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const blur = parseFloat(document.getElementById('blur').value);
-                const haze = parseFloat(document.getElementById('haze').value) / 100;
-                const colorType = document.getElementById('colorDef').value;
+    ctx.drawImage(mask, 0, 0);
+  }
 
-                // Color deficiency
-                if (colorType !== 'none') {
-                    const data = imageData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        let r = data[i], g = data[i+1], b = data[i+2];
-                        if (colorType === 'protanopia') {
-                            data[i] = 0.567*r + 0.433*g; data[i+1] = 0.558*g + 0.442*b; data[i+2] = 0.242*r + 0.758*b;
-                        } else if (colorType === 'deuteranopia') {
-                            data[i] = 0.625*r + 0.375*g; data[i+1] = 0.70*g + 0.30*b; data[i+2] = 0.30*r + 0.70*b;
-                        } else if (colorType === 'tritanopia') {
-                            data[i] = 0.95*r + 0.05*b; data[i+1] = 0.433*g + 0.567*b; data[i+2] = 0.475*r + 0.525*g;
-                        }
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-                }
+  // Floaters: animated translucent shapes drawn into the overlay SVG
+  let floaterState = null;
+  function initFloaters(count) {
+    floaterState = [];
+    for (let i = 0; i < count; i++) {
+      floaterState.push({
+        x: Math.random() * 100,
+        y: Math.random() * 75,
+        vx: (Math.random() - 0.5) * 0.04,
+        vy: (Math.random() - 0.5) * 0.03 + 0.005,
+        type: Math.random() < 0.5 ? 'strand' : 'blob',
+        size: 1 + Math.random() * 4,
+        rot: Math.random() * 360,
+        opacity: 0.18 + Math.random() * 0.25,
+      });
+    }
+  }
+  function drawFloaters() {
+    if (!floaterState) return;
+    let svg = '';
+    floaterState.forEach(f => {
+      f.x += f.vx; f.y += f.vy;
+      if (f.x < -5) f.x = 105; if (f.x > 105) f.x = -5;
+      if (f.y < -5) f.y = 80; if (f.y > 80) f.y = -5;
+      if (f.type === 'blob') {
+        svg += `<ellipse cx="${f.x}" cy="${f.y}" rx="${f.size*0.8}" ry="${f.size*0.5}" fill="rgba(20,20,25,${f.opacity})" filter="url(#fblur)"/>`;
+      } else {
+        const x2 = f.x + Math.cos(f.rot) * f.size * 2.5;
+        const y2 = f.y + Math.sin(f.rot) * f.size * 2.5;
+        svg += `<line x1="${f.x}" y1="${f.y}" x2="${x2}" y2="${y2}" stroke="rgba(20,20,25,${f.opacity})" stroke-width="${f.size*0.3}" stroke-linecap="round" filter="url(#fblur)"/>`;
+      }
+    });
+    overlay.innerHTML = `<defs><filter id="fblur"><feGaussianBlur stdDeviation="0.4"/></filter></defs>${svg}`;
+  }
+  function clearOverlay() { overlay.innerHTML = ''; }
 
-                // Blur
-                if (blur > 0) {
-                    ctx.filter = `blur(${blur}px)`;
-                    ctx.drawImage(canvas, 0, 0);
-                    ctx.filter = 'none';
-                }
+  // ---------- Render dispatch ----------
+  function render() {
+    if (!drawSourceToCanvas()) return;
+    ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
 
-                // Cataract haze
-                if (haze > 0) {
-                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imageData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        let avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        data[i] = data[i]*(1-haze) + avg*haze*0.85;
-                        data[i+1] = data[i+1]*(1-haze) + avg*haze*0.85;
-                        data[i+2] = data[i+2]*(1-haze) + avg*haze*0.85;
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-                }
-            }
-            animationFrame = requestAnimationFrame(processFrame);
-        }
+    switch (condition) {
+      case 'none':
+        ctx.drawImage(sourceCanvas, 0, 0);
+        clearOverlay();
+        break;
+      case 'myopia':
+      case 'hyperopia':
+        applyBlur(params.blurSigma || 0);
+        clearOverlay();
+        break;
+      case 'astigmatism':
+        applyAstigmatism(params.astigMag || 6, params.axis);
+        clearOverlay();
+        break;
+      case 'presbyopia':
+        applyPresbyopia(params.presbySev || 0.5);
+        clearOverlay();
+        break;
+      case 'cataract':
+        applyCataract(params.cataractSev || 0.5);
+        clearOverlay();
+        break;
+      case 'glaucoma':
+        applyGlaucoma(params.glaucomaStage);
+        clearOverlay();
+        break;
+      case 'amd':
+        applyAMD(params.amdSize, params.amdDistortion);
+        clearOverlay();
+        break;
+      case 'floaters':
+        ctx.drawImage(sourceCanvas, 0, 0);
+        drawFloaters();
+        break;
+    }
+  }
 
-        function resetFilters() {
-            document.getElementById('blur').value = 0;
-            document.getElementById('haze').value = 0;
-            document.getElementById('colorDef').value = 'none';
-            updateValues();
-        }
+  function loop() {
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+  function drawOnce() {
+    if (rafId) cancelAnimationFrame(rafId);
+    if (condition === 'floaters') {
+      // floaters need animation even on still images
+      loop();
+    } else {
+      render();
+    }
+  }
 
-        window.addEventListener('beforeunload', stopWebcam);
-    </script>
+  // ---------- Controls UI per condition ----------
+  const conditionMeta = {
+    none: {
+      title: 'Normal Vision (Emmetropia)',
+      note: 'A reference image with no simulated impairment. The light from a distant object focuses precisely on the retina, producing a clear image across the visual field.',
+      controls: () => []
+    },
+    myopia: {
+      title: 'Myopia (Nearsightedness)',
+      note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
+      controls: () => [
+        snellenPresetControl('myopia'),
+        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 30, 0.5)
+      ]
+    },
+    hyperopia: {
+      title: 'Hyperopia (Farsightedness)',
+      note: 'Light focuses <strong>behind</strong> the retina. Younger patients can compensate with accommodation; with age, both near and distance vision become symptomatic. Snellen presets below reflect uncorrected, uncompensated acuity.',
+      controls: () => [
+        snellenPresetControl('hyperopia'),
+        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 30, 0.5)
+      ]
+    },
+    astigmatism: {
+      title: 'Astigmatism',
+      note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Adjust the axis to demonstrate against-the-rule, with-the-rule, and oblique presentations.',
+      controls: () => [
+        sliderControl('astigMag', 'Severity', 2, 20, 1, 'D-equivalent'),
+        sliderControl('axis', 'Axis', 0, 180, 1, '°')
+      ]
+    },
+    presbyopia: {
+      title: 'Presbyopia',
+      note: 'Age-related loss of accommodative range — typically beginning in the early 40s. Distance objects remain clear, but near tasks (reading, phone, dashboard) become progressively blurred. Severity below corresponds roughly to add power from +1.00 to +2.50.',
+      controls: () => [
+        sliderControl('presbySev', 'Add power equivalent', 0.2, 1, 0.05, '×')
+      ]
+    },
+    cataract: {
+      title: 'Cataract (Nuclear Sclerotic)',
+      note: 'Progressive lens opacity scatters and absorbs light, producing a yellow-brown tint, contrast loss, and disabling glare — especially against bright backgrounds or oncoming headlights. The most common age-related form is simulated here.',
+      controls: () => [
+        sliderControl('cataractSev', 'Severity', 0.1, 1, 0.05, '×')
+      ]
+    },
+    glaucoma: {
+      title: 'Glaucoma',
+      note: 'Progressive optic neuropathy producing characteristic peripheral field loss. <strong>Important:</strong> patients are often unaware until late stages because the brain fills in the missing field. Stages below approximate Hodapp-Parrish-Anderson severity.',
+      controls: () => [
+        glaucomaStageControl()
+      ]
+    },
+    amd: {
+      title: 'Age-Related Macular Degeneration',
+      note: 'Damage to the macula produces central field loss while peripheral vision is preserved. Patients often report difficulty recognizing faces, reading, and driving. Enable distortion to demonstrate metamorphopsia (wavy/bent straight lines on the Amsler grid).',
+      controls: () => [
+        sliderControl('amdSize', 'Scotoma size', 5, 60, 1, '%'),
+        sliderControl('amdDistortion', 'Metamorphopsia', 0, 1, 0.05, '×')
+      ]
+    },
+    floaters: {
+      title: 'Floaters & Posterior Vitreous Detachment',
+      note: 'Vitreous opacities — collagen condensations, often following posterior vitreous detachment — cast shadows on the retina. They drift with eye movement and are most visible against bright, uniform backgrounds.',
+      controls: () => [
+        sliderControl('floaterCount', 'Number of floaters', 1, 25, 1, '', () => initFloaters(params.floaterCount))
+      ]
+    }
+  };
+
+  function sliderControl(key, label, min, max, step, unit = '', onChange = null) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    const id = `ctrl_${key}`;
+    wrap.innerHTML = `
+      <label for="${id}">${label} <span class="val" id="${id}_val"></span></label>
+      <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${params[key] ?? min}">
+    `;
+    const input = wrap.querySelector('input');
+    const val = wrap.querySelector('.val');
+    const update = () => {
+      params[key] = parseFloat(input.value);
+      val.textContent = `${params[key]}${unit}`;
+      if (onChange) onChange();
+      if (currentSource === 'image') drawOnce();
+    };
+    input.addEventListener('input', update);
+    update();
+    return wrap;
+  }
+
+  function snellenPresetControl(type) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Snellen acuity preset</label><div class="presets" id="snellenPresets"></div>`;
+    const presets = wrap.querySelector('#snellenPresets');
+    Object.entries(snellenBlur).forEach(([label, sigma]) => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = label;
+      b.dataset.sigma = sigma;
+      b.addEventListener('click', () => {
+        params.blurSigma = sigma;
+        // sync slider
+        const slider = document.getElementById('ctrl_blurSigma');
+        if (slider) { slider.value = sigma; slider.dispatchEvent(new Event('input')); }
+        wrap.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      if (sigma === (params.blurSigma ?? 0)) b.setAttribute('aria-pressed', 'true');
+      presets.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function glaucomaStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="glaucomaStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Early' },
+      { v: 2, label: 'Moderate' },
+      { v: 3, label: 'Advanced' },
+      { v: 4, label: 'Tunnel' }
+    ];
+    const host = wrap.querySelector('#glaucomaStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = s.label;
+      if (s.v === params.glaucomaStage) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.glaucomaStage = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function buildControls() {
+    ctrlGrid.innerHTML = '';
+    const meta = conditionMeta[condition];
+    clinicalNote.innerHTML = `<strong>${meta.title}.</strong> ${meta.note}`;
+    meta.controls().forEach(node => ctrlGrid.appendChild(node));
+    if (condition === 'floaters') initFloaters(params.floaterCount);
+    clearOverlay();
+  }
+
+  // ---------- Condition button wiring ----------
+  conditionsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.cond');
+    if (!btn) return;
+    conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    btn.setAttribute('aria-pressed', 'true');
+    condition = btn.dataset.cond;
+    // Sensible defaults per condition
+    if (condition === 'myopia' || condition === 'hyperopia') params.blurSigma = 6;
+    if (condition === 'astigmatism') { params.astigMag = 6; params.axis = 90; }
+    if (condition === 'presbyopia') params.presbySev = 0.5;
+    if (condition === 'cataract') params.cataractSev = 0.5;
+    if (condition === 'glaucoma') params.glaucomaStage = 2;
+    if (condition === 'amd') { params.amdSize = 25; params.amdDistortion = 0; }
+    if (condition === 'floaters') params.floaterCount = 6;
+    buildControls();
+    if (currentSource === 'image') drawOnce();
+  });
+
+  // ---------- Top buttons ----------
+  document.getElementById('startCam').addEventListener('click', startCamera);
+  document.getElementById('stopCam').addEventListener('click', stopCamera);
+  document.getElementById('flipCam').addEventListener('click', flipCamera);
+  document.getElementById('upload').addEventListener('change', handleUpload);
+
+  // Initial setup
+  resizeStage();
+  buildControls();
+
+  window.addEventListener('beforeunload', stopCamera);
+})();
+</script>
+
 </body>
 </html>
