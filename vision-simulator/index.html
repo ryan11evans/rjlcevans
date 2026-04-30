@@ -21,18 +21,17 @@
     --ink-mute: #6b7888;
     --accent: #d4a574;
     --accent-2: #5a8fb8;
-    --danger: #c87b6f;
-    --good: #7fa987;
     --radius: 14px;
     --radius-sm: 8px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
   body {
-    background:
+    background-color: var(--bg);
+    background-image:
       radial-gradient(1200px 600px at 80% -10%, rgba(90,143,184,0.08), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgba(212,165,116,0.06), transparent 60%),
-      var(--bg);
+      radial-gradient(900px 500px at -10% 110%, rgba(212,165,116,0.06), transparent 60%);
+    background-repeat: no-repeat;
     min-height: 100vh;
   }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
@@ -40,7 +39,7 @@
 header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(–line); margin-bottom: 24px; }
 .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(–ink-mute); margin: 0 0 10px; }
 h1 {
-font-family: ‘Fraunces’, serif; font-weight: 500; font-style: normal;
+font-family: ‘Fraunces’, serif; font-weight: 500;
 font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em;
 margin: 0 0 8px; color: var(–ink);
 }
@@ -49,6 +48,28 @@ h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
 .credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(–ink-mute); padding: 4px 10px; border: 1px solid var(–line); border-radius: 999px; }
 
 .stage-wrap { position: relative; background: #000; border-radius: var(–radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(–line); }
+
+/* On mobile, pin the video to the top so it stays visible while scrolling controls. */
+@media (max-width: 900px) {
+.stage-wrap {
+position: sticky;
+top: 8px;
+z-index: 50;
+aspect-ratio: 16/10;  /* shorter height on phone so more controls are visible below */
+max-height: 42vh;
+box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px var(–line);
+}
+.wrap { padding-top: 16px; }
+header.hero { padding-bottom: 14px; margin-bottom: 14px; }
+h1 { font-size: clamp(22px, 5vw, 32px); }
+.sub { font-size: 13px; }
+.credit { display: none; }   /* save vertical space on phone */
+.section-title { margin: 18px 0 8px; font-size: 17px; }
+.source-row { margin: 10px 0 4px; }
+.conditions { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.cond { padding: 9px 8px; font-size: 12px; }
+.controls { padding: 14px; margin-top: 8px; }
+}
 .stage { position: absolute; inset: 0; display: grid; place-items: center; }
 #video, #sourceCanvas { display: none; }
 #stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -119,12 +140,6 @@ border-radius: 0 var(–radius-sm) var(–radius-sm) 0; font-size: 13px; color: 
 footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(–line); color: var(–ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 footer a { color: var(–accent); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
-
-.toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(–ink-dim); cursor: pointer; user-select: none; }
-.toggle-row input { appearance: none; width: 36px; height: 20px; background: var(–line); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.2s; }
-.toggle-row input::after { content: ‘’; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(–ink); border-radius: 50%; transition: left 0.2s; }
-.toggle-row input:checked { background: var(–accent); }
-.toggle-row input:checked::after { left: 18px; background: #1a1208; }
 </style>
 
 </head>
@@ -164,9 +179,7 @@ footer a:hover { text-decoration: underline; }
   <div class="conditions" id="conditions">
     <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
     <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
-    <button class="cond" data-cond="hyperopia"><span class="name">Hyperopia</span><span class="latin">farsighted</span></button>
     <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
-    <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
     <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
     <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
     <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
@@ -188,7 +201,6 @@ footer a:hover { text-decoration: underline; }
 (() => {
   'use strict';
 
-  // ---------- Element refs ----------
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
   const stageCanvas = document.getElementById('stageCanvas');
@@ -201,29 +213,41 @@ footer a:hover { text-decoration: underline; }
   const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
   const ctx = stageCanvas.getContext('2d');
 
-  // ---------- State ----------
   let stream = null;
   let rafId = null;
-  let currentSource = null; // 'camera' | 'image'
+  let currentSource = null;
   let uploadedImage = null;
   let facingMode = 'user';
   let condition = 'none';
+
+  // Default values for every parameter — used to initialize sliders so they always start
+  // at a meaningful, visible level for the chosen condition (this is the fix for the
+  // "myopia not blurring" bug: blurSigma now starts at a real value, not zero).
+  const defaults = {
+    myopia:      { blurSigma: 8 },
+    astigmatism: { astigMag: 6, axis: 90 },
+    cataract:    { cataractSev: 0.5 },
+    glaucoma:    { glaucomaStage: 2 },
+    amd:         { amdSize: 25, amdDistortion: 0 },
+    floaters:    { floaterCount: 6 }
+  };
+
   const params = {
-    severity: 1,        // generic 0..3 (mild, mod, severe, profound)
-    axis: 90,           // astigmatism axis
-    glaucomaStage: 1,   // 1..4
-    amdSize: 25,        // % of frame
-    amdDistortion: 0,   // 0..1 metamorphopsia
-    floaterCount: 6,
+    blurSigma: 8,
+    astigMag: 6,
+    axis: 90,
+    cataractSev: 0.5,
+    glaucomaStage: 2,
+    amdSize: 25,
+    amdDistortion: 0,
+    floaterCount: 6
   };
 
-  // Snellen presets map to Gaussian blur sigma in pixels (calibrated to a ~600px wide stage)
-  // Approximate: 20/20=0, 20/40~3, 20/70~6, 20/100~9, 20/200~16, 20/400~28
+  // Snellen presets → blur sigma (px). These are calibrated for a ~600px wide stage.
   const snellenBlur = {
-    '20/20': 0, '20/40': 3, '20/70': 6, '20/100': 9, '20/200': 16, '20/400': 28
+    '20/20': 0, '20/40': 4, '20/70': 8, '20/100': 12, '20/200': 20, '20/400': 32
   };
 
-  // ---------- Sizing ----------
   function resizeStage() {
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -232,7 +256,6 @@ footer a:hover { text-decoration: underline; }
   }
   window.addEventListener('resize', resizeStage);
 
-  // ---------- Source handling ----------
   async function startCamera() {
     try {
       stopCamera();
@@ -278,7 +301,6 @@ footer a:hover { text-decoration: underline; }
     img.src = URL.createObjectURL(file);
   }
 
-  // ---------- Source draw to source canvas ----------
   function drawSourceToCanvas() {
     let sw, sh;
     if (currentSource === 'camera' && video.videoWidth) {
@@ -287,7 +309,6 @@ footer a:hover { text-decoration: underline; }
       sw = uploadedImage.naturalWidth; sh = uploadedImage.naturalHeight;
     } else return false;
 
-    // Cover the stage aspect
     const stageW = stageCanvas.width, stageH = stageCanvas.height;
     sourceCanvas.width = stageW; sourceCanvas.height = stageH;
 
@@ -309,8 +330,7 @@ footer a:hover { text-decoration: underline; }
     return true;
   }
 
-  // ---------- Filters ----------
-  // Gaussian blur via canvas filter
+  // ===== Filters =====
   function applyBlur(sigma) {
     if (sigma <= 0) {
       ctx.drawImage(sourceCanvas, 0, 0);
@@ -321,12 +341,8 @@ footer a:hover { text-decoration: underline; }
     ctx.filter = 'none';
   }
 
-  // Directional blur (astigmatism): heavy blur along axis, light perpendicular.
-  // We do this by stacking translated draws along the axis direction.
   function applyAstigmatism(magnitude, axisDeg) {
-    const w = stageCanvas.width, h = stageCanvas.height;
-    ctx.clearRect(0, 0, w, h);
-    // Mild base blur to soften edges
+    ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
     ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
@@ -344,24 +360,20 @@ footer a:hover { text-decoration: underline; }
     ctx.globalAlpha = 1;
   }
 
-  // Cataract: yellow-brown tint, contrast loss, glare bloom
   function applyCataract(severity) {
-    const s = severity; // 0..1
+    const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blurred + reduced contrast
     const blurAmt = 2 + s * 7;
     ctx.filter = `blur(${blurAmt}px) contrast(${1 - s * 0.35}) brightness(${1 + s * 0.05})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Yellow-brown tint (nuclear sclerotic)
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillStyle = `rgba(${Math.round(255 - s * 10)}, ${Math.round(230 - s * 30)}, ${Math.round(170 - s * 90)}, ${0.25 + s * 0.45})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Glare bloom — soft white wash
     ctx.globalCompositeOperation = 'screen';
     const grad = ctx.createRadialGradient(w/2, h*0.45, 0, w/2, h*0.45, Math.max(w,h)*0.7);
     grad.addColorStop(0, `rgba(255, 245, 220, ${0.15 + s * 0.35})`);
@@ -370,27 +382,22 @@ footer a:hover { text-decoration: underline; }
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Light scatter veil
     ctx.fillStyle = `rgba(240, 220, 180, ${s * 0.1})`;
     ctx.fillRect(0, 0, w, h);
   }
 
-  // Glaucoma: peripheral vignette / tunnel
   function applyGlaucoma(stage) {
-    // stage 1..4 → progressively smaller central island
     const w = stageCanvas.width, h = stageCanvas.height;
-    // base: light blur for nerve damage softening
     ctx.filter = `blur(${0.5 + stage * 0.3}px)`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Stage parameters: clearRadius / fadeRadius as fraction of half-diagonal
     const half = Math.hypot(w, h) / 2;
     const stages = {
-      1: { clear: 0.78, fade: 0.95 }, // early — subtle peripheral
-      2: { clear: 0.55, fade: 0.78 }, // moderate arcuate
-      3: { clear: 0.32, fade: 0.55 }, // advanced
-      4: { clear: 0.15, fade: 0.32 }  // tunnel vision
+      1: { clear: 0.78, fade: 0.95 },
+      2: { clear: 0.55, fade: 0.78 },
+      3: { clear: 0.32, fade: 0.55 },
+      4: { clear: 0.15, fade: 0.32 }
     };
     const cfg = stages[stage] || stages[1];
     const cx = w/2, cy = h/2;
@@ -401,7 +408,6 @@ footer a:hover { text-decoration: underline; }
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Pure black beyond fade
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, w, h);
@@ -411,11 +417,9 @@ footer a:hover { text-decoration: underline; }
     ctx.restore();
   }
 
-  // AMD: central scotoma + optional metamorphopsia
   function applyAMD(sizePct, distortion) {
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Optional warp (metamorphopsia) — sample with sinusoidal displacement near center
     if (distortion > 0) {
       const tmp = document.createElement('canvas');
       tmp.width = w; tmp.height = h;
@@ -451,7 +455,6 @@ footer a:hover { text-decoration: underline; }
       ctx.drawImage(sourceCanvas, 0, 0);
     }
 
-    // Central scotoma — soft dark blob
     const cx = w/2, cy = h/2;
     const radius = Math.min(w, h) * (sizePct / 100);
     const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
@@ -462,41 +465,6 @@ footer a:hover { text-decoration: underline; }
     ctx.fillRect(0, 0, w, h);
   }
 
-  // Presbyopia: simulate near-vision blur. Without focal-distance data, we
-  // apply progressive blur on the lower half of the frame (where reading material
-  // typically sits), with severity scaling.
-  function applyPresbyopia(severity) {
-    const w = stageCanvas.width, h = stageCanvas.height;
-    // Sharp pass for upper region
-    ctx.drawImage(sourceCanvas, 0, 0);
-
-    // Blurred pass masked to lower portion
-    const tmp = document.createElement('canvas');
-    tmp.width = w; tmp.height = h;
-    const tctx = tmp.getContext('2d');
-    const blurAmt = 4 + severity * 8;
-    tctx.filter = `blur(${blurAmt}px)`;
-    tctx.drawImage(sourceCanvas, 0, 0);
-    tctx.filter = 'none';
-
-    // Mask gradient: clear top → blurred bottom
-    const mask = document.createElement('canvas');
-    mask.width = w; mask.height = h;
-    const mctx = mask.getContext('2d');
-    mctx.drawImage(tmp, 0, 0);
-    const grad = mctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(0.45, 'rgba(0,0,0,0)');
-    grad.addColorStop(0.85, 'rgba(0,0,0,1)');
-    grad.addColorStop(1, 'rgba(0,0,0,1)');
-    mctx.globalCompositeOperation = 'destination-in';
-    mctx.fillStyle = grad;
-    mctx.fillRect(0, 0, w, h);
-
-    ctx.drawImage(mask, 0, 0);
-  }
-
-  // Floaters: animated translucent shapes drawn into the overlay SVG
   let floaterState = null;
   function initFloaters(count) {
     floaterState = [];
@@ -532,7 +500,6 @@ footer a:hover { text-decoration: underline; }
   }
   function clearOverlay() { overlay.innerHTML = ''; }
 
-  // ---------- Render dispatch ----------
   function render() {
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
@@ -543,20 +510,15 @@ footer a:hover { text-decoration: underline; }
         clearOverlay();
         break;
       case 'myopia':
-      case 'hyperopia':
-        applyBlur(params.blurSigma || 0);
+        applyBlur(params.blurSigma);
         clearOverlay();
         break;
       case 'astigmatism':
-        applyAstigmatism(params.astigMag || 6, params.axis);
-        clearOverlay();
-        break;
-      case 'presbyopia':
-        applyPresbyopia(params.presbySev || 0.5);
+        applyAstigmatism(params.astigMag, params.axis);
         clearOverlay();
         break;
       case 'cataract':
-        applyCataract(params.cataractSev || 0.5);
+        applyCataract(params.cataractSev);
         clearOverlay();
         break;
       case 'glaucoma':
@@ -581,34 +543,24 @@ footer a:hover { text-decoration: underline; }
   function drawOnce() {
     if (rafId) cancelAnimationFrame(rafId);
     if (condition === 'floaters') {
-      // floaters need animation even on still images
       loop();
     } else {
       render();
     }
   }
 
-  // ---------- Controls UI per condition ----------
   const conditionMeta = {
     none: {
       title: 'Normal Vision (Emmetropia)',
-      note: 'A reference image with no simulated impairment. The light from a distant object focuses precisely on the retina, producing a clear image across the visual field.',
+      note: 'A reference image with no simulated impairment. Light from a distant object focuses precisely on the retina, producing a clear image across the visual field.',
       controls: () => []
     },
     myopia: {
       title: 'Myopia (Nearsightedness)',
       note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
       controls: () => [
-        snellenPresetControl('myopia'),
-        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 30, 0.5)
-      ]
-    },
-    hyperopia: {
-      title: 'Hyperopia (Farsightedness)',
-      note: 'Light focuses <strong>behind</strong> the retina. Younger patients can compensate with accommodation; with age, both near and distance vision become symptomatic. Snellen presets below reflect uncorrected, uncompensated acuity.',
-      controls: () => [
-        snellenPresetControl('hyperopia'),
-        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 30, 0.5)
+        snellenPresetControl(),
+        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5)
       ]
     },
     astigmatism: {
@@ -617,13 +569,6 @@ footer a:hover { text-decoration: underline; }
       controls: () => [
         sliderControl('astigMag', 'Severity', 2, 20, 1, 'D-equivalent'),
         sliderControl('axis', 'Axis', 0, 180, 1, '°')
-      ]
-    },
-    presbyopia: {
-      title: 'Presbyopia',
-      note: 'Age-related loss of accommodative range — typically beginning in the early 40s. Distance objects remain clear, but near tasks (reading, phone, dashboard) become progressively blurred. Severity below corresponds roughly to add power from +1.00 to +2.50.',
-      controls: () => [
-        sliderControl('presbySev', 'Add power equivalent', 0.2, 1, 0.05, '×')
       ]
     },
     cataract: {
@@ -636,9 +581,7 @@ footer a:hover { text-decoration: underline; }
     glaucoma: {
       title: 'Glaucoma',
       note: 'Progressive optic neuropathy producing characteristic peripheral field loss. <strong>Important:</strong> patients are often unaware until late stages because the brain fills in the missing field. Stages below approximate Hodapp-Parrish-Anderson severity.',
-      controls: () => [
-        glaucomaStageControl()
-      ]
+      controls: () => [glaucomaStageControl()]
     },
     amd: {
       title: 'Age-Related Macular Degeneration',
@@ -661,9 +604,12 @@ footer a:hover { text-decoration: underline; }
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
     const id = `ctrl_${key}`;
+    // Critical: read params[key] (which has been set to a meaningful default before we get here)
+    // and use it as the initial slider value — don't fall back to `min`.
+    const initial = params[key];
     wrap.innerHTML = `
       <label for="${id}">${label} <span class="val" id="${id}_val"></span></label>
-      <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${params[key] ?? min}">
+      <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${initial}">
     `;
     const input = wrap.querySelector('input');
     const val = wrap.querySelector('.val');
@@ -678,7 +624,7 @@ footer a:hover { text-decoration: underline; }
     return wrap;
   }
 
-  function snellenPresetControl(type) {
+  function snellenPresetControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
     wrap.innerHTML = `<label>Snellen acuity preset</label><div class="presets" id="snellenPresets"></div>`;
@@ -690,14 +636,13 @@ footer a:hover { text-decoration: underline; }
       b.dataset.sigma = sigma;
       b.addEventListener('click', () => {
         params.blurSigma = sigma;
-        // sync slider
         const slider = document.getElementById('ctrl_blurSigma');
         if (slider) { slider.value = sigma; slider.dispatchEvent(new Event('input')); }
         wrap.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
         if (currentSource === 'image') drawOnce();
       });
-      if (sigma === (params.blurSigma ?? 0)) b.setAttribute('aria-pressed', 'true');
+      if (sigma === params.blurSigma) b.setAttribute('aria-pressed', 'true');
       presets.appendChild(b);
     });
     return wrap;
@@ -739,32 +684,25 @@ footer a:hover { text-decoration: underline; }
     clearOverlay();
   }
 
-  // ---------- Condition button wiring ----------
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
     conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
     btn.setAttribute('aria-pressed', 'true');
     condition = btn.dataset.cond;
-    // Sensible defaults per condition
-    if (condition === 'myopia' || condition === 'hyperopia') params.blurSigma = 6;
-    if (condition === 'astigmatism') { params.astigMag = 6; params.axis = 90; }
-    if (condition === 'presbyopia') params.presbySev = 0.5;
-    if (condition === 'cataract') params.cataractSev = 0.5;
-    if (condition === 'glaucoma') params.glaucomaStage = 2;
-    if (condition === 'amd') { params.amdSize = 25; params.amdDistortion = 0; }
-    if (condition === 'floaters') params.floaterCount = 6;
+    // Apply this condition's defaults BEFORE building controls so sliders init with real values
+    if (defaults[condition]) {
+      Object.assign(params, defaults[condition]);
+    }
     buildControls();
     if (currentSource === 'image') drawOnce();
   });
 
-  // ---------- Top buttons ----------
   document.getElementById('startCam').addEventListener('click', startCamera);
   document.getElementById('stopCam').addEventListener('click', stopCamera);
   document.getElementById('flipCam').addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
 
-  // Initial setup
   resizeStage();
   buildControls();
 
