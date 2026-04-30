@@ -1,1 +1,880 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e8f1f5">
+<title>Eye Wellness — Dr. Ryan Evans, OD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #e8f1f5;
+    --sky-2: #d4e4ec;
+    --paper: #fbfaf6;
+    --ink: #1f2933;
+    --ink-soft: #4a5560;
+    --ink-mute: #8a939e;
+    --line: #d8e0e6;
+    --accent: #4a90a4;       /* calm teal-blue */
+    --accent-soft: #6fb0c2;
+    --warm: #d4a574;         /* warm tan accent */
+    --good: #5a8c6e;
+    --warn: #c97e5a;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background-color: var(--sky);
+    background-image:
+      radial-gradient(900px 500px at 80% -10%, rgba(255,230,180,0.4), transparent 60%),
+      radial-gradient(700px 400px at -10% 90%, rgba(180,210,225,0.4), transparent 60%);
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 18px 80px; }
+
+/* –– Header –– */
+header.hero { padding: 8px 4px 22px; margin-bottom: 18px; border-bottom: 1px solid var(–line); }
+.eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(–ink-mute); margin: 0 0 8px; font-weight: 500; }
+h1 {
+font-family: ‘Fraunces’, serif; font-weight: 500;
+font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.015em;
+margin: 0 0 8px;
+}
+h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.sub { color: var(–ink-soft); font-size: 14px; max-width: 60ch; line-height: 1.55; }
+.credit {
+display: inline-block;
+margin-top: 14px;
+font-size: 13px;
+color: var(–ink);
+padding: 7px 16px;
+border: 1px solid var(–line);
+border-radius: 999px;
+background: var(–paper);
+}
+
+/* –– Cards –– */
+.card {
+background: var(–paper);
+border: 1px solid var(–line);
+border-radius: var(–radius);
+padding: 22px;
+margin-bottom: 16px;
+box-shadow: 0 4px 12px rgba(31, 41, 51, 0.04);
+}
+.card-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 500;
+font-size: 22px;
+letter-spacing: -0.01em;
+margin: 0 0 6px;
+display: flex; align-items: center; gap: 10px;
+}
+.card-lede { color: var(–ink-soft); font-size: 14px; line-height: 1.5; margin: 0 0 16px; max-width: 60ch; }
+
+/* –– Buttons –– */
+.btn {
+appearance: none; border: 1px solid var(–line); background: var(–paper); color: var(–ink);
+padding: 11px 18px; border-radius: var(–radius-sm); font-family: inherit; font-size: 14px;
+font-weight: 500; cursor: pointer; transition: all 0.15s ease;
+display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { background: var(–ink); color: var(–paper); border-color: var(–ink); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(–accent); color: white; border-color: var(–accent); }
+.btn.primary:hover { background: #3a7888; border-color: #3a7888; }
+.btn.warn { background: var(–warn); color: white; border-color: var(–warn); }
+.btn.warn:hover { background: #b56a48; border-color: #b56a48; }
+.btn.ghost { background: transparent; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* –– Timer –– */
+.timer-card { text-align: center; padding: 28px 22px; }
+.timer-display {
+font-family: ‘Fraunces’, serif; font-weight: 500;
+font-size: clamp(56px, 14vw, 96px); line-height: 1; letter-spacing: -0.03em;
+color: var(–ink); margin: 12px 0;
+font-variant-numeric: tabular-nums;
+}
+.timer-display.break {
+color: var(–accent);
+font-style: italic;
+font-weight: 400;
+}
+.timer-status {
+font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+color: var(–ink-mute); font-weight: 600;
+}
+.timer-status.running { color: var(–accent); }
+.timer-status.break { color: var(–warm); }
+.timer-progress {
+height: 4px; background: var(–line); border-radius: 999px; overflow: hidden;
+margin: 18px auto 16px; max-width: 360px;
+}
+.timer-progress-bar {
+height: 100%; background: var(–accent); border-radius: 999px;
+transition: width 1s linear, background 0.3s ease;
+width: 0%;
+}
+.timer-progress-bar.break { background: var(–warm); }
+.timer-controls { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+.timer-settings {
+margin-top: 18px; padding-top: 18px; border-top: 1px solid var(–line);
+display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;
+text-align: left;
+}
+.field { display: grid; gap: 6px; }
+.field label {
+font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+color: var(–ink-mute); font-weight: 600;
+}
+.field input[type=“number”] {
+padding: 10px 12px; border: 1px solid var(–line); border-radius: var(–radius-sm);
+font-family: inherit; font-size: 15px; background: white; color: var(–ink);
+}
+.field input[type=“number”]:focus { outline: 2px solid var(–accent); outline-offset: 1px; border-color: var(–accent); }
+.field .hint { font-size: 11px; color: var(–ink-mute); font-style: italic; }
+
+.toggle-row {
+display: flex; align-items: center; gap: 12px;
+padding: 10px 0; font-size: 14px; color: var(–ink-soft);
+}
+.toggle {
+appearance: none; width: 40px; height: 22px; background: var(–line); border-radius: 999px;
+position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+}
+.toggle::after {
+content: ‘’; position: absolute; top: 2px; left: 2px;
+width: 18px; height: 18px; background: white; border-radius: 50%;
+transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle:checked { background: var(–accent); }
+.toggle:checked::after { left: 20px; }
+
+/* –– Stats –– */
+.stats-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;
+}
+.stat {
+padding: 14px; background: var(–sky-2); border-radius: var(–radius-sm); text-align: center;
+}
+.stat .num {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 28px; line-height: 1;
+color: var(–ink); margin: 0 0 4px;
+font-variant-numeric: tabular-nums;
+}
+.stat .lbl {
+font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+color: var(–ink-mute); font-weight: 600;
+}
+.streak-flame { font-size: 22px; }
+
+/* –– Blink exercise –– */
+.blink-stage {
+text-align: center; padding: 24px 18px;
+background: var(–sky-2); border-radius: var(–radius-sm);
+margin-bottom: 14px;
+}
+.blink-eye {
+width: 100px; height: 100px; margin: 0 auto 14px;
+display: grid; place-items: center; position: relative;
+}
+.blink-eye svg { width: 100%; height: 100%; }
+.blink-instruction {
+font-family: ‘Fraunces’, serif; font-style: italic; font-size: 22px;
+color: var(–ink); margin: 6px 0;
+}
+.blink-count {
+font-size: 13px; color: var(–ink-mute); letter-spacing: 0.05em;
+}
+
+/* –– Tips –– */
+.tip-card {
+border-left: 3px solid var(–warm);
+background: rgba(212, 165, 116, 0.06);
+padding: 14px 16px;
+border-radius: 0 var(–radius-sm) var(–radius-sm) 0;
+margin-bottom: 10px;
+}
+.tip-cat {
+font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+color: var(–warm); font-weight: 600; margin-bottom: 6px;
+}
+.tip-body { font-size: 14px; line-height: 1.55; color: var(–ink); }
+.tip-body strong { color: var(–ink); }
+
+/* –– Notification banner –– */
+.notif-banner {
+background: rgba(74, 144, 164, 0.08);
+border: 1px solid var(–accent-soft);
+padding: 12px 14px;
+border-radius: var(–radius-sm);
+margin-bottom: 14px;
+font-size: 13px;
+color: var(–ink-soft);
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+flex-wrap: wrap;
+}
+.notif-banner.ok { background: rgba(90, 140, 110, 0.08); border-color: var(–good); }
+
+/* –– Footer –– */
+footer {
+margin-top: 36px; padding-top: 18px; border-top: 1px solid var(–line);
+color: var(–ink-mute); font-size: 12px;
+display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+footer a { color: var(–accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* –– Animations –– */
+@keyframes blinkAnim {
+0%, 90%, 100% { transform: scaleY(1); }
+95% { transform: scaleY(0.05); }
+}
+.blink-eye.animating .eye-shape {
+transform-origin: center;
+animation: blinkAnim 1.4s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+0%, 100% { box-shadow: 0 0 0 0 rgba(74, 144, 164, 0); }
+50% { box-shadow: 0 0 0 12px rgba(74, 144, 164, 0.15); }
+}
+.timer-display.alert { animation: pulseGlow 1.5s ease-in-out infinite; border-radius: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@media (max-width: 600px) {
+.wrap { padding: 18px 14px 80px; }
+.timer-card { padding: 22px 16px; }
+.card { padding: 18px; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Daily eye care · Educational use only</p>
+    <h1>Small Habits for <em>Healthy Eyes</em></h1>
+    <p class="sub">Three evidence-based tools for the screens we live behind: a 20-20-20 timer, blink exercises, and a daily tip from your eye doctor.</p>
+    <span class="credit">Built by Dr. Ryan Evans, OD</span>
+  </header>
+
+  <!-- ===== Notification permission banner ===== -->
+
+  <div class="notif-banner" id="notifBanner" hidden>
+    <span id="notifMsg">Enable notifications so I can remind you when it's time to look away.</span>
+    <button class="btn primary" id="enableNotifs">Enable</button>
+  </div>
+
+  <!-- ===== TIMER CARD ===== -->
+
+  <section class="card timer-card">
+    <div class="timer-status" id="timerStatus">Ready</div>
+    <div class="timer-display" id="timerDisplay">20:00</div>
+    <div class="timer-progress"><div class="timer-progress-bar" id="timerBar"></div></div>
+    <div class="timer-controls">
+      <button class="btn primary" id="timerStart">Start</button>
+      <button class="btn ghost" id="timerPause" hidden>Pause</button>
+      <button class="btn ghost" id="timerResume" hidden>Resume</button>
+      <button class="btn ghost" id="timerReset">Reset</button>
+    </div>
+
+```
+<div class="timer-settings">
+  <div class="field">
+    <label for="workMins">Work (minutes)</label>
+    <input type="number" id="workMins" min="1" max="120" value="20">
+    <span class="hint">Standard 20-20-20: 20 min work</span>
+  </div>
+  <div class="field">
+    <label for="breakSecs">Break (seconds)</label>
+    <input type="number" id="breakSecs" min="5" max="300" value="20">
+    <span class="hint">Look 20 ft away for 20 sec</span>
+  </div>
+  <div class="field" style="grid-column: 1/-1;">
+    <label for="autoLoop">Auto-restart</label>
+    <div class="toggle-row">
+      <input type="checkbox" id="autoLoop" class="toggle" checked>
+      <span>Automatically begin the next 20-minute cycle after the break.</span>
+    </div>
+  </div>
+</div>
+```
+
+  </section>
+
+  <!-- ===== STATS / PROGRESS ===== -->
+
+  <section class="card">
+    <h2 class="card-title">Your progress</h2>
+    <p class="card-lede">Tracked locally on this device. Resets each calendar day.</p>
+    <div class="stats-grid">
+      <div class="stat"><div class="num" id="statToday">0</div><div class="lbl">Breaks today</div></div>
+      <div class="stat"><div class="num" id="statWeek">0</div><div class="lbl">Breaks this week</div></div>
+      <div class="stat"><div class="num"><span id="statStreak">0</span> <span class="streak-flame" id="streakFlame" hidden>🔥</span></div><div class="lbl">Day streak</div></div>
+      <div class="stat"><div class="num" id="statBlinks">0</div><div class="lbl">Blink sets done</div></div>
+    </div>
+    <div style="margin-top: 14px; text-align: right;">
+      <button class="btn ghost" id="resetStats" style="font-size: 12px; padding: 6px 12px;">Reset all data</button>
+    </div>
+  </section>
+
+  <!-- ===== BLINK EXERCISE ===== -->
+
+  <section class="card">
+    <h2 class="card-title">Blink exercises</h2>
+    <p class="card-lede">Most people blink 60% less while reading on a screen. Complete blinks help spread the tear film and reduce dryness. Try 20 full blinks now.</p>
+
+```
+<div class="blink-stage">
+  <div class="blink-eye" id="blinkEye">
+    <svg viewBox="0 0 100 100" fill="none" stroke="#4a90a4" stroke-width="3">
+      <g class="eye-shape">
+        <path d="M 10 50 Q 50 15 90 50 Q 50 85 10 50 Z" fill="#fff"/>
+        <circle cx="50" cy="50" r="14" fill="#4a90a4"/>
+        <circle cx="50" cy="50" r="6" fill="#1f2933"/>
+        <circle cx="46" cy="46" r="2.5" fill="#fff" stroke="none"/>
+      </g>
+    </svg>
+  </div>
+  <div class="blink-instruction" id="blinkInstruction">Ready when you are.</div>
+  <div class="blink-count" id="blinkCount"></div>
+</div>
+
+<div class="btn-row" style="justify-content: center;">
+  <button class="btn primary" id="blinkStart">Start 20 blinks</button>
+  <button class="btn ghost" id="blinkStop" hidden>Stop</button>
+</div>
+```
+
+  </section>
+
+  <!-- ===== DAILY TIP ===== -->
+
+  <section class="card">
+    <h2 class="card-title">Today's tip</h2>
+    <div id="tipContainer"></div>
+    <div class="btn-row" style="margin-top: 12px;">
+      <button class="btn ghost" id="tipNext">Another tip →</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>© Dr. Ryan Evans, OD · Educational use only · Not a substitute for an eye exam</span>
+    <a href="https://rjlcevans.com/">← Return to Evans Family Home</a>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================
+  // STORAGE LAYER
+  // ============================================================
+  const STORAGE_KEY = 'evans_eye_wellness_v1';
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      return Object.assign(defaultState(), parsed);
+    } catch (e) {
+      return defaultState();
+    }
+  }
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function defaultState() {
+    return {
+      workMins: 20,
+      breakSecs: 20,
+      autoLoop: true,
+      breaksByDate: {},   // { 'YYYY-MM-DD': count }
+      blinkSetsByDate: {},
+      lastTipIndex: -1,
+      lastTipDate: null,
+    };
+  }
+  const state = loadState();
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function recordBreak() {
+    const k = todayKey();
+    state.breaksByDate[k] = (state.breaksByDate[k] || 0) + 1;
+    saveState();
+    updateStats();
+  }
+  function recordBlinkSet() {
+    const k = todayKey();
+    state.blinkSetsByDate[k] = (state.blinkSetsByDate[k] || 0) + 1;
+    saveState();
+    updateStats();
+  }
+  function getStreak() {
+    // Consecutive days with at least one break, ending today or yesterday
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    let cur = new Date(today);
+    // If no break today yet, allow streak based on yesterday
+    let firstCheck = true;
+    while (true) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth()+1).padStart(2,'0');
+      const d = String(cur.getDate()).padStart(2,'0');
+      const k = `${y}-${m}-${d}`;
+      if (state.breaksByDate[k] && state.breaksByDate[k] > 0) {
+        streak++;
+      } else {
+        if (firstCheck) {
+          // No break today — streak might still exist from yesterday backward
+          firstCheck = false;
+          cur.setDate(cur.getDate() - 1);
+          continue;
+        }
+        break;
+      }
+      firstCheck = false;
+      cur.setDate(cur.getDate() - 1);
+    }
+    return streak;
+  }
+  function getWeekCount() {
+    const now = new Date();
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      total += state.breaksByDate[k] || 0;
+    }
+    return total;
+  }
+  function getTodayBlinkSets() {
+    return state.blinkSetsByDate[todayKey()] || 0;
+  }
+
+  function updateStats() {
+    document.getElementById('statToday').textContent = state.breaksByDate[todayKey()] || 0;
+    document.getElementById('statWeek').textContent = getWeekCount();
+    const streak = getStreak();
+    document.getElementById('statStreak').textContent = streak;
+    document.getElementById('streakFlame').hidden = streak < 2;
+    document.getElementById('statBlinks').textContent = getTodayBlinkSets();
+  }
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
+  const notifBanner = document.getElementById('notifBanner');
+  const notifMsg = document.getElementById('notifMsg');
+  const enableBtn = document.getElementById('enableNotifs');
+
+  function updateNotifBanner() {
+    if (!('Notification' in window)) {
+      notifBanner.hidden = false;
+      notifMsg.textContent = 'This browser does not support notifications. The timer will still alert you on-screen.';
+      enableBtn.hidden = true;
+      return;
+    }
+    const perm = Notification.permission;
+    if (perm === 'default') {
+      notifBanner.hidden = false;
+      notifBanner.classList.remove('ok');
+      notifMsg.textContent = 'Enable notifications so I can remind you when it\'s time to look away.';
+      enableBtn.hidden = false;
+    } else if (perm === 'granted') {
+      notifBanner.hidden = true;
+    } else {
+      notifBanner.hidden = false;
+      notifBanner.classList.remove('ok');
+      notifMsg.textContent = 'Notifications are blocked. The timer will alert you on-screen instead.';
+      enableBtn.hidden = true;
+    }
+  }
+  enableBtn.addEventListener('click', async () => {
+    if (!('Notification' in window)) return;
+    try {
+      await Notification.requestPermission();
+    } catch (e) { /* older API */
+      Notification.requestPermission(updateNotifBanner);
+    }
+    updateNotifBanner();
+  });
+  function sendNotification(title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try {
+      new Notification(title, {
+        body,
+        icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#4a90a4"/><circle cx="50" cy="50" r="20" fill="#fff"/><circle cx="50" cy="50" r="10" fill="#1f2933"/></svg>'),
+        silent: false,
+      });
+    } catch (e) {}
+  }
+
+  // Audio chime — generated with Web Audio so we don't need a file
+  let audioCtx = null;
+  function playChime(freq = 660, duration = 0.18) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.0001;
+      gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+  function playBreakChime() {
+    playChime(523, 0.15);
+    setTimeout(() => playChime(659, 0.15), 160);
+    setTimeout(() => playChime(784, 0.25), 320);
+  }
+  function playWorkChime() {
+    playChime(784, 0.12);
+    setTimeout(() => playChime(523, 0.18), 130);
+  }
+
+  // ============================================================
+  // 20-20-20 TIMER
+  // ============================================================
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerStatus = document.getElementById('timerStatus');
+  const timerBar = document.getElementById('timerBar');
+  const startBtn = document.getElementById('timerStart');
+  const pauseBtn = document.getElementById('timerPause');
+  const resumeBtn = document.getElementById('timerResume');
+  const resetBtn = document.getElementById('timerReset');
+  const workInput = document.getElementById('workMins');
+  const breakInput = document.getElementById('breakSecs');
+  const autoLoopInput = document.getElementById('autoLoop');
+
+  // Initialize from state
+  workInput.value = state.workMins;
+  breakInput.value = state.breakSecs;
+  autoLoopInput.checked = state.autoLoop;
+
+  let timerMode = 'idle';      // 'idle' | 'work' | 'break' | 'paused'
+  let timerEndAt = 0;          // ms timestamp when current phase ends
+  let timerRemaining = 0;      // ms left when paused
+  let timerTotal = 0;          // ms of current phase
+  let timerInterval = null;
+  let pausedFrom = null;       // 'work' | 'break'
+
+  function fmtTime(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function setTimerUI(mode, ms) {
+    if (mode === 'work') {
+      timerStatus.textContent = 'Work — focused';
+      timerStatus.className = 'timer-status running';
+      timerDisplay.className = 'timer-display';
+      timerBar.classList.remove('break');
+    } else if (mode === 'break') {
+      timerStatus.textContent = 'Break — look 20 ft away';
+      timerStatus.className = 'timer-status break';
+      timerDisplay.className = 'timer-display break';
+      timerBar.classList.add('break');
+    } else if (mode === 'paused') {
+      timerStatus.textContent = 'Paused';
+      timerStatus.className = 'timer-status';
+      timerDisplay.className = 'timer-display';
+    } else {
+      timerStatus.textContent = 'Ready';
+      timerStatus.className = 'timer-status';
+      timerDisplay.className = 'timer-display';
+      timerBar.classList.remove('break');
+    }
+    timerDisplay.textContent = fmtTime(ms);
+  }
+
+  function updateBar() {
+    if (timerTotal <= 0) { timerBar.style.width = '0%'; return; }
+    const elapsed = timerTotal - Math.max(0, timerEndAt - Date.now());
+    const pct = Math.min(100, Math.max(0, (elapsed / timerTotal) * 100));
+    timerBar.style.width = pct + '%';
+  }
+
+  function tick() {
+    if (timerMode !== 'work' && timerMode !== 'break') return;
+    const remaining = timerEndAt - Date.now();
+    if (remaining <= 0) {
+      onPhaseEnd();
+    } else {
+      timerDisplay.textContent = fmtTime(remaining);
+      updateBar();
+    }
+  }
+
+  function startWork() {
+    state.workMins = parseInt(workInput.value, 10) || 20;
+    state.breakSecs = parseInt(breakInput.value, 10) || 20;
+    saveState();
+    timerTotal = state.workMins * 60 * 1000;
+    timerEndAt = Date.now() + timerTotal;
+    timerMode = 'work';
+    setTimerUI('work', timerTotal);
+    timerBar.style.width = '0%';
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(tick, 250);
+    startBtn.hidden = true;
+    pauseBtn.hidden = false;
+    resumeBtn.hidden = true;
+  }
+
+  function startBreak() {
+    timerTotal = state.breakSecs * 1000;
+    timerEndAt = Date.now() + timerTotal;
+    timerMode = 'break';
+    setTimerUI('break', timerTotal);
+    timerBar.style.width = '0%';
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(tick, 250);
+    sendNotification('👀 Break time', `Look at something 20 feet away for ${state.breakSecs} seconds.`);
+    playBreakChime();
+  }
+
+  function onPhaseEnd() {
+    if (timerMode === 'work') {
+      startBreak();
+    } else if (timerMode === 'break') {
+      recordBreak();
+      sendNotification('✓ Break complete', 'Nice. Back to work — next reminder in ' + state.workMins + ' minutes.');
+      playWorkChime();
+      if (state.autoLoop) {
+        startWork();
+      } else {
+        stopTimer();
+      }
+    }
+  }
+
+  function pauseTimer() {
+    if (timerMode !== 'work' && timerMode !== 'break') return;
+    timerRemaining = timerEndAt - Date.now();
+    pausedFrom = timerMode;
+    timerMode = 'paused';
+    setTimerUI('paused', timerRemaining);
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    pauseBtn.hidden = true;
+    resumeBtn.hidden = false;
+  }
+
+  function resumeTimer() {
+    if (timerMode !== 'paused') return;
+    timerEndAt = Date.now() + timerRemaining;
+    timerMode = pausedFrom;
+    setTimerUI(timerMode, timerRemaining);
+    timerInterval = setInterval(tick, 250);
+    pauseBtn.hidden = false;
+    resumeBtn.hidden = true;
+  }
+
+  function stopTimer() {
+    timerMode = 'idle';
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    const ms = (parseInt(workInput.value, 10) || 20) * 60 * 1000;
+    timerTotal = ms;
+    setTimerUI('idle', ms);
+    timerBar.style.width = '0%';
+    startBtn.hidden = false;
+    pauseBtn.hidden = true;
+    resumeBtn.hidden = true;
+  }
+
+  startBtn.addEventListener('click', startWork);
+  pauseBtn.addEventListener('click', pauseTimer);
+  resumeBtn.addEventListener('click', resumeTimer);
+  resetBtn.addEventListener('click', stopTimer);
+
+  // Settings save on change
+  [workInput, breakInput].forEach(el => {
+    el.addEventListener('change', () => {
+      state.workMins = parseInt(workInput.value, 10) || 20;
+      state.breakSecs = parseInt(breakInput.value, 10) || 20;
+      saveState();
+      if (timerMode === 'idle') {
+        const ms = state.workMins * 60 * 1000;
+        timerTotal = ms;
+        setTimerUI('idle', ms);
+      }
+    });
+  });
+  autoLoopInput.addEventListener('change', () => {
+    state.autoLoop = autoLoopInput.checked;
+    saveState();
+  });
+
+  // Initialize idle display
+  setTimerUI('idle', state.workMins * 60 * 1000);
+
+  // ============================================================
+  // BLINK EXERCISE
+  // ============================================================
+  const blinkEye = document.getElementById('blinkEye');
+  const blinkInstruction = document.getElementById('blinkInstruction');
+  const blinkCount = document.getElementById('blinkCount');
+  const blinkStartBtn = document.getElementById('blinkStart');
+  const blinkStopBtn = document.getElementById('blinkStop');
+  let blinkIndex = 0;
+  let blinkInterval = null;
+  const TOTAL_BLINKS = 20;
+
+  function startBlinkExercise() {
+    blinkIndex = 0;
+    blinkEye.classList.add('animating');
+    blinkStartBtn.hidden = true;
+    blinkStopBtn.hidden = false;
+    tickBlink();
+    // Each animation cycle is 1.4s; advance counter on the same beat
+    blinkInterval = setInterval(tickBlink, 1400);
+  }
+  function tickBlink() {
+    blinkIndex++;
+    if (blinkIndex > TOTAL_BLINKS) {
+      finishBlinkExercise(true);
+      return;
+    }
+    blinkInstruction.textContent = `Blink — slow and full`;
+    blinkCount.textContent = `${blinkIndex} of ${TOTAL_BLINKS}`;
+    playChime(440 + blinkIndex * 6, 0.06);
+  }
+  function finishBlinkExercise(complete) {
+    blinkEye.classList.remove('animating');
+    if (blinkInterval) { clearInterval(blinkInterval); blinkInterval = null; }
+    blinkStartBtn.hidden = false;
+    blinkStopBtn.hidden = true;
+    if (complete) {
+      blinkInstruction.textContent = 'Done — well blinked.';
+      blinkCount.textContent = `Completed ${TOTAL_BLINKS} of ${TOTAL_BLINKS}`;
+      recordBlinkSet();
+      playBreakChime();
+    } else {
+      blinkInstruction.textContent = 'Stopped.';
+      blinkCount.textContent = '';
+    }
+  }
+  blinkStartBtn.addEventListener('click', startBlinkExercise);
+  blinkStopBtn.addEventListener('click', () => finishBlinkExercise(false));
+
+  // ============================================================
+  // DAILY TIPS
+  // ============================================================
+  const tips = [
+    { cat: 'Lighting', body: 'Keep your screen at least as bright as the room around it. A dim screen in a bright room — or vice versa — is the single most common cause of digital eye strain.' },
+    { cat: 'Posture', body: 'Position your monitor about an arm\'s length away (20-28 inches) with the top of the screen at or slightly below eye level. Looking slightly downward keeps the lids partially closed and the tear film stable.' },
+    { cat: 'Blue light', body: 'Most evidence does not support blue-light blocking glasses for eye health. Blue light from screens is much weaker than daylight. The real value of evening screen filters is for sleep, not for the eyes themselves.' },
+    { cat: 'Dry eye', body: 'If your eyes feel gritty or burn after screen work, you\'re likely under-blinking. Each complete blink resurfaces the tear film. Conscious blinking — slow and full — beats any drop you can buy.' },
+    { cat: 'Hydration', body: 'Tear production depends on systemic hydration. A persistent dry-eye sufferer who drinks more water often notices a real difference within a week.' },
+    { cat: 'Humidity', body: 'Indoor heating and air conditioning evaporate the tear film faster than you can replace it. A small humidifier near your desk (40-50% RH target) is one of the best low-effort comfort upgrades.' },
+    { cat: 'Reading distance', body: 'Phones get held closer than any other screen — sometimes under 12 inches. The closer the screen, the harder the eyes work to focus and converge. Holding your phone slightly farther away meaningfully reduces strain.' },
+    { cat: 'Glasses', body: 'If you wear glasses for distance and your near vision feels harder than it used to, it may be time for a comprehensive exam. Presbyopia begins in the early 40s and progresses gradually until about age 65.' },
+    { cat: 'Outdoor time', body: 'Children who spend at least 90 minutes outdoors daily develop myopia at significantly lower rates. Bright outdoor light appears to slow eyeball elongation. This is one of the few interventions with strong evidence in pediatric eye care.' },
+    { cat: 'UV protection', body: 'Sunglasses are not a fashion item — they are dose-dependent protection against cataract and macular degeneration. Wear them outside year-round, including overcast days. Look for "100% UV" or "UV400" on the label.' },
+    { cat: 'Smoking', body: 'Smoking is one of the largest modifiable risk factors for both cataract and AMD. Risk drops measurably within a few years of quitting.' },
+    { cat: 'Sleep', body: 'Most adults need 7-9 hours. Insufficient sleep reduces tear production and slows the meibomian glands that produce the lipid layer of the tear film. Tired eyes are physiologically drier eyes.' },
+    { cat: 'Diet', body: 'Lutein and zeaxanthin (leafy greens, eggs) and omega-3 fatty acids (oily fish) have meaningful evidence for retinal and tear-film health. They\'re not magic — but they show up in the literature for a reason.' },
+    { cat: 'Contact lenses', body: 'Sleeping in contact lenses increases corneal infection risk by 6-8 times. Even "extended-wear" lenses approved for overnight use carry meaningful risk. Daily disposables remain the safest option for most patients.' },
+    { cat: 'Eye exams', body: 'A comprehensive exam every 1-2 years catches glaucoma, diabetic retinopathy, and macular degeneration in their reversible or treatable phases. Acuity tests at the DMV or pharmacy do not substitute — those screen vision, not eye health.' },
+    { cat: 'Children', body: 'Vision changes in school-age children often present as behavior issues, not complaints. If a child avoids reading, holds books unusually close, or skips lines, an exam is warranted.' },
+    { cat: 'Eye rubbing', body: 'Persistent eye rubbing can deform the cornea over time and is associated with keratoconus, especially in younger patients. If you find yourself rubbing daily, it usually means your eyes need lubrication or allergy treatment.' },
+    { cat: 'Driving', body: 'Glare from oncoming headlights at night that wasn\'t bothersome before may be an early sign of cataract. If night driving has become noticeably harder, schedule an exam.' },
+    { cat: 'Floaters', body: 'A few stable floaters are normal and rarely concerning. But a sudden shower of new floaters, flashes of light, or a curtain in your vision can signal a retinal tear or detachment — these require same-day evaluation.' },
+    { cat: 'Screen breaks', body: 'The best break isn\'t looking at another screen. Look out a window. The combination of distance focus, natural light, and eye movement does more for your visual system than any blue-light app.' },
+  ];
+
+  function todayTipIndex() {
+    // Stable per-day rotation: day-of-year mod tip count
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return dayOfYear % tips.length;
+  }
+  function showTip(i) {
+    const tip = tips[i];
+    const container = document.getElementById('tipContainer');
+    container.innerHTML = `
+      <div class="tip-card">
+        <div class="tip-cat">${tip.cat}</div>
+        <div class="tip-body">${tip.body}</div>
+      </div>
+    `;
+    state.lastTipIndex = i;
+    state.lastTipDate = todayKey();
+    saveState();
+  }
+
+  let displayedTipIndex = todayTipIndex();
+  showTip(displayedTipIndex);
+
+  document.getElementById('tipNext').addEventListener('click', () => {
+    let next;
+    do { next = Math.floor(Math.random() * tips.length); } while (next === displayedTipIndex && tips.length > 1);
+    displayedTipIndex = next;
+    showTip(next);
+  });
+
+  // ============================================================
+  // RESET
+  // ============================================================
+  document.getElementById('resetStats').addEventListener('click', () => {
+    if (!confirm('Reset all tracked breaks, blink sets, and streaks? This cannot be undone.')) return;
+    const fresh = defaultState();
+    // keep current settings
+    fresh.workMins = state.workMins;
+    fresh.breakSecs = state.breakSecs;
+    fresh.autoLoop = state.autoLoop;
+    Object.keys(state).forEach(k => delete state[k]);
+    Object.assign(state, fresh);
+    saveState();
+    updateStats();
+  });
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  updateNotifBanner();
+  updateStats();
+
+  // Pause-aware visibility: when the user comes back to the tab,
+  // if the timer should have ended while away, end it correctly.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && (timerMode === 'work' || timerMode === 'break')) {
+      tick(); // immediate update, will fire onPhaseEnd if needed
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
