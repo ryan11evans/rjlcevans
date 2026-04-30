@@ -1,1 +1,856 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2332">
+<title>Blink Survival — Dr. Ryan Evans, OD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a2332;
+    --bg-2: #243144;
+    --panel: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.12);
+    --ink: #f0f4f8;
+    --ink-dim: #a4b3c4;
+    --accent: #ffd166;
+    --accent-2: #06d6a0;
+    --danger: #ef476f;
+    --sky: #4a90a4;
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(900px 500px at 80% 0%, rgba(255,209,102,0.06), transparent 60%),
+      radial-gradient(700px 400px at 0% 100%, rgba(6,214,160,0.06), transparent 60%);
+    min-height: 100vh;
+    touch-action: manipulation;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 18px 14px 30px; }
+
+header.hero { text-align: center; margin-bottom: 18px; }
+.eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(–accent); margin: 0 0 6px; font-weight: 600; }
+h1 {
+font-family: ‘Fraunces’, serif; font-weight: 500;
+font-size: clamp(30px, 6vw, 48px); line-height: 1; letter-spacing: -0.02em;
+margin: 0;
+}
+h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.sub { color: var(–ink-dim); font-size: 13px; margin: 6px 0 0; }
+
+/* Game canvas */
+.game-stage {
+position: relative;
+width: 100%;
+aspect-ratio: 16/9;
+background: linear-gradient(180deg, #2c3e50 0%, #4a6278 100%);
+border-radius: 14px;
+overflow: hidden;
+box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 0 0 1px var(–line);
+cursor: pointer;
+touch-action: none;
+}
+#gameCanvas { display: block; width: 100%; height: 100%; }
+
+/* HUD */
+.hud {
+position: absolute; top: 12px; left: 12px; right: 12px;
+display: flex; justify-content: space-between; align-items: flex-start;
+pointer-events: none;
+font-family: ‘Fraunces’, serif; color: white;
+text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.hud-left, .hud-right { display: flex; flex-direction: column; gap: 4px; }
+.hud-right { align-items: flex-end; }
+.hud-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.7; font-family: ‘Inter Tight’; font-weight: 600; }
+.hud-val { font-size: 22px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+.hud-lives { font-size: 24px; line-height: 1; letter-spacing: 2px; }
+
+/* Overlays (start, paused, gameover) */
+.overlay {
+position: absolute; inset: 0;
+background: rgba(15, 22, 32, 0.85);
+backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+display: grid; place-items: center;
+padding: 20px;
+z-index: 10;
+}
+.overlay-card {
+text-align: center;
+max-width: 420px;
+}
+.overlay h2 {
+font-family: ‘Fraunces’, serif; font-weight: 500;
+font-size: clamp(28px, 5vw, 40px); line-height: 1.1; letter-spacing: -0.01em;
+margin: 0 0 8px; color: white;
+}
+.overlay h2 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.overlay p { color: var(–ink-dim); font-size: 14px; line-height: 1.5; margin: 0 0 18px; }
+.overlay .score-big {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 56px; line-height: 1;
+color: var(–accent); margin: 12px 0;
+font-variant-numeric: tabular-nums;
+}
+.overlay .score-row {
+display: flex; justify-content: center; gap: 24px; margin: 10px 0 18px;
+font-size: 13px; color: var(–ink-dim);
+}
+.overlay .score-row strong { color: white; font-family: ‘Fraunces’, serif; font-style: italic; font-size: 18px; display: block; }
+
+.btn {
+appearance: none;
+background: var(–accent);
+color: #1a1208;
+border: none;
+padding: 14px 28px;
+border-radius: 999px;
+font-family: inherit;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.1s, background 0.15s;
+margin: 4px;
+}
+.btn:hover { background: #ffdb85; }
+.btn:active { transform: scale(0.97); }
+.btn.ghost {
+background: transparent;
+color: white;
+border: 1px solid var(–line);
+}
+.btn.ghost:hover { background: var(–panel); }
+
+.tap-hint {
+position: absolute; bottom: 14px; left: 0; right: 0;
+text-align: center; color: rgba(255,255,255,0.5);
+font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+pointer-events: none;
+font-weight: 600;
+}
+
+.legend {
+margin-top: 14px;
+display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+gap: 8px; font-size: 12px; color: var(–ink-dim);
+}
+.legend-item {
+background: var(–panel); border: 1px solid var(–line);
+padding: 8px 10px; border-radius: 8px;
+display: flex; align-items: center; gap: 8px;
+}
+.legend-icon { font-size: 18px; flex-shrink: 0; }
+
+footer {
+margin-top: 22px; padding-top: 14px; border-top: 1px solid var(–line);
+color: var(–ink-dim); font-size: 11px;
+display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+footer a { color: var(–accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* Hidden helper */
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+*, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">A game by Dr. Ryan Evans, OD</p>
+    <h1>Blink <em>Survival</em></h1>
+    <p class="sub">Tap to blink. Clear the hazards. Don't let your eyes dry out.</p>
+  </header>
+
+  <div class="game-stage" id="stage">
+    <canvas id="gameCanvas"></canvas>
+
+```
+<div class="hud" id="hud" hidden>
+  <div class="hud-left">
+    <div class="hud-label">Score</div>
+    <div class="hud-val" id="hudScore">0</div>
+  </div>
+  <div class="hud-right">
+    <div class="hud-label">Time</div>
+    <div class="hud-val" id="hudTime">90</div>
+    <div class="hud-lives" id="hudLives">💧💧💧</div>
+  </div>
+</div>
+
+<!-- Start screen -->
+<div class="overlay" id="overlayStart">
+  <div class="overlay-card">
+    <h2>Ready to <em>blink?</em></h2>
+    <p>Hazards drift toward your eye. Tap or press <kbd>space</kbd> to blink and clear what's in front of you. Miss three and you're out. You have 90 seconds.</p>
+    <button class="btn" id="btnStart">Start playing</button>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-icon">🌫️</span><span>Dust mote</span></div>
+      <div class="legend-item"><span class="legend-icon">✨</span><span>Glare flare</span></div>
+      <div class="legend-item"><span class="legend-icon">💨</span><span>Dry-air gust</span></div>
+      <div class="legend-item"><span class="legend-icon">💧</span><span>Tear bottle (heal)</span></div>
+      <div class="legend-item"><span class="legend-icon">🕶️</span><span>Sunglasses (shield)</span></div>
+      <div class="legend-item"><span class="legend-icon">⏱️</span><span>20-20-20 (slow time)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Game over screen -->
+<div class="overlay" id="overlayEnd" hidden>
+  <div class="overlay-card">
+    <h2 id="endTitle">Eyes need a <em>break</em></h2>
+    <p id="endMessage">Take 20 seconds and look out a window. Then come back and try again.</p>
+    <div class="score-big" id="endScore">0</div>
+    <div class="score-row">
+      <div><strong id="endHigh">0</strong>Best</div>
+      <div><strong id="endHazards">0</strong>Hazards blinked</div>
+      <div><strong id="endTime">0</strong>Seconds survived</div>
+    </div>
+    <button class="btn" id="btnRestart">Play again</button>
+    <button class="btn ghost" id="btnHome">Home</button>
+  </div>
+</div>
+
+<!-- Pause overlay -->
+<div class="overlay" id="overlayPause" hidden>
+  <div class="overlay-card">
+    <h2>Paused</h2>
+    <button class="btn" id="btnResume">Resume</button>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint" hidden>Tap or press space to blink</div>
+```
+
+  </div>
+
+  <footer>
+    <span>© Dr. Ryan Evans, OD · Built for fun</span>
+    <a href="https://rjlcevans.com/">← Return to Evans Family Home</a>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  const GAME_DURATION = 90; // seconds
+  const STARTING_LIVES = 3;
+  const HIGH_SCORE_KEY = 'evans_blink_survival_high_v1';
+
+  // Hazards & power-ups
+  const ENTITY_TYPES = {
+    dust:    { kind: 'hazard', emoji: '🌫️', size: 36, points: 10, color: '#a8b5c4', wobble: 0.6 },
+    glare:   { kind: 'hazard', emoji: '✨', size: 38, points: 15, color: '#ffd166', wobble: 1.5 },
+    dryair:  { kind: 'hazard', emoji: '💨', size: 40, points: 20, color: '#cfe8f0', wobble: 0.3, fast: true },
+    smudge:  { kind: 'hazard', emoji: '🫥', size: 42, points: 25, color: '#7d8fa0', wobble: 0.2, slow: true },
+    tear:    { kind: 'powerup', emoji: '💧', size: 36, points: 0, color: '#06d6a0', wobble: 0.5, effect: 'heal' },
+    shades:  { kind: 'powerup', emoji: '🕶️', size: 40, points: 0, color: '#1a2332', wobble: 0.3, effect: 'shield' },
+    timer:   { kind: 'powerup', emoji: '⏱️', size: 38, points: 0, color: '#4a90a4', wobble: 0.4, effect: 'slow' },
+  };
+
+  // Spawn weights (relative)
+  const SPAWN_WEIGHTS = {
+    dust: 35, glare: 25, dryair: 18, smudge: 12,
+    tear: 4, shades: 3, timer: 3
+  };
+
+  // ============================================================
+  // STATE & DOM
+  // ============================================================
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const overlayStart = document.getElementById('overlayStart');
+  const overlayEnd = document.getElementById('overlayEnd');
+  const overlayPause = document.getElementById('overlayPause');
+  const hud = document.getElementById('hud');
+  const tapHint = document.getElementById('tapHint');
+  const hudScore = document.getElementById('hudScore');
+  const hudTime = document.getElementById('hudTime');
+  const hudLives = document.getElementById('hudLives');
+
+  let game = null;
+
+  // ============================================================
+  // CANVAS SIZING
+  // ============================================================
+  function resizeCanvas() {
+    const rect = stage.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (game) {
+      game.w = rect.width;
+      game.h = rect.height;
+      game.eye.x = rect.width * 0.18;
+      game.eye.y = rect.height * 0.5;
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ============================================================
+  // AUDIO (Web Audio API — no files needed)
+  // ============================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+  }
+  function tone(freq, duration, type = 'sine', volume = 0.2) {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = 0.0001;
+      gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+  const sfx = {
+    blink: () => tone(440, 0.06, 'sine', 0.15),
+    hit: () => tone(880, 0.08, 'triangle', 0.2),
+    miss: () => { tone(220, 0.15, 'sawtooth', 0.18); setTimeout(() => tone(165, 0.15, 'sawtooth', 0.18), 80); },
+    powerup: () => { tone(659, 0.08); setTimeout(() => tone(880, 0.1), 70); setTimeout(() => tone(1175, 0.15), 160); },
+    gameover: () => { tone(440, 0.18, 'square', 0.15); setTimeout(() => tone(330, 0.22, 'square', 0.15), 180); setTimeout(() => tone(220, 0.4, 'square', 0.15), 380); },
+    countdown: () => tone(880, 0.1, 'sine', 0.15),
+  };
+
+  // ============================================================
+  // GAME OBJECTS
+  // ============================================================
+  function newGame() {
+    const rect = stage.getBoundingClientRect();
+    return {
+      w: rect.width, h: rect.height,
+      running: false,
+      paused: false,
+      score: 0,
+      hazardsBlinked: 0,
+      timeLeft: GAME_DURATION,
+      lives: STARTING_LIVES,
+      eye: {
+        x: rect.width * 0.18,
+        y: rect.height * 0.5,
+        size: 60,
+        blinkT: 0,        // 0 = open, 1 = fully shut
+        blinkPhase: 0,    // animation phase counter
+        shielded: 0,      // ms remaining of shield
+        slowTime: 0,      // ms remaining of slow-mo
+        squint: 0,        // visual squint based on lives
+      },
+      entities: [],       // hazards + powerups
+      particles: [],
+      lastSpawn: 0,
+      spawnInterval: 900, // ms; decreases over time
+      lastFrameTime: performance.now(),
+      elapsed: 0,
+      shake: 0,
+    };
+  }
+
+  function pickEntityType() {
+    const total = Object.values(SPAWN_WEIGHTS).reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (const [type, weight] of Object.entries(SPAWN_WEIGHTS)) {
+      r -= weight;
+      if (r <= 0) return type;
+    }
+    return 'dust';
+  }
+
+  function spawnEntity() {
+    const type = pickEntityType();
+    const def = ENTITY_TYPES[type];
+    const baseSpeed = 90 + game.elapsed * 12; // px/sec, ramps up
+    let speed = baseSpeed;
+    if (def.fast) speed *= 1.4;
+    if (def.slow) speed *= 0.7;
+    game.entities.push({
+      type,
+      def,
+      x: game.w + def.size,
+      y: 60 + Math.random() * (game.h - 120),
+      vx: -speed,
+      vy: 0,
+      wobblePhase: Math.random() * Math.PI * 2,
+      rotation: Math.random() * Math.PI * 2,
+      vRot: (Math.random() - 0.5) * 2,
+      collected: false,
+      missed: false,
+      hitLeft: false,    // entity passed the blink zone unscathed
+    });
+  }
+
+  function spawnParticles(x, y, color, count = 8) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 80 + Math.random() * 120;
+      game.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0.5 + Math.random() * 0.3,
+        maxLife: 0.8,
+        color,
+        size: 3 + Math.random() * 3,
+      });
+    }
+  }
+
+  // ============================================================
+  // GAME LOOP
+  // ============================================================
+  function update(dt) {
+    if (!game.running || game.paused) return;
+    game.elapsed += dt;
+    game.timeLeft = Math.max(0, GAME_DURATION - game.elapsed);
+
+    // Decay timers
+    if (game.eye.shielded > 0) game.eye.shielded = Math.max(0, game.eye.shielded - dt * 1000);
+    if (game.eye.slowTime > 0) game.eye.slowTime = Math.max(0, game.eye.slowTime - dt * 1000);
+    if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 60);
+
+    // Blink animation decay
+    if (game.eye.blinkT > 0) {
+      game.eye.blinkPhase += dt;
+      // Animation: rises quickly then falls
+      const t = game.eye.blinkPhase / 0.18; // total blink ~180ms
+      if (t >= 1) { game.eye.blinkT = 0; game.eye.blinkPhase = 0; }
+      else if (t < 0.5) game.eye.blinkT = t * 2;
+      else game.eye.blinkT = (1 - t) * 2;
+    }
+
+    // Squint visual based on lives
+    const targetSquint = (STARTING_LIVES - game.lives) * 0.12;
+    game.eye.squint += (targetSquint - game.eye.squint) * dt * 5;
+
+    // Spawn entities
+    const spawnRate = Math.max(380, game.spawnInterval - game.elapsed * 6);
+    game.lastSpawn += dt * 1000;
+    if (game.lastSpawn >= spawnRate) {
+      game.lastSpawn = 0;
+      spawnEntity();
+    }
+
+    // Update entities (with slow-mo factor)
+    const slowFactor = game.eye.slowTime > 0 ? 0.35 : 1;
+    for (const e of game.entities) {
+      e.x += e.vx * dt * slowFactor;
+      e.wobblePhase += dt * (1 + (e.def.wobble || 0));
+      e.y += Math.sin(e.wobblePhase) * (e.def.wobble || 0) * dt * 30;
+      e.rotation += e.vRot * dt;
+
+      // Check if entity reached the eye zone
+      const dx = e.x - game.eye.x;
+      const dy = e.y - game.eye.y;
+      const dist = Math.hypot(dx, dy);
+      const collisionDist = (e.def.size / 2) + (game.eye.size / 2);
+
+      if (!e.collected && !e.missed && dist < collisionDist) {
+        if (e.def.kind === 'hazard') {
+          // Did we blink in time?
+          if (game.eye.blinkT > 0.5 || game.eye.shielded > 0) {
+            // Blinked it away! Score it.
+            e.collected = true;
+            game.score += e.def.points;
+            game.hazardsBlinked++;
+            spawnParticles(e.x, e.y, e.def.color, 10);
+            sfx.hit();
+          } else {
+            // Hit us!
+            e.missed = true;
+            game.lives--;
+            game.shake = 12;
+            spawnParticles(e.x, e.y, '#ef476f', 14);
+            sfx.miss();
+            if (game.lives <= 0) {
+              endGame();
+              return;
+            }
+          }
+        } else if (e.def.kind === 'powerup') {
+          // Power-ups are collected on contact (always)
+          e.collected = true;
+          spawnParticles(e.x, e.y, e.def.color, 12);
+          sfx.powerup();
+          if (e.def.effect === 'heal') {
+            game.lives = Math.min(STARTING_LIVES, game.lives + 1);
+          } else if (e.def.effect === 'shield') {
+            game.eye.shielded = 4000;
+          } else if (e.def.effect === 'slow') {
+            game.eye.slowTime = 5000;
+          }
+          game.score += 30;
+        }
+      }
+
+      // Off-screen?
+      if (e.x < -e.def.size) {
+        if (!e.collected && !e.missed && e.def.kind === 'hazard') {
+          // Hazard passed unblinked but didn't hit eye — counts as small score for surviving
+          game.score += 2;
+        }
+        e.toRemove = true;
+      }
+    }
+    game.entities = game.entities.filter(e => !e.toRemove && !e.collected && !e.missed);
+    // (collected/missed removed after their particles already spawned)
+
+    // Update particles
+    for (const p of game.particles) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+      p.life -= dt;
+    }
+    game.particles = game.particles.filter(p => p.life > 0);
+
+    // End-of-time check
+    if (game.timeLeft <= 0) {
+      endGame();
+      return;
+    }
+
+    // Final 5 seconds beep
+    const secondsInt = Math.ceil(game.timeLeft);
+    if (secondsInt <= 5 && secondsInt > 0 && Math.floor(game.elapsed) !== Math.floor(game.elapsed - dt)) {
+      sfx.countdown();
+    }
+
+    updateHUD();
+  }
+
+  function updateHUD() {
+    hudScore.textContent = game.score;
+    hudTime.textContent = Math.ceil(game.timeLeft);
+    hudLives.textContent = '💧'.repeat(game.lives) + '💧'.split('').map(c => '').join('');
+    // Restyle lives — use empty markers for missing
+    hudLives.textContent = '💧'.repeat(game.lives) + '·'.repeat(STARTING_LIVES - game.lives);
+  }
+
+  // ============================================================
+  // RENDERING
+  // ============================================================
+  function draw() {
+    const w = game ? game.w : canvas.width;
+    const h = game ? game.h : canvas.height;
+
+    // Background gradient (already on stage element, but we redraw for canvas)
+    ctx.clearRect(0, 0, w, h);
+
+    // Subtle desk surface lines
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    for (let y = 50; y < h; y += 50) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (!game || !game.running) return;
+
+    // Apply screen shake
+    let sx = 0, sy = 0;
+    if (game.shake > 0) {
+      sx = (Math.random() - 0.5) * game.shake;
+      sy = (Math.random() - 0.5) * game.shake;
+    }
+    ctx.save();
+    ctx.translate(sx, sy);
+
+    // Slow-time visual indicator (vignette tint)
+    if (game.eye.slowTime > 0) {
+      const alpha = Math.min(0.25, game.eye.slowTime / 5000 * 0.25);
+      ctx.fillStyle = `rgba(74, 144, 164, ${alpha})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // Draw entities
+    for (const e of game.entities) {
+      drawEntity(e);
+    }
+
+    // Draw eye
+    drawEye();
+
+    // Draw particles
+    for (const p of game.particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Shield ring around eye
+    if (game.eye.shielded > 0) {
+      ctx.save();
+      ctx.translate(game.eye.x, game.eye.y);
+      const t = (Date.now() / 1000) % 1;
+      const pulse = 1 + Math.sin(t * Math.PI * 2) * 0.04;
+      ctx.strokeStyle = `rgba(74, 144, 164, ${0.7 + Math.sin(t * Math.PI * 4) * 0.2})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, game.eye.size * 0.85 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawEntity(e) {
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(e.rotation);
+    ctx.font = `${e.def.size}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(e.def.emoji, 0, 0);
+    ctx.restore();
+  }
+
+  function drawEye() {
+    const eye = game.eye;
+    ctx.save();
+    ctx.translate(eye.x, eye.y);
+
+    const size = eye.size;
+    const half = size / 2;
+
+    // Squint factor (0 = wide open, 1 = closed)
+    const squint = Math.min(0.95, eye.squint + eye.blinkT);
+    const lidGap = (1 - squint) * size * 0.7;
+
+    // White of eye (sclera)
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#1a2332';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, half, lidGap / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    if (lidGap > 4) {
+      // Iris
+      const irisR = Math.min(half * 0.55, lidGap * 0.45);
+      const lookOffset = 6; // slight forward gaze
+      ctx.fillStyle = '#4a90a4';
+      ctx.beginPath();
+      ctx.arc(lookOffset, 0, irisR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupil
+      ctx.fillStyle = '#1a2332';
+      ctx.beginPath();
+      ctx.arc(lookOffset, 0, irisR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Highlight
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(lookOffset - irisR * 0.3, -irisR * 0.3, irisR * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Eyelash hint when squinting hard
+    if (squint > 0.3) {
+      ctx.strokeStyle = '#1a2332';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      const lashes = 5;
+      for (let i = 0; i < lashes; i++) {
+        const t = (i / (lashes - 1)) * 2 - 1;
+        const lashX = t * half * 0.7;
+        const lashLen = 4 + squint * 5;
+        ctx.beginPath();
+        ctx.moveTo(lashX, -lidGap / 2);
+        ctx.lineTo(lashX, -lidGap / 2 - lashLen);
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // ============================================================
+  // GAME FLOW
+  // ============================================================
+  function startGame() {
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    game = newGame();
+    game.running = true;
+    overlayStart.hidden = true;
+    overlayEnd.hidden = true;
+    overlayPause.hidden = true;
+    hud.hidden = false;
+    tapHint.hidden = false;
+    setTimeout(() => { tapHint.hidden = true; }, 2500);
+    resizeCanvas();
+    game.lastFrameTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function endGame() {
+    if (!game) return;
+    game.running = false;
+    sfx.gameover();
+
+    // Save high score
+    let high = 0;
+    try { high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0; } catch (e) {}
+    const isNew = game.score > high;
+    if (isNew) {
+      try { localStorage.setItem(HIGH_SCORE_KEY, String(game.score)); } catch (e) {}
+      high = game.score;
+    }
+
+    // Populate end screen
+    document.getElementById('endScore').textContent = game.score;
+    document.getElementById('endHigh').textContent = high;
+    document.getElementById('endHazards').textContent = game.hazardsBlinked;
+    document.getElementById('endTime').textContent = Math.floor(game.elapsed);
+
+    const endTitle = document.getElementById('endTitle');
+    const endMsg = document.getElementById('endMessage');
+    if (isNew && game.score > 50) {
+      endTitle.innerHTML = 'New <em>high score!</em>';
+      endMsg.textContent = 'Excellent reflexes. Now actually rest your eyes for a minute.';
+    } else if (game.lives <= 0) {
+      endTitle.innerHTML = 'Eyes need a <em>break</em>';
+      endMsg.textContent = 'Take 20 seconds and look out a window. Then come back and try again.';
+    } else {
+      endTitle.innerHTML = 'Time\u2019s <em>up</em>';
+      endMsg.textContent = 'Nicely played. Take a moment to blink slowly a few times.';
+    }
+    overlayEnd.hidden = false;
+    hud.hidden = true;
+  }
+
+  function pauseGame() {
+    if (!game || !game.running || game.paused) return;
+    game.paused = true;
+    overlayPause.hidden = false;
+  }
+  function resumeGame() {
+    if (!game || !game.paused) return;
+    game.paused = false;
+    overlayPause.hidden = true;
+    game.lastFrameTime = performance.now();
+  }
+
+  function blink() {
+    if (!game || !game.running || game.paused) return;
+    if (game.eye.blinkT > 0) return; // already blinking
+    game.eye.blinkT = 0.01;
+    game.eye.blinkPhase = 0;
+    sfx.blink();
+  }
+
+  function loop(now) {
+    if (!game) return;
+    if (game.running && !game.paused) {
+      const dt = Math.min(0.05, (now - game.lastFrameTime) / 1000);
+      game.lastFrameTime = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    } else if (game.paused) {
+      draw();
+      // keep redrawing but don't update
+      game.lastFrameTime = now;
+      requestAnimationFrame(loop);
+    }
+  }
+
+  // ============================================================
+  // INPUT
+  // ============================================================
+  function onTap(e) {
+    if (e.target.closest('.btn') || e.target.closest('.overlay-card')) return;
+    if (game && game.running && !game.paused) {
+      e.preventDefault();
+      blink();
+    }
+  }
+  stage.addEventListener('pointerdown', onTap);
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      blink();
+    } else if (e.code === 'Escape' || e.key === 'p' || e.key === 'P') {
+      if (game && game.running) {
+        if (game.paused) resumeGame(); else pauseGame();
+      }
+    }
+  });
+
+  // Auto-pause if tab loses focus
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && game && game.running && !game.paused) {
+      pauseGame();
+    }
+  });
+
+  // Buttons
+  document.getElementById('btnStart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', startGame);
+  document.getElementById('btnResume').addEventListener('click', resumeGame);
+  document.getElementById('btnHome').addEventListener('click', () => { window.location.href = 'https://rjlcevans.com/'; });
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  resizeCanvas();
+  // Show high score on start screen if exists
+  try {
+    const high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0;
+    if (high > 0) {
+      const card = overlayStart.querySelector('.overlay-card');
+      const hsEl = document.createElement('p');
+      hsEl.style.cssText = 'color: var(--accent); font-family: Fraunces, serif; font-style: italic; margin: 12px 0 0; font-size: 13px;';
+      hsEl.textContent = `Personal best: ${high}`;
+      card.appendChild(hsEl);
+    }
+  } catch (e) {}
+
+  // Draw initial frame so canvas isn't blank
+  draw();
+})();
+</script>
+
+</body>
+</html>
