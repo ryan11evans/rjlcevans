@@ -9,89 +9,156 @@
         body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         video, canvas { max-width: 100%; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 15px 0; }
-        button, label { padding: 14px 24px; margin: 6px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; display: inline-block; }
-        .debug { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 8px; font-size: 14px; }
+        button, label { padding: 14px 24px; margin: 6px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; }
+        .controls { margin: 20px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
+        label { background:#eee; color:#333; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Vision Impairment Simulator</h1>
         <p><strong>Educational tool only.</strong> Not for clinical diagnosis. Built by Ryan Evans, Optometrist.</p>
-        
-        <div class="debug" id="debug">JavaScript Status: Loading...</div>
 
-        <button onclick="startWebcam()">Start Camera</button>
-        <button onclick="stopWebcam()">Stop Camera</button>
-        <label>📸 Upload Image <input type="file" id="upload" accept="image/*" onchange="handleUpload(event)"></label>
+        <div>
+            <button onclick="startWebcam()">Start Camera</button>
+            <button onclick="stopWebcam()">Stop Camera</button>
+            <label>📸 Upload Image <input type="file" id="upload" accept="image/*" onchange="handleUpload(event)"></label>
+        </div>
 
         <video id="video" autoplay playsinline style="display:none; width:100%;"></video>
         <canvas id="canvas" style="width:100%;"></canvas>
 
-        <div style="margin-top:20px;">
-            <p>Myopia Blur: <input type="range" id="blur" min="0" max="20" value="0" step="0.5" oninput="applyFilters()"></p>
+        <div class="controls">
+            <div>
+                <label>Myopia Blur (px): <span id="blurVal">0</span></label>
+                <input type="range" id="blur" min="0" max="25" value="0" step="0.5" oninput="updateSliders()">
+            </div>
+            <div>
+                <label>Cataract Haze: <span id="hazeVal">0</span></label>
+                <input type="range" id="haze" min="0" max="80" value="0" oninput="updateSliders()">
+            </div>
+            <div>
+                <label>Color Deficiency:</label>
+                <select id="colorDef" onchange="updateSliders()">
+                    <option value="none">None</option>
+                    <option value="protanopia">Protanopia (Red)</option>
+                    <option value="deuteranopia">Deuteranopia (Green)</option>
+                    <option value="tritanopia">Tritanopia (Blue)</option>
+                </select>
+            </div>
         </div>
 
-        <button onclick="resetFilters()">Reset</button>
+        <button onclick="resetFilters()">Reset All</button>
         <p><a href="https://rjlcevans.com/">← Return to Evans Family Home</a></p>
     </div>
 
     <script>
-        document.getElementById('debug').innerHTML = 'JavaScript Status: <strong>RUNNING</strong> ✅';
-
-        let stream = null;
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let stream = null;
+        let animationFrame = null;
 
         function startWebcam() {
-            document.getElementById('debug').innerHTML += '<br>Camera requested...';
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                 .then(s => {
                     stream = s;
                     video.srcObject = s;
                     video.style.display = 'block';
                     video.play();
-                    document.getElementById('debug').innerHTML += '<br>✅ Camera started!';
+                    processFrame();
                 })
-                .catch(err => {
-                    document.getElementById('debug').innerHTML += '<br>❌ Error: ' + err.message;
-                    alert('Camera error: ' + err.message);
-                });
+                .catch(err => alert("Camera error: " + err.message));
         }
 
         function stopWebcam() {
-            if (stream) {
-                stream.getTracks().forEach(t => t.stop());
-                stream = null;
-            }
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            if (animationFrame) cancelAnimationFrame(animationFrame);
             video.style.display = 'none';
-            document.getElementById('debug').innerHTML += '<br>Camera stopped.';
         }
 
         function handleUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            document.getElementById('debug').innerHTML += '<br>Image selected: ' + file.name;
             const img = new Image();
             img.onload = () => {
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
-                document.getElementById('debug').innerHTML += '<br>✅ Image loaded!';
             };
             img.src = URL.createObjectURL(file);
         }
 
-        function applyFilters() {
-            if (canvas.width === 0) return;
-            ctx.filter = `blur(${document.getElementById('blur').value}px)`;
-            ctx.drawImage(canvas, 0, 0);
-            ctx.filter = 'none';
+        function updateSliders() {
+            document.getElementById('blurVal').textContent = document.getElementById('blur').value;
+            document.getElementById('hazeVal').textContent = document.getElementById('haze').value;
+        }
+
+        function processFrame() {
+            if (video.videoWidth > 0) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+
+                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const blur = parseFloat(document.getElementById('blur').value);
+                const haze = parseFloat(document.getElementById('haze').value) / 100;
+                const colorType = document.getElementById('colorDef').value;
+
+                // Color deficiency
+                if (colorType !== 'none') {
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        let r = data[i], g = data[i+1], b = data[i+2];
+                        if (colorType === 'protanopia') {
+                            data[i]   = 0.567*r + 0.433*g;
+                            data[i+1] = 0.558*g + 0.442*b;
+                            data[i+2] = 0.242*r + 0.758*b;
+                        } else if (colorType === 'deuteranopia') {
+                            data[i]   = 0.625*r + 0.375*g;
+                            data[i+1] = 0.70*g  + 0.30*b;
+                            data[i+2] = 0.30*r  + 0.70*b;
+                        } else if (colorType === 'tritanopia') {
+                            data[i]   = 0.95*r + 0.05*b;
+                            data[i+1] = 0.433*g + 0.567*b;
+                            data[i+2] = 0.475*r + 0.525*g;
+                        }
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                }
+
+                // Blur
+                if (blur > 0) {
+                    ctx.filter = `blur(${blur}px)`;
+                    ctx.drawImage(canvas, 0, 0);
+                    ctx.filter = 'none';
+                }
+
+                // Cataract haze (reduce contrast + add brightness)
+                if (haze > 0) {
+                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        let avg = (data[i] + data[i+1] + data[i+2]) / 3;
+                        data[i]   = data[i]   * (1 - haze) + avg * haze * 0.9;
+                        data[i+1] = data[i+1] * (1 - haze) + avg * haze * 0.9;
+                        data[i+2] = data[i+2] * (1 - haze) + avg * haze * 0.9;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                }
+            }
+            animationFrame = requestAnimationFrame(processFrame);
         }
 
         function resetFilters() {
             document.getElementById('blur').value = 0;
+            document.getElementById('haze').value = 0;
+            document.getElementById('colorDef').value = 'none';
+            updateSliders();
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopWebcam);
     </script>
 </body>
 </html>
