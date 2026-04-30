@@ -9,51 +9,89 @@
         body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         video, canvas { max-width: 100%; border: 2px solid #ddd; border-radius: 8px; display: block; margin: 15px 0; }
-        button { padding: 14px 24px; margin: 6px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; }
-        label { background:#eee; padding:14px 20px; border-radius:10px; display:inline-block; cursor:pointer; }
-        .controls { margin: 25px 0; }
+        button, label { padding: 14px 24px; margin: 6px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; display: inline-block; }
+        .debug { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Vision Impairment Simulator</h1>
-        <p><strong>Educational tool only.</strong> Not for clinical diagnosis.</p>
+        <p><strong>Educational tool only.</strong> Not for clinical diagnosis. Built by Ryan Evans, Optometrist.</p>
+        
+        <div class="debug" id="debug">JavaScript Status: Loading...</div>
 
-        <div>
-            <button onclick="startWebcam()">Start Camera</button>
-            <button onclick="stopWebcam()">Stop Camera</button>
-            <label>📸 Upload Image <input type="file" id="upload" accept="image/*" onchange="handleUpload(event)"></label>
-        </div>
+        <button onclick="startWebcam()">Start Camera</button>
+        <button onclick="stopWebcam()">Stop Camera</button>
+        <label>📸 Upload Image <input type="file" id="upload" accept="image/*" onchange="handleUpload(event)"></label>
 
         <video id="video" autoplay playsinline style="display:none; width:100%;"></video>
         <canvas id="canvas" style="width:100%;"></canvas>
 
-        <div class="controls">
+        <div style="margin-top:20px;">
             <p>Myopia Blur: <input type="range" id="blur" min="0" max="20" value="0" step="0.5" oninput="applyFilters()"></p>
-            <p>Cataract Haze: <input type="range" id="haze" min="0" max="100" value="0" oninput="applyFilters()"></p>
         </div>
 
-        <button onclick="resetFilters()">Reset All</button>
+        <button onclick="resetFilters()">Reset</button>
         <p><a href="https://rjlcevans.com/">← Return to Evans Family Home</a></p>
     </div>
 
     <script>
+        document.getElementById('debug').innerHTML = 'JavaScript Status: <strong>RUNNING</strong> ✅';
+
+        let stream = null;
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let stream = null;
 
         function startWebcam() {
-            alert("Requesting camera access... Please tap Allow if prompted.");
-            navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" } 
-            }).then(s => {
-                stream = s;
-                video.srcObject = s;
-                video.style.display = 'block';
-                video.play();
-            }).catch(err => {
-                alert("Camera access failed:\n" + err.message + "\n\nMake sure Safari has camera permission for this site.");
-                console.error(err);
-            });
+            document.getElementById('debug').innerHTML += '<br>Camera requested...';
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                .then(s => {
+                    stream = s;
+                    video.srcObject = s;
+                    video.style.display = 'block';
+                    video.play();
+                    document.getElementById('debug').innerHTML += '<br>✅ Camera started!';
+                })
+                .catch(err => {
+                    document.getElementById('debug').innerHTML += '<br>❌ Error: ' + err.message;
+                    alert('Camera error: ' + err.message);
+                });
         }
+
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+            }
+            video.style.display = 'none';
+            document.getElementById('debug').innerHTML += '<br>Camera stopped.';
+        }
+
+        function handleUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('debug').innerHTML += '<br>Image selected: ' + file.name;
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                document.getElementById('debug').innerHTML += '<br>✅ Image loaded!';
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function applyFilters() {
+            if (canvas.width === 0) return;
+            ctx.filter = `blur(${document.getElementById('blur').value}px)`;
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+        }
+
+        function resetFilters() {
+            document.getElementById('blur').value = 0;
+        }
+    </script>
+</body>
+</html>
