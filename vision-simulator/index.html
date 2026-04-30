@@ -45,7 +45,16 @@ margin: 0 0 8px; color: var(–ink);
 }
 h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
 .sub { color: var(–ink-dim); font-size: 14px; max-width: 60ch; line-height: 1.55; }
-.credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(–ink-mute); padding: 4px 10px; border: 1px solid var(–line); border-radius: 999px; }
+.credit {
+display: inline-block;
+margin-top: 14px;
+font-size: 13px;
+color: var(–ink);
+padding: 7px 16px;
+border: 1px solid var(–line);
+border-radius: 999px;
+background: rgba(255, 255, 255, 0.04);
+}
 
 .stage-wrap { position: relative; background: #000; border-radius: var(–radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(–line); }
 
@@ -63,7 +72,6 @@ box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px var(–line);
 header.hero { padding-bottom: 14px; margin-bottom: 14px; }
 h1 { font-size: clamp(22px, 5vw, 32px); }
 .sub { font-size: 13px; }
-.credit { display: none; }   /* save vertical space on phone */
 .section-title { margin: 18px 0 8px; font-size: 17px; }
 .source-row { margin: 10px 0 4px; }
 .conditions { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
