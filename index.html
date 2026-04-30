@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Evans Family — rjlcevans.com</title>
-  <meta name="description" content="A simple, modern Evans Family page with a subtle time-of-day background." />
+  <meta name="description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
   <style>
     :root {
       --bg: #ececec;
@@ -14,135 +15,276 @@
       --radius: 16px;
       --shadow: 0 6px 20px rgba(0,0,0,.08);
       --maxw: 960px;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg);
-      transition: background 1.6s ease;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    header {
-      width: 100%;
-      max-width: var(--maxw);
-      padding: 20px 18px;
-      margin-top: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .brand {
-      font-weight: 800;
-      font-size: 2.2rem;
-      letter-spacing: 0.04em;
-      color: #ffffff;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
-      display: flex;
-      gap: 0.6rem;
-      align-items: center;
-    }
-    .brand .logo { font-size: 2.6rem; }
-    .contact a {
-      text-decoration: none;
-      color: var(--text);
-      border: 1px solid rgba(0,0,0,.12);
-      padding: .5rem .9rem;
-      border-radius: 12px;
-      background: #fff;
-      font-size: 1rem;
-    }
-    main {
-      width: 100%;
-      max-width: var(--maxw);
-      padding: 0 18px 28px;
-    }
-    .card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      margin: 20px 0;
-    }
-    .photo img {
-      display: block;
-      width: 100%;
-      height: auto;
-      object-fit: cover;
-    }
-    .caption {
-      color: #333;
-      text-align: center;
-      font-size: 1.1rem;
-      padding: 12px 12px 16px;
-      border-top: 1px solid rgba(0,0,0,.06);
-      background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.9));
-    }
-    footer {
-      width: 100%;
-      max-width: var(--maxw);
-      color: var(--muted);
-      font-size: .9rem;
-      padding: 14px 18px 36px;
-      text-align: center;
-    }
-    .widgets {
-      width: 100%;
-      max-width: var(--maxw);
-      padding: 0 18px;
-      margin: 20px 0;
-    }
-    .widget-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-    }
-    .widget-card {
-      flex: 1 1 280px;
-      min-width: 260px;
-      padding: 18px;
-      text-align: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      border: 1px solid rgba(0,0,0,.05);
-      position: relative;
-    }
-    .widget-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0,0,0,.12);
-    }
-    .widget-card h3 {
-      margin: 0 0 10px;
-      font-size: 1.25rem;
-      color: var(--muted);
-    }
-    #timer {
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #c0392b;
-      margin: 6px 0;
-    }
-    .joke-text {
-      font-size: 1.1rem;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 1;
-      transition: opacity 0.8s ease;
-    }
-    .joke-text.fade {
-      opacity: 0;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; }
-    }
+
+```
+  /* Clinical accent for the tools section */
+  --clinical-bg: #0f1620;
+  --clinical-panel: #1d2733;
+  --clinical-line: #2a3543;
+  --clinical-ink: #eef2f7;
+  --clinical-ink-dim: #9aa7b8;
+  --clinical-accent: #d4a574;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+header {
+  width: 100%;
+  max-width: var(--maxw);
+  padding: 20px 18px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.brand .logo { font-size: 2.6rem; }
+.contact a {
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid rgba(0,0,0,.12);
+  padding: .5rem .9rem;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.contact a:hover { background: var(--text); color: #fff; border-color: var(--text); }
+
+main {
+  width: 100%;
+  max-width: var(--maxw);
+  padding: 0 18px 28px;
+}
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: 20px 0;
+}
+.photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+.caption {
+  color: #333;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 12px 12px 16px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.9));
+}
+footer {
+  width: 100%;
+  max-width: var(--maxw);
+  color: var(--muted);
+  font-size: .9rem;
+  padding: 14px 18px 36px;
+  text-align: center;
+}
+
+/* ===== Clinical Tools Section ===== */
+.tools-section {
+  width: 100%;
+  max-width: var(--maxw);
+  padding: 0 18px;
+  margin: 8px 0 20px;
+}
+.tools-card {
+  background: var(--clinical-bg);
+  background-image:
+    radial-gradient(1000px 400px at 90% -10%, rgba(212,165,116,0.08), transparent 60%),
+    radial-gradient(700px 300px at -10% 110%, rgba(90,143,184,0.06), transparent 60%);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow);
+  color: var(--clinical-ink);
+}
+.tools-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--clinical-accent);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.tools-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--clinical-ink);
+}
+.tools-lede {
+  color: var(--clinical-ink-dim);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 20px;
+  max-width: 60ch;
+}
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.tool-link {
+  display: block;
+  padding: 18px;
+  background: var(--clinical-panel);
+  border: 1px solid var(--clinical-line);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--clinical-ink);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  position: relative;
+}
+.tool-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--clinical-accent);
+  background: #243040;
+}
+.tool-link .tl-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  display: block;
+}
+.tool-link .tl-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.tool-link .tl-desc {
+  font-size: 0.85rem;
+  color: var(--clinical-ink-dim);
+  line-height: 1.5;
+}
+.tool-link .tl-arrow {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: var(--clinical-accent);
+  font-size: 1.1rem;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.tool-link:hover .tl-arrow { opacity: 1; transform: translateX(2px); }
+.tools-disclaimer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--clinical-line);
+  font-size: 0.8rem;
+  color: var(--clinical-ink-dim);
+  font-style: italic;
+}
+
+/* ===== Widgets ===== */
+.widgets {
+  width: 100%;
+  max-width: var(--maxw);
+  padding: 0 18px;
+  margin: 20px 0;
+}
+.widget-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+.widget-card {
+  flex: 1 1 280px;
+  min-width: 260px;
+  padding: 18px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0,0,0,.05);
+  position: relative;
+}
+.widget-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.12);
+}
+.widget-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+.holiday-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #e74c3c;
+  margin-bottom: 6px;
+}
+#timer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #c0392b;
+  margin: 6px 0;
+  font-variant-numeric: tabular-nums;
+}
+#holiday-meta {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.joke-text {
+  font-size: 1.1rem;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  padding: 0 12px;
+}
+.joke-text.fade { opacity: 0; }
+.joke-controls { margin-top: 8px; }
+.joke-controls button {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.12);
+  padding: .4rem .9rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s;
+}
+.joke-controls button:hover {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+@media (max-width: 600px) {
+  .brand { font-size: 1.6rem; }
+  .brand .logo { font-size: 2rem; }
+  .tools-card { padding: 22px 18px; }
+}
+```
+
   </style>
 </head>
 <body>
@@ -152,34 +294,214 @@
   </header>
 
   <main>
-    <section class="photo card">
-      <img src="family.jpg" alt="The Evans Family" loading="eager" />
-      <div class="caption">The Evans Family — Murrieta, 2025</div>
-    </section>
 
-    <section class="card" style="padding:18px;text-align:center"><h3 style="margin-top:0">About</h3><p>Ryan and Jadyn Evans are both optometrists living in Murrieta, California. They have two sons, Landon and Cody. 😊</p></section>
+```
+<!-- ===== FAMILY CONTENT ===== -->
+<section class="photo card">
+  <img src="family.jpg?v=2" alt="The Evans Family" loading="eager" />
+  <div class="caption">The Evans Family — Murrieta, 2025</div>
+</section>
 
-    <section class="card" style="padding:18px;text-align:center"><h3 style="margin-top:0">This Week In Our House</h3><p id="week-line">Probably coaching, probably snacks, definitely sports.</p></section>
+<section class="card" style="padding:18px;text-align:center">
+  <h3 style="margin-top:0">About</h3>
+  <p>Ryan and Jadyn Evans are both optometrists living in Murrieta, California. They have two sons, Landon and Cody. 😊</p>
+</section>
 
-    <section class="card" style="padding:18px;text-align:center"><h3 style="margin-top:0">Family Superpowers</h3><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"><div>Ryan — Vision &amp; patience 👓</div><div>Jadyn — Organization &amp; calm ✨</div><div>Landon — Humor &amp; curiosity 😄</div><div>Cody — Creativity &amp; speed ⚡</div></div></section>
+<section class="card" style="padding:18px;text-align:center">
+  <h3 style="margin-top:0">This Week In Our House</h3>
+  <p id="week-line">Probably coaching, probably snacks, definitely sports.</p>
+</section>
 
-    <!-- Widgets: 3 side-by-side (holiday, dad jokes) -->
-    <section class="widgets">
-      <div class="widget-grid">
-        <!-- Holiday Countdown -->
-        <div class="card widget-card">
-          <h3>Next Holiday</h3>
-          <div style="font-size: 1.9rem; font-weight: bold; color: #e74c3c; margin-bottom: 6px;">Presidents' Day</div>
-          <div id="timer">Calculating...</div>
-          <p style="margin: 10px 0 0; font-size: 0.95rem; color: var(--muted);">
-            Feb 16, 2026 • Murrieta getaway time! 🌞
-          </p>
-        </div>
-      </div>
-    </section>
-    <section class="card" style="padding:18px;text-align:center"><h3 style="margin-top:0">Dad Joke Time</h3><div id="joke-text" class="joke-text">Loading a groaner...</div></section>
-    <script> // Joke script here </script>
+<section class="card" style="padding:18px;text-align:center">
+  <h3 style="margin-top:0">Family Superpowers</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+    <div>Ryan — Vision &amp; patience 👓</div>
+    <div>Jadyn — Organization &amp; calm ✨</div>
+    <div>Landon — Humor &amp; curiosity 😄</div>
+    <div>Cody — Creativity &amp; speed ⚡</div>
+  </div>
+</section>
+
+<!-- Holiday countdown -->
+<section class="widgets">
+  <div class="widget-grid">
+    <div class="card widget-card">
+      <h3>Next Holiday</h3>
+      <div class="holiday-name" id="holiday-name">—</div>
+      <div id="timer">Calculating...</div>
+      <p id="holiday-meta">—</p>
+    </div>
+  </div>
+</section>
+
+<!-- Dad jokes -->
+<section class="card" style="padding:18px;text-align:center">
+  <h3 style="margin-top:0">Dad Joke Time</h3>
+  <div id="joke-text" class="joke-text">Loading a groaner...</div>
+  <div class="joke-controls">
+    <button id="joke-next" type="button">Another one →</button>
+  </div>
+</section>
+
+<!-- ===== CLINICAL TOOLS SECTION ===== -->
+<section class="tools-section">
+  <div class="tools-card">
+    <p class="tools-eyebrow">From the practice of Dr. Ryan Evans, OD</p>
+    <h2>Patient Education Tools</h2>
+    <p class="tools-lede">Two interactive tools for exploring how vision works — and how it changes. Designed for educational use, not clinical diagnosis.</p>
+    <div class="tools-grid">
+      <a class="tool-link" href="vision-simulator/">
+        <span class="tl-arrow">→</span>
+        <span class="tl-icon">👁</span>
+        <div class="tl-title">Vision Impairment Simulator</div>
+        <div class="tl-desc">See through the eyes of someone with cataracts, glaucoma, AMD, refractive error, or floaters.</div>
+      </a>
+      <a class="tool-link" href="visual-acuity/">
+        <span class="tl-arrow">→</span>
+        <span class="tl-icon">📏</span>
+        <div class="tl-title">Calibrated Acuity Test</div>
+        <div class="tl-desc">A properly-sized Snellen chart for at-home visual acuity screening, with full screen calibration.</div>
+      </a>
+    </div>
+    <p class="tools-disclaimer">Educational use only. Not a substitute for a comprehensive eye examination.</p>
+  </div>
+</section>
+```
+
   </main>
+
   <footer>© 2026 Evans Family · rjlcevans.com</footer>
+
+  <script>
+  // ===== Holiday Countdown =====
+  (function () {
+    function nthWeekdayOfMonth(year, month, weekday, n) {
+      const first = new Date(year, month, 1);
+      const offset = (weekday - first.getDay() + 7) % 7;
+      return new Date(year, month, 1 + offset + (n - 1) * 7);
+    }
+    function lastWeekdayOfMonth(year, month, weekday) {
+      const last = new Date(year, month + 1, 0);
+      const offset = (last.getDay() - weekday + 7) % 7;
+      return new Date(year, month, last.getDate() - offset);
+    }
+    function buildHolidaysForYear(year) {
+      return [
+        { name: "New Year's Day", date: new Date(year, 0, 1), emoji: "🎉" },
+        { name: "Martin Luther King Jr. Day", date: nthWeekdayOfMonth(year, 0, 1, 3), emoji: "✊" },
+        { name: "Valentine's Day", date: new Date(year, 1, 14), emoji: "💝" },
+        { name: "Presidents' Day", date: nthWeekdayOfMonth(year, 1, 1, 3), emoji: "🇺🇸" },
+        { name: "St. Patrick's Day", date: new Date(year, 2, 17), emoji: "☘️" },
+        { name: "Mother's Day", date: nthWeekdayOfMonth(year, 4, 0, 2), emoji: "💐" },
+        { name: "Memorial Day", date: lastWeekdayOfMonth(year, 4, 1), emoji: "🇺🇸" },
+        { name: "Father's Day", date: nthWeekdayOfMonth(year, 5, 0, 3), emoji: "👔" },
+        { name: "Independence Day", date: new Date(year, 6, 4), emoji: "🎆" },
+        { name: "Labor Day", date: nthWeekdayOfMonth(year, 8, 1, 1), emoji: "🛠" },
+        { name: "Halloween", date: new Date(year, 9, 31), emoji: "🎃" },
+        { name: "Thanksgiving", date: nthWeekdayOfMonth(year, 10, 4, 4), emoji: "🦃" },
+        { name: "Christmas", date: new Date(year, 11, 25), emoji: "🎄" },
+        { name: "New Year's Eve", date: new Date(year, 11, 31), emoji: "🥂" }
+      ];
+    }
+    function findNextHoliday() {
+      const now = new Date();
+      const thisYear = buildHolidaysForYear(now.getFullYear());
+      const nextYear = buildHolidaysForYear(now.getFullYear() + 1);
+      const all = [...thisYear, ...nextYear].filter(h => h.date.getTime() > now.getTime());
+      all.sort((a, b) => a.date - b.date);
+      return all[0];
+    }
+    function formatCountdown(ms) {
+      if (ms <= 0) return "Today!";
+      const totalSec = Math.floor(ms / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+      if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+      return `${minutes}m ${seconds}s`;
+    }
+    function updateHoliday() {
+      const next = findNextHoliday();
+      if (!next) return;
+      const nameEl = document.getElementById('holiday-name');
+      const timerEl = document.getElementById('timer');
+      const metaEl = document.getElementById('holiday-meta');
+      nameEl.textContent = `${next.emoji} ${next.name}`;
+      const dateOpts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+      metaEl.textContent = next.date.toLocaleDateString('en-US', dateOpts);
+      function tick() {
+        const ms = next.date.getTime() - Date.now();
+        timerEl.textContent = formatCountdown(ms);
+        if (ms <= 0) updateHoliday();
+      }
+      tick();
+      if (window._holidayInterval) clearInterval(window._holidayInterval);
+      window._holidayInterval = setInterval(tick, 1000);
+    }
+    updateHoliday();
+  })();
+
+  // ===== Dad Jokes =====
+  (function () {
+    const jokes = [
+      "I told my optometrist a joke. He said, \u201cI see what you did there.\u201d",
+      "Why don\u2019t eyes ever get lonely? They always come in pairs.",
+      "I\u2019m reading a book about anti-gravity. It\u2019s impossible to put down.",
+      "What do you call a fish wearing a crown? Your royal haddock-ness.",
+      "I used to hate facial hair. Then it grew on me.",
+      "Did you hear about the kidnapping at the playground? They woke up.",
+      "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+      "Why did the scarecrow win an award? He was outstanding in his field.",
+      "I'm on a seafood diet. I see food, and I eat it.",
+      "Parallel lines have so much in common. It\u2019s a shame they\u2019ll never meet.",
+      "I would tell you a construction joke, but I'm still working on it.",
+      "Why don't scientists trust atoms? Because they make up everything.",
+      "What do you call a bear with no teeth? A gummy bear.",
+      "Why did the math book look sad? It had too many problems.",
+      "I'm reading a horror book in braille. Something bad is about to happen \u2014 I can feel it.",
+      "How do you organize a space party? You planet.",
+      "I asked the librarian if they had any books on paranoia. She whispered, \u201cThey\u2019re right behind you.\u201d",
+      "What does a nosy pepper do? Gets jalape\u00f1o business.",
+      "Why don\u2019t skeletons fight each other? They don\u2019t have the guts.",
+      "I gave away all my dead batteries today \u2014 free of charge."
+    ];
+    const el = document.getElementById('joke-text');
+    const btn = document.getElementById('joke-next');
+    let lastIdx = -1;
+    function pickJoke() {
+      let idx;
+      do { idx = Math.floor(Math.random() * jokes.length); } while (idx === lastIdx && jokes.length > 1);
+      lastIdx = idx;
+      return jokes[idx];
+    }
+    function showJoke() {
+      el.classList.add('fade');
+      setTimeout(() => {
+        el.textContent = pickJoke();
+        el.classList.remove('fade');
+      }, 350);
+    }
+    btn.addEventListener('click', showJoke);
+    el.textContent = pickJoke();
+  })();
+
+  // ===== This Week in Our House — varies by day =====
+  (function () {
+    const lines = {
+      0: "Sunday: pancakes, slow mornings, and one of the boys insisting on baseball.",
+      1: "Monday: school drop-off chaos, coffee, and a fresh week of patients.",
+      2: "Tuesday: practice night \u2014 gloves, shin guards, and snacks in the car.",
+      3: "Wednesday: hump day. Ryan\u2019s probably reviewing OCTs; Jadyn\u2019s probably winning.",
+      4: "Thursday: soccer, homework, and someone asking for a second dinner.",
+      5: "Friday: pizza night, movie picks, and one kid falling asleep on the couch.",
+      6: "Saturday: tournaments, sunshine, and a backyard full of laughter."
+    };
+    const el = document.getElementById('week-line');
+    if (el) el.textContent = lines[new Date().getDay()];
+  })();
+  </script>
+
 </body>
 </html>
