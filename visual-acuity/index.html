@@ -486,12 +486,18 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
     distanceMm: 3000,
     currentEye: 'OD',
     results: { OD: null, OS: null },
-    testIndex: 0,           // pointer into LINES (start at logmar 1.0)
+    testIndex: 0,           // pointer into LINES
     currentLetters: [],
     currentAnswers: [],
     correctSoFar: {},       // {logmar: correctCount}
-    lastValidLine: null,    // logmar value of best line passed
+    lastValidLine: null,    // logmar value of best (smallest) line passed
+    direction: null,        // 'down' = going smaller, 'up' = going larger
+    failedAtSmaller: null,  // index of smallest line that was failed (for ETDRS scoring)
+    passedFirstLine: false, // did they pass the starting line?
   };
+
+  // Index of the starting line (20/80, logMAR 0.6)
+  const START_LINE_INDEX = 4;
 
   // ===== Step navigation =====
   const stepEls = document.querySelectorAll('.step');
@@ -683,9 +689,12 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
   beginEye.addEventListener('click', () => {
     occluderPrompt.hidden = true;
     testStage.hidden = false;
-    state.testIndex = 0; // start at logmar 1.0 (20/200)
+    state.testIndex = START_LINE_INDEX; // start at 20/80
     state.lastValidLine = null;
     state.correctSoFar = {};
+    state.direction = null;
+    state.failedAtSmaller = null;
+    state.passedFirstLine = false;
     presentLine();
   });
 
@@ -726,8 +735,14 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
     // Sloan letters are designed on a 5x5 grid — height = font-size approximation
     optotypes.textContent = state.currentLetters.join(' ');
 
-    lineLabel.textContent = `Line ${LINES.length - state.testIndex} · ${line.snellen} (logMAR ${line.logmar.toFixed(1)})`;
-    lineProgress.textContent = `${state.testIndex + 1} of ${LINES.length}`;
+    lineLabel.textContent = `${line.snellen} · logMAR ${line.logmar.toFixed(1)}`;
+    if (state.direction === 'down') {
+      lineProgress.textContent = 'going smaller ↓';
+    } else if (state.direction === 'up') {
+      lineProgress.textContent = 'going larger ↑';
+    } else {
+      lineProgress.textContent = 'starting line';
+    }
 
     // Build answer inputs
     answerRow.innerHTML = '';
@@ -796,44 +811,80 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
     });
     state.correctSoFar[line.logmar] = correct;
 
-    // Pass criterion: ≥ ceil(count/2) + 1 (i.e. majority + 1 — clinical convention varies, we use >50%)
-    // Common: 3 of 5 = pass. Use Math.ceil(count * 0.6).
-    const threshold = Math.ceil(line.count * 0.6);
-    if (correct >= threshold) {
-      state.lastValidLine = line.logmar;
-      state.testIndex++;
-      if (state.testIndex >= LINES.length || line.logmar <= -0.3) {
+    const threshold = Math.ceil(line.count * 0.6); // 3 of 5
+    const passed = correct >= threshold;
+
+    // Bidirectional staircase logic
+    if (state.direction === null) {
+      // First line tested — decide direction
+      if (passed) {
+        state.lastValidLine = line.logmar;
+        state.passedFirstLine = true;
+        state.direction = 'down'; // go smaller
+        state.testIndex++;
+        if (state.testIndex >= LINES.length) finishEye();
+        else presentLine();
+      } else {
+        state.direction = 'up'; // go larger to find threshold
+        state.failedAtSmaller = state.testIndex;
+        state.testIndex--;
+        if (state.testIndex < 0) finishEye();
+        else presentLine();
+      }
+    } else if (state.direction === 'down') {
+      // Going smaller — continue while passing, stop on first fail
+      if (passed) {
+        state.lastValidLine = line.logmar;
+        state.testIndex++;
+        if (state.testIndex >= LINES.length) finishEye();
+        else presentLine();
+      } else {
+        // Failed — this is the threshold line; finish with ETDRS refinement
+        state.failedAtSmaller = state.testIndex;
+        finishEye();
+      }
+    } else if (state.direction === 'up') {
+      // Going larger — continue while failing, stop on first pass
+      if (passed) {
+        state.lastValidLine = line.logmar;
         finishEye();
       } else {
-        presentLine();
+        state.failedAtSmaller = state.testIndex;
+        state.testIndex--;
+        if (state.testIndex < 0) {
+          // Failed every line down to 20/200 — score is worse than that
+          finishEye();
+        } else {
+          presentLine();
+        }
       }
-    } else {
-      // Failed — stop here, score is the last valid line, with letter-by-letter logMAR refinement
-      finishEye();
     }
   });
 
   document.getElementById('cantSee').addEventListener('click', () => {
-    // Treat as 0 correct on this line
+    // Treat as 0 correct on this line, then drive the staircase as a fail
     const line = LINES[state.testIndex];
     state.correctSoFar[line.logmar] = 0;
-    finishEye();
+    state.currentAnswers = new Array(line.count).fill('');
+    document.getElementById('submitLine').click();
   });
 
   function finishEye() {
-    // Letter-by-letter logMAR scoring (ETDRS):
-    // logMAR = lastValidLogmar - 0.02 × (correct on next line)
-    // If never passed any line, score is "worse than 20/200" → mark as <20/200
+    // ETDRS letter-by-letter refinement:
+    // Final logMAR = last passed line - 0.02 × (correct on the smallest failed line)
     let finalLogmar;
     let finalSnellen;
     if (state.lastValidLine === null) {
+      // Never passed any line — worse than 20/200
       finalLogmar = 1.0;
       finalSnellen = '<20/200';
     } else {
-      const failedLine = LINES[state.testIndex];
-      const extraCorrect = (failedLine && state.correctSoFar[failedLine.logmar]) || 0;
+      let extraCorrect = 0;
+      if (state.failedAtSmaller !== null) {
+        const failedLine = LINES[state.failedAtSmaller];
+        if (failedLine) extraCorrect = state.correctSoFar[failedLine.logmar] || 0;
+      }
       finalLogmar = state.lastValidLine - 0.02 * extraCorrect;
-      // Convert to nearest standard Snellen
       finalSnellen = logMarToSnellen(finalLogmar);
     }
     state.results[state.currentEye] = { logmar: finalLogmar, snellen: finalSnellen };
@@ -876,9 +927,12 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
   document.getElementById('restart').addEventListener('click', () => {
     state.results = { OD: null, OS: null };
     state.currentEye = 'OD';
-    state.testIndex = 0;
+    state.testIndex = START_LINE_INDEX;
     state.lastValidLine = null;
     state.correctSoFar = {};
+    state.direction = null;
+    state.failedAtSmaller = null;
+    state.passedFirstLine = false;
     goStep(1);
   });
 
