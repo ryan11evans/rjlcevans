@@ -16,7 +16,7 @@
       --shadow: 0 6px 20px rgba(0,0,0,.08);
       --maxw: 960px;
 
-
+```
   /* Clinical accent for the tools section */
   --clinical-bg: #0f1620;
   --clinical-panel: #1d2733;
@@ -284,7 +284,7 @@ footer {
   .brand .logo { font-size: 2rem; }
   .tools-card { padding: 22px 18px; }
 }
-
+```
 
   </style>
 </head>
@@ -296,7 +296,7 @@ footer {
 
   <main>
 
-
+```
 <!-- ===== FAMILY CONTENT ===== -->
 <section class="photo card">
   <img src="family.jpg?v=2" alt="The Evans Family" loading="eager" />
@@ -349,7 +349,7 @@ footer {
   <div class="tools-card">
     <p class="tools-eyebrow">From the practice of Dr. Ryan Evans, OD</p>
     <h2>Patient Education Tools</h2>
-    <p class="tools-lede">Two interactive tools for exploring how vision works — and how it changes. Designed for educational use, not clinical diagnosis.</p>
+    <p class="tools-lede">Three interactive tools for exploring how vision works — and how to keep it healthy. Designed for educational use, not clinical diagnosis.</p>
     <div class="tools-grid">
       <a class="tool-link" href="vision-simulator/">
         <span class="tl-arrow">→</span>
@@ -363,11 +363,17 @@ footer {
         <div class="tl-title">Calibrated Acuity Test</div>
         <div class="tl-desc">A properly-sized Snellen chart for at-home visual acuity screening, with full screen calibration.</div>
       </a>
+      <a class="tool-link" href="eye-wellness/">
+        <span class="tl-arrow">→</span>
+        <span class="tl-icon">🌿</span>
+        <div class="tl-title">Eye Wellness Dashboard</div>
+        <div class="tl-desc">A 20-20-20 timer, blink exercises, and a daily evidence-based tip — to keep your eyes happy at the screen.</div>
+      </a>
     </div>
     <p class="tools-disclaimer">Educational use only. Not a substitute for a comprehensive eye examination.</p>
   </div>
 </section>
-
+```
 
   </main>
 
@@ -502,7 +508,7 @@ footer {
     const el = document.getElementById('week-line');
     if (el) el.textContent = lines[new Date().getDay()];
   })();
-  </script> 
+  </script>
 
 </body>
 </html>
