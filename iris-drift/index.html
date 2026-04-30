@@ -1,1 +1,1717 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2332">
+<title>Iris Drift — Dr. Ryan Evans, OD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #f0f4f8;
+    --ink-dim: #a4b3c4;
+    --accent: #ffd166;
+    --accent-2: #06d6a0;
+    --line: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #1a2332; color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; overflow: hidden; }
+  body { min-height: 100vh; min-height: 100dvh; touch-action: none; }
+
+/* The game fills the viewport on phone/tablet, with a max width on desktop */
+.game-root {
+position: fixed; inset: 0;
+display: flex; flex-direction: column;
+background: #1a2332;
+}
+
+.stage {
+position: relative; flex: 1;
+overflow: hidden;
+cursor: pointer;
+}
+#gameCanvas { display: block; width: 100%; height: 100%; }
+
+/* HUD */
+.hud {
+position: absolute; top: 14px; left: 16px; right: 16px;
+display: flex; justify-content: space-between; align-items: flex-start;
+pointer-events: none;
+color: white;
+text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+font-family: ‘Fraunces’, serif;
+z-index: 5;
+}
+.hud-block { display: flex; flex-direction: column; gap: 2px; }
+.hud-block.right { align-items: flex-end; }
+.hud-label {
+font-family: ‘Inter Tight’; font-size: 9px; letter-spacing: 0.18em;
+text-transform: uppercase; opacity: 0.75; font-weight: 600;
+}
+.hud-val {
+font-size: 26px; font-weight: 500; line-height: 1;
+font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.hud-orbs { font-size: 14px; line-height: 1; opacity: 0.9; font-style: italic; font-weight: 400; }
+.biome-banner {
+position: absolute; top: 24%; left: 0; right: 0;
+text-align: center;
+color: rgba(255,255,255,0.85);
+pointer-events: none;
+z-index: 4;
+opacity: 0;
+transition: opacity 0.6s ease;
+}
+.biome-banner.show { opacity: 1; }
+.biome-banner .biome-name {
+font-family: ‘Fraunces’, serif; font-style: italic;
+font-size: clamp(28px, 6vw, 44px); font-weight: 400;
+text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+letter-spacing: 0.02em;
+}
+.biome-banner .biome-sub {
+font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+opacity: 0.75; margin-top: 4px;
+font-family: ‘Inter Tight’; font-weight: 600;
+}
+
+/* Trick toast — appears mid-screen briefly */
+.trick-toast {
+position: absolute; top: 38%; left: 0; right: 0;
+text-align: center;
+pointer-events: none;
+z-index: 4;
+opacity: 0;
+}
+.trick-toast.show { animation: trickPop 1s ease-out forwards; }
+@keyframes trickPop {
+0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+20% { opacity: 1; transform: translateY(0) scale(1); }
+80% { opacity: 1; transform: translateY(-6px) scale(1); }
+100% { opacity: 0; transform: translateY(-20px) scale(1); }
+}
+.trick-name {
+font-family: ‘Fraunces’, serif; font-style: italic;
+font-size: clamp(22px, 5vw, 34px); color: var(–accent);
+text-shadow: 0 4px 18px rgba(0,0,0,0.5);
+font-weight: 500;
+}
+.trick-points {
+font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+color: white; opacity: 0.9; margin-top: 2px; font-weight: 600;
+}
+
+/* Overlays */
+.overlay {
+position: absolute; inset: 0;
+background: rgba(15, 22, 32, 0.88);
+backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+display: grid; place-items: center;
+padding: 20px;
+z-index: 10;
+}
+.overlay-card {
+text-align: center;
+max-width: 460px;
+}
+.overlay h2 {
+font-family: ‘Fraunces’, serif; font-weight: 500;
+font-size: clamp(32px, 6vw, 48px); line-height: 1.05; letter-spacing: -0.02em;
+margin: 0 0 10px; color: white;
+}
+.overlay h2 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.overlay p { color: var(–ink-dim); font-size: 14px; line-height: 1.55; margin: 0 0 18px; }
+.overlay .score-big {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 56px; line-height: 1;
+color: var(–accent); margin: 12px 0 8px;
+font-variant-numeric: tabular-nums;
+}
+.overlay .score-row {
+display: flex; justify-content: center; gap: 24px; margin: 6px 0 18px;
+font-size: 12px; color: var(–ink-dim);
+}
+.overlay .score-row strong {
+color: white; font-family: ‘Fraunces’, serif; font-style: italic; font-size: 18px;
+display: block; font-weight: 500;
+}
+.overlay .controls-info {
+font-size: 13px; color: var(–ink-dim);
+margin: 18px 0; line-height: 1.7;
+background: rgba(255,255,255,0.04);
+border: 1px solid var(–line);
+border-radius: 10px;
+padding: 12px 16px;
+text-align: left;
+}
+.overlay .controls-info strong { color: white; font-weight: 600; }
+.overlay .controls-info kbd {
+display: inline-block;
+padding: 1px 6px; margin: 0 2px;
+background: rgba(255,255,255,0.1);
+border: 1px solid var(–line);
+border-radius: 4px;
+font-family: monospace; font-size: 11px;
+color: white;
+}
+
+.btn {
+appearance: none;
+background: var(–accent);
+color: #1a1208;
+border: none;
+padding: 14px 28px;
+border-radius: 999px;
+font-family: inherit;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+transition: transform 0.1s, background 0.15s;
+margin: 4px;
+}
+.btn:hover { background: #ffdb85; }
+.btn:active { transform: scale(0.97); }
+.btn.ghost {
+background: transparent;
+color: white;
+border: 1px solid var(–line);
+}
+.btn.ghost:hover { background: rgba(255,255,255,0.06); }
+
+.home-link {
+position: absolute; bottom: 14px; right: 16px;
+z-index: 5;
+font-size: 11px; color: rgba(255,255,255,0.5);
+text-decoration: none; letter-spacing: 0.08em;
+pointer-events: auto;
+}
+.home-link:hover { color: white; }
+
+[hidden] { display: none !important; }
+</style>
+
+</head>
+<body>
+
+<div class="game-root">
+  <div class="stage" id="stage">
+    <canvas id="gameCanvas"></canvas>
+
+```
+<!-- HUD (in-game) -->
+<div class="hud" id="hud" hidden>
+  <div class="hud-block">
+    <div class="hud-label">Score</div>
+    <div class="hud-val" id="hudScore">0</div>
+    <div class="hud-orbs" id="hudOrbs">0 orbs</div>
+  </div>
+  <div class="hud-block right">
+    <div class="hud-label">Distance</div>
+    <div class="hud-val" id="hudDist">0m</div>
+    <div class="hud-orbs" id="hudCombo"></div>
+  </div>
+</div>
+
+<!-- Biome banner -->
+<div class="biome-banner" id="biomeBanner">
+  <div class="biome-name" id="biomeName"></div>
+  <div class="biome-sub" id="biomeSub"></div>
+</div>
+
+<!-- Trick toast -->
+<div class="trick-toast" id="trickToast">
+  <div class="trick-name" id="trickName"></div>
+  <div class="trick-points" id="trickPoints"></div>
+</div>
+
+<!-- Start overlay -->
+<div class="overlay" id="overlayStart">
+  <div class="overlay-card">
+    <h2>Iris <em>Drift</em></h2>
+    <p>An endless ride through the anatomy of sight. Chase the horizon, collect vision orbs, and string together tricks across five biomes of the eye.</p>
+    <div class="controls-info">
+      <strong>Tap</strong> or <kbd>space</kbd> to jump.<br>
+      <strong>Hold</strong> mid-air to spin (more rotation = more points).<br>
+      <strong>Land on a flag</strong> to grind for bonus points.<br>
+      Avoid floaters and obstacles.
+    </div>
+    <button class="btn" id="btnStart">Start riding</button>
+  </div>
+</div>
+
+<!-- Game over overlay -->
+<div class="overlay" id="overlayEnd" hidden>
+  <div class="overlay-card">
+    <h2 id="endTitle">Wiped <em>out</em></h2>
+    <p id="endMessage">Take a breath, blink a few times, and try again.</p>
+    <div class="score-big" id="endScore">0</div>
+    <div class="score-row">
+      <div><strong id="endHigh">0</strong>Best</div>
+      <div><strong id="endDistance">0m</strong>Distance</div>
+      <div><strong id="endOrbs">0</strong>Orbs</div>
+    </div>
+    <button class="btn" id="btnRestart">Ride again</button>
+    <button class="btn ghost" id="btnHome">Home</button>
+  </div>
+</div>
+
+<!-- Pause overlay -->
+<div class="overlay" id="overlayPause" hidden>
+  <div class="overlay-card">
+    <h2>Paused</h2>
+    <button class="btn" id="btnResume">Resume</button>
+    <button class="btn ghost" id="btnQuit">End ride</button>
+  </div>
+</div>
+
+<a class="home-link" href="https://rjlcevans.com/">← Home</a>
+```
+
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  const HIGH_SCORE_KEY = 'evans_iris_drift_high_v1';
+
+  // Physics
+  const GRAVITY = 1800;            // px/s²
+  const RUN_SPEED_BASE = 380;      // px/s base ground speed
+  const SPEED_GROWTH = 6;          // px/s² distance speed-up
+  const SPEED_MAX = 720;
+  const JUMP_VELOCITY = -780;      // initial jump
+  const JUMP_HOLD_BOOST = -1200;   // extra upward force while holding shortly after jump
+  const JUMP_HOLD_TIME = 0.12;     // seconds you can extend a jump
+  const SPIN_RATE = 9;             // radians/sec while spinning (full rotation = 2π)
+
+  // Terrain
+  const TERRAIN_RES = 4;           // sample every N px along the screen for hill drawing
+  const HILL_AMPLITUDE = 90;       // base hill height
+  const HILL_FREQ_BASE = 0.0035;   // primary frequency
+  const HILL_FREQ_2 = 0.011;       // secondary, smaller bumps
+  const HILL_FREQ_3 = 0.0008;      // long swells
+
+  // Biomes — Alto's-style atmospheric variety, eye-themed
+  const BIOMES = [
+    {
+      name: 'Cornea Pass', sub: 'Where light first lands',
+      sky: ['#a8d8ea', '#fef6e4', '#f9c5d1'],
+      hills: ['#5d8aa8', '#3a5d7a', '#1f3a52', '#0d1f30'],
+      particle: 'mist', particleColor: 'rgba(255,255,255,0.5)',
+      orbColor: '#ffd166',
+      celestial: { type: 'sun', color: '#fff4d6', glow: 'rgba(255, 220, 150, 0.45)' },
+      trees: 'pine',
+    },
+    {
+      name: 'Iris Valley', sub: 'Warmth in pigment',
+      sky: ['#8d6e4b', '#c89466', '#e8b87f'],
+      hills: ['#5a3d28', '#3f2818', '#2a1810', '#150a05'],
+      particle: 'leaves', particleColor: 'rgba(232, 184, 127, 0.6)',
+      orbColor: '#ffe680',
+      celestial: { type: 'sun', color: '#ffd9a0', glow: 'rgba(255, 200, 120, 0.4)' },
+      trees: 'wisp',
+    },
+    {
+      name: 'Lens Drift', sub: 'Clarity at altitude',
+      sky: ['#e8f4f8', '#d1e8ec', '#a8c8d0'],
+      hills: ['#6a8a96', '#4a6878', '#2c4a5a', '#152838'],
+      particle: 'sparkle', particleColor: 'rgba(255,255,255,0.8)',
+      orbColor: '#a8e6ff',
+      celestial: { type: 'sun', color: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
+      trees: 'pine',
+    },
+    {
+      name: 'Retinal Ridge', sub: 'The light record',
+      sky: ['#5a1e1e', '#a8453a', '#e87858'],
+      hills: ['#6a2418', '#451612', '#28100c', '#150805'],
+      particle: 'embers', particleColor: 'rgba(255, 200, 120, 0.8)',
+      orbColor: '#ffb86b',
+      celestial: { type: 'sun', color: '#ffe0b0', glow: 'rgba(255, 150, 80, 0.5)' },
+      trees: 'wisp',
+    },
+    {
+      name: 'Optic Tunnel', sub: 'Toward the brain',
+      sky: ['#0d1138', '#1a1f5a', '#3a3a7a'],
+      hills: ['#1a1f4a', '#0f1430', '#080a1a', '#04050d'],
+      particle: 'stars', particleColor: 'rgba(255,255,255,0.95)',
+      orbColor: '#c8b0ff',
+      celestial: { type: 'moon', color: '#e8e0ff', glow: 'rgba(200, 180, 255, 0.35)' },
+      trees: 'pine',
+    },
+  ];
+
+  const BIOME_DURATION = 15; // seconds each biome lasts before transition
+  const BIOME_FADE = 3;      // crossfade duration
+
+  // ============================================================
+  // STATE & DOM
+  // ============================================================
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const overlayStart = document.getElementById('overlayStart');
+  const overlayEnd = document.getElementById('overlayEnd');
+  const overlayPause = document.getElementById('overlayPause');
+  const hud = document.getElementById('hud');
+  const hudScore = document.getElementById('hudScore');
+  const hudDist = document.getElementById('hudDist');
+  const hudOrbs = document.getElementById('hudOrbs');
+  const hudCombo = document.getElementById('hudCombo');
+  const biomeBanner = document.getElementById('biomeBanner');
+  const biomeName = document.getElementById('biomeName');
+  const biomeSub = document.getElementById('biomeSub');
+  const trickToast = document.getElementById('trickToast');
+  const trickName = document.getElementById('trickName');
+  const trickPoints = document.getElementById('trickPoints');
+
+  let game = null;
+  let cssW = 0, cssH = 0, dpr = 1;
+
+  function resizeCanvas() {
+    const rect = stage.getBoundingClientRect();
+    cssW = rect.width;
+    cssH = rect.height;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ============================================================
+  // AUDIO
+  // ============================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  }
+  function tone(freq, dur, type = 'sine', vol = 0.18) {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = 0.0001;
+      gain.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+  }
+  const sfx = {
+    jump: () => tone(440, 0.08, 'sine', 0.12),
+    land: () => tone(160, 0.1, 'triangle', 0.12),
+    orb: () => { tone(880, 0.06, 'sine', 0.12); setTimeout(()=>tone(1175, 0.08, 'sine', 0.1), 40); },
+    trick: () => { tone(523, 0.06); setTimeout(()=>tone(659, 0.06), 50); setTimeout(()=>tone(784, 0.1), 100); },
+    grind: () => tone(330, 0.04, 'sawtooth', 0.06),
+    crash: () => { tone(220, 0.2, 'sawtooth', 0.18); setTimeout(()=>tone(110, 0.3, 'sawtooth', 0.18), 100); },
+    biome: () => { tone(523, 0.15, 'sine', 0.1); setTimeout(()=>tone(659, 0.15, 'sine', 0.1), 150); setTimeout(()=>tone(784, 0.25, 'sine', 0.1), 300); },
+  };
+
+  // ============================================================
+  // TERRAIN
+  // ============================================================
+  // Returns the y-coordinate of terrain surface at world x.
+  // Multi-octave sine for natural rolling hills. Stable across the run because
+  // we use deterministic functions of world x.
+  function terrainAt(x) {
+    const groundY = cssH * 0.72;
+    let y = groundY;
+    y -= Math.sin(x * HILL_FREQ_BASE) * HILL_AMPLITUDE;
+    y -= Math.sin(x * HILL_FREQ_2 + 1.3) * 22;
+    y -= Math.sin(x * HILL_FREQ_3 - 0.7) * 60;
+    return y;
+  }
+
+  function terrainSlope(x) {
+    // Numerical derivative for ground angle
+    const dx = 5;
+    return (terrainAt(x + dx) - terrainAt(x - dx)) / (2 * dx);
+  }
+
+  // ============================================================
+  // GAME OBJECTS
+  // ============================================================
+  function newGame() {
+    return {
+      running: false,
+      paused: false,
+      gameOver: false,
+
+      // World state — the player conceptually moves through "world x"; the camera follows
+      worldX: 0,
+      cameraX: 0,
+      speed: RUN_SPEED_BASE,
+
+      // Score
+      score: 0,
+      orbs: 0,
+      distance: 0,
+      combo: 0,
+      comboTimer: 0,
+
+      // Biome system
+      biomeIndex: 0,
+      biomeTime: 0,
+      biomeTransition: 0, // 0..1 during transition
+
+      // Player
+      player: {
+        x: cssW * 0.28,    // screen-space x (camera-locked)
+        y: 0,              // world y (will be set on first frame)
+        vy: 0,
+        onGround: true,
+        rotation: 0,       // current rotation
+        spinning: false,
+        spinStartRot: 0,
+        spinAccum: 0,      // total radians spun this jump
+        jumpHoldTime: 0,
+        canExtendJump: false,
+        grinding: false,
+        grindObj: null,
+        grindAccumPoints: 0,
+      },
+
+      // Entities
+      orbsArr: [],          // collectible vision orbs
+      obstacles: [],        // floaters & rocks
+      grindObjects: [],     // flags to grind on
+      particles: [],
+      ambientParticles: [],
+      snowTrail: [],        // particles trailing behind boarder when on ground
+
+      // Spawning
+      nextOrbX: cssW * 0.5,
+      nextObstacleX: cssW * 1.5,
+      nextGrindX: cssW * 2.0,
+
+      lastFrameTime: performance.now(),
+      elapsed: 0,
+    };
+  }
+
+  function spawnOrb(worldX) {
+    // Orbs sit a bit above the terrain, often in arcs
+    const baseY = terrainAt(worldX);
+    const arcPhase = (worldX % 200) / 200 * Math.PI;
+    const arcHeight = 60 + Math.sin(arcPhase) * 40;
+    game.orbsArr.push({
+      x: worldX, y: baseY - arcHeight,
+      collected: false,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+  function spawnObstacle(worldX) {
+    // 60% rock (ground-level), 40% floater (mid-air)
+    const isFloater = Math.random() < 0.4;
+    const baseY = terrainAt(worldX);
+    if (isFloater) {
+      game.obstacles.push({
+        type: 'floater',
+        x: worldX, y: baseY - 70 - Math.random() * 50,
+        size: 16 + Math.random() * 10,
+        phase: Math.random() * Math.PI * 2,
+      });
+    } else {
+      game.obstacles.push({
+        type: 'rock',
+        x: worldX, y: baseY,
+        size: 14 + Math.random() * 8,
+      });
+    }
+  }
+  function spawnGrindRail(worldX) {
+    // A flag with a horizontal pole players can grind on
+    const baseY = terrainAt(worldX);
+    game.grindObjects.push({
+      x: worldX, y: baseY - 80 - Math.random() * 40,
+      length: 80 + Math.random() * 60,
+      flagHeight: 30,
+    });
+  }
+
+  // ============================================================
+  // INPUT
+  // ============================================================
+  let inputDown = false;
+  let inputDownStart = 0;
+
+  function onPress(e) {
+    if (e && e.target && (e.target.closest('.btn') || e.target.closest('.overlay') || e.target.closest('.home-link'))) return;
+    if (e) e.preventDefault();
+    if (!game || !game.running || game.paused) return;
+    inputDown = true;
+    inputDownStart = performance.now();
+
+    const p = game.player;
+    if (p.onGround) {
+      // Jump
+      p.onGround = false;
+      p.vy = JUMP_VELOCITY;
+      p.canExtendJump = true;
+      p.jumpHoldTime = 0;
+      p.spinAccum = 0;
+      p.spinStartRot = p.rotation;
+      sfx.jump();
+    } else {
+      // Already in air — start spinning
+      p.spinning = true;
+    }
+  }
+  function onRelease() {
+    inputDown = false;
+    if (!game || !game.running) return;
+    const p = game.player;
+    p.canExtendJump = false;
+    p.spinning = false;
+  }
+
+  stage.addEventListener('pointerdown', onPress);
+  stage.addEventListener('pointerup', onRelease);
+  stage.addEventListener('pointercancel', onRelease);
+  stage.addEventListener('pointerleave', onRelease);
+
+  document.addEventListener('keydown', e => {
+    if (e.repeat) return;
+    if (e.code === 'Space') { onPress(e); }
+    else if (e.code === 'Escape' || e.key === 'p' || e.key === 'P') {
+      if (game && game.running) {
+        if (game.paused) resumeGame(); else pauseGame();
+      }
+    }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.code === 'Space') onRelease();
+  });
+
+  // ============================================================
+  // GAME LOGIC
+  // ============================================================
+  function update(dt) {
+    if (!game || !game.running || game.paused) return;
+    game.elapsed += dt;
+
+    // Speed grows over time, capped
+    game.speed = Math.min(SPEED_MAX, RUN_SPEED_BASE + game.elapsed * SPEED_GROWTH);
+
+    // Player advances through world
+    game.worldX += game.speed * dt;
+    game.distance = game.worldX / 30; // arbitrary "meter" conversion
+
+    // Camera tracks player x with the player anchored at screen position
+    game.cameraX = game.worldX - game.player.x;
+
+    // Biome timing
+    game.biomeTime += dt;
+    if (game.biomeTime >= BIOME_DURATION) {
+      // Begin transition
+      game.biomeTransition += dt / BIOME_FADE;
+      if (game.biomeTransition >= 1) {
+        game.biomeIndex = (game.biomeIndex + 1) % BIOMES.length;
+        game.biomeTime = 0;
+        game.biomeTransition = 0;
+        showBiomeBanner();
+        sfx.biome();
+      }
+    }
+
+    updatePlayer(dt);
+    updateEntities(dt);
+    updateParticles(dt);
+    updateAmbientParticles(dt);
+
+    // Combo decay
+    if (game.combo > 0) {
+      game.comboTimer -= dt;
+      if (game.comboTimer <= 0) {
+        game.combo = 0;
+        hudCombo.textContent = '';
+      }
+    }
+
+    updateHUD();
+  }
+
+  function updatePlayer(dt) {
+    const p = game.player;
+
+    // Extend jump while holding
+    if (p.canExtendJump && inputDown) {
+      p.jumpHoldTime += dt;
+      if (p.jumpHoldTime < JUMP_HOLD_TIME) {
+        p.vy += JUMP_HOLD_BOOST * dt;
+      } else {
+        p.canExtendJump = false;
+      }
+    }
+
+    if (!p.onGround) {
+      // Apply gravity
+      p.vy += GRAVITY * dt;
+      p.y += p.vy * dt;
+
+      // Spinning while airborne
+      if (p.spinning || inputDown) {
+        const before = p.rotation;
+        p.rotation += SPIN_RATE * dt;
+        p.spinAccum += SPIN_RATE * dt;
+      } else {
+        // Smoothly tilt toward ground angle (Alto's auto-righting feel)
+        const ground = terrainSlope(game.worldX);
+        const target = Math.atan(ground);
+        const diff = ((target - p.rotation + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        p.rotation += diff * dt * 6;
+      }
+
+      // Check landing
+      const groundY = terrainAt(game.worldX);
+      if (p.y >= groundY) {
+        p.y = groundY;
+        p.vy = 0;
+        p.onGround = true;
+        p.canExtendJump = false;
+
+        // Award trick if a meaningful spin was completed
+        if (p.spinAccum > 0) {
+          const fullRotations = Math.floor(p.spinAccum / (Math.PI * 2));
+          const halfRotations = Math.floor(p.spinAccum / Math.PI);
+
+          // Check if we landed at a sane angle (not crashing)
+          const groundSlope = terrainSlope(game.worldX);
+          const groundAngle = Math.atan(groundSlope);
+          const rotMod = ((p.rotation - groundAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+          const upright = (rotMod < Math.PI * 0.45 || rotMod > Math.PI * 1.55);
+
+          if (!upright && halfRotations >= 1) {
+            // Bad landing — crash
+            crashGame();
+            return;
+          }
+
+          if (halfRotations >= 1) {
+            const points = halfRotations >= 4 ? 800 : halfRotations >= 2 ? 250 : 100;
+            const label = halfRotations >= 4 ? 'Double Backflip!' : halfRotations >= 2 ? 'Backflip!' : 'Half Spin';
+            awardTrick(label, points);
+          }
+
+          // Snap rotation to ground angle
+          p.rotation = groundAngle;
+        }
+        p.spinning = false;
+        p.spinAccum = 0;
+        sfx.land();
+      }
+
+      // Check grind landing
+      for (const g of game.grindObjects) {
+        if (g.collected) continue;
+        const left = g.x;
+        const right = g.x + g.length;
+        if (game.worldX >= left && game.worldX <= right) {
+          // If player is roughly at the rail height and falling
+          if (p.vy >= 0 && Math.abs(p.y - g.y) < 14) {
+            startGrind(g);
+            break;
+          }
+        }
+      }
+    } else {
+      // On ground — follow terrain
+      p.y = terrainAt(game.worldX);
+      // Smoothly orient to slope
+      const ground = terrainSlope(game.worldX);
+      const target = Math.atan(ground);
+      const diff = ((target - p.rotation + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      p.rotation += diff * dt * 12;
+    }
+
+    // Grind continuation
+    if (p.grinding && p.grindObj) {
+      const g = p.grindObj;
+      if (game.worldX > g.x + g.length) {
+        // Finished grind — exit airborne
+        endGrind(true);
+      } else {
+        p.y = g.y;
+        p.vy = 0;
+        // Award grind points over time
+        p.grindAccumPoints += dt * 80;
+        const whole = Math.floor(p.grindAccumPoints);
+        if (whole > 0) {
+          game.score += whole;
+          p.grindAccumPoints -= whole;
+        }
+        // Subtle grind sound
+        if (Math.random() < dt * 8) sfx.grind();
+      }
+    }
+  }
+
+  function startGrind(g) {
+    const p = game.player;
+    p.grinding = true;
+    p.grindObj = g;
+    p.onGround = false;
+    p.spinning = false;
+    p.spinAccum = 0;
+    g.collected = true;
+    p.grindAccumPoints = 0;
+    awardTrick('Grind!', 50);
+  }
+  function endGrind(success) {
+    const p = game.player;
+    p.grinding = false;
+    p.grindObj = null;
+    p.vy = -200; // small pop off the rail
+    if (success) {
+      awardTrick('Grind Off!', 100);
+    }
+  }
+
+  function awardTrick(label, points) {
+    game.combo++;
+    const multiplier = 1 + (game.combo - 1) * 0.5;
+    const finalPoints = Math.round(points * multiplier);
+    game.score += finalPoints;
+    game.comboTimer = 3;
+    showTrickToast(label, finalPoints, game.combo);
+    sfx.trick();
+  }
+
+  function showTrickToast(label, points, combo) {
+    trickName.textContent = label;
+    trickPoints.textContent = combo > 1
+      ? `+${points} · ${combo}× combo`
+      : `+${points}`;
+    trickToast.classList.remove('show');
+    void trickToast.offsetWidth; // restart animation
+    trickToast.classList.add('show');
+  }
+
+  function showBiomeBanner() {
+    const b = BIOMES[game.biomeIndex];
+    biomeName.textContent = b.name;
+    biomeSub.textContent = b.sub;
+    biomeBanner.classList.add('show');
+    setTimeout(() => biomeBanner.classList.remove('show'), 2400);
+  }
+
+  function updateEntities(dt) {
+    // Spawn ahead of camera
+    const spawnAheadX = game.cameraX + cssW + 200;
+    while (game.nextOrbX < spawnAheadX) {
+      // Sometimes spawn a small arc of orbs
+      if (Math.random() < 0.5) {
+        const arcStart = game.nextOrbX;
+        const count = 3 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < count; i++) {
+          spawnOrb(arcStart + i * 32);
+        }
+        game.nextOrbX = arcStart + count * 32 + 250 + Math.random() * 200;
+      } else {
+        spawnOrb(game.nextOrbX);
+        game.nextOrbX += 180 + Math.random() * 180;
+      }
+    }
+    while (game.nextObstacleX < spawnAheadX) {
+      spawnObstacle(game.nextObstacleX);
+      // Difficulty: obstacles get closer over time
+      const baseGap = 600 - Math.min(300, game.elapsed * 3);
+      game.nextObstacleX += baseGap + Math.random() * 250;
+    }
+    while (game.nextGrindX < spawnAheadX) {
+      // Only spawn grinds occasionally
+      if (Math.random() < 0.6) spawnGrindRail(game.nextGrindX);
+      game.nextGrindX += 800 + Math.random() * 600;
+    }
+
+    // Update orbs (collection check)
+    for (const o of game.orbsArr) {
+      if (o.collected) continue;
+      o.phase += dt * 4;
+      const dx = game.worldX - o.x;
+      const dy = game.player.y - o.y;
+      if (Math.abs(dx) < 22 && Math.abs(dy) < 28) {
+        o.collected = true;
+        game.orbs++;
+        game.score += 5;
+        spawnParticles(o.x - game.cameraX, o.y, BIOMES[game.biomeIndex].orbColor, 6);
+        sfx.orb();
+      }
+    }
+
+    // Update obstacles (collision check)
+    for (const ob of game.obstacles) {
+      if (ob.bounced) continue;  // already bounced past it
+      if (ob.type === 'floater') {
+        ob.phase += dt * 2;
+        ob.y += Math.sin(ob.phase) * dt * 8;
+      }
+      const dx = game.worldX - ob.x;
+      const playerY = game.player.y;
+
+      if (ob.type === 'floater') {
+        // Danger orb: ANY contact = crash (must be jumped over)
+        const dy = playerY - ob.y;
+        const collDist = ob.size * 1.15 + 14;
+        if (Math.abs(dx) < collDist * 0.55 && Math.abs(dy) < collDist * 0.55) {
+          crashGame();
+          return;
+        }
+      } else if (ob.type === 'rock') {
+        // Rocks: landing on top = bounce, hitting side = crash
+        // Rock occupies a region from (ob.x - size) to (ob.x + size) horizontally,
+        // and from (ob.y - rockHeight) to (ob.y) vertically. ob.y is the BASE.
+        const rockHalfWidth = ob.size * 0.85;
+        const rockTopY = ob.y - ob.size * 1.1;  // approximate visual top of rock
+
+        if (Math.abs(dx) < rockHalfWidth + 14) {
+          // Player horizontally overlaps the rock
+          const p = game.player;
+
+          // Only bounce when the player is genuinely making contact with the rock top.
+          // Require: falling (vy > 0), and the player's y is in a small contact band
+          // just above the rock top (within ~12px). If the player is well above the rock
+          // (mid-jump apex passing over it), we do nothing — they fly past untouched.
+          const distFromTop = rockTopY - p.y;  // positive when player is above rock top
+          const contactBand = 14;              // how close to the top counts as "landing"
+
+          const playerOnTop = (
+            !p.onGround &&
+            p.vy > 0 &&                         // moving downward
+            distFromTop <= 0 &&                 // player has reached or passed the rock top
+            distFromTop > -contactBand           // but not deeply past it (not slamming into the body)
+          );
+
+          // "Hitting the side" = player y is below the rock top by more than the contact band
+          // AND they're horizontally overlapping → this is a side impact at body height
+          const playerHitSide = (distFromTop < -contactBand);
+
+          if (playerOnTop) {
+            // BOUNCE off the top!
+            p.y = rockTopY;
+            p.vy = -560;
+            p.onGround = false;
+            game.score += 25;
+            spawnParticles(ob.x - game.cameraX, rockTopY, '#a8b5c4', 8);
+            sfx.land();
+            ob.bounced = true;
+            p.rotation = 0;
+          } else if (playerHitSide) {
+            crashGame();
+            return;
+          }
+          // Otherwise (player still above rock top with no contact, or already past it) — do nothing
+        }
+      }
+    }
+
+    // Cull entities far behind camera
+    const cullX = game.cameraX - 100;
+    game.orbsArr = game.orbsArr.filter(o => o.x > cullX);
+    game.obstacles = game.obstacles.filter(o => o.x > cullX);
+    game.grindObjects = game.grindObjects.filter(g => g.x + g.length > cullX);
+  }
+
+  function spawnParticles(x, y, color, count = 8) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 60 + Math.random() * 100;
+      game.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0.4 + Math.random() * 0.3,
+        maxLife: 0.7,
+        color,
+        size: 3 + Math.random() * 3,
+      });
+    }
+  }
+  function updateParticles(dt) {
+    for (const p of game.particles) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 200 * dt; // light gravity
+      p.life -= dt;
+    }
+    game.particles = game.particles.filter(p => p.life > 0);
+
+    // Snow trail behind boarder when on ground
+    if (game.player.onGround && !game.player.grinding) {
+      // Spawn small puff every short interval
+      if (Math.random() < dt * 60) {
+        const px = game.player.x - 18 + (Math.random() - 0.5) * 6;
+        const py = game.player.y + 6;
+        game.snowTrail.push({
+          x: px, y: py,
+          vx: -40 - Math.random() * 30,
+          vy: -20 - Math.random() * 20,
+          size: 1.5 + Math.random() * 2,
+          life: 0.6 + Math.random() * 0.3,
+          maxLife: 0.9,
+        });
+      }
+    }
+    for (const t of game.snowTrail) {
+      t.x += t.vx * dt;
+      t.y += t.vy * dt;
+      t.vy += 80 * dt;
+      t.vx *= 0.96;
+      t.life -= dt;
+    }
+    game.snowTrail = game.snowTrail.filter(t => t.life > 0);
+  }
+
+  function updateAmbientParticles(dt) {
+    // Maintain a small set of ambient particles for the current biome
+    const targetCount = 30;
+    const biome = BIOMES[game.biomeIndex];
+    while (game.ambientParticles.length < targetCount) {
+      game.ambientParticles.push({
+        x: Math.random() * cssW,
+        y: Math.random() * cssH,
+        vx: -20 - Math.random() * 30,
+        vy: (Math.random() - 0.5) * 10,
+        size: 0.8 + Math.random() * 1.8,
+        life: 1,
+      });
+    }
+    for (const ap of game.ambientParticles) {
+      ap.x += ap.vx * dt;
+      ap.y += ap.vy * dt;
+      if (ap.x < -10) { ap.x = cssW + 10; ap.y = Math.random() * cssH; }
+      if (ap.y < -10 || ap.y > cssH + 10) { ap.y = Math.random() * cssH; }
+    }
+  }
+
+  function updateHUD() {
+    hudScore.textContent = Math.floor(game.score);
+    hudOrbs.textContent = `${game.orbs} orb${game.orbs === 1 ? '' : 's'}`;
+    hudDist.textContent = `${Math.floor(game.distance)}m`;
+    hudCombo.textContent = game.combo > 1 ? `${game.combo}× combo` : '';
+  }
+
+  // ============================================================
+  // RENDERING
+  // ============================================================
+  function lerpColor(c1, c2, t) {
+    const a = hexToRgb(c1);
+    const b = hexToRgb(c2);
+    return `rgb(${Math.round(a[0] + (b[0]-a[0])*t)}, ${Math.round(a[1] + (b[1]-a[1])*t)}, ${Math.round(a[2] + (b[2]-a[2])*t)})`;
+  }
+  function hexToRgb(h) {
+    const m = h.replace('#','');
+    return [parseInt(m.slice(0,2),16), parseInt(m.slice(2,4),16), parseInt(m.slice(4,6),16)];
+  }
+  function getCurrentBiomePalette() {
+    const cur = BIOMES[game.biomeIndex];
+    if (game.biomeTransition <= 0) return cur;
+    const next = BIOMES[(game.biomeIndex + 1) % BIOMES.length];
+    const t = game.biomeTransition;
+    return {
+      name: cur.name, sub: cur.sub,
+      sky: cur.sky.map((c, i) => lerpColor(c, next.sky[i], t)),
+      hills: cur.hills.map((c, i) => lerpColor(c, next.hills[i], t)),
+      orbColor: cur.orbColor,
+      particle: cur.particle, particleColor: cur.particleColor,
+      celestial: t < 0.5 ? cur.celestial : next.celestial,
+      trees: t < 0.5 ? cur.trees : next.trees,
+    };
+  }
+
+  function draw() {
+    if (!game) return;
+    const palette = getCurrentBiomePalette();
+
+    // Sky gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, cssH);
+    skyGrad.addColorStop(0, palette.sky[0]);
+    skyGrad.addColorStop(0.55, palette.sky[1]);
+    skyGrad.addColorStop(1, palette.sky[2]);
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    // Celestial body (sun/moon) — drawn behind everything but ahead of sky
+    drawCelestial(palette);
+
+    // Ambient particles (drawn over sky, behind hills)
+    ctx.save();
+    ctx.fillStyle = palette.particleColor || 'rgba(255,255,255,0.5)';
+    for (const ap of game.ambientParticles) {
+      ctx.beginPath();
+      ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Parallax hill layers, far → near
+    // Trees are drawn between hill layers for depth
+    const layerCount = 4;
+    for (let layer = 0; layer < layerCount; layer++) {
+      drawHillLayer(layer, layerCount, palette);
+      // Trees between layers (not on the very front layer where the player rides)
+      if (layer < layerCount - 1) {
+        drawTreesOnLayer(layer, layerCount, palette);
+      }
+    }
+
+    // Entities (within near-hill layer's plane)
+    drawGrindRails();
+    drawOrbs(palette);
+    drawObstacles();
+    drawSnowTrail();
+    drawParticles();
+    drawPlayer();
+  }
+
+  function drawCelestial(palette) {
+    const ce = palette.celestial || BIOMES[0].celestial;
+    if (!ce) return;
+    const cx = cssW * 0.78;
+    const cy = cssH * 0.22;
+    const r = 38;
+
+    // Glow
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
+    glow.addColorStop(0, ce.glow);
+    glow.addColorStop(0.4, ce.glow.replace(/[\d.]+\)$/, '0.15)'));
+    glow.addColorStop(1, ce.glow.replace(/[\d.]+\)$/, '0)'));
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Disc
+    ctx.fillStyle = ce.color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Moon craters (only for moon)
+    if (ce.type === 'moon') {
+      ctx.fillStyle = 'rgba(120, 110, 150, 0.3)';
+      ctx.beginPath();
+      ctx.arc(cx - 10, cy - 8, 6, 0, Math.PI * 2);
+      ctx.arc(cx + 8, cy + 10, 4, 0, Math.PI * 2);
+      ctx.arc(cx + 12, cy - 12, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawTreesOnLayer(layer, total, palette) {
+    // Deterministic tree placement based on world x — uses a simple pseudo-hash
+    // so trees stay in the same world position as we scroll past
+    const parallax = 0.2 + (layer / (total - 1)) * 0.8;
+    const ampScale = 0.4 + (layer / (total - 1)) * 0.6;
+    const yOffset = -(layer / (total - 1)) * 30 + 30;
+    // Trees are slightly darker than the hill behind them but lighter than the next hill in front
+    // Use a midpoint shade
+    const baseColor = palette.hills[layer];
+    const frontColor = palette.hills[Math.min(layer + 1, palette.hills.length - 1)];
+    const treeColor = mixColors(baseColor, frontColor, 0.5);
+
+    const treeKind = palette.trees || 'pine';
+    const spacing = 80 + layer * 10;     // farther layers have more spacing
+    const treeSize = 14 + (layer / (total - 1)) * 12;
+
+    const startWX = (game.cameraX * parallax);
+    const startTreeIdx = Math.floor(startWX / spacing) - 1;
+    const endTreeIdx = Math.floor((startWX + cssW) / spacing) + 2;
+
+    for (let i = startTreeIdx; i <= endTreeIdx; i++) {
+      // Pseudo-random per tree slot
+      const seed = i * 374761393 + layer * 668265263;
+      const rand = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+      // Skip ~30% of slots so trees are distributed not packed
+      if (rand > 0.7) continue;
+      const wx = i * spacing + (rand - 0.5) * spacing * 0.4;
+      const sx = wx - startWX;
+      // Find ground y at this x for THIS layer's hill
+      const groundY = cssH * 0.72 + yOffset;
+      let y = groundY;
+      y -= Math.sin(wx * HILL_FREQ_BASE * (1 - layer * 0.1)) * HILL_AMPLITUDE * ampScale;
+      y -= Math.sin(wx * HILL_FREQ_3 * (1 + layer * 0.2)) * 50 * ampScale;
+
+      const sizeJitter = treeSize * (0.85 + rand * 0.4);
+      drawTree(sx, y, sizeJitter, treeColor, treeKind);
+    }
+  }
+
+  function drawTree(x, y, size, color, kind) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color;
+    if (kind === 'pine') {
+      // Triangle pine
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 1.6);
+      ctx.lineTo(-size * 0.55, -size * 0.6);
+      ctx.lineTo(-size * 0.3, -size * 0.6);
+      ctx.lineTo(-size * 0.7, 0);
+      ctx.lineTo(size * 0.7, 0);
+      ctx.lineTo(size * 0.3, -size * 0.6);
+      ctx.lineTo(size * 0.55, -size * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      // Trunk
+      ctx.fillStyle = mixColors(color, '#000000', 0.3);
+      ctx.fillRect(-size * 0.08, 0, size * 0.16, size * 0.2);
+    } else {
+      // Wisp tree — soft blob
+      ctx.beginPath();
+      ctx.ellipse(0, -size * 0.7, size * 0.5, size * 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = mixColors(color, '#000000', 0.3);
+      ctx.fillRect(-size * 0.08, -size * 0.2, size * 0.16, size * 0.3);
+    }
+    ctx.restore();
+  }
+
+  function mixColors(c1, c2, t) {
+    const a = hexToRgb(c1);
+    const b = hexToRgb(c2);
+    return `rgb(${Math.round(a[0] + (b[0]-a[0])*t)}, ${Math.round(a[1] + (b[1]-a[1])*t)}, ${Math.round(a[2] + (b[2]-a[2])*t)})`;
+  }
+
+  function drawSnowTrail() {
+    for (const t of game.snowTrail) {
+      const alpha = Math.max(0, t.life / t.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawHillLayer(layer, total, palette) {
+    // Layer 0 = farthest, layer total-1 = nearest (where the player actually rides)
+    const isPlayerLayer = (layer === total - 1);
+    const parallax = 0.2 + (layer / (total - 1)) * 0.8;
+    const ampScale = 0.4 + (layer / (total - 1)) * 0.6;
+    const yOffset = -(layer / (total - 1)) * 30 + 30;
+
+    ctx.fillStyle = palette.hills[layer];
+    ctx.beginPath();
+
+    for (let sx = 0; sx <= cssW + TERRAIN_RES; sx += TERRAIN_RES) {
+      const wx = game.cameraX * parallax + sx;
+      let y;
+      if (isPlayerLayer) {
+        y = terrainAt(wx);
+      } else {
+        // Different hill shape per layer for depth
+        const groundY = cssH * 0.72 + yOffset;
+        y = groundY;
+        y -= Math.sin(wx * HILL_FREQ_BASE * (1 - layer * 0.1)) * HILL_AMPLITUDE * ampScale;
+        y -= Math.sin(wx * HILL_FREQ_3 * (1 + layer * 0.2)) * 50 * ampScale;
+      }
+      if (sx === 0) ctx.moveTo(sx, y);
+      else ctx.lineTo(sx, y);
+    }
+    ctx.lineTo(cssW + TERRAIN_RES, cssH);
+    ctx.lineTo(0, cssH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawOrbs(palette) {
+    for (const o of game.orbsArr) {
+      if (o.collected) continue;
+      const sx = o.x - game.cameraX;
+      if (sx < -30 || sx > cssW + 30) continue;
+      const pulse = 1 + Math.sin(o.phase) * 0.15;
+      ctx.save();
+      ctx.translate(sx, o.y);
+      // Glow
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 18 * pulse);
+      glow.addColorStop(0, palette.orbColor);
+      glow.addColorStop(0.4, palette.orbColor + '80');
+      glow.addColorStop(1, palette.orbColor + '00');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      // Core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, 5 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawObstacles() {
+    for (const ob of game.obstacles) {
+      const sx = ob.x - game.cameraX;
+      if (sx < -50 || sx > cssW + 50) continue;
+      ctx.save();
+      ctx.translate(sx, ob.y);
+      if (ob.type === 'rock') {
+        // Rock with subtle gradient highlight
+        const rockGrad = ctx.createLinearGradient(-ob.size, -ob.size, ob.size, 0);
+        rockGrad.addColorStop(0, '#1a2332');
+        rockGrad.addColorStop(0.5, '#0a0d14');
+        rockGrad.addColorStop(1, '#040608');
+        ctx.fillStyle = rockGrad;
+        ctx.beginPath();
+        ctx.moveTo(-ob.size, 0);
+        ctx.lineTo(-ob.size * 0.6, -ob.size);
+        ctx.lineTo(ob.size * 0.4, -ob.size * 1.2);
+        ctx.lineTo(ob.size, -ob.size * 0.5);
+        ctx.lineTo(ob.size * 0.7, 0);
+        ctx.closePath();
+        ctx.fill();
+        // Top highlight (catches light)
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath();
+        ctx.moveTo(-ob.size * 0.4, -ob.size * 0.95);
+        ctx.lineTo(0, -ob.size * 1.18);
+        ctx.lineTo(ob.size * 0.3, -ob.size * 1.1);
+        ctx.lineTo(0, -ob.size * 0.95);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Danger orb — glowing red-orange spiked sphere. Reads instantly as "do not touch."
+        const sz = ob.size * 1.15;
+        const t = (ob.phase || 0);
+
+        // Pulsing outer halo
+        const pulse = 1 + Math.sin(t * 2.5) * 0.12;
+        const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * 2.4 * pulse);
+        halo.addColorStop(0, 'rgba(255, 80, 60, 0.45)');
+        halo.addColorStop(0.4, 'rgba(255, 80, 60, 0.18)');
+        halo.addColorStop(1, 'rgba(255, 80, 60, 0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(0, 0, sz * 2.4 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spiky outer ring (slowly rotating spikes)
+        ctx.save();
+        ctx.rotate(t * 0.6);
+        ctx.fillStyle = '#c0392b';
+        const spikes = 8;
+        ctx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+          const angle = (i / (spikes * 2)) * Math.PI * 2;
+          const r = (i % 2 === 0) ? sz * 1.35 : sz * 0.95;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Main orb body — red-orange gradient
+        const orbGrad = ctx.createRadialGradient(-sz * 0.3, -sz * 0.3, 0, 0, 0, sz);
+        orbGrad.addColorStop(0, '#ffb47a');
+        orbGrad.addColorStop(0.4, '#ff6b3d');
+        orbGrad.addColorStop(1, '#a8281a');
+        ctx.fillStyle = orbGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, sz, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dark outer ring for definition
+        ctx.strokeStyle = '#5a1408';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, sz, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Specular highlight (top-left)
+        ctx.fillStyle = 'rgba(255, 230, 200, 0.7)';
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.35, -sz * 0.35, sz * 0.25, sz * 0.18, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner pulse — bright core that flickers
+        const corePulse = 0.6 + Math.sin(t * 4) * 0.4;
+        ctx.fillStyle = `rgba(255, 240, 180, ${0.5 * corePulse})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, sz * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawGrindRails() {
+    for (const g of game.grindObjects) {
+      const sx = g.x - game.cameraX;
+      if (sx + g.length < -50 || sx > cssW + 50) continue;
+      ctx.save();
+      // Pole
+      ctx.fillStyle = '#1a2332';
+      ctx.fillRect(sx - 2, g.y, 3, terrainAt(g.x) - g.y);
+      ctx.fillRect(sx + g.length - 1, g.y, 3, terrainAt(g.x + g.length) - g.y);
+      // Rail
+      ctx.fillStyle = '#1a2332';
+      ctx.fillRect(sx, g.y - 2, g.length, 4);
+      // Flag
+      ctx.fillStyle = '#ef476f';
+      ctx.beginPath();
+      ctx.moveTo(sx + g.length, g.y);
+      ctx.lineTo(sx + g.length + 24, g.y + 6);
+      ctx.lineTo(sx + g.length, g.y + 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawParticles() {
+    for (const p of game.particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawPlayer() {
+    const p = game.player;
+    const sx = p.x;       // already screen-space
+    const sy = p.y;
+
+    // Drop shadow on ground (only when on ground)
+    if (p.onGround && !p.grinding) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(sx, sy + 8, 20, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(p.rotation);
+
+    // Snowboard with subtle highlight
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.roundRect(-22, 4, 44, 6, 3);
+    ctx.fill();
+    // Board top highlight
+    ctx.fillStyle = '#ef476f';
+    ctx.beginPath();
+    ctx.roundRect(-20, 4, 40, 1.5, 1);
+    ctx.fill();
+
+    // Body silhouette (slightly shaded)
+    const bodyGrad = ctx.createLinearGradient(-10, -16, 10, 4);
+    bodyGrad.addColorStop(0, '#3a4862');
+    bodyGrad.addColorStop(1, '#1f2838');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-8, 4);
+    ctx.lineTo(-6, -16);
+    ctx.lineTo(8, -16);
+    ctx.lineTo(10, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arm
+    ctx.fillStyle = '#2a3548';
+    ctx.beginPath();
+    ctx.ellipse(-2, -10, 3, 8, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head — slightly larger and lighter to support the big goggles
+    const headGrad = ctx.createRadialGradient(0, -24, 1, 2, -22, 11);
+    headGrad.addColorStop(0, '#f5ecd6');
+    headGrad.addColorStop(1, '#d4c4a4');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.arc(2, -22, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ======= GOGGLES — the eye-themed signature element =======
+    // Two large round lenses that look like literal eyeballs.
+    // Each lens has a sclera (white), an iris (colored), and a pupil (black) with highlight.
+
+    const goggleY = -23;
+    const lensR = 6.5;        // radius of each lens (was tiny rectangles before)
+    const leftX = -2.5;
+    const rightX = 6.5;
+
+    // Goggle strap going around the head
+    ctx.strokeStyle = '#0d1420';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-9, goggleY - 1);
+    ctx.quadraticCurveTo(2, goggleY - 3.5, 13, goggleY - 1);
+    ctx.stroke();
+
+    // Goggle frames (thick dark border around each lens)
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(leftX, goggleY, lensR + 1.6, 0, Math.PI * 2);
+    ctx.arc(rightX, goggleY, lensR + 1.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bridge connecting the two lenses
+    ctx.fillStyle = '#0d1420';
+    ctx.fillRect(leftX + lensR - 0.5, goggleY - 1.2, rightX - leftX - 2 * lensR + 1, 2.5);
+
+    // ----- Left eye lens -----
+    // Sclera (white background of the eye)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(leftX, goggleY, lensR, 0, Math.PI * 2);
+    ctx.fill();
+    // Iris — teal/blue (matches your site palette)
+    ctx.fillStyle = '#4a90a4';
+    ctx.beginPath();
+    ctx.arc(leftX + 0.5, goggleY, lensR * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+    // Iris ring detail (slightly darker outer ring)
+    ctx.strokeStyle = '#2a6878';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(leftX + 0.5, goggleY, lensR * 0.65, 0, Math.PI * 2);
+    ctx.stroke();
+    // Pupil
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(leftX + 0.5, goggleY, lensR * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Pupil highlight (sparkle of life)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(leftX - 0.5, goggleY - 1.2, lensR * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ----- Right eye lens -----
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(rightX, goggleY, lensR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#4a90a4';
+    ctx.beginPath();
+    ctx.arc(rightX + 0.5, goggleY, lensR * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#2a6878';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(rightX + 0.5, goggleY, lensR * 0.65, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(rightX + 0.5, goggleY, lensR * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(rightX - 0.5, goggleY - 1.2, lensR * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hat / hair on top — reshaped to sit above the bigger goggles
+    ctx.fillStyle = '#ef476f';
+    ctx.beginPath();
+    ctx.moveTo(-9, goggleY - 4);
+    ctx.lineTo(-3, -34);
+    ctx.lineTo(11, -30);
+    ctx.lineTo(12, goggleY - 3);
+    ctx.closePath();
+    ctx.fill();
+    // Hat pom
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-3, -34, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Scarf trail (when moving)
+    if (game.running) {
+      ctx.fillStyle = '#ef476f';
+      ctx.beginPath();
+      ctx.moveTo(-6, -18);
+      ctx.lineTo(-22, -14);
+      ctx.lineTo(-20, -10);
+      ctx.lineTo(-4, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Scarf highlight
+      ctx.fillStyle = '#f5708a';
+      ctx.beginPath();
+      ctx.moveTo(-8, -17);
+      ctx.lineTo(-18, -14);
+      ctx.lineTo(-18, -13);
+      ctx.lineTo(-6, -16);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Trail effect when grinding — sparks
+    if (p.grinding) {
+      for (let i = 0; i < 4; i++) {
+        ctx.save();
+        ctx.fillStyle = `rgba(255, 209, 102, ${0.5 - i * 0.1})`;
+        ctx.beginPath();
+        ctx.arc(sx - 14 - i * 7, sy + 6 + (Math.random() - 0.5) * 2, 3 - i * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
+  // ============================================================
+  // GAME FLOW
+  // ============================================================
+  function startGame() {
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    resizeCanvas();
+    game = newGame();
+    game.player.x = cssW * 0.28;
+    game.player.y = terrainAt(0);
+    game.running = true;
+    overlayStart.hidden = true;
+    overlayEnd.hidden = true;
+    overlayPause.hidden = true;
+    hud.hidden = false;
+    showBiomeBanner();
+    game.lastFrameTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function crashGame() {
+    if (!game || game.gameOver) return;
+    game.gameOver = true;
+    game.running = false;
+    sfx.crash();
+
+    // Save high score
+    let high = 0;
+    try { high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0; } catch(e){}
+    const isNew = game.score > high;
+    if (isNew) {
+      try { localStorage.setItem(HIGH_SCORE_KEY, String(Math.floor(game.score))); } catch(e){}
+      high = Math.floor(game.score);
+    }
+
+    document.getElementById('endScore').textContent = Math.floor(game.score);
+    document.getElementById('endHigh').textContent = high;
+    document.getElementById('endDistance').textContent = Math.floor(game.distance) + 'm';
+    document.getElementById('endOrbs').textContent = game.orbs;
+
+    const endTitle = document.getElementById('endTitle');
+    const endMsg = document.getElementById('endMessage');
+    if (isNew && game.score > 200) {
+      endTitle.innerHTML = 'New <em>high score!</em>';
+      endMsg.textContent = `You traveled ${Math.floor(game.distance)} meters and racked up some serious style.`;
+    } else if (game.distance > 1000) {
+      endTitle.innerHTML = 'Long <em>ride</em>';
+      endMsg.textContent = 'You went the distance. Now blink a few times.';
+    } else {
+      endTitle.innerHTML = 'Wiped <em>out</em>';
+      endMsg.textContent = 'Take a breath, look out a window, and ride again.';
+    }
+    overlayEnd.hidden = false;
+    hud.hidden = true;
+  }
+
+  function pauseGame() {
+    if (!game || !game.running || game.paused) return;
+    game.paused = true;
+    overlayPause.hidden = false;
+  }
+  function resumeGame() {
+    if (!game || !game.paused) return;
+    game.paused = false;
+    overlayPause.hidden = true;
+    game.lastFrameTime = performance.now();
+  }
+  function quitGame() {
+    if (!game) return;
+    game.running = false;
+    game.paused = false;
+    game.gameOver = true;
+    overlayPause.hidden = true;
+    overlayStart.hidden = false;
+    hud.hidden = true;
+  }
+
+  function loop(now) {
+    if (!game) return;
+    if (game.running && !game.paused) {
+      const dt = Math.min(0.05, (now - game.lastFrameTime) / 1000);
+      game.lastFrameTime = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    } else if (game.paused) {
+      draw();
+      game.lastFrameTime = now;
+      requestAnimationFrame(loop);
+    }
+  }
+
+  // Auto-pause on tab switch
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && game && game.running && !game.paused) pauseGame();
+  });
+
+  // Buttons
+  document.getElementById('btnStart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', startGame);
+  document.getElementById('btnResume').addEventListener('click', resumeGame);
+  document.getElementById('btnQuit').addEventListener('click', quitGame);
+  document.getElementById('btnHome').addEventListener('click', () => { window.location.href = 'https://rjlcevans.com/'; });
+
+  // Init
+  resizeCanvas();
+  // Show personal best on start screen
+  try {
+    const high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0;
+    if (high > 0) {
+      const card = overlayStart.querySelector('.overlay-card');
+      const hsEl = document.createElement('p');
+      hsEl.style.cssText = 'color: var(--accent); font-family: Fraunces, serif; font-style: italic; margin: 6px 0 0; font-size: 13px;';
+      hsEl.textContent = `Personal best: ${high}`;
+      card.appendChild(hsEl);
+    }
+  } catch(e) {}
+
+  // Polyfill roundRect for older Safari
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      if (typeof r === 'number') r = [r, r, r, r];
+      this.beginPath();
+      this.moveTo(x + r[0], y);
+      this.arcTo(x + w, y, x + w, y + h, r[1]);
+      this.arcTo(x + w, y + h, x, y + h, r[2]);
+      this.arcTo(x, y + h, x, y, r[3]);
+      this.arcTo(x, y, x + w, y, r[0]);
+      this.closePath();
+    };
+  }
+})();
+</script>
+
+</body>
+</html>
