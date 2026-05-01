@@ -2293,18 +2293,20 @@ display: grid; place-items: center;
       showToast(`${reason} — ${game.lives} ${game.lives === 1 ? 'life' : 'lives'} left`);
       setTimeout(() => {
         if (!game) return;
-        // Respawn at last safe spot
-        const startCol = Math.max(2, Math.floor(game.player.x / TILE) - 4);
+        // Find a safe respawn column: walk backward from death position to find
+        // ground that isn't above a pit, and that's well clear of any pit edge.
+        const safeCol = findSafeSpawnColumn(Math.floor(game.player.x / TILE));
+        // Find ground row at that column
         for (let r = 0; r < game.level.length; r++) {
-          if (isSolid(tileAt(game.level, startCol, r))) {
-            game.player.x = startCol * TILE;
+          if (isSolid(tileAt(game.level, safeCol, r))) {
+            game.player.x = safeCol * TILE;
             game.player.y = r * TILE - game.player.h - 1;
             break;
           }
         }
         game.player.vx = 0;
         game.player.vy = 0;
-        game.player.invincible = 1.5;
+        game.player.invincible = 1.8;
         game.dying = false;
         game.running = true;
         game.lastFrameTime = performance.now();
@@ -2312,6 +2314,46 @@ display: grid; place-items: center;
         requestAnimationFrame(loop);
       }, 1200);
     }
+  }
+
+  // Walks backward from the given column to find a safe spawn point.
+  // A safe spawn:
+  //  - Has solid ground beneath it
+  //  - The 3 columns directly to the right (where the player will run after respawn)
+  //    also have solid ground (so they don't immediately run off into a pit)
+  //  - Is not directly above an enemy
+  function findSafeSpawnColumn(deathCol) {
+    // Step backward checking each column for safety
+    for (let c = Math.max(2, deathCol - 5); c >= 2; c--) {
+      if (isSafeSpawnCol(c)) return c;
+    }
+    // Fallback: start of the level
+    return 2;
+  }
+
+  function isSafeSpawnCol(col) {
+    // Must have solid ground in this column
+    let hasGround = false;
+    for (let r = 0; r < game.levelH; r++) {
+      if (isSolid(tileAt(game.level, col, r))) { hasGround = true; break; }
+    }
+    if (!hasGround) return false;
+    // Next 3 columns to the right must also have ground (so the player doesn't
+    // immediately run off a cliff after respawn)
+    for (let dc = 1; dc <= 3; dc++) {
+      let nextHasGround = false;
+      for (let r = 0; r < game.levelH; r++) {
+        if (isSolid(tileAt(game.level, col + dc, r))) { nextHasGround = true; break; }
+      }
+      if (!nextHasGround) return false;
+    }
+    // No enemy within 2 tiles in either direction
+    for (const en of game.enemies) {
+      if (!en.alive || en.squashed) continue;
+      const enCol = Math.floor((en.x + en.w/2) / TILE);
+      if (Math.abs(enCol - col) <= 2) return false;
+    }
+    return true;
   }
 
   function gameOver(reason) {
