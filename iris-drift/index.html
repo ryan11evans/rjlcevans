@@ -158,6 +158,93 @@ font-family: monospace; font-size: 11px;
 color: white;
 }
 
+/* Wider overlay card for level select */
+.overlay-wide { max-width: 600px; }
+
+/* Level select */
+.level-select {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 8px;
+margin-top: 18px;
+}
+.level-btn {
+appearance: none;
+background: rgba(255,255,255,0.05);
+border: 1px solid var(–line);
+color: white;
+padding: 12px 14px;
+border-radius: 12px;
+font-family: inherit;
+text-align: left;
+cursor: pointer;
+transition: all 0.15s ease;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.level-btn:hover:not(.locked) {
+background: rgba(255, 209, 102, 0.1);
+border-color: var(–accent);
+transform: translateY(-1px);
+}
+.level-btn.locked {
+opacity: 0.4;
+cursor: not-allowed;
+}
+.level-btn .level-num {
+font-family: ‘Fraunces’, serif; font-style: italic;
+font-size: 26px; font-weight: 500;
+width: 36px; height: 36px;
+display: grid; place-items: center;
+background: var(–accent); color: #1a1208;
+border-radius: 50%;
+flex-shrink: 0;
+}
+.level-btn.locked .level-num {
+background: rgba(255,255,255,0.1); color: white;
+}
+.level-btn .level-info { flex: 1; min-width: 0; }
+.level-btn .level-name {
+font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 15px;
+color: white;
+}
+.level-btn .level-sub {
+font-size: 11px; color: var(–ink-dim); margin-top: 2px;
+font-style: italic;
+}
+.level-btn .level-best {
+font-size: 10px; color: var(–accent); margin-top: 4px;
+letter-spacing: 0.05em;
+}
+
+/* Level progress bar (top of screen) */
+.level-progress-wrap {
+position: absolute;
+top: 76px; left: 16px; right: 16px;
+height: 3px;
+background: rgba(255,255,255,0.15);
+border-radius: 999px;
+overflow: hidden;
+z-index: 4;
+pointer-events: none;
+}
+.level-progress-bar {
+height: 100%;
+width: 0%;
+background: linear-gradient(90deg, var(–accent-2), var(–accent));
+border-radius: 999px;
+transition: width 0.2s ease-out;
+box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
+}
+
+/* Lives display */
+#hudLives {
+font-size: 16px;
+letter-spacing: 2px;
+line-height: 1;
+}
+
 .btn {
 appearance: none;
 background: var(–accent);
@@ -204,15 +291,21 @@ pointer-events: auto;
 <!-- HUD (in-game) -->
 <div class="hud" id="hud" hidden>
   <div class="hud-block">
-    <div class="hud-label">Score</div>
+    <div class="hud-label" id="hudLevelLabel">Level 1</div>
     <div class="hud-val" id="hudScore">0</div>
     <div class="hud-orbs" id="hudOrbs">0 orbs</div>
   </div>
   <div class="hud-block right">
     <div class="hud-label">Distance</div>
     <div class="hud-val" id="hudDist">0m</div>
+    <div class="hud-orbs" id="hudLives">💧💧💧</div>
     <div class="hud-orbs" id="hudCombo"></div>
   </div>
+</div>
+
+<!-- Level progress bar -->
+<div class="level-progress-wrap" id="levelProgressWrap" hidden>
+  <div class="level-progress-bar" id="levelProgressBar"></div>
 </div>
 
 <!-- Biome banner -->
@@ -227,18 +320,18 @@ pointer-events: auto;
   <div class="trick-points" id="trickPoints"></div>
 </div>
 
-<!-- Start overlay -->
+<!-- Start overlay with level select -->
 <div class="overlay" id="overlayStart">
-  <div class="overlay-card">
+  <div class="overlay-card overlay-wide">
     <h2>Iris <em>Drift</em></h2>
-    <p>An endless ride through the anatomy of sight. Chase the horizon, collect vision orbs, and string together tricks across five biomes of the eye.</p>
+    <p>Five biomes. Eight hundred meters each. Fly out of one eye, into the next, until you reach the brain.</p>
     <div class="controls-info">
-      <strong>Tap</strong> or <kbd>space</kbd> to jump.<br>
-      <strong>Hold</strong> mid-air to spin (more rotation = more points).<br>
-      <strong>Land on a flag</strong> to grind for bonus points.<br>
-      Avoid floaters and obstacles.
+      <strong>Tap</strong> or <kbd>space</kbd> to jump.
+      <strong>Hold</strong> mid-air to spin.
+      <strong>Land on a flag</strong> to grind.
+      You have 3 lives per level.
     </div>
-    <button class="btn" id="btnStart">Start riding</button>
+    <div class="level-select" id="levelSelect"></div>
   </div>
 </div>
 
@@ -280,7 +373,9 @@ pointer-events: auto;
   // ============================================================
   // CONFIG
   // ============================================================
-  const HIGH_SCORE_KEY = 'evans_iris_drift_high_v1';
+  const PROGRESS_KEY = 'evans_iris_drift_progress_v2';
+  const LEVEL_DISTANCE = 800;     // meters required to beat a level
+  const LIVES_PER_LEVEL = 3;
 
   // Physics
   const GRAVITY = 1800;            // px/s²
@@ -299,7 +394,7 @@ pointer-events: auto;
   const HILL_FREQ_2 = 0.011;       // secondary, smaller bumps
   const HILL_FREQ_3 = 0.0008;      // long swells
 
-  // Biomes — Alto's-style atmospheric variety, eye-themed
+  // Biomes — each biome IS a level. The player completes one before progressing.
   const BIOMES = [
     {
       name: 'Cornea Pass', sub: 'Where light first lands',
@@ -309,6 +404,9 @@ pointer-events: auto;
       orbColor: '#ffd166',
       celestial: { type: 'sun', color: '#fff4d6', glow: 'rgba(255, 220, 150, 0.45)' },
       trees: 'pine',
+      // Gimmick: easy intro level — slower base speed, sparse obstacles
+      speedMul: 0.85, obstacleSpacing: 1.4, orbDensity: 1.2, hazardOrbChance: 0.25,
+      hint: 'Tap to jump · hold to spin · land on flags to grind',
     },
     {
       name: 'Iris Valley', sub: 'Warmth in pigment',
@@ -318,6 +416,10 @@ pointer-events: auto;
       orbColor: '#ffe680',
       celestial: { type: 'sun', color: '#ffd9a0', glow: 'rgba(255, 200, 120, 0.4)' },
       trees: 'wisp',
+      // Gimmick: pigment storm — heavier ambient particles, more obstacles
+      speedMul: 1.0, obstacleSpacing: 1.0, orbDensity: 1.0, hazardOrbChance: 0.3,
+      heavyParticles: true,
+      hint: 'Pigment fills the air. More rocks ahead.',
     },
     {
       name: 'Lens Drift', sub: 'Clarity at altitude',
@@ -327,6 +429,10 @@ pointer-events: auto;
       orbColor: '#a8e6ff',
       celestial: { type: 'sun', color: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
       trees: 'pine',
+      // Gimmick: floating hazards everywhere, more grind rails
+      speedMul: 1.05, obstacleSpacing: 0.85, orbDensity: 1.0, hazardOrbChance: 0.7,
+      grindFrequency: 1.6,
+      hint: 'Hazards float in the air. Grind rails are abundant.',
     },
     {
       name: 'Retinal Ridge', sub: 'The light record',
@@ -336,6 +442,10 @@ pointer-events: auto;
       orbColor: '#ffb86b',
       celestial: { type: 'sun', color: '#ffe0b0', glow: 'rgba(255, 150, 80, 0.5)' },
       trees: 'wisp',
+      // Gimmick: steeper hills, faster speed
+      speedMul: 1.15, obstacleSpacing: 0.8, orbDensity: 0.9, hazardOrbChance: 0.45,
+      hillAmpMul: 1.4,
+      hint: 'Steep hills. Catch big air.',
     },
     {
       name: 'Optic Tunnel', sub: 'Toward the brain',
@@ -345,11 +455,12 @@ pointer-events: auto;
       orbColor: '#c8b0ff',
       celestial: { type: 'moon', color: '#e8e0ff', glow: 'rgba(200, 180, 255, 0.35)' },
       trees: 'pine',
+      // Gimmick: tunnel — vertical play zone narrows
+      speedMul: 1.2, obstacleSpacing: 0.7, orbDensity: 1.0, hazardOrbChance: 0.55,
+      tunnel: true,
+      hint: 'The optic tunnel narrows. Stay centered.',
     },
   ];
-
-  const BIOME_DURATION = 15; // seconds each biome lasts before transition
-  const BIOME_FADE = 3;      // crossfade duration
 
   // ============================================================
   // STATE & DOM
@@ -428,11 +539,12 @@ pointer-events: auto;
   // Multi-octave sine for natural rolling hills. Stable across the run because
   // we use deterministic functions of world x.
   function terrainAt(x) {
+    const ampMul = (game && game.levelConfig && game.levelConfig.hillAmpMul) || 1;
     const groundY = cssH * 0.72;
     let y = groundY;
-    y -= Math.sin(x * HILL_FREQ_BASE) * HILL_AMPLITUDE;
+    y -= Math.sin(x * HILL_FREQ_BASE) * HILL_AMPLITUDE * ampMul;
     y -= Math.sin(x * HILL_FREQ_2 + 1.3) * 22;
-    y -= Math.sin(x * HILL_FREQ_3 - 0.7) * 60;
+    y -= Math.sin(x * HILL_FREQ_3 - 0.7) * 60 * ampMul;
     return y;
   }
 
@@ -445,16 +557,23 @@ pointer-events: auto;
   // ============================================================
   // GAME OBJECTS
   // ============================================================
-  function newGame() {
+  function newGame(levelIndex) {
+    const cfg = BIOMES[levelIndex] || BIOMES[0];
     return {
       running: false,
       paused: false,
       gameOver: false,
+      levelComplete: false,
+
+      // Level state
+      levelIndex: levelIndex,
+      levelConfig: cfg,
+      lives: LIVES_PER_LEVEL,
 
       // World state — the player conceptually moves through "world x"; the camera follows
       worldX: 0,
       cameraX: 0,
-      speed: RUN_SPEED_BASE,
+      speed: RUN_SPEED_BASE * cfg.speedMul,
 
       // Score
       score: 0,
@@ -462,11 +581,6 @@ pointer-events: auto;
       distance: 0,
       combo: 0,
       comboTimer: 0,
-
-      // Biome system
-      biomeIndex: 0,
-      biomeTime: 0,
-      biomeTransition: 0, // 0..1 during transition
 
       // Player
       player: {
@@ -515,8 +629,9 @@ pointer-events: auto;
     });
   }
   function spawnObstacle(worldX) {
-    // 60% rock (ground-level), 40% floater (mid-air)
-    const isFloater = Math.random() < 0.4;
+    // Level controls how often hazard orbs spawn vs rocks
+    const hazardChance = (game.levelConfig && game.levelConfig.hazardOrbChance) || 0.4;
+    const isFloater = Math.random() < hazardChance;
     const baseY = terrainAt(worldX);
     if (isFloater) {
       game.obstacles.push({
@@ -604,8 +719,9 @@ pointer-events: auto;
     if (!game || !game.running || game.paused) return;
     game.elapsed += dt;
 
-    // Speed grows over time, capped
-    game.speed = Math.min(SPEED_MAX, RUN_SPEED_BASE + game.elapsed * SPEED_GROWTH);
+    // Speed grows over time, capped, scaled by level multiplier
+    const baseSpd = RUN_SPEED_BASE * game.levelConfig.speedMul;
+    game.speed = Math.min(SPEED_MAX, baseSpd + game.elapsed * SPEED_GROWTH);
 
     // Player advances through world
     game.worldX += game.speed * dt;
@@ -614,18 +730,11 @@ pointer-events: auto;
     // Camera tracks player x with the player anchored at screen position
     game.cameraX = game.worldX - game.player.x;
 
-    // Biome timing
-    game.biomeTime += dt;
-    if (game.biomeTime >= BIOME_DURATION) {
-      // Begin transition
-      game.biomeTransition += dt / BIOME_FADE;
-      if (game.biomeTransition >= 1) {
-        game.biomeIndex = (game.biomeIndex + 1) % BIOMES.length;
-        game.biomeTime = 0;
-        game.biomeTransition = 0;
-        showBiomeBanner();
-        sfx.biome();
-      }
+    // Level complete check
+    if (game.distance >= LEVEL_DISTANCE && !game.levelComplete) {
+      game.levelComplete = true;
+      onLevelComplete();
+      return;
     }
 
     updatePlayer(dt);
@@ -802,7 +911,7 @@ pointer-events: auto;
   }
 
   function showBiomeBanner() {
-    const b = BIOMES[game.biomeIndex];
+    const b = BIOMES[game.levelIndex];
     biomeName.textContent = b.name;
     biomeSub.textContent = b.sub;
     biomeBanner.classList.add('show');
@@ -828,14 +937,16 @@ pointer-events: auto;
     }
     while (game.nextObstacleX < spawnAheadX) {
       spawnObstacle(game.nextObstacleX);
-      // Difficulty: obstacles get closer over time
-      const baseGap = 600 - Math.min(300, game.elapsed * 3);
-      game.nextObstacleX += baseGap + Math.random() * 250;
+      // Difficulty: obstacles get closer over time, scaled by level spacing
+      const spacing = (game.levelConfig && game.levelConfig.obstacleSpacing) || 1.0;
+      const baseGap = (600 - Math.min(300, game.elapsed * 3)) * spacing;
+      game.nextObstacleX += baseGap + Math.random() * 250 * spacing;
     }
     while (game.nextGrindX < spawnAheadX) {
-      // Only spawn grinds occasionally
-      if (Math.random() < 0.6) spawnGrindRail(game.nextGrindX);
-      game.nextGrindX += 800 + Math.random() * 600;
+      // Only spawn grinds occasionally — Lens Drift gets more
+      const grindFreq = (game.levelConfig && game.levelConfig.grindFrequency) || 1.0;
+      if (Math.random() < 0.6 * grindFreq) spawnGrindRail(game.nextGrindX);
+      game.nextGrindX += (800 + Math.random() * 600) / grindFreq;
     }
 
     // Update orbs (collection check)
@@ -848,7 +959,7 @@ pointer-events: auto;
         o.collected = true;
         game.orbs++;
         game.score += 5;
-        spawnParticles(o.x - game.cameraX, o.y, BIOMES[game.biomeIndex].orbColor, 6);
+        spawnParticles(o.x - game.cameraX, o.y, BIOMES[game.levelIndex].orbColor, 6);
         sfx.orb();
       }
     }
@@ -978,8 +1089,8 @@ pointer-events: auto;
 
   function updateAmbientParticles(dt) {
     // Maintain a small set of ambient particles for the current biome
-    const targetCount = 30;
-    const biome = BIOMES[game.biomeIndex];
+    const biome = BIOMES[game.levelIndex];
+    const targetCount = biome.heavyParticles ? 80 : 30;
     while (game.ambientParticles.length < targetCount) {
       game.ambientParticles.push({
         x: Math.random() * cssW,
@@ -990,6 +1101,10 @@ pointer-events: auto;
         life: 1,
       });
     }
+    // Trim excess if level changed to a sparser biome
+    if (game.ambientParticles.length > targetCount) {
+      game.ambientParticles.length = targetCount;
+    }
     for (const ap of game.ambientParticles) {
       ap.x += ap.vx * dt;
       ap.y += ap.vy * dt;
@@ -998,11 +1113,29 @@ pointer-events: auto;
     }
   }
 
+  function setHudVisible(visible) {
+    hud.hidden = !visible;
+    const wrap = document.getElementById('levelProgressWrap');
+    if (wrap) wrap.hidden = !visible;
+  }
+
   function updateHUD() {
     hudScore.textContent = Math.floor(game.score);
     hudOrbs.textContent = `${game.orbs} orb${game.orbs === 1 ? '' : 's'}`;
-    hudDist.textContent = `${Math.floor(game.distance)}m`;
+    hudDist.textContent = `${Math.floor(game.distance)}m / ${LEVEL_DISTANCE}m`;
     hudCombo.textContent = game.combo > 1 ? `${game.combo}× combo` : '';
+    document.getElementById('hudLevelLabel').textContent = `Level ${game.levelIndex + 1}`;
+    // Lives as droplets
+    const livesEl = document.getElementById('hudLives');
+    livesEl.textContent = '💧'.repeat(Math.max(0, game.lives)) + '·'.repeat(Math.max(0, LIVES_PER_LEVEL - game.lives));
+    // Progress bar
+    const progressWrap = document.getElementById('levelProgressWrap');
+    const progressBar = document.getElementById('levelProgressBar');
+    if (progressWrap && progressBar) {
+      progressWrap.hidden = false;
+      const pct = Math.min(100, (game.distance / LEVEL_DISTANCE) * 100);
+      progressBar.style.width = pct + '%';
+    }
   }
 
   // ============================================================
@@ -1018,19 +1151,7 @@ pointer-events: auto;
     return [parseInt(m.slice(0,2),16), parseInt(m.slice(2,4),16), parseInt(m.slice(4,6),16)];
   }
   function getCurrentBiomePalette() {
-    const cur = BIOMES[game.biomeIndex];
-    if (game.biomeTransition <= 0) return cur;
-    const next = BIOMES[(game.biomeIndex + 1) % BIOMES.length];
-    const t = game.biomeTransition;
-    return {
-      name: cur.name, sub: cur.sub,
-      sky: cur.sky.map((c, i) => lerpColor(c, next.sky[i], t)),
-      hills: cur.hills.map((c, i) => lerpColor(c, next.hills[i], t)),
-      orbColor: cur.orbColor,
-      particle: cur.particle, particleColor: cur.particleColor,
-      celestial: t < 0.5 ? cur.celestial : next.celestial,
-      trees: t < 0.5 ? cur.trees : next.trees,
-    };
+    return BIOMES[game.levelIndex];
   }
 
   function draw() {
@@ -1076,6 +1197,19 @@ pointer-events: auto;
     drawSnowTrail();
     drawParticles();
     drawPlayer();
+
+    // Optic Tunnel gimmick: dark vignette top and bottom narrows the visible play area
+    if (palette.tunnel) {
+      const grad = ctx.createLinearGradient(0, 0, 0, cssH);
+      grad.addColorStop(0, 'rgba(5, 8, 20, 0.95)');
+      grad.addColorStop(0.18, 'rgba(5, 8, 20, 0.4)');
+      grad.addColorStop(0.28, 'rgba(5, 8, 20, 0)');
+      grad.addColorStop(0.72, 'rgba(5, 8, 20, 0)');
+      grad.addColorStop(0.85, 'rgba(5, 8, 20, 0.55)');
+      grad.addColorStop(1, 'rgba(5, 8, 20, 0.95)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
   }
 
   function drawCelestial(palette) {
@@ -1580,59 +1714,523 @@ pointer-events: auto;
   }
 
   // ============================================================
-  // GAME FLOW
+  // GAME FLOW & LEVEL PROGRESSION
   // ============================================================
-  function startGame() {
+
+  // Persistent progress: which levels have been completed
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY);
+      if (!raw) return { completed: 0, bestScores: {} };
+      const p = JSON.parse(raw);
+      return Object.assign({ completed: 0, bestScores: {} }, p);
+    } catch(e) { return { completed: 0, bestScores: {} }; }
+  }
+  function saveProgress(progress) {
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch(e) {}
+  }
+
+  // Eye transition state — runs as an overlay before/after a level
+  // Modes: 'enter' = zooming OUT of pupil (level start), 'exit' = zooming INTO pupil (level end)
+  let eyeTransition = null;
+
+  function startEyeTransition(mode, levelIndex, onComplete) {
+    eyeTransition = {
+      mode,                  // 'enter' or 'exit'
+      levelIndex,
+      t: 0,                  // 0..1 progress
+      duration: 1.6,         // seconds
+      onComplete,
+      lastFrame: performance.now(),
+    };
+    requestAnimationFrame(eyeTransitionLoop);
+  }
+
+  function eyeTransitionLoop(now) {
+    if (!eyeTransition) return;
+    const dt = Math.min(0.05, (now - eyeTransition.lastFrame) / 1000);
+    eyeTransition.lastFrame = now;
+    eyeTransition.t += dt / eyeTransition.duration;
+
+    drawEyeTransition();
+
+    if (eyeTransition.t >= 1) {
+      const cb = eyeTransition.onComplete;
+      eyeTransition = null;
+      if (cb) cb();
+      return;
+    }
+    requestAnimationFrame(eyeTransitionLoop);
+  }
+
+  function drawEyeTransition() {
+    const t = Math.min(1, Math.max(0, eyeTransition.t));
+    const mode = eyeTransition.mode;
+
+    // ENTER (level start): start with eye filling screen, zoom out so player flies out of pupil
+    // EXIT (level end): start small (player far from eye), zoom in so we end inside the pupil
+    // Smooth ease curve
+    const ease = mode === 'enter' ? (1 - Math.pow(1 - t, 3)) : (t * t);
+
+    // Eye scale: enter goes 4.0 → 1.0 → fades out; exit goes 0.4 → 4.0
+    let eyeScale, alpha = 1;
+    if (mode === 'enter') {
+      eyeScale = 4.0 - ease * 3.6;        // 4 → 0.4
+      // Fade out near the end
+      if (t > 0.7) alpha = 1 - (t - 0.7) / 0.3;
+    } else {
+      eyeScale = 0.5 + ease * 5.5;        // 0.5 → 6
+      // Fade in at start, hold opaque, then fade to black at end
+      if (t < 0.15) alpha = t / 0.15;
+    }
+
+    // Background — fade between sky color and black depending on mode
+    const palette = BIOMES[eyeTransition.levelIndex];
+    if (mode === 'enter') {
+      // Start dark (inside the pupil), brighten to the level's sky as we exit
+      const bgT = Math.min(1, t * 1.4);
+      ctx.fillStyle = bgT < 0.5
+        ? `rgb(${Math.round(20 - bgT * 40)}, ${Math.round(20 - bgT * 40)}, ${Math.round(30 - bgT * 60)})`
+        : palette.sky[1];
+      ctx.fillRect(0, 0, cssW, cssH);
+    } else {
+      // Fade level sky → black as we zoom in
+      const fadeT = Math.max(0, (t - 0.6) / 0.4);
+      const bg = lerpColor(palette.sky[1], '#050810', fadeT);
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
+
+    // Draw the giant eye, centered
+    if (alpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      drawGiantEye(cssW / 2, cssH / 2, Math.min(cssW, cssH) * 0.42 * eyeScale, palette);
+      ctx.restore();
+    }
+
+    // Draw the player flying out of / into the pupil
+    drawTransitionBoarder(t, mode, eyeScale);
+
+    // Title overlay during transition
+    if (mode === 'enter') {
+      const titleAlpha = t < 0.2 ? t / 0.2 : t > 0.65 ? Math.max(0, 1 - (t - 0.65) / 0.25) : 1;
+      ctx.save();
+      ctx.globalAlpha = titleAlpha;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = `400 italic ${Math.min(48, cssW * 0.07)}px Fraunces, serif`;
+      ctx.fillText(palette.name, cssW / 2, cssH * 0.18);
+      ctx.font = `600 ${Math.min(13, cssW * 0.022)}px Inter Tight, sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText(`LEVEL ${eyeTransition.levelIndex + 1}  ·  ${palette.sub.toUpperCase()}`, cssW / 2, cssH * 0.18 + 36);
+      ctx.restore();
+    }
+  }
+
+  // Draws a hyper-realistic eye centered at (cx,cy) with radius r
+  function drawGiantEye(cx, cy, r, palette) {
+    // Sclera with gradient (hint of pink toward edges)
+    const scleraGrad = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.15, r * 0.1, cx, cy, r);
+    scleraGrad.addColorStop(0, '#fdf6e8');
+    scleraGrad.addColorStop(0.7, '#f0e0c8');
+    scleraGrad.addColorStop(1, '#d8b8a0');
+    ctx.fillStyle = scleraGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Veins — branching red lines drawn deterministically
+    ctx.save();
+    ctx.strokeStyle = 'rgba(180, 60, 50, 0.4)';
+    ctx.lineWidth = Math.max(0.6, r * 0.005);
+    ctx.lineCap = 'round';
+    const veinCount = 14;
+    for (let i = 0; i < veinCount; i++) {
+      const angle = (i / veinCount) * Math.PI * 2 + 0.3;
+      // Skip veins near the iris (right side where it sits)
+      const irisDirX = 0.35;  // iris is offset right
+      const dx = Math.cos(angle), dy = Math.sin(angle);
+      if (dx > 0.3 && Math.abs(dy) < 0.4) continue;  // skip — would go through iris area
+      drawVeinBranch(cx + dx * r * 0.3, cy + dy * r * 0.3, dx, dy, r * 0.4, 3);
+    }
+    ctx.restore();
+
+    // Iris — positioned slightly right and down (matches reference)
+    const ix = cx + r * 0.32;
+    const iy = cy + r * 0.05;
+    const ir = r * 0.42;
+
+    // Iris outer ring (darker rim)
+    ctx.fillStyle = '#2a3540';
+    ctx.beginPath();
+    ctx.arc(ix, iy, ir + 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Iris main color — radial gradient from inner brown to outer blue/gray
+    const irisGrad = ctx.createRadialGradient(ix, iy, ir * 0.25, ix, iy, ir);
+    irisGrad.addColorStop(0, '#8a5a30');     // inner ring (around pupil): warm brown
+    irisGrad.addColorStop(0.4, '#6a4828');
+    irisGrad.addColorStop(0.7, '#4a5260');   // mid: gray-blue
+    irisGrad.addColorStop(1, '#2a3848');     // outer rim: deep blue-gray
+    ctx.fillStyle = irisGrad;
+    ctx.beginPath();
+    ctx.arc(ix, iy, ir, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Iris radial striations (the fibrous detail)
+    ctx.save();
+    const striations = 60;
+    for (let i = 0; i < striations; i++) {
+      const a = (i / striations) * Math.PI * 2;
+      const innerR = ir * 0.28;
+      const outerR = ir * (0.85 + Math.sin(i * 7.3) * 0.15);
+      const cosA = Math.cos(a), sinA = Math.sin(a);
+      // Alternate light and dark striations
+      const isLight = (i % 3 === 0);
+      ctx.strokeStyle = isLight
+        ? `rgba(180, 130, 70, ${0.25 + Math.sin(i * 1.3) * 0.1})`
+        : `rgba(20, 20, 30, ${0.4 + Math.sin(i * 2.1) * 0.15})`;
+      ctx.lineWidth = Math.max(0.5, ir * 0.012);
+      ctx.beginPath();
+      ctx.moveTo(ix + cosA * innerR, iy + sinA * innerR);
+      // Slight wave to make it look organic
+      const midR = (innerR + outerR) / 2;
+      const waveOffset = Math.sin(i * 3.7) * ir * 0.03;
+      ctx.quadraticCurveTo(
+        ix + cosA * midR + waveOffset * (-sinA),
+        iy + sinA * midR + waveOffset * cosA,
+        ix + cosA * outerR, iy + sinA * outerR
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Limbal ring (dark outer iris boundary)
+    ctx.strokeStyle = 'rgba(15, 18, 25, 0.85)';
+    ctx.lineWidth = Math.max(1, r * 0.012);
+    ctx.beginPath();
+    ctx.arc(ix, iy, ir, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Pupil — pure black with subtle inner gradient
+    const pupilR = ir * 0.42;
+    const pupilGrad = ctx.createRadialGradient(ix, iy, 0, ix, iy, pupilR);
+    pupilGrad.addColorStop(0, '#000000');
+    pupilGrad.addColorStop(0.8, '#0a0510');
+    pupilGrad.addColorStop(1, '#1a0c1a');
+    ctx.fillStyle = pupilGrad;
+    ctx.beginPath();
+    ctx.arc(ix, iy, pupilR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Specular highlight (white reflection on the eye)
+    const hx = ix - ir * 0.5;
+    const hy = iy - ir * 0.5;
+    const hr = ir * 0.18;
+    const highlightGrad = ctx.createRadialGradient(hx, hy, 0, hx, hy, hr);
+    highlightGrad.addColorStop(0, 'rgba(255,255,255,1)');
+    highlightGrad.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+    highlightGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = highlightGrad;
+    ctx.beginPath();
+    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Smaller secondary highlight on the pupil
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.arc(ix - pupilR * 0.4, iy - pupilR * 0.4, pupilR * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outer shadow / vignette around the eyeball for depth
+    const vignette = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.15);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.7)');
+    ctx.fillStyle = vignette;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawVeinBranch(x, y, dx, dy, len, depth) {
+    if (depth <= 0 || len < 4) return;
+    // Wobbly path
+    const segs = 6;
+    let cx = x, cy = y;
+    let cdx = dx, cdy = dy;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    for (let i = 0; i < segs; i++) {
+      // Perturb direction slightly
+      cdx += (Math.random() - 0.5) * 0.4;
+      cdy += (Math.random() - 0.5) * 0.4;
+      const m = Math.hypot(cdx, cdy);
+      cdx /= m; cdy /= m;
+      const step = len / segs;
+      cx += cdx * step;
+      cy += cdy * step;
+      ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+    // Branches
+    if (depth > 1 && Math.random() < 0.7) {
+      const branchAngle = (Math.random() - 0.5) * 1.2;
+      const cos = Math.cos(branchAngle), sin = Math.sin(branchAngle);
+      const ndx = cdx * cos - cdy * sin;
+      const ndy = cdx * sin + cdy * cos;
+      drawVeinBranch(cx, cy, ndx, ndy, len * 0.55, depth - 1);
+    }
+  }
+
+  function drawTransitionBoarder(t, mode, eyeScale) {
+    // Player position scales with the eye for visual consistency
+    let px, py, scale, rot;
+    const cx = cssW / 2;
+    const cy = cssH / 2;
+    // Pupil is offset right and slightly down within the eye
+    const eyeR = Math.min(cssW, cssH) * 0.42 * eyeScale;
+    const pupilX = cx + eyeR * 0.32;
+    const pupilY = cy + eyeR * 0.05;
+
+    if (mode === 'enter') {
+      // Player emerges from the pupil and flies down/right toward the play position
+      // Start at pupil, end at gameplay screen position
+      const targetX = cssW * 0.28;
+      const targetY = cssH * 0.55;
+      px = pupilX + (targetX - pupilX) * t;
+      py = pupilY + (targetY - pupilY) * t;
+      scale = 0.3 + t * 0.7;
+      rot = (1 - t) * 0.6;  // slight rotation as they emerge
+    } else {
+      // Player flies up and into the next pupil
+      const startX = cssW * 0.28;
+      const startY = cssH * 0.55;
+      const targetX = pupilX;
+      const targetY = pupilY;
+      // Curve trajectory upward
+      px = startX + (targetX - startX) * t;
+      py = startY + (targetY - startY) * t - Math.sin(t * Math.PI) * 80;
+      scale = 1 - t * 0.7;
+      rot = -t * 0.8;
+    }
+
+    if (scale < 0.05) return;
+
+    // Draw a small player at this transition position
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.scale(scale, scale);
+    ctx.rotate(rot);
+    drawPlayerSprite();
+    ctx.restore();
+  }
+
+  // Renders just the player sprite at origin (no global state)
+  function drawPlayerSprite() {
+    // Snowboard
+    ctx.fillStyle = '#0d1420';
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(-22, 4, 44, 6, 3);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-22, 4, 44, 6);
+    }
+    ctx.fillStyle = '#ef476f';
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(-20, 4, 40, 1.5, 1);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-20, 4, 40, 1.5);
+    }
+    // Body
+    const bodyGrad = ctx.createLinearGradient(-10, -16, 10, 4);
+    bodyGrad.addColorStop(0, '#3a4862');
+    bodyGrad.addColorStop(1, '#1f2838');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-8, 4); ctx.lineTo(-6, -16); ctx.lineTo(8, -16); ctx.lineTo(10, 4);
+    ctx.closePath(); ctx.fill();
+    // Head
+    ctx.fillStyle = '#f5ecd6';
+    ctx.beginPath();
+    ctx.arc(2, -22, 10, 0, Math.PI * 2);
+    ctx.fill();
+    // Goggles
+    ctx.strokeStyle = '#0d1420';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-9, -24);
+    ctx.quadraticCurveTo(2, -26.5, 13, -24);
+    ctx.stroke();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(-2.5, -23, 8.1, 0, Math.PI * 2);
+    ctx.arc(6.5, -23, 8.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0d1420';
+    ctx.fillRect(4, -24.2, 1, 2.5);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-2.5, -23, 6.5, 0, Math.PI * 2);
+    ctx.arc(6.5, -23, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#4a90a4';
+    ctx.beginPath();
+    ctx.arc(-2, -23, 4.2, 0, Math.PI * 2);
+    ctx.arc(7, -23, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(-2, -23, 1.95, 0, Math.PI * 2);
+    ctx.arc(7, -23, 1.95, 0, Math.PI * 2);
+    ctx.fill();
+    // Hat
+    ctx.fillStyle = '#ef476f';
+    ctx.beginPath();
+    ctx.moveTo(-9, -27); ctx.lineTo(-3, -34); ctx.lineTo(11, -30); ctx.lineTo(12, -26);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-3, -34, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ----- Level start: shows entry transition then begins gameplay -----
+  function startLevel(levelIndex) {
     ensureAudio();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     resizeCanvas();
-    game = newGame();
-    game.player.x = cssW * 0.28;
-    game.player.y = terrainAt(0);
-    game.running = true;
+
+    // Hide overlays
     overlayStart.hidden = true;
     overlayEnd.hidden = true;
     overlayPause.hidden = true;
-    hud.hidden = false;
-    showBiomeBanner();
-    game.lastFrameTime = performance.now();
-    requestAnimationFrame(loop);
+    setHudVisible(false);
+
+    // Stop any existing game
+    game = null;
+
+    // Run entry transition
+    sfx.biome();
+    startEyeTransition('enter', levelIndex, () => {
+      // Begin gameplay
+      game = newGame(levelIndex);
+      game.player.x = cssW * 0.28;
+      game.player.y = terrainAt(0);
+      game.running = true;
+      setHudVisible(true);
+      showBiomeBanner();
+      showLevelHint(levelIndex);
+      game.lastFrameTime = performance.now();
+      requestAnimationFrame(loop);
+    });
   }
 
+  // Show the per-level hint as a small toast
+  function showLevelHint(levelIndex) {
+    const hint = BIOMES[levelIndex].hint;
+    if (!hint) return;
+    trickName.textContent = hint;
+    trickPoints.textContent = `LIVES: ${LIVES_PER_LEVEL}  ·  GOAL: ${LEVEL_DISTANCE}m`;
+    trickToast.classList.remove('show');
+    void trickToast.offsetWidth;
+    trickToast.classList.add('show');
+  }
+
+  // ----- Crash: lose a life. If lives remain, restart same level. Else game over. -----
   function crashGame() {
     if (!game || game.gameOver) return;
-    game.gameOver = true;
-    game.running = false;
     sfx.crash();
-
-    // Save high score
-    let high = 0;
-    try { high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0; } catch(e){}
-    const isNew = game.score > high;
-    if (isNew) {
-      try { localStorage.setItem(HIGH_SCORE_KEY, String(Math.floor(game.score))); } catch(e){}
-      high = Math.floor(game.score);
+    game.lives--;
+    if (game.lives > 0) {
+      // Quick restart of same level
+      game.gameOver = true;
+      game.running = false;
+      // Brief delay then restart
+      setTimeout(() => {
+        const idx = game.levelIndex;
+        game = null;
+        startLevel(idx);
+      }, 1200);
+      // Show "lives left" toast
+      trickName.textContent = `Wiped out — ${game.lives} ${game.lives === 1 ? 'life' : 'lives'} left`;
+      trickPoints.textContent = 'Restarting…';
+      trickToast.classList.remove('show');
+      void trickToast.offsetWidth;
+      trickToast.classList.add('show');
+    } else {
+      // No lives left — show game over screen, retry from level 1 or this level
+      game.gameOver = true;
+      game.running = false;
+      showGameOverScreen();
     }
+  }
 
+  // ----- Level complete: show success, then transition into next level's eye -----
+  function onLevelComplete() {
+    if (!game) return;
+    game.running = false;
+    sfx.biome();
+
+    // Update progress
+    const progress = loadProgress();
+    progress.completed = Math.max(progress.completed, game.levelIndex + 1);
+    const prevBest = progress.bestScores[game.levelIndex] || 0;
+    progress.bestScores[game.levelIndex] = Math.max(prevBest, Math.floor(game.score));
+    saveProgress(progress);
+
+    const completedLevel = game.levelIndex;
+    const isLastLevel = completedLevel >= BIOMES.length - 1;
+    const finalScore = Math.floor(game.score);
+    const finalOrbs = game.orbs;
+
+    // Hide HUD
+    setHudVisible(false);
+
+    if (isLastLevel) {
+      // Beat the whole game
+      setTimeout(() => {
+        showFinalScreen(finalScore, finalOrbs);
+      }, 500);
+    } else {
+      // Exit transition into next eye → enter next level
+      startEyeTransition('exit', completedLevel, () => {
+        startLevel(completedLevel + 1);
+      });
+    }
+  }
+
+  function showGameOverScreen() {
     document.getElementById('endScore').textContent = Math.floor(game.score);
-    document.getElementById('endHigh').textContent = high;
     document.getElementById('endDistance').textContent = Math.floor(game.distance) + 'm';
     document.getElementById('endOrbs').textContent = game.orbs;
-
+    document.getElementById('endHigh').textContent = `L${game.levelIndex + 1}`;
     const endTitle = document.getElementById('endTitle');
     const endMsg = document.getElementById('endMessage');
-    if (isNew && game.score > 200) {
-      endTitle.innerHTML = 'New <em>high score!</em>';
-      endMsg.textContent = `You traveled ${Math.floor(game.distance)} meters and racked up some serious style.`;
-    } else if (game.distance > 1000) {
-      endTitle.innerHTML = 'Long <em>ride</em>';
-      endMsg.textContent = 'You went the distance. Now blink a few times.';
-    } else {
-      endTitle.innerHTML = 'Wiped <em>out</em>';
-      endMsg.textContent = 'Take a breath, look out a window, and ride again.';
-    }
+    endTitle.innerHTML = 'Out of <em>lives</em>';
+    endMsg.textContent = `You ran out of lives in ${BIOMES[game.levelIndex].name}. Retry the level or head home.`;
     overlayEnd.hidden = false;
-    hud.hidden = true;
+    // Replace the restart button label
+    document.getElementById('btnRestart').textContent = 'Retry level';
+    document.getElementById('btnRestart').dataset.action = 'retry';
+  }
+
+  function showFinalScreen(score, orbs) {
+    document.getElementById('endScore').textContent = score;
+    document.getElementById('endDistance').textContent = '—';
+    document.getElementById('endOrbs').textContent = orbs;
+    document.getElementById('endHigh').textContent = '✓';
+    const endTitle = document.getElementById('endTitle');
+    const endMsg = document.getElementById('endMessage');
+    endTitle.innerHTML = 'You reached <em>the brain</em>';
+    endMsg.textContent = 'Five biomes conquered. The optic nerve carries the signal home. Take a real screen break — you earned it.';
+    overlayEnd.hidden = false;
+    document.getElementById('btnRestart').textContent = 'Ride again from level 1';
+    document.getElementById('btnRestart').dataset.action = 'restart-game';
   }
 
   function pauseGame() {
@@ -1652,8 +2250,44 @@ pointer-events: auto;
     game.paused = false;
     game.gameOver = true;
     overlayPause.hidden = true;
+    showStartScreen();
+    setHudVisible(false);
+  }
+
+  // ----- Start screen with level select -----
+  function showStartScreen() {
     overlayStart.hidden = false;
-    hud.hidden = true;
+    overlayEnd.hidden = true;
+    overlayPause.hidden = true;
+    setHudVisible(false);
+    buildLevelSelect();
+  }
+
+  function buildLevelSelect() {
+    const progress = loadProgress();
+    const host = document.getElementById('levelSelect');
+    if (!host) return;
+    host.innerHTML = '';
+    BIOMES.forEach((b, i) => {
+      const unlocked = i <= progress.completed;
+      const completed = i < progress.completed;
+      const best = progress.bestScores[i] || 0;
+      const btn = document.createElement('button');
+      btn.className = 'level-btn' + (unlocked ? '' : ' locked');
+      btn.disabled = !unlocked;
+      btn.innerHTML = `
+        <div class="level-num">${completed ? '✓' : (i + 1)}</div>
+        <div class="level-info">
+          <div class="level-name">${b.name}</div>
+          <div class="level-sub">${b.sub}</div>
+          ${best > 0 ? `<div class="level-best">Best: ${best}</div>` : ''}
+        </div>
+      `;
+      btn.addEventListener('click', () => {
+        if (unlocked) startLevel(i);
+      });
+      host.appendChild(btn);
+    });
   }
 
   function loop(now) {
@@ -1677,25 +2311,30 @@ pointer-events: auto;
   });
 
   // Buttons
-  document.getElementById('btnStart').addEventListener('click', startGame);
-  document.getElementById('btnRestart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', () => {
+    const action = document.getElementById('btnRestart').dataset.action;
+    if (action === 'retry' && game) {
+      const idx = game.levelIndex;
+      game = null;
+      startLevel(idx);
+    } else if (action === 'restart-game') {
+      // Reset progress for full replay
+      saveProgress({ completed: 0, bestScores: loadProgress().bestScores });
+      game = null;
+      showStartScreen();
+    } else {
+      // Default: go back to level select
+      game = null;
+      showStartScreen();
+    }
+  });
   document.getElementById('btnResume').addEventListener('click', resumeGame);
   document.getElementById('btnQuit').addEventListener('click', quitGame);
   document.getElementById('btnHome').addEventListener('click', () => { window.location.href = 'https://rjlcevans.com/'; });
 
   // Init
   resizeCanvas();
-  // Show personal best on start screen
-  try {
-    const high = parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0;
-    if (high > 0) {
-      const card = overlayStart.querySelector('.overlay-card');
-      const hsEl = document.createElement('p');
-      hsEl.style.cssText = 'color: var(--accent); font-family: Fraunces, serif; font-style: italic; margin: 6px 0 0; font-size: 13px;';
-      hsEl.textContent = `Personal best: ${high}`;
-      card.appendChild(hsEl);
-    }
-  } catch(e) {}
+  buildLevelSelect();
 
   // Polyfill roundRect for older Safari
   if (!CanvasRenderingContext2D.prototype.roundRect) {
