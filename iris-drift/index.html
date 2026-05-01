@@ -277,6 +277,23 @@ pointer-events: auto;
 }
 .home-link:hover { color: white; }
 
+.music-btn {
+position: absolute; bottom: 12px; left: 16px;
+z-index: 5;
+appearance: none;
+width: 36px; height: 36px;
+border-radius: 50%;
+background: rgba(0,0,0,0.4);
+border: 1px solid rgba(255,255,255,0.15);
+color: white;
+font-size: 16px;
+cursor: pointer;
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+display: grid; place-items: center;
+transition: background 0.15s, border-color 0.15s;
+}
+.music-btn:hover { background: rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.3); }
+
 [hidden] { display: none !important; }
 </style>
 
@@ -360,6 +377,7 @@ pointer-events: auto;
   </div>
 </div>
 
+<button class="music-btn" id="btnMusic" title="Toggle music">🔊</button>
 <a class="home-link" href="https://rjlcevans.com/">← Home</a>
 ```
 
@@ -374,7 +392,7 @@ pointer-events: auto;
   // CONFIG
   // ============================================================
   const PROGRESS_KEY = 'evans_iris_drift_progress_v2';
-  const LEVEL_DISTANCE = 800;     // meters required to beat a level
+  const LEVEL_DISTANCE = 400;     // meters required to beat a level
   const LIVES_PER_LEVEL = 3;
 
   // Physics
@@ -531,6 +549,207 @@ pointer-events: auto;
     crash: () => { tone(220, 0.2, 'sawtooth', 0.18); setTimeout(()=>tone(110, 0.3, 'sawtooth', 0.18), 100); },
     biome: () => { tone(523, 0.15, 'sine', 0.1); setTimeout(()=>tone(659, 0.15, 'sine', 0.1), 150); setTimeout(()=>tone(784, 0.25, 'sine', 0.1), 300); },
   };
+
+  // ============================================================
+  // PROCEDURAL MUSIC
+  // ============================================================
+  // Each level gets a unique musical mood — gentle ambient pads with arpeggios,
+  // generated entirely with Web Audio (no audio files needed).
+  // Music is muted by default; the user can toggle it on with the sound button.
+
+  let musicEnabled = true;       // user toggle
+  let musicNodes = [];           // active audio nodes (oscillators + gains)
+  let musicTimers = [];          // setTimeout/setInterval ids
+  let musicMasterGain = null;
+  let musicLevel = -1;
+  let musicPaused = false;
+
+  // Note frequency helper (A4 = 440)
+  function noteFreq(n) {  // n = MIDI note number
+    return 440 * Math.pow(2, (n - 69) / 12);
+  }
+
+  // Per-level musical config: [root note, scale type, tempo (ms per beat), arpeggio pattern]
+  const MUSIC_CONFIGS = [
+    // 0 Cornea Pass — peaceful major, slow tempo
+    { root: 60, scale: [0, 4, 7, 11, 14], tempo: 600, padType: 'sine', arpType: 'triangle', volume: 0.12 },
+    // 1 Iris Valley — warm dorian (minor with raised 6), medium tempo
+    { root: 57, scale: [0, 3, 5, 7, 10, 12], tempo: 540, padType: 'triangle', arpType: 'sine', volume: 0.13 },
+    // 2 Lens Drift — bright lydian, faster
+    { root: 65, scale: [0, 2, 4, 6, 7, 11, 14], tempo: 480, padType: 'sine', arpType: 'sine', volume: 0.11 },
+    // 3 Retinal Ridge — intense minor, fastest
+    { root: 55, scale: [0, 3, 5, 7, 10], tempo: 420, padType: 'sawtooth', arpType: 'triangle', volume: 0.10 },
+    // 4 Optic Tunnel — mystical phrygian, sparse
+    { root: 52, scale: [0, 1, 5, 7, 8, 12], tempo: 560, padType: 'triangle', arpType: 'sine', volume: 0.11 },
+  ];
+
+  function startMusic(levelIndex) {
+    if (!audioCtx) ensureAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    stopMusic();
+    musicLevel = levelIndex;
+    musicPaused = false;
+    if (!musicEnabled) return;
+
+    const cfg = MUSIC_CONFIGS[levelIndex] || MUSIC_CONFIGS[0];
+
+    // Master gain so we can fade in/out and pause smoothly
+    musicMasterGain = audioCtx.createGain();
+    musicMasterGain.gain.value = 0;
+    musicMasterGain.connect(audioCtx.destination);
+    // Fade in over 1.5 seconds
+    musicMasterGain.gain.exponentialRampToValueAtTime(cfg.volume, audioCtx.currentTime + 1.5);
+
+    // ----- Pad layer: a slowly evolving sustained chord -----
+    // Use 3 sustained oscillators tuned to root, fifth, and tenth.
+    const padNotes = [cfg.root - 12, cfg.root - 5, cfg.root, cfg.root + 4];
+    padNotes.forEach((note, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = cfg.padType;
+      osc.frequency.value = noteFreq(note);
+      // Slight detune for warmth
+      osc.detune.value = (i - 1) * 4;
+      // Slow tremolo via LFO on gain
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      lfo.frequency.value = 0.15 + i * 0.05;
+      lfoGain.gain.value = 0.05;
+      lfo.connect(lfoGain);
+      lfoGain.connect(gain.gain);
+      gain.gain.value = 0.18;
+      osc.connect(gain).connect(musicMasterGain);
+      osc.start();
+      lfo.start();
+      musicNodes.push(osc, gain, lfo, lfoGain);
+    });
+
+    // ----- Arpeggio layer: gentle bell-like notes -----
+    // We schedule notes ahead of time using setTimeout for simplicity.
+    // The arpeggio walks up and down through the scale in a slow, peaceful rhythm.
+    let step = 0;
+    const playArpNote = () => {
+      if (musicPaused || !musicEnabled || musicLevel !== levelIndex) return;
+      const scaleIdx = Math.floor(step) % cfg.scale.length;
+      const direction = Math.floor(step / cfg.scale.length) % 2 === 0 ? 1 : -1;
+      const actualIdx = direction > 0 ? scaleIdx : (cfg.scale.length - 1 - scaleIdx);
+      const noteOffset = cfg.scale[actualIdx];
+      const note = cfg.root + noteOffset + 12;  // octave above root
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = cfg.arpType;
+      osc.frequency.value = noteFreq(note);
+      gain.gain.value = 0.0001;
+      // Bell-like envelope
+      const now = audioCtx.currentTime;
+      const peak = 0.16;
+      const dur = cfg.tempo * 1.4 / 1000;
+      gain.gain.exponentialRampToValueAtTime(peak, now + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      osc.connect(gain).connect(musicMasterGain);
+      osc.start();
+      osc.stop(now + dur + 0.1);
+
+      step++;
+      // Occasionally skip a beat for breathing room
+      const skipChance = 0.15;
+      const nextDelay = cfg.tempo * (Math.random() < skipChance ? 2 : 1);
+      const t = setTimeout(playArpNote, nextDelay);
+      musicTimers.push(t);
+    };
+    // Start arpeggio after a beat delay so the pad establishes first
+    const startArp = setTimeout(playArpNote, cfg.tempo * 2);
+    musicTimers.push(startArp);
+
+    // ----- Bass layer: occasional low note on the root -----
+    const playBass = () => {
+      if (musicPaused || !musicEnabled || musicLevel !== levelIndex) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = noteFreq(cfg.root - 24);
+      const now = audioCtx.currentTime;
+      gain.gain.value = 0.0001;
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+      osc.connect(gain).connect(musicMasterGain);
+      osc.start();
+      osc.stop(now + 1.6);
+      const t = setTimeout(playBass, cfg.tempo * 8);
+      musicTimers.push(t);
+    };
+    const startBass = setTimeout(playBass, cfg.tempo * 4);
+    musicTimers.push(startBass);
+  }
+
+  function stopMusic() {
+    musicLevel = -1;
+    // Fade out master gain quickly
+    if (musicMasterGain && audioCtx) {
+      try {
+        musicMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        musicMasterGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        // Disconnect after fade
+        const oldGain = musicMasterGain;
+        setTimeout(() => { try { oldGain.disconnect(); } catch(e){} }, 400);
+      } catch(e) {}
+    }
+    musicMasterGain = null;
+    // Stop all oscillators
+    for (const node of musicNodes) {
+      try { if (node.stop) node.stop(); } catch(e) {}
+      try { node.disconnect(); } catch(e) {}
+    }
+    musicNodes = [];
+    // Clear timers
+    for (const t of musicTimers) clearTimeout(t);
+    musicTimers = [];
+  }
+
+  function pauseMusic() {
+    musicPaused = true;
+    if (musicMasterGain && audioCtx) {
+      try {
+        musicMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        musicMasterGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      } catch(e) {}
+    }
+  }
+  function resumeMusic() {
+    musicPaused = false;
+    if (!musicEnabled) return;
+    const cfg = MUSIC_CONFIGS[musicLevel] || MUSIC_CONFIGS[0];
+    if (musicMasterGain && audioCtx) {
+      try {
+        musicMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        musicMasterGain.gain.linearRampToValueAtTime(cfg.volume, audioCtx.currentTime + 0.3);
+      } catch(e) {}
+    }
+  }
+
+  function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    try { localStorage.setItem('evans_iris_drift_music', musicEnabled ? '1' : '0'); } catch(e) {}
+    updateMusicButton();
+    if (musicEnabled) {
+      // Restart current level's music if a game is running
+      if (game && game.running) startMusic(game.levelIndex);
+    } else {
+      stopMusic();
+    }
+  }
+  function updateMusicButton() {
+    const btn = document.getElementById('btnMusic');
+    if (btn) btn.textContent = musicEnabled ? '🔊' : '🔇';
+  }
+  // Restore preference
+  try {
+    const stored = localStorage.getItem('evans_iris_drift_music');
+    if (stored === '0') musicEnabled = false;
+  } catch(e) {}
 
   // ============================================================
   // TERRAIN
@@ -1734,6 +1953,10 @@ pointer-events: auto;
   // Modes: 'enter' = zooming OUT of pupil (level start), 'exit' = zooming INTO pupil (level end)
   let eyeTransition = null;
 
+  // Session state — persists across crash-and-retry within a single level attempt.
+  // Reset only when entering a new level fresh (from level select or after beating one).
+  let session = null;
+
   function startEyeTransition(mode, levelIndex, onComplete) {
     eyeTransition = {
       mode,                  // 'enter' or 'exit'
@@ -2100,7 +2323,9 @@ pointer-events: auto;
   }
 
   // ----- Level start: shows entry transition then begins gameplay -----
-  function startLevel(levelIndex) {
+  // fresh = true means starting a new attempt with a fresh life pool.
+  // fresh = false means continuing a session (e.g. after a crash with lives remaining).
+  function startLevel(levelIndex, fresh = true) {
     ensureAudio();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     resizeCanvas();
@@ -2111,14 +2336,20 @@ pointer-events: auto;
     overlayPause.hidden = true;
     setHudVisible(false);
 
+    // Manage session — only reset lives when this is a fresh attempt
+    if (fresh || !session || session.levelIndex !== levelIndex) {
+      session = { levelIndex, lives: LIVES_PER_LEVEL };
+    }
+
     // Stop any existing game
     game = null;
 
     // Run entry transition
     sfx.biome();
     startEyeTransition('enter', levelIndex, () => {
-      // Begin gameplay
+      // Begin gameplay — pull lives from the session, not from a fresh count
       game = newGame(levelIndex);
+      game.lives = session.lives;
       game.player.x = cssW * 0.28;
       game.player.y = terrainAt(0);
       game.running = true;
@@ -2126,6 +2357,7 @@ pointer-events: auto;
       showBiomeBanner();
       showLevelHint(levelIndex);
       game.lastFrameTime = performance.now();
+      startMusic(levelIndex);
       requestAnimationFrame(loop);
     });
   }
@@ -2135,7 +2367,7 @@ pointer-events: auto;
     const hint = BIOMES[levelIndex].hint;
     if (!hint) return;
     trickName.textContent = hint;
-    trickPoints.textContent = `LIVES: ${LIVES_PER_LEVEL}  ·  GOAL: ${LEVEL_DISTANCE}m`;
+    trickPoints.textContent = `LIVES: ${session ? session.lives : LIVES_PER_LEVEL}  ·  GOAL: ${LEVEL_DISTANCE}m`;
     trickToast.classList.remove('show');
     void trickToast.offsetWidth;
     trickToast.classList.add('show');
@@ -2145,25 +2377,29 @@ pointer-events: auto;
   function crashGame() {
     if (!game || game.gameOver) return;
     sfx.crash();
-    game.lives--;
-    if (game.lives > 0) {
-      // Quick restart of same level
+    stopMusic();
+    // Decrement the session's persistent life count
+    if (session) session.lives--;
+    const livesLeft = session ? session.lives : 0;
+
+    if (livesLeft > 0) {
+      // Quick restart of same level — keep session alive
       game.gameOver = true;
       game.running = false;
-      // Brief delay then restart
-      setTimeout(() => {
-        const idx = game.levelIndex;
-        game = null;
-        startLevel(idx);
-      }, 1200);
-      // Show "lives left" toast
-      trickName.textContent = `Wiped out — ${game.lives} ${game.lives === 1 ? 'life' : 'lives'} left`;
+      const idx = game.levelIndex;
+      // Show "lives left" toast first
+      trickName.textContent = `Wiped out — ${livesLeft} ${livesLeft === 1 ? 'life' : 'lives'} left`;
       trickPoints.textContent = 'Restarting…';
       trickToast.classList.remove('show');
       void trickToast.offsetWidth;
       trickToast.classList.add('show');
+      // Brief delay then restart
+      setTimeout(() => {
+        game = null;
+        startLevel(idx, /* fresh */ false);
+      }, 1200);
     } else {
-      // No lives left — show game over screen, retry from level 1 or this level
+      // No lives left — game over
       game.gameOver = true;
       game.running = false;
       showGameOverScreen();
@@ -2175,6 +2411,7 @@ pointer-events: auto;
     if (!game) return;
     game.running = false;
     sfx.biome();
+    stopMusic();
 
     // Update progress
     const progress = loadProgress();
@@ -2191,6 +2428,9 @@ pointer-events: auto;
     // Hide HUD
     setHudVisible(false);
 
+    // Reset session — next level gets a full life pool
+    session = null;
+
     if (isLastLevel) {
       // Beat the whole game
       setTimeout(() => {
@@ -2199,12 +2439,13 @@ pointer-events: auto;
     } else {
       // Exit transition into next eye → enter next level
       startEyeTransition('exit', completedLevel, () => {
-        startLevel(completedLevel + 1);
+        startLevel(completedLevel + 1, /* fresh */ true);
       });
     }
   }
 
   function showGameOverScreen() {
+    stopMusic();
     document.getElementById('endScore').textContent = Math.floor(game.score);
     document.getElementById('endDistance').textContent = Math.floor(game.distance) + 'm';
     document.getElementById('endOrbs').textContent = game.orbs;
@@ -2217,9 +2458,12 @@ pointer-events: auto;
     // Replace the restart button label
     document.getElementById('btnRestart').textContent = 'Retry level';
     document.getElementById('btnRestart').dataset.action = 'retry';
+    // Session cleared so retry starts fresh
+    session = null;
   }
 
   function showFinalScreen(score, orbs) {
+    stopMusic();
     document.getElementById('endScore').textContent = score;
     document.getElementById('endDistance').textContent = '—';
     document.getElementById('endOrbs').textContent = orbs;
@@ -2231,24 +2475,29 @@ pointer-events: auto;
     overlayEnd.hidden = false;
     document.getElementById('btnRestart').textContent = 'Ride again from level 1';
     document.getElementById('btnRestart').dataset.action = 'restart-game';
+    session = null;
   }
 
   function pauseGame() {
     if (!game || !game.running || game.paused) return;
     game.paused = true;
     overlayPause.hidden = false;
+    pauseMusic();
   }
   function resumeGame() {
     if (!game || !game.paused) return;
     game.paused = false;
     overlayPause.hidden = true;
     game.lastFrameTime = performance.now();
+    resumeMusic();
   }
   function quitGame() {
     if (!game) return;
     game.running = false;
     game.paused = false;
     game.gameOver = true;
+    session = null;
+    stopMusic();
     overlayPause.hidden = true;
     showStartScreen();
     setHudVisible(false);
@@ -2330,11 +2579,13 @@ pointer-events: auto;
   });
   document.getElementById('btnResume').addEventListener('click', resumeGame);
   document.getElementById('btnQuit').addEventListener('click', quitGame);
-  document.getElementById('btnHome').addEventListener('click', () => { window.location.href = 'https://rjlcevans.com/'; });
+  document.getElementById('btnHome').addEventListener('click', () => { stopMusic(); window.location.href = 'https://rjlcevans.com/'; });
+  document.getElementById('btnMusic').addEventListener('click', toggleMusic);
 
   // Init
   resizeCanvas();
   buildLevelSelect();
+  updateMusicButton();
 
   // Polyfill roundRect for older Safari
   if (!CanvasRenderingContext2D.prototype.roundRect) {
