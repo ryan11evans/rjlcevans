@@ -42,25 +42,33 @@ position: absolute; top: 14px; left: 16px; right: 16px;
 display: flex; justify-content: space-between; align-items: flex-start;
 pointer-events: none;
 color: white;
-text-shadow: 0 2px 10px rgba(0,0,0,0.6);
 font-family: ‘Fraunces’, serif;
 z-index: 5;
 }
-.hud-block { display: flex; flex-direction: column; gap: 2px; }
+.hud-block {
+display: flex; flex-direction: column; gap: 2px;
+background: rgba(15, 22, 32, 0.55);
+backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+border-radius: 12px;
+padding: 8px 14px;
+text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
 .hud-block.right { align-items: flex-end; }
 .hud-label {
 font-family: ‘Inter Tight’; font-size: 9px; letter-spacing: 0.18em;
-text-transform: uppercase; opacity: 0.75; font-weight: 600;
+text-transform: uppercase; opacity: 0.85; font-weight: 600;
+color: white;
 }
 .hud-val {
 font-size: 26px; font-weight: 500; line-height: 1;
 font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+color: white;
 }
-.hud-orbs { font-size: 14px; line-height: 1; opacity: 0.9; font-style: italic; font-weight: 400; }
+.hud-orbs { font-size: 14px; line-height: 1; opacity: 0.95; font-style: italic; font-weight: 400; color: white; }
 .biome-banner {
 position: absolute; top: 24%; left: 0; right: 0;
 text-align: center;
-color: rgba(255,255,255,0.85);
+color: white;
 pointer-events: none;
 z-index: 4;
 opacity: 0;
@@ -70,13 +78,25 @@ transition: opacity 0.6s ease;
 .biome-banner .biome-name {
 font-family: ‘Fraunces’, serif; font-style: italic;
 font-size: clamp(28px, 6vw, 44px); font-weight: 400;
-text-shadow: 0 4px 20px rgba(0,0,0,0.5);
 letter-spacing: 0.02em;
+display: inline-block;
+padding: 8px 22px;
+background: rgba(15, 22, 32, 0.6);
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+border-radius: 12px;
+text-shadow: 0 2px 12px rgba(0,0,0,0.8);
 }
 .biome-banner .biome-sub {
 font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
-opacity: 0.75; margin-top: 4px;
+margin-top: 8px;
 font-family: ‘Inter Tight’; font-weight: 600;
+color: white;
+display: inline-block;
+padding: 4px 12px;
+background: rgba(15, 22, 32, 0.55);
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+border-radius: 999px;
+text-shadow: 0 1px 6px rgba(0,0,0,0.7);
 }
 
 /* Trick toast — appears mid-screen briefly */
@@ -97,12 +117,23 @@ opacity: 0;
 .trick-name {
 font-family: ‘Fraunces’, serif; font-style: italic;
 font-size: clamp(22px, 5vw, 34px); color: var(–accent);
-text-shadow: 0 4px 18px rgba(0,0,0,0.5);
 font-weight: 500;
+display: inline-block;
+padding: 6px 18px;
+background: rgba(15, 22, 32, 0.65);
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+border-radius: 12px;
+text-shadow: 0 2px 10px rgba(0,0,0,0.85);
 }
 .trick-points {
 font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
-color: white; opacity: 0.9; margin-top: 2px; font-weight: 600;
+color: white; margin-top: 6px; font-weight: 600;
+display: inline-block;
+padding: 4px 12px;
+background: rgba(15, 22, 32, 0.6);
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+border-radius: 999px;
+text-shadow: 0 1px 6px rgba(0,0,0,0.7);
 }
 
 /* Overlays */
