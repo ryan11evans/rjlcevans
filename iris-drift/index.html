@@ -572,21 +572,28 @@ transition: background 0.15s, border-color 0.15s;
   // Per-level musical config: [root note, scale type, tempo (ms per beat), arpeggio pattern]
   const MUSIC_CONFIGS = [
     // 0 Cornea Pass — peaceful major, slow tempo
-    { root: 60, scale: [0, 4, 7, 11, 14], tempo: 600, padType: 'sine', arpType: 'triangle', volume: 0.12 },
+    { root: 60, scale: [0, 4, 7, 11, 14], tempo: 600, padType: 'sine', arpType: 'triangle', volume: 0.35 },
     // 1 Iris Valley — warm dorian (minor with raised 6), medium tempo
-    { root: 57, scale: [0, 3, 5, 7, 10, 12], tempo: 540, padType: 'triangle', arpType: 'sine', volume: 0.13 },
+    { root: 57, scale: [0, 3, 5, 7, 10, 12], tempo: 540, padType: 'triangle', arpType: 'sine', volume: 0.38 },
     // 2 Lens Drift — bright lydian, faster
-    { root: 65, scale: [0, 2, 4, 6, 7, 11, 14], tempo: 480, padType: 'sine', arpType: 'sine', volume: 0.11 },
+    { root: 65, scale: [0, 2, 4, 6, 7, 11, 14], tempo: 480, padType: 'sine', arpType: 'sine', volume: 0.32 },
     // 3 Retinal Ridge — intense minor, fastest
-    { root: 55, scale: [0, 3, 5, 7, 10], tempo: 420, padType: 'sawtooth', arpType: 'triangle', volume: 0.10 },
+    { root: 55, scale: [0, 3, 5, 7, 10], tempo: 420, padType: 'sawtooth', arpType: 'triangle', volume: 0.28 },
     // 4 Optic Tunnel — mystical phrygian, sparse
-    { root: 52, scale: [0, 1, 5, 7, 8, 12], tempo: 560, padType: 'triangle', arpType: 'sine', volume: 0.11 },
+    { root: 52, scale: [0, 1, 5, 7, 8, 12], tempo: 560, padType: 'triangle', arpType: 'sine', volume: 0.32 },
   ];
 
   function startMusic(levelIndex) {
     if (!audioCtx) ensureAudio();
     if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        // Once resumed, restart music
+        if (musicLevel === levelIndex) return; // already started
+        startMusic(levelIndex);
+      });
+      return;
+    }
 
     stopMusic();
     musicLevel = levelIndex;
@@ -597,13 +604,14 @@ transition: background 0.15s, border-color 0.15s;
 
     // Master gain so we can fade in/out and pause smoothly
     musicMasterGain = audioCtx.createGain();
-    musicMasterGain.gain.value = 0;
+    // Start at a small non-zero value (exponentialRampToValueAtTime can't start from 0)
+    musicMasterGain.gain.value = 0.001;
     musicMasterGain.connect(audioCtx.destination);
-    // Fade in over 1.5 seconds
-    musicMasterGain.gain.exponentialRampToValueAtTime(cfg.volume, audioCtx.currentTime + 1.5);
+    // Linear fade in over 1 second (linear ramp works fine from any value)
+    musicMasterGain.gain.linearRampToValueAtTime(cfg.volume, audioCtx.currentTime + 1.0);
 
     // ----- Pad layer: a slowly evolving sustained chord -----
-    // Use 3 sustained oscillators tuned to root, fifth, and tenth.
+    // Use 4 sustained oscillators tuned to root, fifth, and tenth.
     const padNotes = [cfg.root - 12, cfg.root - 5, cfg.root, cfg.root + 4];
     padNotes.forEach((note, i) => {
       const osc = audioCtx.createOscillator();
@@ -616,10 +624,10 @@ transition: background 0.15s, border-color 0.15s;
       const lfo = audioCtx.createOscillator();
       const lfoGain = audioCtx.createGain();
       lfo.frequency.value = 0.15 + i * 0.05;
-      lfoGain.gain.value = 0.05;
+      lfoGain.gain.value = 0.08;
       lfo.connect(lfoGain);
       lfoGain.connect(gain.gain);
-      gain.gain.value = 0.18;
+      gain.gain.value = 0.32;
       osc.connect(gain).connect(musicMasterGain);
       osc.start();
       lfo.start();
@@ -627,8 +635,6 @@ transition: background 0.15s, border-color 0.15s;
     });
 
     // ----- Arpeggio layer: gentle bell-like notes -----
-    // We schedule notes ahead of time using setTimeout for simplicity.
-    // The arpeggio walks up and down through the scale in a slow, peaceful rhythm.
     let step = 0;
     const playArpNote = () => {
       if (musicPaused || !musicEnabled || musicLevel !== levelIndex) return;
@@ -636,31 +642,28 @@ transition: background 0.15s, border-color 0.15s;
       const direction = Math.floor(step / cfg.scale.length) % 2 === 0 ? 1 : -1;
       const actualIdx = direction > 0 ? scaleIdx : (cfg.scale.length - 1 - scaleIdx);
       const noteOffset = cfg.scale[actualIdx];
-      const note = cfg.root + noteOffset + 12;  // octave above root
+      const note = cfg.root + noteOffset + 12;
 
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = cfg.arpType;
       osc.frequency.value = noteFreq(note);
-      gain.gain.value = 0.0001;
-      // Bell-like envelope
+      gain.gain.value = 0.001;
       const now = audioCtx.currentTime;
-      const peak = 0.16;
+      const peak = 0.32;
       const dur = cfg.tempo * 1.4 / 1000;
       gain.gain.exponentialRampToValueAtTime(peak, now + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
       osc.connect(gain).connect(musicMasterGain);
       osc.start();
       osc.stop(now + dur + 0.1);
 
       step++;
-      // Occasionally skip a beat for breathing room
       const skipChance = 0.15;
       const nextDelay = cfg.tempo * (Math.random() < skipChance ? 2 : 1);
       const t = setTimeout(playArpNote, nextDelay);
       musicTimers.push(t);
     };
-    // Start arpeggio after a beat delay so the pad establishes first
     const startArp = setTimeout(playArpNote, cfg.tempo * 2);
     musicTimers.push(startArp);
 
@@ -672,9 +675,9 @@ transition: background 0.15s, border-color 0.15s;
       osc.type = 'sine';
       osc.frequency.value = noteFreq(cfg.root - 24);
       const now = audioCtx.currentTime;
-      gain.gain.value = 0.0001;
-      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+      gain.gain.value = 0.001;
+      gain.gain.exponentialRampToValueAtTime(0.45, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
       osc.connect(gain).connect(musicMasterGain);
       osc.start();
       osc.stop(now + 1.6);
@@ -687,24 +690,20 @@ transition: background 0.15s, border-color 0.15s;
 
   function stopMusic() {
     musicLevel = -1;
-    // Fade out master gain quickly
     if (musicMasterGain && audioCtx) {
       try {
         musicMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-        musicMasterGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-        // Disconnect after fade
+        musicMasterGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         const oldGain = musicMasterGain;
         setTimeout(() => { try { oldGain.disconnect(); } catch(e){} }, 400);
       } catch(e) {}
     }
     musicMasterGain = null;
-    // Stop all oscillators
     for (const node of musicNodes) {
       try { if (node.stop) node.stop(); } catch(e) {}
       try { node.disconnect(); } catch(e) {}
     }
     musicNodes = [];
-    // Clear timers
     for (const t of musicTimers) clearTimeout(t);
     musicTimers = [];
   }
