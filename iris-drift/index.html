@@ -154,13 +154,17 @@ font-family: ‘Fraunces’, serif; font-weight: 500;
 font-size: clamp(32px, 6vw, 48px); line-height: 1.05; letter-spacing: -0.02em;
 margin: 0 0 10px; color: white;
 }
-.overlay h2 em { font-style: italic; color: var(–accent); font-weight: 400; }
+.overlay h2 em {
+font-style: italic !important;
+color: #ffd166 !important;
+font-weight: 400;
+}
 .overlay p.byline {
 margin: -2px 0 14px;
 font-family: ‘Fraunces’, serif;
-font-style: italic;
+font-style: italic !important;
 font-size: 14px;
-color: var(–accent);
+color: #ffd166 !important;
 letter-spacing: 0.02em;
 }
 .overlay p { color: var(–ink-dim); font-size: 14px; line-height: 1.55; margin: 0 0 18px; }
@@ -200,6 +204,50 @@ color: white;
 /* Wider overlay card for level select */
 .overlay-wide { max-width: 600px; }
 
+/* Title row with character canvases on each side */
+.title-row {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+margin-bottom: 14px;
+}
+.title-character {
+width: 80px;
+height: 80px;
+flex-shrink: 0;
+/* float gently */
+animation: floatChar 3s ease-in-out infinite;
+}
+.title-character-flip {
+transform: scaleX(-1);
+animation-delay: 1.5s;
+}
+.title-text {
+flex: 1;
+min-width: 0;
+}
+.title-text h2 {
+margin: 0 0 4px;
+}
+@keyframes floatChar {
+0%, 100% { transform: translateY(0); }
+50% { transform: translateY(-6px); }
+}
+.title-character-flip {
+/* Combine flip + float */
+animation: floatCharFlip 3s ease-in-out infinite;
+animation-delay: 1.5s;
+}
+@keyframes floatCharFlip {
+0%, 100% { transform: scaleX(-1) translateY(0); }
+50% { transform: scaleX(-1) translateY(-6px); }
+}
+@media (max-width: 500px) {
+.title-character { width: 60px; height: 60px; }
+.title-row { gap: 4px; }
+}
+
 /* Level select */
 .level-select {
 display: grid;
@@ -236,12 +284,12 @@ font-family: ‘Fraunces’, serif; font-style: italic;
 font-size: 26px; font-weight: 500;
 width: 36px; height: 36px;
 display: grid; place-items: center;
-background: var(–accent); color: #1a1208;
+background: #ffd166 !important; color: #1a1208 !important;
 border-radius: 50%;
 flex-shrink: 0;
 }
 .level-btn.locked .level-num {
-background: rgba(255,255,255,0.1); color: white;
+background: rgba(255,255,255,0.1) !important; color: white !important;
 }
 .level-btn .level-info { flex: 1; min-width: 0; }
 .level-btn .level-name {
@@ -253,7 +301,7 @@ font-size: 11px; color: var(–ink-dim); margin-top: 2px;
 font-style: italic;
 }
 .level-btn .level-best {
-font-size: 10px; color: var(–accent); margin-top: 4px;
+font-size: 10px; color: #ffd166 !important; margin-top: 4px;
 letter-spacing: 0.05em;
 }
 
@@ -379,8 +427,14 @@ transition: background 0.15s, border-color 0.15s;
 <!-- Start overlay with level select -->
 <div class="overlay" id="overlayStart">
   <div class="overlay-card overlay-wide">
-    <h2>Iris <em>Drift</em></h2>
-    <p class="byline">Created by Dr. Ryan Evans, OD</p>
+    <div class="title-row">
+      <canvas class="title-character" id="titleCharLeft" width="120" height="120"></canvas>
+      <div class="title-text">
+        <h2>Iris <em>Drift</em></h2>
+        <p class="byline">Created by Dr. Ryan Evans, OD</p>
+      </div>
+      <canvas class="title-character title-character-flip" id="titleCharRight" width="120" height="120"></canvas>
+    </div>
     <p>Five biomes. Four hundred meters each. Fly out of one eye, into the next, until you reach the brain.</p>
     <div class="controls-info">
       <strong>Tap</strong> or <kbd>space</kbd> to jump.
@@ -2290,75 +2344,78 @@ transition: background 0.15s, border-color 0.15s;
   }
 
   // Renders just the player sprite at origin (no global state)
-  function drawPlayerSprite() {
+  function drawPlayerSprite(targetCtx) {
+    // If a target context is passed (e.g. for the title decoration), use it.
+    // Otherwise use the main game ctx from the outer scope.
+    const c = targetCtx || ctx;
     // Snowboard
-    ctx.fillStyle = '#0d1420';
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(-22, 4, 44, 6, 3);
-      ctx.fill();
+    c.fillStyle = '#0d1420';
+    if (c.roundRect) {
+      c.beginPath();
+      c.roundRect(-22, 4, 44, 6, 3);
+      c.fill();
     } else {
-      ctx.fillRect(-22, 4, 44, 6);
+      c.fillRect(-22, 4, 44, 6);
     }
-    ctx.fillStyle = '#ef476f';
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(-20, 4, 40, 1.5, 1);
-      ctx.fill();
+    c.fillStyle = '#ef476f';
+    if (c.roundRect) {
+      c.beginPath();
+      c.roundRect(-20, 4, 40, 1.5, 1);
+      c.fill();
     } else {
-      ctx.fillRect(-20, 4, 40, 1.5);
+      c.fillRect(-20, 4, 40, 1.5);
     }
     // Body
-    const bodyGrad = ctx.createLinearGradient(-10, -16, 10, 4);
+    const bodyGrad = c.createLinearGradient(-10, -16, 10, 4);
     bodyGrad.addColorStop(0, '#3a4862');
     bodyGrad.addColorStop(1, '#1f2838');
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.moveTo(-8, 4); ctx.lineTo(-6, -16); ctx.lineTo(8, -16); ctx.lineTo(10, 4);
-    ctx.closePath(); ctx.fill();
+    c.fillStyle = bodyGrad;
+    c.beginPath();
+    c.moveTo(-8, 4); c.lineTo(-6, -16); c.lineTo(8, -16); c.lineTo(10, 4);
+    c.closePath(); c.fill();
     // Head
-    ctx.fillStyle = '#f5ecd6';
-    ctx.beginPath();
-    ctx.arc(2, -22, 10, 0, Math.PI * 2);
-    ctx.fill();
+    c.fillStyle = '#f5ecd6';
+    c.beginPath();
+    c.arc(2, -22, 10, 0, Math.PI * 2);
+    c.fill();
     // Goggles
-    ctx.strokeStyle = '#0d1420';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(-9, -24);
-    ctx.quadraticCurveTo(2, -26.5, 13, -24);
-    ctx.stroke();
-    ctx.fillStyle = '#0d1420';
-    ctx.beginPath();
-    ctx.arc(-2.5, -23, 8.1, 0, Math.PI * 2);
-    ctx.arc(6.5, -23, 8.1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0d1420';
-    ctx.fillRect(4, -24.2, 1, 2.5);
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(-2.5, -23, 6.5, 0, Math.PI * 2);
-    ctx.arc(6.5, -23, 6.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#4a90a4';
-    ctx.beginPath();
-    ctx.arc(-2, -23, 4.2, 0, Math.PI * 2);
-    ctx.arc(7, -23, 4.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0d1420';
-    ctx.beginPath();
-    ctx.arc(-2, -23, 1.95, 0, Math.PI * 2);
-    ctx.arc(7, -23, 1.95, 0, Math.PI * 2);
-    ctx.fill();
+    c.strokeStyle = '#0d1420';
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(-9, -24);
+    c.quadraticCurveTo(2, -26.5, 13, -24);
+    c.stroke();
+    c.fillStyle = '#0d1420';
+    c.beginPath();
+    c.arc(-2.5, -23, 8.1, 0, Math.PI * 2);
+    c.arc(6.5, -23, 8.1, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#0d1420';
+    c.fillRect(4, -24.2, 1, 2.5);
+    c.fillStyle = '#ffffff';
+    c.beginPath();
+    c.arc(-2.5, -23, 6.5, 0, Math.PI * 2);
+    c.arc(6.5, -23, 6.5, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#4a90a4';
+    c.beginPath();
+    c.arc(-2, -23, 4.2, 0, Math.PI * 2);
+    c.arc(7, -23, 4.2, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#0d1420';
+    c.beginPath();
+    c.arc(-2, -23, 1.95, 0, Math.PI * 2);
+    c.arc(7, -23, 1.95, 0, Math.PI * 2);
+    c.fill();
     // Hat
-    ctx.fillStyle = '#ef476f';
-    ctx.beginPath();
-    ctx.moveTo(-9, -27); ctx.lineTo(-3, -34); ctx.lineTo(11, -30); ctx.lineTo(12, -26);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(-3, -34, 2.2, 0, Math.PI * 2);
-    ctx.fill();
+    c.fillStyle = '#ef476f';
+    c.beginPath();
+    c.moveTo(-9, -27); c.lineTo(-3, -34); c.lineTo(11, -30); c.lineTo(12, -26);
+    c.closePath(); c.fill();
+    c.fillStyle = '#ffffff';
+    c.beginPath();
+    c.arc(-3, -34, 2.2, 0, Math.PI * 2);
+    c.fill();
   }
 
   // ----- Level start: shows entry transition then begins gameplay -----
@@ -2549,6 +2606,29 @@ transition: background 0.15s, border-color 0.15s;
     overlayPause.hidden = true;
     setHudVisible(false);
     buildLevelSelect();
+    drawTitleCharacters();
+  }
+
+  // Draws the player character on the small canvases that flank the title
+  function drawTitleCharacters() {
+    ['titleCharLeft', 'titleCharRight'].forEach(id => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssSize = parseFloat(getComputedStyle(canvas).width) || 80;
+      canvas.width = Math.round(cssSize * dpr);
+      canvas.height = Math.round(cssSize * dpr);
+      const tctx = canvas.getContext('2d');
+      tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      tctx.clearRect(0, 0, cssSize, cssSize);
+      // Center and scale the sprite (sprite is drawn around origin, ~50px tall total)
+      tctx.save();
+      tctx.translate(cssSize / 2, cssSize * 0.7);
+      const scale = cssSize / 70;
+      tctx.scale(scale, scale);
+      drawPlayerSprite(tctx);
+      tctx.restore();
+    });
   }
 
   function buildLevelSelect() {
@@ -2624,6 +2704,7 @@ transition: background 0.15s, border-color 0.15s;
   // Init
   resizeCanvas();
   buildLevelSelect();
+  drawTitleCharacters();
   updateMusicButton();
 
   // Polyfill roundRect for older Safari
