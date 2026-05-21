@@ -118,6 +118,115 @@
     max-width: 460px;
     color: white;
   }
+  .overlay-levelmap {
+    max-width: 560px;
+    width: 100%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .level-map {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+    overflow-y: auto;
+    padding: 2px;
+  }
+  @media (min-width: 480px) {
+    .level-map { grid-template-columns: repeat(2, 1fr); }
+  }
+  .lvl-card {
+    appearance: none;
+    text-align: left;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s, border-color 0.15s;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    position: relative;
+  }
+  .lvl-card:hover:not(.locked) {
+    background: rgba(252, 212, 68, 0.12);
+    border-color: #fcd444;
+    transform: translateY(-1px);
+  }
+  .lvl-card:active:not(.locked) { transform: translateY(1px); }
+  .lvl-card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .lvl-num {
+    flex-shrink: 0;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #fcd444;
+    color: #2a1d00;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 18px;
+    display: grid; place-items: center;
+  }
+  .lvl-card.locked .lvl-num {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+  }
+  .lvl-info { flex: 1; min-width: 0; }
+  .lvl-name {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 14px;
+    line-height: 1.2; margin-bottom: 2px;
+  }
+  .lvl-sub {
+    font-size: 10.5px; color: #aab4c4; line-height: 1.3;
+  }
+  .lvl-best {
+    font-size: 10px; color: #fcd444; margin-top: 3px; font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .lvl-lock {
+    position: absolute; top: 10px; right: 12px;
+    font-size: 14px; opacity: 0.7;
+  }
+  .lvl-check {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 14px; color: #4ade80;
+  }
+  .shop-coins {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: 'Fraunces', serif; font-style: italic;
+    color: #fcd444; font-size: 16px;
+  }
+  .shop-card {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.15s, background 0.15s;
+  }
+  .shop-card:hover:not(.locked) { transform: translateY(-1px); border-color: #fcd444; background: rgba(252,212,68,0.1); }
+  .shop-card.equipped { border-color: #4ade80; background: rgba(74,222,128,0.12); }
+  .shop-card.locked.cant-afford { opacity: 0.55; }
+  .shop-card canvas { width: 56px; height: 36px; }
+  .shop-name { font-family: 'Fraunces', serif; font-size: 12px; font-weight: 600; text-align: center; }
+  .shop-price {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .shop-price.owned { color: #4ade80; }
+  .shop-price.cost { color: #fcd444; }
+  .shop-tag {
+    position: absolute; top: 6px; right: 8px; font-size: 12px;
+  }
   .overlay h2 {
     font-family: 'Fraunces', serif; font-weight: 600;
     font-size: clamp(34px, 7vw, 52px); line-height: 1.05; letter-spacing: -0.02em;
@@ -254,7 +363,7 @@
       <div class="overlay-card">
         <h2>Mr. <em>Glass</em></h2>
         <p class="byline">Created by Dr. Ryan Evans, OD</p>
-        <p>Help Mr. Glass run through 5 levels of optometry mayhem — from the office to the optic nerve itself. Stomp gremlins, dodge cataracts, collect eyeball coins.</p>
+        <p>Help Mr. Glass run through 8 levels of optometry mayhem — from the office to the optic nerve and beyond. Stomp gremlins, dodge cataracts, collect eyeball coins.</p>
         <div class="controls-info">
           <strong>Tap</strong> or <kbd>space</kbd> to jump — <strong>tap again mid-air</strong> for a double jump.
           <strong>Hold</strong> for a higher jump.
@@ -262,6 +371,28 @@
           <strong>Stomp</strong> enemies from above. Don't run into them.
         </div>
         <button class="btn" id="btnStart">Start playing</button>
+        <button class="btn ghost" id="btnLevelSelect">Choose level</button>
+        <button class="btn ghost" id="btnShop">👓 Glasses shop</button>
+      </div>
+    </div>
+
+    <!-- Level select map -->
+    <div class="overlay" id="overlayLevelSelect" hidden>
+      <div class="overlay-card overlay-levelmap">
+        <h2>Choose a <em>Level</em></h2>
+        <p>Mr. Glass's journey through the eye. Beat a level to unlock the next.</p>
+        <div class="level-map" id="levelMap"></div>
+        <button class="btn ghost" id="btnLevelBack">← Back</button>
+      </div>
+    </div>
+
+    <!-- Glasses shop -->
+    <div class="overlay" id="overlayShop" hidden>
+      <div class="overlay-card overlay-levelmap">
+        <h2>Glasses <em>Shop</em></h2>
+        <p>Spend your eyeball coins on a new look for Mr. Glass.<br><span id="shopCoinCount" class="shop-coins">👁 0 coins</span></p>
+        <div class="level-map" id="shopGrid"></div>
+        <button class="btn ghost" id="btnShopBack">← Back</button>
       </div>
     </div>
 
@@ -384,9 +515,9 @@
   ];
   const LEVEL_2_ENEMIES = [
     { type: 'astigmatism', col: 28, min: 26, max: 32 },
-    { type: 'gremlin', col: 56, min: 54, max: 60 },
+    { type: 'hopper', col: 56, min: 54, max: 60 },
     { type: 'astigmatism', col: 72, min: 68, max: 76 },
-    { type: 'astigmatism', col: 86, min: 82, max: 90 },
+    { type: 'hopper', col: 86, min: 82, max: 90 },
   ];
 
   // ----- LEVEL 3: Behind the Counter (frame platforms, glaucoma blobs) -----
@@ -417,8 +548,8 @@
   ];
   const LEVEL_3_ENEMIES = [
     { type: 'glaucoma', col: 24, min: 22, max: 28 },
-    { type: 'gremlin', col: 50, min: 47, max: 55 },
-    { type: 'glaucoma', col: 70, min: 67, max: 73 },
+    { type: 'flyer', col: 50, min: 45, max: 55 },
+    { type: 'charger', col: 70, min: 64, max: 76 },
     { type: 'glaucoma', col: 80, min: 78, max: 84 },
   ];
 
@@ -434,7 +565,7 @@
     '..................................................................................................',
     '..................F..............................F..............................................',
     '......QQ.........FF.....BBBBB....................FF........BBBBB..............X..................',
-    '.................FF..............................FF..............................................',
+    '.................FF.............................KFF..............................................',
     'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
@@ -499,7 +630,7 @@
     '..................................................................................................',
     '..................................................................................................',
     '...........FF................FF................FF................FF...................X.........',
-    '..................................................................................................',
+    '.................................................K................................................',
     'BBBBBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     'DDDDDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
@@ -600,6 +731,11 @@
       theme: 'dispensary',
       gimmick: null,
       sky: ['#a8d4f0', '#d0e4f5', '#e8f0f8'],   // cool fluorescent
+      platforms: [
+        { type: 'crumbling', col: 36, row: 8, width: 2 },
+        { type: 'crumbling', col: 56, row: 8, width: 2 },
+        { type: 'moving', col: 44, row: 7, width: 2, axis: 'y', range: 3, speed: 55 },
+      ],
     },
     {
       name: 'The Phoropter Maze',
@@ -624,6 +760,11 @@
       theme: 'lasik',
       gimmick: 'lasers',
       sky: ['#c83838', '#e85858', '#fc8888'],   // hot red lasik room
+      platforms: [
+        { type: 'moving', col: 15, row: 9, width: 2, axis: 'x', range: 2, speed: 70 },
+        { type: 'moving', col: 30, row: 9, width: 2, axis: 'y', range: 2, speed: 60 },
+        { type: 'moving', col: 44, row: 9, width: 2, axis: 'x', range: 2, speed: 80 },
+      ],
     },
     {
       name: 'The Brain',
@@ -851,6 +992,7 @@
   }
   function isSpring(ch) { return ch === 'S'; }
   function isGoal(ch) { return ch === 'X'; }
+  function isCheckpoint(ch) { return ch === 'K'; }
 
   // ============================================================
   // GAME OBJECTS
@@ -897,6 +1039,8 @@
         wallVaultRecovery: 0,  // brief moment after wall vault where vx is reduced
         powerup: 0,            // seconds remaining of Super Glass mode
         airStomps: 0,          // consecutive stomps without touching ground (combo)
+        stunned: 0,            // stun-spin animation timer
+        victory: 0,            // victory-hop animation timer
       },
 
       lives: 3,
@@ -910,6 +1054,7 @@
       fogPatches: [],// {x, y, w, h, life} — left by glaucoma blobs
       powerups: [],  // {x, y, vy, collected} — prescription glasses pickups
       floatTexts: [],// {x, y, text, color, life, vy} — floating "+25" etc
+      platforms: [], // {type:'moving'|'crumbling', x, y, w, h, ...}
       particles: [],
 
       lastFrameTime: performance.now(),
@@ -929,14 +1074,54 @@
     }));
     // Enemies
     game.enemies = cfg.enemies.map(e => makeEnemy(e));
-    // Drop enemies onto ground at start
+    // Drop enemies onto ground at start (flyers keep their placed height)
     game.enemies.forEach(en => {
+      if (en.type === 'flyer') {
+        en.y = (en.patrolMinX === en.patrolMaxX ? en.y : en.y);  // keep spawn height
+        // Place flyer a few tiles above the floor at its column
+        const col = Math.floor((en.x + en.w/2) / TILE);
+        for (let r = 0; r < game.level.length; r++) {
+          if (isSolid(tileAt(game.level, col, r))) {
+            en.y = r * TILE - en.h - TILE * 3;  // hover 3 tiles above ground
+            break;
+          }
+        }
+        en.hoverBaseY = en.y;
+        return;
+      }
       const col = Math.floor((en.x + en.w/2) / TILE);
       for (let r = 0; r < game.level.length; r++) {
         if (isSolid(tileAt(game.level, col, r))) {
           en.y = r * TILE - en.h;
           break;
         }
+      }
+    });
+
+    // Platforms (moving / crumbling) from level config
+    game.platforms = (cfg.platforms || []).map(pl => {
+      if (pl.type === 'moving') {
+        return {
+          type: 'moving',
+          x: pl.col * TILE, y: pl.row * TILE,
+          w: (pl.width || 2) * TILE, h: TILE * 0.5,
+          axis: pl.axis || 'x',          // 'x' or 'y'
+          range: (pl.range || 3) * TILE, // travel distance
+          speed: pl.speed || 60,
+          originX: pl.col * TILE, originY: pl.row * TILE,
+          dir: 1,
+          prevX: pl.col * TILE, prevY: pl.row * TILE,
+        };
+      } else {
+        return {
+          type: 'crumbling',
+          x: pl.col * TILE, y: pl.row * TILE,
+          w: (pl.width || 1) * TILE, h: TILE * 0.5,
+          state: 'solid',     // 'solid', 'shaking', 'gone'
+          shakeTimer: 0,
+          respawnTimer: 0,
+          originX: pl.col * TILE, originY: pl.row * TILE,
+        };
       }
     });
   }
@@ -966,6 +1151,19 @@
     } else if (spawn.type === 'diplopia') {
       // Small twin that moves erratically
       return Object.assign(base, { w: TILE * 0.65, h: TILE * 0.65, vx: -60 });
+    } else if (spawn.type === 'hopper') {
+      // Spring-legged enemy that hops periodically — "presbyopia frog"
+      return Object.assign(base, { w: TILE * 0.8, h: TILE * 0.75, vx: -45, hopTimer: 1 + Math.random() });
+    } else if (spawn.type === 'flyer') {
+      // Hovering enemy that dives at the player — "floater fly"
+      return Object.assign(base, {
+        w: TILE * 0.7, h: TILE * 0.7, vx: 0, vy: 0,
+        flyState: 'hover', flyTimer: 1.2 + Math.random(),
+        hoverBaseY: 0, hoverPhase: Math.random() * Math.PI * 2,
+      });
+    } else if (spawn.type === 'charger') {
+      // Charges fast when the player is in line of sight — "strabismus bull"
+      return Object.assign(base, { w: TILE * 1.0, h: TILE * 0.85, vx: -35, charging: false, baseSpeed: 35, chargeSpeed: 240 });
     } else if (spawn.type === 'cataract') {
       // Boss — bigger, takes 3 hits, slow
       return Object.assign(base, { w: TILE * 1.6, h: TILE * 1.4, vx: -25, hp: 3, hitFlash: 0 });
@@ -1060,6 +1258,7 @@
     if (!game || !game.running || game.paused) return;
     game.elapsed += dt;
 
+    updatePlatforms(dt);
     updatePlayer(dt);
     updateEnemies(dt);
     updateCoins(dt);
@@ -1087,6 +1286,54 @@
     if (game.levelConfig.gimmick === 'flicker') {
       game.flickerPhase += dt;
     }
+  }
+
+  function updatePlatforms(dt) {
+    for (const pl of game.platforms) {
+      if (pl.type === 'moving') {
+        pl.prevX = pl.x; pl.prevY = pl.y;
+        const move = pl.speed * pl.dir * dt;
+        if (pl.axis === 'x') {
+          pl.x += move;
+          if (pl.x > pl.originX + pl.range) { pl.x = pl.originX + pl.range; pl.dir = -1; }
+          if (pl.x < pl.originX) { pl.x = pl.originX; pl.dir = 1; }
+        } else {
+          pl.y += move;
+          if (pl.y > pl.originY + pl.range) { pl.y = pl.originY + pl.range; pl.dir = -1; }
+          if (pl.y < pl.originY) { pl.y = pl.originY; pl.dir = 1; }
+        }
+      } else if (pl.type === 'crumbling') {
+        if (pl.state === 'shaking') {
+          pl.shakeTimer -= dt;
+          if (pl.shakeTimer <= 0) {
+            pl.state = 'gone';
+            pl.respawnTimer = 2.5;
+            spawnParticles(pl.x + pl.w/2, pl.y, '#b08850', 12);
+          }
+        } else if (pl.state === 'gone') {
+          pl.respawnTimer -= dt;
+          if (pl.respawnTimer <= 0) {
+            pl.state = 'solid';
+          }
+        }
+      }
+    }
+  }
+
+  // Returns the platform the player is standing on (feet near its top), or null.
+  // Also handles crumbling trigger and moving-platform carry.
+  function platformUnderPlayer(p) {
+    for (const pl of game.platforms) {
+      if (pl.type === 'crumbling' && pl.state === 'gone') continue;
+      // Is the player horizontally over this platform?
+      if (p.x + p.w * 0.7 < pl.x || p.x + p.w * 0.3 > pl.x + pl.w) continue;
+      const feet = p.y + p.h;
+      // Within landing band and falling
+      if (p.vy >= 0 && feet >= pl.y - 2 && feet <= pl.y + pl.h + 8) {
+        return pl;
+      }
+    }
+    return null;
   }
 
   function updatePlayer(dt) {
@@ -1178,13 +1425,36 @@
     let newY = p.y + p.vy * dt;
     const vRes = resolveVertical(p.x, newY, p.w, p.h, p.vy);
     const wasOnGround = p.onGround;
-    if (vRes.landed) {
+
+    // Platform landing — only if not already landing on solid ground higher up
+    let onPlatform = null;
+    if (!vRes.landed && p.vy >= 0) {
+      const pl = platformUnderPlayer(p);
+      if (pl) {
+        // Land on the platform top
+        newY = pl.y - p.h - 0.01;
+        onPlatform = pl;
+      }
+    }
+
+    if (vRes.landed || onPlatform) {
       p.onGround = true;
       p.vy = 0;
       p.canExtendJump = false;
       p.jumpHoldTime = 0;
       p.airStomps = 0;      // reset combo counter on landing
       p.jumpsRemaining = 2;  // refill jumps
+      // Carry the player with a moving platform
+      if (onPlatform && onPlatform.type === 'moving') {
+        p.x += (onPlatform.x - onPlatform.prevX);
+        // Vertical carry
+        newY += (onPlatform.y - onPlatform.prevY);
+      }
+      // Trigger crumbling platform
+      if (onPlatform && onPlatform.type === 'crumbling' && onPlatform.state === 'solid') {
+        onPlatform.state = 'shaking';
+        onPlatform.shakeTimer = 0.5;
+      }
       // Spring bounce — automatic big launch
       if (vRes.landedOnSpring) {
         p.vy = -1100;
@@ -1212,7 +1482,7 @@
       // If we just walked off a ledge (was on ground last frame, not now), start coyote timer
       if (wasOnGround) p.coyoteTime = 0.12;
     }
-    p.y = vRes.y;
+    p.y = vRes.landed ? vRes.y : newY;
 
     // Animation frame for run cycle
     if (p.onGround) p.runFrame += dt * 12;
@@ -1221,9 +1491,14 @@
     const playerCenterCol = Math.floor((p.x + p.w * 0.5) / TILE);
     let inGoalColumn = false;
     for (let r = 0; r < game.levelH; r++) {
-      if (isGoal(tileAt(game.level, playerCenterCol, r))) {
-        inGoalColumn = true;
-        break;
+      const ch = tileAt(game.level, playerCenterCol, r);
+      if (isGoal(ch)) inGoalColumn = true;
+      // Checkpoint — record this as the new respawn column
+      if (isCheckpoint(ch) && (!game.checkpointCol || playerCenterCol > game.checkpointCol)) {
+        game.checkpointCol = playerCenterCol;
+        spawnFloatText(p.x + p.w/2, p.y - 10, 'CHECKPOINT!', '#4ade80');
+        spawnParticles(p.x + p.w/2, p.y, '#4ade80', 12);
+        sfx.coin();
       }
     }
     if (inGoalColumn) {
@@ -1402,6 +1677,105 @@
     game.powerups = game.powerups.filter(pu => !pu.collected);
   }
 
+  function checkEnemyPlayerCollision(en) {
+    const p = game.player;
+    if (en.squashed || !en.alive) return;
+    if (p.invincible > 0) return;
+    if (!rectsOverlap(p.x, p.y, p.w, p.h, en.x, en.y, en.w, en.h)) return;
+
+    const playerBottom = p.y + p.h;
+    const enemyTop = en.y;
+    const stompedFromAbove = p.vy > 0 && playerBottom - 8 < enemyTop + en.h * 0.4;
+    if (stompedFromAbove) {
+      p.airStomps++;
+      const comboBonus = Math.max(0, p.airStomps - 1) * 50;
+      if (en.type === 'cataract') {
+        const dmg = p.powerup > 0 ? 3 : 1;
+        en.hp -= dmg;
+        en.hitFlash = 0.3;
+        p.vy = STOMP_BOUNCE;
+        game.score += 200 + comboBonus;
+        game.stomps++;
+        sfx.stomp();
+        spawnParticles(en.x + en.w/2, en.y, '#e8d8ff', 14);
+        spawnFloatText(en.x + en.w/2, en.y, `+${200 + comboBonus}`, '#e8d8ff');
+        if (en.hp <= 0) {
+          en.squashed = true;
+          en.squashTimer = 0.6;
+          game.score += 500;
+          spawnFloatText(en.x + en.w/2, en.y - 20, 'BOSS DOWN! +500', '#fcd444');
+        }
+      } else {
+        en.squashed = true;
+        en.squashTimer = 0.4;
+        p.vy = STOMP_BOUNCE;
+        const points = 100 + comboBonus;
+        game.score += points;
+        game.stomps++;
+        sfx.stomp();
+        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 10);
+        if (p.airStomps >= 2) {
+          const labels = ['', '', 'Double Stomp!', 'Triple Stomp!', 'QUAD STOMP!!', 'PENTA STOMP!!!'];
+          const label = labels[Math.min(p.airStomps, 5)];
+          spawnFloatText(en.x + en.w/2, en.y - 8, `${label} +${points}`, '#fcd444');
+        } else {
+          spawnFloatText(en.x + en.w/2, en.y - 8, `+${points}`, '#fcd444');
+        }
+      }
+    } else {
+      if (p.powerup > 0 && en.type !== 'cataract') {
+        en.squashed = true;
+        en.squashTimer = 0.4;
+        game.score += 150;
+        game.stomps++;
+        sfx.stomp();
+        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 12);
+        spawnFloatText(en.x + en.w/2, en.y - 8, 'CRUSHED! +150', '#a8e6ff');
+      } else {
+        loseLife(enemyHitMessage(en.type));
+      }
+    }
+  }
+
+  // Flyer — hovers in place, then periodically dives toward the player and returns
+  function updateFlyer(en, dt) {
+    const p = game.player;
+    if (en.hoverBaseY === 0) en.hoverBaseY = en.y;
+    en.hoverPhase += dt * 2;
+
+    if (en.flyState === 'hover') {
+      // Bob gently around the hover line and drift along patrol
+      en.x += en.vx * dt;
+      if (en.vx === 0) en.vx = -40;
+      if (en.x < en.patrolMinX) { en.x = en.patrolMinX; en.vx = Math.abs(en.vx); }
+      if (en.x + en.w > en.patrolMaxX) { en.x = en.patrolMaxX - en.w; en.vx = -Math.abs(en.vx); }
+      en.y = en.hoverBaseY + Math.sin(en.hoverPhase) * 6;
+      en.flyTimer -= dt;
+      // Dive if player is roughly beneath
+      const dxToPlayer = Math.abs((p.x + p.w/2) - (en.x + en.w/2));
+      if (en.flyTimer <= 0 && dxToPlayer < TILE * 4) {
+        en.flyState = 'dive';
+        en.diveTargetY = p.y + p.h * 0.5;
+        spawnFloatText(en.x + en.w/2, en.y - 6, '!', '#ff80c0');
+      }
+    } else if (en.flyState === 'dive') {
+      // Accelerate downward toward the player's level
+      en.vy += 1400 * dt;
+      en.y += en.vy * dt;
+      if (en.y >= en.diveTargetY || en.y + en.h >= (game.levelH - 1) * TILE) {
+        en.flyState = 'return';
+      }
+    } else if (en.flyState === 'return') {
+      // Float back up to the hover line
+      en.y += (en.hoverBaseY - en.y) * dt * 3;
+      en.vy = 0;
+      if (Math.abs(en.y - en.hoverBaseY) < 4) {
+        en.flyState = 'hover';
+        en.flyTimer = 1.5 + Math.random() * 1.5;
+      }
+    }
+  }
+
   function updateEnemies(dt) {
     for (const en of game.enemies) {
       if (!en.alive) continue;
@@ -1420,6 +1794,49 @@
       if (en.type === 'aberration') {
         updateAberration(en, dt);
         continue;
+      }
+
+      // -------- FLYER — hovers and dives, skips gravity --------
+      if (en.type === 'flyer') {
+        updateFlyer(en, dt);
+        // Player collision handled in shared block below
+        checkEnemyPlayerCollision(en);
+        continue;
+      }
+
+      const p = game.player;
+
+      // -------- CHARGER — speeds toward player when roughly level and in front --------
+      if (en.type === 'charger') {
+        const sameLevel = Math.abs((p.y + p.h) - (en.y + en.h)) < TILE * 1.2;
+        const dxToPlayer = (p.x + p.w/2) - (en.x + en.w/2);
+        const facingPlayer = (en.vx < 0 && dxToPlayer < 0) || (en.vx > 0 && dxToPlayer > 0);
+        const near = Math.abs(dxToPlayer) < TILE * 6;
+        if (sameLevel && facingPlayer && near) {
+          if (!en.charging) {
+            en.charging = true;
+            spawnFloatText(en.x + en.w/2, en.y - 6, '!', '#ff5050');
+          }
+          const dir = Math.sign(en.vx) || -1;
+          en.vx = dir * en.chargeSpeed;
+        } else {
+          if (en.charging) en.charging = false;
+          const dir = Math.sign(en.vx) || -1;
+          en.vx = dir * en.baseSpeed;
+        }
+      }
+
+      // -------- HOPPER — periodic jumps when on ground --------
+      if (en.type === 'hopper') {
+        en.hopTimer -= dt;
+        // Detect on-ground by checking tile beneath
+        const footCol = Math.floor((en.x + en.w/2) / TILE);
+        const footRow = Math.floor((en.y + en.h + 2) / TILE);
+        const grounded = isSolid(tileAt(game.level, footCol, footRow));
+        if (en.hopTimer <= 0 && grounded) {
+          en.vy = -650;
+          en.hopTimer = 1.2 + Math.random() * 0.8;
+        }
       }
 
       // Gravity
@@ -1479,66 +1896,8 @@
         }
       }
 
-      // Player collision
-      const p = game.player;
-      if (p.invincible <= 0 && rectsOverlap(p.x, p.y, p.w, p.h, en.x, en.y, en.w, en.h)) {
-        const playerBottom = p.y + p.h;
-        const enemyTop = en.y;
-        const stompedFromAbove = p.vy > 0 && playerBottom - 8 < enemyTop + en.h * 0.4;
-        if (stompedFromAbove) {
-          // Increment air-stomp combo
-          p.airStomps++;
-          const comboBonus = Math.max(0, p.airStomps - 1) * 50;
-          if (en.type === 'cataract') {
-            // Boss takes 3 hits (1 hit if Super Glass)
-            const dmg = p.powerup > 0 ? 3 : 1;
-            en.hp -= dmg;
-            en.hitFlash = 0.3;
-            p.vy = STOMP_BOUNCE;
-            game.score += 200 + comboBonus;
-            game.stomps++;
-            sfx.stomp();
-            spawnParticles(en.x + en.w/2, en.y, '#e8d8ff', 14);
-            spawnFloatText(en.x + en.w/2, en.y, `+${200 + comboBonus}`, '#e8d8ff');
-            if (en.hp <= 0) {
-              en.squashed = true;
-              en.squashTimer = 0.6;
-              game.score += 500;
-              spawnFloatText(en.x + en.w/2, en.y - 20, 'BOSS DOWN! +500', '#fcd444');
-            }
-          } else {
-            en.squashed = true;
-            en.squashTimer = 0.4;
-            p.vy = STOMP_BOUNCE;
-            const points = 100 + comboBonus;
-            game.score += points;
-            game.stomps++;
-            sfx.stomp();
-            spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 10);
-            // Combo message
-            if (p.airStomps >= 2) {
-              const labels = ['', '', 'Double Stomp!', 'Triple Stomp!', 'QUAD STOMP!!', 'PENTA STOMP!!!'];
-              const label = labels[Math.min(p.airStomps, 5)];
-              spawnFloatText(en.x + en.w/2, en.y - 8, `${label} +${points}`, '#fcd444');
-            } else {
-              spawnFloatText(en.x + en.w/2, en.y - 8, `+${points}`, '#fcd444');
-            }
-          }
-        } else {
-          // Side hit — if powered up, kill the enemy instead of taking damage
-          if (p.powerup > 0 && en.type !== 'cataract') {
-            en.squashed = true;
-            en.squashTimer = 0.4;
-            game.score += 150;
-            game.stomps++;
-            sfx.stomp();
-            spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 12);
-            spawnFloatText(en.x + en.w/2, en.y - 8, 'CRUSHED! +150', '#a8e6ff');
-          } else {
-            loseLife(enemyHitMessage(en.type));
-          }
-        }
-      }
+      // Player collision (shared logic)
+      checkEnemyPlayerCollision(en);
     }
     game.enemies = game.enemies.filter(en => en.alive);
 
@@ -1688,6 +2047,9 @@
       diplopia: '#a8a8d8',
       cataract: '#e8d8ff',
       aberration: '#c8a8e8',
+      hopper: '#6ac86a',
+      flyer: '#f890c8',
+      charger: '#e87848',
     }[type] || '#a07e9c';
   }
   function enemyHitMessage(type) {
@@ -1698,6 +2060,9 @@
       diplopia: 'Ran into a diplopia twin',
       cataract: 'Crashed into the cataract',
       aberration: 'Hit by Dr. Aberration',
+      hopper: 'Squished by a presbyopia frog',
+      flyer: 'Dive-bombed by a floater fly',
+      charger: 'Run down by a strabismus bull',
     }[type] || 'Hit an enemy';
   }
 
@@ -1840,6 +2205,7 @@
     // Theme-specific background
     drawThemedBackground();
     drawLevelTiles();
+    drawPlatforms();
     drawFogPatches();
     drawCoins();
     drawPowerups();
@@ -2401,6 +2767,101 @@
       const pulse = Math.sin(performance.now() / 400 + x * 0.01) * 0.5 + 0.5;
       ctx.fillStyle = `rgba(255, 100, 180, ${pulse * 0.15})`;
       ctx.fillRect(x, y, TILE, TILE);
+    } else if (ch === 'K') {
+      // Checkpoint flag — a green eye-chart flag on a pole, with waving cloth
+      const reached = game.checkpointCol && Math.floor((x + game.cameraX) / TILE) <= game.checkpointCol;
+      // Pole
+      ctx.fillStyle = '#cccccc';
+      ctx.fillRect(x + TILE * 0.45, y - TILE, 4, TILE * 2);
+      // Pole top knob
+      ctx.fillStyle = '#fcd444';
+      ctx.beginPath();
+      ctx.arc(x + TILE * 0.47, y - TILE, 4, 0, Math.PI * 2);
+      ctx.fill();
+      // Flag cloth — waves; green if reached, gray if not
+      const wave = Math.sin(performance.now() / 200 + x * 0.05) * 3;
+      ctx.fillStyle = reached ? '#4ade80' : '#8a9098';
+      ctx.beginPath();
+      ctx.moveTo(x + TILE * 0.5, y - TILE + 2);
+      ctx.lineTo(x + TILE * 0.5 + TILE * 0.4 + wave, y - TILE + 8);
+      ctx.lineTo(x + TILE * 0.5, y - TILE + 16);
+      ctx.closePath();
+      ctx.fill();
+      // Little "E" eye-chart letter on the flag
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('E', x + TILE * 0.62, y - TILE + 9);
+    }
+  }
+
+  function drawPlatforms() {
+    for (const pl of game.platforms) {
+      if (pl.type === 'crumbling' && pl.state === 'gone') continue;
+      let sx = pl.x - game.cameraX;
+      let sy = pl.y;
+      // Shake offset for crumbling platforms about to fall
+      if (pl.type === 'crumbling' && pl.state === 'shaking') {
+        sx += (Math.random() - 0.5) * 4;
+        sy += (Math.random() - 0.5) * 2;
+      }
+      ctx.save();
+      if (pl.type === 'moving') {
+        // Metal sliding platform with arrow indicators
+        ctx.fillStyle = '#8a94a8';
+        roundRectPath(sx, sy, pl.w, pl.h, 4);
+        ctx.fill();
+        ctx.fillStyle = '#aeb8cc';
+        ctx.fillRect(sx, sy, pl.w, 3);
+        ctx.fillStyle = '#5a6478';
+        ctx.fillRect(sx, sy + pl.h - 3, pl.w, 3);
+        // Direction chevrons
+        ctx.fillStyle = 'rgba(252,212,68,0.8)';
+        const cxp = sx + pl.w/2;
+        if (pl.axis === 'x') {
+          ctx.beginPath();
+          ctx.moveTo(cxp - 8, sy + pl.h/2 - 4);
+          ctx.lineTo(cxp - 2, sy + pl.h/2);
+          ctx.lineTo(cxp - 8, sy + pl.h/2 + 4);
+          ctx.moveTo(cxp + 2, sy + pl.h/2 - 4);
+          ctx.lineTo(cxp + 8, sy + pl.h/2);
+          ctx.lineTo(cxp + 2, sy + pl.h/2 + 4);
+          ctx.fill();
+        }
+      } else {
+        // Crumbling platform — brown cracked block
+        const shaking = pl.state === 'shaking';
+        ctx.fillStyle = shaking ? '#c89860' : '#b08850';
+        roundRectPath(sx, sy, pl.w, pl.h, 3);
+        ctx.fill();
+        ctx.fillStyle = '#8a6838';
+        ctx.fillRect(sx, sy + pl.h - 3, pl.w, 3);
+        // Cracks
+        ctx.strokeStyle = '#6e4e28';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sx + pl.w * 0.3, sy);
+        ctx.lineTo(sx + pl.w * 0.35, sy + pl.h);
+        ctx.moveTo(sx + pl.w * 0.65, sy);
+        ctx.lineTo(sx + pl.w * 0.6, sy + pl.h);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // Helper for rounded rectangles (older Safari lacks ctx.roundRect)
+  function roundRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
     }
   }
 
@@ -2467,6 +2928,9 @@
       else if (en.type === 'diplopia') drawDiplopia(w, h, en);
       else if (en.type === 'cataract') drawCataract(w, h, en);
       else if (en.type === 'aberration') drawAberration(w, h, en);
+      else if (en.type === 'hopper') drawHopper(w, h, en);
+      else if (en.type === 'flyer') drawFlyer(w, h, en);
+      else if (en.type === 'charger') drawCharger(w, h, en);
       ctx.restore();
     }
   }
@@ -2601,6 +3065,126 @@
     ctx.arc(w * 0.35, h * 0.5, 1.2, 0, Math.PI * 2);
     ctx.arc(w * 0.65, h * 0.5, 1.2, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  function drawHopper(w, h, en) {
+    // Green spring-legged frog. Squashes/stretches based on vertical speed.
+    const stretch = Math.max(-0.2, Math.min(0.25, -en.vy / 3000));
+    const bw = w * (1 - stretch);
+    const bh = h * (1 + stretch);
+    // Legs (springs)
+    ctx.strokeStyle = '#3a8a3a';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.28, h * 0.7);
+    ctx.lineTo(w * 0.2, h);
+    ctx.moveTo(w * 0.72, h * 0.7);
+    ctx.lineTo(w * 0.8, h);
+    ctx.stroke();
+    // Body
+    ctx.fillStyle = '#6ac86a';
+    ctx.beginPath();
+    ctx.ellipse(w/2, h * 0.55, bw * 0.5, bh * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#4ea84e';
+    ctx.beginPath();
+    ctx.ellipse(w/2, h * 0.7, bw * 0.4, bh * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Big bulging eyes on top
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(w * 0.34, h * 0.32, 5, 0, Math.PI * 2);
+    ctx.arc(w * 0.66, h * 0.32, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(w * 0.34, h * 0.32, 2, 0, Math.PI * 2);
+    ctx.arc(w * 0.66, h * 0.32, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawFlyer(w, h, en) {
+    const diving = en.flyState === 'dive';
+    // Wings flapping
+    const flap = Math.sin(performance.now() / (diving ? 40 : 90)) * h * 0.25;
+    ctx.fillStyle = 'rgba(255, 200, 230, 0.7)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.2, h * 0.4 + flap, w * 0.3, h * 0.18, -0.4, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.8, h * 0.4 + flap, w * 0.3, h * 0.18, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    // Body — pink-purple floater
+    ctx.fillStyle = diving ? '#ff5ca0' : '#f890c8';
+    ctx.beginPath();
+    ctx.ellipse(w/2, h * 0.5, w * 0.32, h * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Single big eye (it's a floater, after all)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.45, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(w * 0.5, h * 0.45, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Stinger/tail
+    ctx.strokeStyle = diving ? '#ff5ca0' : '#d860a0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w/2, h * 0.85);
+    ctx.lineTo(w/2, h);
+    ctx.stroke();
+  }
+
+  function drawCharger(w, h, en) {
+    const charging = en.charging;
+    // Body — orange bull-like blob, leans forward when charging
+    const lean = charging ? Math.sign(en.vx) * 4 : 0;
+    ctx.fillStyle = charging ? '#ff6838' : '#e87848';
+    ctx.beginPath();
+    ctx.ellipse(w/2 + lean, h * 0.6, w * 0.5, h * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Angry eyebrows
+    ctx.strokeStyle = '#7a3818';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.28 + lean, h * 0.38);
+    ctx.lineTo(w * 0.44 + lean, h * 0.48);
+    ctx.moveTo(w * 0.72 + lean, h * 0.38);
+    ctx.lineTo(w * 0.56 + lean, h * 0.48);
+    ctx.stroke();
+    // Eyes (crossed — strabismus)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(w * 0.4 + lean, h * 0.55, 4, 0, Math.PI * 2);
+    ctx.arc(w * 0.6 + lean, h * 0.55, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0d1420';
+    ctx.beginPath();
+    ctx.arc(w * 0.44 + lean, h * 0.55, 1.8, 0, Math.PI * 2);  // crossed inward
+    ctx.arc(w * 0.56 + lean, h * 0.55, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    // Little horns
+    ctx.fillStyle = '#c8c0b0';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.25 + lean, h * 0.28);
+    ctx.lineTo(w * 0.32 + lean, h * 0.16);
+    ctx.lineTo(w * 0.38 + lean, h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(w * 0.75 + lean, h * 0.28);
+    ctx.lineTo(w * 0.68 + lean, h * 0.16);
+    ctx.lineTo(w * 0.62 + lean, h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    // Charge dust
+    if (charging) {
+      ctx.fillStyle = 'rgba(255,150,80,0.5)';
+      const dustX = en.vx > 0 ? -4 : w + 4;
+      ctx.beginPath();
+      ctx.arc(dustX, h * 0.9, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   function drawCataract(w, h, en) {
@@ -2776,13 +3360,29 @@
     }
 
     // Animation: bob up and down a few pixels with run frame
-    const bob = p.onGround ? Math.sin(p.runFrame) * 1.5 : 0;
-    const facing = p.wallVaultRecovery > 0 ? -1 : 1;
+    let bob = p.onGround ? Math.sin(p.runFrame) * 1.5 : 0;
+    let facing = p.wallVaultRecovery > 0 ? -1 : 1;
+    if (game.levelConfig.gimmick === 'boss-arena' && p.runDirection) {
+      facing = p.runDirection;
+    }
+    // Victory: celebratory hop
+    if (p.victory > 0) {
+      bob = -Math.abs(Math.sin((1.4 - p.victory) * Math.PI * 3)) * 14;
+      facing = 1;
+    }
 
     ctx.save();
     ctx.translate(sx + p.w/2, sy + bob);
-    ctx.scale(facing, 1);
-    // Flicker on invincibility
+
+    // Stunned: spin around when hit
+    if (p.stunned > 0) {
+      const spin = (1.2 - p.stunned) * Math.PI * 4;  // a couple of full rotations
+      ctx.rotate(spin);
+    } else {
+      ctx.scale(facing, 1);
+    }
+
+    // Victory: little hop handled elsewhere; flicker on invincibility
     if (p.invincible > 0 && Math.floor(p.invincible * 10) % 2 === 0) {
       ctx.globalAlpha = 0.5;
     }
@@ -2792,7 +3392,7 @@
     ctx.restore();
 
     // Run dust particles behind him — emitted while running on ground
-    if (p.onGround && Math.random() < 0.3) {
+    if (p.onGround && !p.stunned && Math.random() < 0.3) {
       game.particles.push({
         x: p.x + p.w * 0.2,
         y: p.y + p.h - 2,
@@ -2867,18 +3467,31 @@
     ctx.fillRect(-w * 0.075, h * 0.42, w * 0.15, 2);
 
     // Arms — visible on either side of coat (in pumping run motion)
-    const armSwing = Math.sin(game.player.runFrame) * h * 0.06;
-    ctx.fillStyle = '#ffffff';
-    // Right arm (forward)
-    ctx.fillRect(w * 0.3, h * 0.28 + armSwing, w * 0.18, h * 0.32);
-    // Left arm (back)
-    ctx.fillRect(-w * 0.48, h * 0.28 - armSwing, w * 0.18, h * 0.32);
-    // Hands (skin tone)
-    ctx.fillStyle = '#f5d5b0';
-    ctx.beginPath();
-    ctx.arc(w * 0.39, h * 0.62 + armSwing, w * 0.09, 0, Math.PI * 2);
-    ctx.arc(-w * 0.39, h * 0.62 - armSwing, w * 0.09, 0, Math.PI * 2);
-    ctx.fill();
+    const victorious = game.player.victory > 0;
+    if (victorious) {
+      // Both arms raised up in celebration
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(w * 0.28, -h * 0.05, w * 0.18, h * 0.35);
+      ctx.fillRect(-w * 0.46, -h * 0.05, w * 0.18, h * 0.35);
+      ctx.fillStyle = '#f5d5b0';
+      ctx.beginPath();
+      ctx.arc(w * 0.37, -h * 0.08, w * 0.09, 0, Math.PI * 2);
+      ctx.arc(-w * 0.37, -h * 0.08, w * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const armSwing = Math.sin(game.player.runFrame) * h * 0.06;
+      ctx.fillStyle = '#ffffff';
+      // Right arm (forward)
+      ctx.fillRect(w * 0.3, h * 0.28 + armSwing, w * 0.18, h * 0.32);
+      // Left arm (back)
+      ctx.fillRect(-w * 0.48, h * 0.28 - armSwing, w * 0.18, h * 0.32);
+      // Hands (skin tone)
+      ctx.fillStyle = '#f5d5b0';
+      ctx.beginPath();
+      ctx.arc(w * 0.39, h * 0.62 + armSwing, w * 0.09, 0, Math.PI * 2);
+      ctx.arc(-w * 0.39, h * 0.62 - armSwing, w * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Head (slightly bigger to support the big glasses)
     const headY = -h * 0.05;
@@ -2908,9 +3521,22 @@
     const leftX = -headR * 0.5;
     const rightX = headR * 0.5;
 
-    // Frames — thick black
-    ctx.strokeStyle = '#0d1420';
-    ctx.fillStyle = '#0d1420';
+    // Resolve the equipped cosmetic style (cached on game for performance)
+    const style = game.glassesStyle || glassesById('classic');
+    let frameStroke = style.frame;
+    if (style.frame === 'rainbow') {
+      const grad = ctx.createLinearGradient(leftX - lensR, 0, rightX + lensR, 0);
+      grad.addColorStop(0, '#ff4444');
+      grad.addColorStop(0.3, '#ffcc00');
+      grad.addColorStop(0.5, '#44cc44');
+      grad.addColorStop(0.7, '#4488ff');
+      grad.addColorStop(1, '#cc44ff');
+      frameStroke = grad;
+    }
+
+    // Frames
+    ctx.strokeStyle = frameStroke;
+    ctx.fillStyle = (typeof frameStroke === 'string') ? frameStroke : '#0d1420';
     ctx.lineWidth = 4;
 
     // Left lens frame
@@ -2935,8 +3561,8 @@
     ctx.lineTo(headR + 2, glassY - 2);
     ctx.stroke();
 
-    // Glass tint (subtle, so eyes are visible)
-    ctx.fillStyle = 'rgba(160, 200, 240, 0.2)';
+    // Glass tint (per style)
+    ctx.fillStyle = style.lens || 'rgba(160, 200, 240, 0.2)';
     ctx.beginPath();
     ctx.arc(leftX, glassY, lensR - 2, 0, Math.PI * 2);
     ctx.fill();
@@ -2944,12 +3570,26 @@
     ctx.arc(rightX, glassY, lensR - 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eyes behind glasses
+    // Eyes behind glasses — blink periodically (every ~3.5s, closed for ~120ms)
+    const blinkCycle = (performance.now() % 3500);
+    const blinking = blinkCycle < 120;
     ctx.fillStyle = '#0d1420';
-    ctx.beginPath();
-    ctx.arc(leftX + 1, glassY, 2.5, 0, Math.PI * 2);
-    ctx.arc(rightX + 1, glassY, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    if (blinking) {
+      // Closed eyes — short horizontal lines
+      ctx.strokeStyle = '#0d1420';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(leftX - 2.5, glassY);
+      ctx.lineTo(leftX + 3.5, glassY);
+      ctx.moveTo(rightX - 2.5, glassY);
+      ctx.lineTo(rightX + 3.5, glassY);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(leftX + 1, glassY, 2.5, 0, Math.PI * 2);
+      ctx.arc(rightX + 1, glassY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Smile (small, cheerful)
     ctx.strokeStyle = '#0d1420';
@@ -3054,12 +3694,40 @@
   function loadProgress() {
     try {
       const raw = localStorage.getItem(PROGRESS_KEY);
-      if (!raw) return { highestUnlocked: 0, totalScore: 0 };
-      return JSON.parse(raw);
-    } catch(e) { return { highestUnlocked: 0, totalScore: 0 }; }
+      if (!raw) return defaultProgress();
+      const p = JSON.parse(raw);
+      const d = defaultProgress();
+      // Merge defaults so older saves get new fields
+      return Object.assign(d, p, { bestScores: p.bestScores || {}, ownedGlasses: p.ownedGlasses || d.ownedGlasses });
+    } catch(e) { return defaultProgress(); }
+  }
+  function defaultProgress() {
+    return {
+      highestUnlocked: 0,
+      totalScore: 0,
+      bestScores: {},
+      coinBank: 0,           // total coins banked across runs (spendable)
+      ownedGlasses: ['classic'],   // owned cosmetic styles
+      equippedGlasses: 'classic',
+    };
   }
   function saveProgress(p) {
     try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch(e){}
+  }
+
+  // Cosmetic glasses styles for the shop
+  const GLASSES_SHOP = [
+    { id: 'classic',   name: 'Classic Black', cost: 0,    frame: '#0d1420', lens: 'rgba(160,200,240,0.2)' },
+    { id: 'tortoise',  name: 'Tortoiseshell', cost: 100,  frame: '#6a4423', lens: 'rgba(200,170,120,0.25)' },
+    { id: 'rosegold',  name: 'Rose Gold',     cost: 200,  frame: '#d98a6a', lens: 'rgba(255,210,200,0.25)' },
+    { id: 'cherry',    name: 'Cherry Red',    cost: 250,  frame: '#c0392b', lens: 'rgba(255,180,180,0.25)' },
+    { id: 'emerald',   name: 'Emerald',       cost: 300,  frame: '#0e7a4f', lens: 'rgba(160,255,200,0.25)' },
+    { id: 'royal',     name: 'Royal Blue',    cost: 350,  frame: '#1f4fd8', lens: 'rgba(170,200,255,0.3)' },
+    { id: 'gold',      name: 'Solid Gold',    cost: 500,  frame: '#d4a000', lens: 'rgba(255,235,150,0.3)' },
+    { id: 'rainbow',   name: 'Rainbow',       cost: 800,  frame: 'rainbow', lens: 'rgba(255,255,255,0.25)' },
+  ];
+  function glassesById(id) {
+    return GLASSES_SHOP.find(g => g.id === id) || GLASSES_SHOP[0];
   }
 
   function startGame(levelIndex) {
@@ -3075,6 +3743,8 @@
     resizeCanvas();
 
     game = newGame(levelIndex);
+    // Apply equipped cosmetic glasses
+    game.glassesStyle = glassesById(loadProgress().equippedGlasses || 'classic');
     initLevelEntities();
     // Place player just above first floor tile
     // Boss arena: start in the center of the arena
@@ -3108,6 +3778,7 @@
     sfx.crash();
     stopMusic();
     game.lives--;
+    game.player.stunned = 1.2;   // trigger stunned spin animation
     if (game.lives <= 0) {
       // Pause for the death animation before showing game over screen
       game.dying = true;
@@ -3121,9 +3792,13 @@
       showToast(`${reason} — ${game.lives} ${game.lives === 1 ? 'life' : 'lives'} left`);
       setTimeout(() => {
         if (!game) return;
-        // Find a safe respawn column: walk backward from death position to find
-        // ground that isn't above a pit, and that's well clear of any pit edge.
-        const safeCol = findSafeSpawnColumn(Math.floor(game.player.x / TILE));
+        // Respawn at checkpoint if one was passed; otherwise walk back to safe ground
+        let safeCol;
+        if (game.checkpointCol) {
+          safeCol = game.checkpointCol;
+        } else {
+          safeCol = findSafeSpawnColumn(Math.floor(game.player.x / TILE));
+        }
         // Find ground row at that column
         for (let r = 0; r < game.level.length; r++) {
           if (isSolid(tileAt(game.level, safeCol, r))) {
@@ -3135,6 +3810,7 @@
         game.player.vx = 0;
         game.player.vy = 0;
         game.player.invincible = 1.8;
+        game.player.stunned = 0;
         game.dying = false;
         game.running = true;
         game.lastFrameTime = performance.now();
@@ -3188,6 +3864,10 @@
     game.running = false;
     game.gameOver = true;
     stopMusic();
+    // Bank any coins collected this run
+    const progress = loadProgress();
+    progress.coinBank = (progress.coinBank || 0) + game.coinsCollected;
+    saveProgress(progress);
     document.getElementById('endScore').textContent = game.score;
     document.getElementById('endCoins').textContent = game.coinsCollected;
     document.getElementById('endStomps').textContent = game.stomps;
@@ -3202,7 +3882,6 @@
   function winLevel() {
     if (game.won) return;
     game.won = true;
-    game.running = false;
     sfx.win();
     stopMusic();
 
@@ -3214,26 +3893,41 @@
     const progress = loadProgress();
     progress.highestUnlocked = Math.max(progress.highestUnlocked, nextIdx);
     progress.totalScore = (progress.totalScore || 0) + game.score;
+    progress.coinBank = (progress.coinBank || 0) + game.coinsCollected;
+    if (!progress.bestScores) progress.bestScores = {};
+    const prevBest = progress.bestScores[completedIdx] || 0;
+    if (game.score > prevBest) progress.bestScores[completedIdx] = game.score;
     saveProgress(progress);
 
-    document.getElementById('endScore').textContent = game.score;
-    document.getElementById('endCoins').textContent = game.coinsCollected;
-    document.getElementById('endStomps').textContent = game.stomps;
+    // Trigger a victory pose, then show the screen after a beat
+    game.player.victory = 1.4;
+    game.player.vx = 0;
+    game.running = false;
+    game.victoryFreeze = true;
+    showToast(isFinalLevel ? '20/20 ACHIEVED!' : 'Level Complete!');
+    spawnParticles(game.player.x + game.player.w/2, game.player.y, '#fcd444', 24);
 
-    if (isFinalLevel) {
-      document.getElementById('endTitle').innerHTML = 'You <em>made it!</em>';
-      document.getElementById('endMessage').textContent = `Mr. Glass cleared the optic nerve and reached the brain. Practice mastered. Total score: ${progress.totalScore}.`;
-      document.getElementById('btnRestart').textContent = 'Play again from level 1';
-      document.getElementById('btnRestart').dataset.action = 'replay-all';
-    } else {
-      document.getElementById('endTitle').innerHTML = `Level ${completedIdx + 1} <em>Complete!</em>`;
-      document.getElementById('endMessage').textContent = `Next: ${LEVELS[nextIdx].name} — ${LEVELS[nextIdx].sub}`;
-      document.getElementById('btnRestart').textContent = `Continue to level ${nextIdx + 1}`;
-      document.getElementById('btnRestart').dataset.action = 'next-level';
-      document.getElementById('btnRestart').dataset.nextLevel = nextIdx;
-    }
-    overlayEnd.hidden = false;
-    hud.hidden = true;
+    setTimeout(() => {
+      document.getElementById('endScore').textContent = game.score;
+      document.getElementById('endCoins').textContent = game.coinsCollected;
+      document.getElementById('endStomps').textContent = game.stomps;
+
+      if (isFinalLevel) {
+        document.getElementById('endTitle').innerHTML = 'You <em>made it!</em>';
+        document.getElementById('endMessage').textContent = `Mr. Glass cleared the optic nerve and reached the brain. Practice mastered. Total score: ${progress.totalScore}.`;
+        document.getElementById('btnRestart').textContent = 'Play again from level 1';
+        document.getElementById('btnRestart').dataset.action = 'replay-all';
+      } else {
+        document.getElementById('endTitle').innerHTML = `Level ${completedIdx + 1} <em>Complete!</em>`;
+        document.getElementById('endMessage').textContent = `Next: ${LEVELS[nextIdx].name} — ${LEVELS[nextIdx].sub}`;
+        document.getElementById('btnRestart').textContent = `Continue to level ${nextIdx + 1}`;
+        document.getElementById('btnRestart').dataset.action = 'next-level';
+        document.getElementById('btnRestart').dataset.nextLevel = nextIdx;
+      }
+      overlayEnd.hidden = false;
+      hud.hidden = true;
+      game.victoryFreeze = false;
+    }, 1400);
   }
 
   function pauseGame() {
@@ -3273,6 +3967,16 @@
       draw();
       game.lastFrameTime = now;
       requestAnimationFrame(loop);
+    } else if (game.dying || game.victoryFreeze) {
+      // Keep animating during the death freeze or victory pose
+      const dt = Math.min(0.05, (now - game.lastFrameTime) / 1000);
+      game.lastFrameTime = now;
+      if (game.player.stunned > 0) game.player.stunned = Math.max(0, game.player.stunned - dt);
+      if (game.player.victory > 0) game.player.victory = Math.max(0, game.player.victory - dt);
+      updateParticles(dt);
+      updateFloatTexts(dt);
+      draw();
+      requestAnimationFrame(loop);
     }
   }
 
@@ -3307,6 +4011,159 @@
   document.getElementById('btnHome').addEventListener('click', () => { stopMusic(); window.location.href = 'https://rjlcevans.com/'; });
   document.getElementById('btnMusic').addEventListener('click', toggleMusic);
 
+  // Level select
+  const overlayLevelSelect = document.getElementById('overlayLevelSelect');
+  document.getElementById('btnLevelSelect').addEventListener('click', () => {
+    overlayStart.hidden = true;
+    overlayLevelSelect.hidden = false;
+    buildLevelMap();
+  });
+  document.getElementById('btnLevelBack').addEventListener('click', () => {
+    overlayLevelSelect.hidden = true;
+    overlayStart.hidden = false;
+  });
+
+  function buildLevelMap() {
+    const progress = loadProgress();
+    const host = document.getElementById('levelMap');
+    host.innerHTML = '';
+    LEVELS.forEach((lvl, i) => {
+      const unlocked = i <= progress.highestUnlocked;
+      const completed = i < progress.highestUnlocked;
+      const best = (progress.bestScores && progress.bestScores[i]) || 0;
+      const card = document.createElement('button');
+      card.className = 'lvl-card' + (unlocked ? '' : ' locked');
+      card.disabled = !unlocked;
+      card.innerHTML = `
+        <div class="lvl-num">${i + 1}</div>
+        <div class="lvl-info">
+          <div class="lvl-name">${lvl.name}</div>
+          <div class="lvl-sub">${lvl.sub}</div>
+          ${best > 0 ? `<div class="lvl-best">Best: ${best}</div>` : ''}
+        </div>
+        ${!unlocked ? '<span class="lvl-lock">🔒</span>' : ''}
+        ${completed ? '<span class="lvl-check">✓</span>' : ''}
+      `;
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          overlayLevelSelect.hidden = true;
+          startGame(i);
+        });
+      }
+      host.appendChild(card);
+    });
+  }
+
+  // ---- Glasses shop ----
+  const overlayShop = document.getElementById('overlayShop');
+  document.getElementById('btnShop').addEventListener('click', () => {
+    overlayStart.hidden = true;
+    overlayShop.hidden = false;
+    buildShop();
+  });
+  document.getElementById('btnShopBack').addEventListener('click', () => {
+    overlayShop.hidden = true;
+    overlayStart.hidden = false;
+  });
+
+  function buildShop() {
+    const progress = loadProgress();
+    document.getElementById('shopCoinCount').textContent = `👁 ${progress.coinBank || 0} coins`;
+    const host = document.getElementById('shopGrid');
+    host.innerHTML = '';
+    GLASSES_SHOP.forEach(g => {
+      const owned = (progress.ownedGlasses || ['classic']).includes(g.id);
+      const equipped = progress.equippedGlasses === g.id;
+      const canAfford = (progress.coinBank || 0) >= g.cost;
+      const card = document.createElement('div');
+      card.className = 'shop-card' + (equipped ? ' equipped' : '') + (!owned && !canAfford ? ' locked cant-afford' : '');
+      // Preview canvas
+      const cv = document.createElement('canvas');
+      cv.width = 112; cv.height = 72;
+      drawGlassesPreview(cv, g);
+      card.appendChild(cv);
+      const nameEl = document.createElement('div');
+      nameEl.className = 'shop-name';
+      nameEl.textContent = g.name;
+      card.appendChild(nameEl);
+      const priceEl = document.createElement('div');
+      priceEl.className = 'shop-price ' + (owned ? 'owned' : 'cost');
+      priceEl.textContent = owned ? (equipped ? 'Equipped' : 'Owned') : `👁 ${g.cost}`;
+      card.appendChild(priceEl);
+      if (equipped) {
+        const tag = document.createElement('span');
+        tag.className = 'shop-tag';
+        tag.textContent = '✓';
+        card.appendChild(tag);
+      }
+      card.addEventListener('click', () => {
+        const prog = loadProgress();
+        const isOwned = (prog.ownedGlasses || ['classic']).includes(g.id);
+        if (isOwned) {
+          // Equip it
+          prog.equippedGlasses = g.id;
+          saveProgress(prog);
+          buildShop();
+        } else if ((prog.coinBank || 0) >= g.cost) {
+          // Buy it
+          prog.coinBank -= g.cost;
+          prog.ownedGlasses = (prog.ownedGlasses || ['classic']).concat(g.id);
+          prog.equippedGlasses = g.id;
+          saveProgress(prog);
+          sfx.win();
+          buildShop();
+        } else {
+          // Can't afford — little shake feedback
+          card.animate(
+            [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
+            { duration: 250 }
+          );
+        }
+      });
+      host.appendChild(card);
+    });
+  }
+
+  // Draw a small glasses preview into a canvas
+  function drawGlassesPreview(cv, g) {
+    const c = cv.getContext('2d');
+    c.clearRect(0, 0, cv.width, cv.height);
+    const cx = cv.width / 2, cy = cv.height / 2;
+    const lensR = 16;
+    const leftX = cx - 18, rightX = cx + 18;
+    // Frame stroke (rainbow gets a gradient)
+    if (g.frame === 'rainbow') {
+      const grad = c.createLinearGradient(leftX - lensR, 0, rightX + lensR, 0);
+      grad.addColorStop(0, '#ff4444');
+      grad.addColorStop(0.3, '#ffcc00');
+      grad.addColorStop(0.5, '#44cc44');
+      grad.addColorStop(0.7, '#4488ff');
+      grad.addColorStop(1, '#cc44ff');
+      c.strokeStyle = grad;
+    } else {
+      c.strokeStyle = g.frame;
+    }
+    c.lineWidth = 4;
+    // Lens tint
+    c.fillStyle = g.lens;
+    c.beginPath(); c.arc(leftX, cy, lensR, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(rightX, cy, lensR, 0, Math.PI*2); c.fill();
+    // Frames
+    c.beginPath(); c.arc(leftX, cy, lensR, 0, Math.PI*2); c.stroke();
+    c.beginPath(); c.arc(rightX, cy, lensR, 0, Math.PI*2); c.stroke();
+    // Bridge
+    c.beginPath(); c.moveTo(leftX + lensR, cy); c.lineTo(rightX - lensR, cy); c.stroke();
+    // Temples
+    c.beginPath();
+    c.moveTo(leftX - lensR, cy); c.lineTo(leftX - lensR - 8, cy - 3);
+    c.moveTo(rightX + lensR, cy); c.lineTo(rightX + lensR + 8, cy - 3);
+    c.stroke();
+    // Shine
+    c.fillStyle = 'rgba(255,255,255,0.6)';
+    c.beginPath(); c.arc(leftX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(rightX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
+  }
+
   // Update start button label based on progress
   function updateStartButton() {
     const progress = loadProgress();
@@ -3329,7 +4186,9 @@
         resetLink.style.cssText = 'display:block; margin-top:12px; font-size:11px; color:#cdd6e2; opacity:0.7; text-decoration:underline; cursor:pointer;';
         resetLink.addEventListener('click', (e) => {
           e.preventDefault();
-          saveProgress({ highestUnlocked: 0, totalScore: 0 });
+          // Keep best scores but reset unlock progress
+          const prog = loadProgress();
+          saveProgress({ highestUnlocked: 0, totalScore: 0, bestScores: prog.bestScores || {} });
           updateStartButton();
         });
         btn.parentNode.appendChild(resetLink);
