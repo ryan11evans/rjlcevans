@@ -236,6 +236,40 @@
     font-size: 14px; line-height: 1.5; margin: 0 0 16px;
     font-weight: 500;
   }
+  /* Ending / credits screen */
+  .ending-card { max-width: 400px; }
+  .ending-title { color: #2a2118 !important; }
+  .ending-title em { color: #f5a623 !important; }
+  .ending-blurb {
+    color: #5a4f42 !important; font-size: 14px; line-height: 1.55;
+    margin: 0 0 14px; font-weight: 500;
+  }
+  .ending-stats {
+    display: flex; justify-content: center; gap: 16px;
+    margin: 0 0 16px; flex-wrap: wrap;
+  }
+  .ending-stat {
+    background: #fff; border: 2.5px solid #2a2118; border-radius: 14px;
+    box-shadow: 2px 2px 0 #2a2118;
+    padding: 8px 14px; min-width: 64px;
+  }
+  .ending-stat .es-val {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px;
+    color: #2a2118; line-height: 1;
+  }
+  .ending-stat .es-label {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #9b8a6a; font-weight: 700; margin-top: 3px;
+  }
+  .ending-stat .es-val.gold { color: #d4a000; }
+  .ending-credits {
+    margin: 6px 0 16px; line-height: 1.5;
+  }
+  .ending-credits-title {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+    font-size: 16px; color: #2a2118; margin-bottom: 4px;
+  }
+  .ending-credits-line { font-size: 12px; color: #6c6055; }
   .controls-pills {
     display: flex; flex-wrap: wrap; gap: 7px; justify-content: center;
     margin: 0 0 18px;
@@ -712,6 +746,24 @@
       </div>
     </div>
 
+    <!-- Ending / credits screen (after beating the boss) -->
+    <div class="overlay overlay-start-themed" id="overlayEnding" hidden>
+      <div class="overlay-card start-card ending-card">
+        <canvas id="endingCharCanvas" width="160" height="160" class="start-char"></canvas>
+        <h2 class="start-title ending-title">20/20 <em>Vision!</em></h2>
+        <p class="ending-blurb">Mr. Glass defeated Dr. Aberration and restored clear sight to the whole eye. The practice is saved!</p>
+        <div class="ending-stats" id="endingStats"></div>
+        <div class="ending-credits">
+          <div class="ending-credits-title">— Mr. Glass —</div>
+          <div class="ending-credits-line">A game by Dr. Ryan Evans, OD</div>
+          <div class="ending-credits-line">Built with love for Landon &amp; Cody</div>
+          <div class="ending-credits-line">rjlcevans.com</div>
+        </div>
+        <button class="btn btn-play" id="btnEndingReplay">▶ Play again</button>
+        <button class="btn ghost" id="btnEndingTitle">Title screen</button>
+      </div>
+    </div>
+
     <!-- Pause overlay -->
     <div class="overlay" id="overlayPause" hidden>
       <div class="overlay-card">
@@ -764,28 +816,27 @@
 
   // ----- LEVEL 1: Welcome to the Practice (optometry office) -----
   const LEVEL_1_TILES = [
-    '.................................................................................................',
-    '.................................................................................................',
-    '.................................................................................................',
-    '..................BBBB......BBBB.................BBBB......BBBB..................................',
-    '.....................................................................B...........................',
-    '..........BBBB.........................BBBB..............BBBBB.......B...........................',
-    '...................................................................B.............................',
-    '..............................................................................BBBB...............',
-    '.................................................................................................',
-    '..........................QQQ....................................................................',
-    '...........................................FFFF........................BBBB......X...............',
-    'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG......FFFFFGGGGGGGGGG.....GGGGGGGGGGGGGGGGGGGGGGGGGGGGGG.',
-    'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDD.....GGGGGGGGGGGGGGGGGGGGGGGGGGGGGG.',
+    '................................................................................................',
+    '................................................................................................',
+    '................................................................................................',
+    '..................BBBB......BBBB.................BBBB......BBBB.................................',
+    '................................................................................................',
+    '..................BBBB......BBBB.................BBBB......BBBB.................................',
+    '................................................................................................',
+    '..........BBBB................................BBBB..............................................',
+    '......QQ........................................................................................',
+    '................................................................................................',
+    '...........................................FFFF........................BBBB......X..............',
+    'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG......FFFFFGGGGGGGGGG.....GGGGGGGGGGGGGGGGGGGGGGGGGGGGGG',
+    'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDD.....DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
   const LEVEL_1_COINS = [
-    [2, 18], [2, 19], [2, 20], [2, 21], [4, 55], [4, 56], [4, 57], [2, 48], [2, 49], [2, 50], [10, 11], [10, 12], [10, 13], [8, 26], [8, 27], [8, 28], [9, 72], [9, 74], [9, 76], [9, 78]
+    [6, 6], [6, 7], [2, 18], [2, 19], [2, 20], [2, 38], [2, 39], [2, 40], [2, 48], [2, 49], [2, 50], [9, 72], [9, 74], [9, 76]
   ];
   const LEVEL_1_ENEMIES = [
-    { type: 'gremlin', col: 25, min: 22, max: 28 },
-    { type: 'gremlin', col: 54, min: 52, max: 58 },
-    { type: 'gremlin', col: 70, min: 68, max: 74 },
-    { type: 'gremlin', col: 73, min: 68, max: 74 },
+    { type: 'gremlin', col: 25, min: 23, max: 28 },
+    { type: 'gremlin', col: 54, min: 52, max: 57 },
+    { type: 'gremlin', col: 74, min: 72, max: 77 }
   ];
 
   // ----- LEVEL 2: The Waiting Room (springy chairs, astigmatism imps) -----
@@ -794,8 +845,8 @@
     '....................................................................................................',
     '....................................................................................................',
     '............BBBB.............BBBB...............BBBB............BBBB...BBBB.........................',
-    '.................................................B..................................................',
-    '.................................................B..................................................',
+    '....................................................................................................',
+    '....................................................................................................',
     '...................QQ...............................................................................',
     '....................................................................................................',
     '....................................................................................................',
@@ -808,10 +859,10 @@
     [2, 12], [2, 13], [2, 14], [2, 15], [2, 28], [2, 29], [2, 30], [2, 31], [2, 47], [2, 48], [2, 49], [2, 50], [2, 62], [2, 63], [2, 64], [2, 65], [10, 18], [10, 19], [10, 20], [10, 80], [10, 82], [10, 84], [10, 86]
   ];
   const LEVEL_2_ENEMIES = [
-    { type: 'astigmatism', col: 28, min: 26, max: 32 },
-    { type: 'hopper', col: 56, min: 54, max: 60 },
-    { type: 'astigmatism', col: 72, min: 68, max: 76 },
-    { type: 'hopper', col: 86, min: 82, max: 90 },
+    { type: 'astigmatism', col: 24, min: 22, max: 27 },
+    { type: 'hopper', col: 42, min: 40, max: 46 },
+    { type: 'astigmatism', col: 58, min: 56, max: 61 },
+    { type: 'hopper', col: 78, min: 76, max: 82 }
   ];
 
   // ----- LEVEL 3: Behind the Counter (frame platforms, glaucoma blobs) -----
@@ -820,10 +871,10 @@
     '....................................................................................................',
     '....................................................................................................',
     '....................................................................................................',
-    '.................CCC..........CCC.........B.CCC.........CCC..........CCC............................',
-    '.........................................B..........................................................',
-    '.........QQ.........................................................................................',
-    '...........CCC.........CCC..........CCC..........CCC..........CCC...................................',
+    '..................................................CCC...............................................',
+    '.........QQ......................................CCC................................................',
+    '..............................................CCC...................................................',
+    '...........CCC.....CCC.......................CCC................CCC...CCC...CCC.....................',
     '....................................................................................................',
     '....................................................................................................',
     '..............................................................................X.....................',
@@ -831,40 +882,40 @@
     'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
   const LEVEL_3_COINS = [
-    [3, 17], [3, 18], [3, 19], [3, 30], [3, 31], [3, 32], [3, 55], [3, 56], [3, 57], [3, 68], [3, 69], [3, 70], [10, 12], [10, 13], [10, 14], [10, 38], [10, 40], [10, 42], [10, 72], [10, 74], [10, 76]
+    [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [5, 44], [4, 47], [3, 50], [6, 63], [6, 67], [6, 71], [10, 30], [10, 31], [10, 32]
   ];
   const LEVEL_3_ENEMIES = [
-    { type: 'glaucoma', col: 24, min: 22, max: 28 },
-    { type: 'flyer', col: 50, min: 45, max: 55 },
-    { type: 'charger', col: 70, min: 64, max: 76 },
-    { type: 'glaucoma', col: 80, min: 78, max: 84 },
+    { type: 'glaucoma', col: 16, min: 15, max: 19 },
+    { type: 'flyer', col: 50, min: 49, max: 52 },
+    { type: 'charger', col: 66, min: 60, max: 72 },
+    { type: 'gremlin', col: 74, min: 73, max: 77 }
   ];
 
   // ----- LEVEL 4: The Phoropter Maze (dim flicker, diplopia twins) -----
   const LEVEL_4_TILES = [
-    '....................................................................................................',
-    '....................................................................................................',
-    '....................................................................................................',
-    '....................................................................................................',
-    '..........BBBB......BBBB...B..BBBB......BBBB....B.BBBB......BBBB......BBBB..........................',
-    '..........................B....................B....................................................',
-    '....................................................................................................',
-    '.......QQ.................BBBB................BBBB................BBBB..............................',
-    '..................F...............................F.................................................',
-    '.................FF.............................FFF.................................................',
-    '................FF...............................FF.............................X...................',
-    'BBBBBBBBBBBBBBBBBBBBBBBBBBBB......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-    'DDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+    '......................................................................................................',
+    '......................................................................................................',
+    '......................................................................................................',
+    '......................................................................................................',
+    '..........BBBB......BBBB......BBBB......BBBB......BBBB......BBBB......BBBB............................',
+    '......................................................................................................',
+    '.......QQ.................BBBB................BBBB................BBBB................................',
+    '......................................................................................................',
+    '..................F...............................F...................................................',
+    '.................FF.............................FFF...................................................',
+    '................FF...............................FF................................X..................',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBB......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..',
+    'DDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..',
   ];
   const LEVEL_4_COINS = [
-    [3, 11], [3, 12], [3, 13], [3, 33], [3, 34], [3, 35], [3, 52], [3, 53], [3, 54], [3, 66], [3, 67], [3, 68], [6, 26], [6, 27], [6, 28], [6, 45], [6, 46], [6, 47], [10, 40], [10, 42], [10, 44]
+    [3, 11], [3, 12], [3, 13], [5, 25], [5, 26], [5, 27], [3, 33], [3, 34], [3, 35], [5, 45], [5, 46], [5, 47], [3, 52], [3, 53], [3, 54], [3, 66], [3, 67], [3, 68], [10, 40], [10, 42], [10, 44]
   ];
   const LEVEL_4_ENEMIES = [
-    { type: 'diplopia', col: 22, min: 19, max: 25 },
-    { type: 'diplopia', col: 24, min: 19, max: 25 },
-    { type: 'gremlin', col: 50, min: 47, max: 55 },
-    { type: 'diplopia', col: 75, min: 72, max: 78 },
-    { type: 'diplopia', col: 77, min: 72, max: 78 },
+    { type: 'diplopia', col: 22, min: 20, max: 25 },
+    { type: 'diplopia', col: 24, min: 20, max: 25 },
+    { type: 'gremlin', col: 44, min: 42, max: 48 },
+    { type: 'diplopia', col: 72, min: 70, max: 75 },
+    { type: 'diplopia', col: 74, min: 70, max: 75 }
   ];
 
   // ----- LEVEL 5: The Optic Nerve Highway (vein walls, cataract boss) -----
@@ -872,10 +923,10 @@
     '....................................................................................................',
     '....................................................................................................',
     '....................................................................................................',
+    '..........VVVV......VVVV...............VVVV......VVVV...............................................',
     '....................................................................................................',
-    '..........VVVV......VVVV..V...VVVV...............VVVV......VVVV.....................................',
-    '.........................V..........................................................................',
-    '.......VVVV................VVVV..............VVVV...............VVVV................................',
+    '.......VVVV........VVVV.....VVVV.......VVVV..VVVV...............VVVV................................',
+    '....................................................................................................',
     '....................................................................................................',
     '....................................................................................................',
     '....................................................................................................',
@@ -884,42 +935,40 @@
     'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
   const LEVEL_5_COINS = [
-    [3, 10], [3, 11], [3, 12], [3, 29], [3, 30], [3, 31], [3, 48], [3, 49], [3, 50], [3, 58], [3, 59], [3, 60], [10, 14], [10, 16], [10, 18], [10, 64], [10, 66], [10, 68]
+    [2, 10], [2, 11], [2, 12], [4, 18], [4, 19], [4, 20], [2, 38], [2, 39], [2, 40], [4, 44], [4, 45], [4, 46], [10, 14], [10, 16], [10, 18], [10, 64], [10, 66], [10, 68]
   ];
   const LEVEL_5_ENEMIES = [
-    { type: 'glaucoma', col: 22, min: 19, max: 25 },
-    { type: 'astigmatism', col: 42, min: 39, max: 45 },
-    { type: 'diplopia', col: 58, min: 55, max: 62 },
-    { type: 'diplopia', col: 60, min: 55, max: 62 },
-    { type: 'cataract', col: 72, min: 70, max: 78 },  // boss
+    { type: 'glaucoma', col: 22, min: 20, max: 25 },
+    { type: 'diplopia', col: 44, min: 42, max: 47 },
+    { type: 'diplopia', col: 46, min: 42, max: 47 },
+    { type: 'astigmatism', col: 60, min: 58, max: 63 },
+    { type: 'cataract', col: 72, min: 70, max: 78 }
   ];
 
   // ----- LEVEL 6: Lasik Lane (high-speed corridor, dodge laser beams) -----
   // Dense, fast level. Lots of pits, plenty of coins, gauntlet of enemies.
   const LEVEL_6_TILES = [
-    '....................................................................................................',
-    '....................................................................................................',
-    '....................................................................................................',
-    '....................................................................................................',
-    '.......BBBB......BBBB...B..BBBB......BBBB......BBBB......BBBB......BBBB......BBBB...................',
-    '.......................B............................................................................',
-    '......QQ.....................QQ.....................QQ.....................QQ.......................',
-    '....................................................................................................',
-    '....................................................................................................',
-    '...........FF................FF................FF................FF.................................',
-    '......................................................................................X.............',
-    'BBBBBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-    'DDDDDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+    '.....................................................................................................',
+    '.....................................................................................................',
+    '.....................................................................................................',
+    '.....................................................................................................',
+    '.......BBBB......BBBB......BBBB......BBBB......BBBB......BBBB......BBBB......BBBB....................',
+    '.....................................................................................................',
+    '......QQ.....................QQ.....................QQ.....................QQ........................',
+    '.....................................................................................................',
+    '.....................................................................................................',
+    '...........FF................FF................FF................FF..................................',
+    '......................................................................................X..............',
+    'BBBBBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBB...BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.',
+    'DDDDDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDD...DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.',
   ];
   const LEVEL_6_COINS = [
     [3, 7], [3, 8], [3, 9], [3, 28], [3, 29], [3, 30], [3, 46], [3, 47], [3, 48], [3, 64], [3, 65], [3, 66], [10, 8], [10, 9], [10, 10], [10, 67], [10, 68], [10, 69], [10, 85], [10, 87], [10, 89]
   ];
   const LEVEL_6_ENEMIES = [
-    { type: 'astigmatism', col: 18, min: 16, max: 22 },
-    { type: 'gremlin', col: 32, min: 30, max: 36 },
-    { type: 'diplopia', col: 48, min: 46, max: 52 },
-    { type: 'glaucoma', col: 62, min: 60, max: 66 },
-    { type: 'astigmatism', col: 78, min: 76, max: 82 },
+    { type: 'gremlin', col: 22, min: 20, max: 25 },
+    { type: 'diplopia', col: 38, min: 36, max: 40 },
+    { type: 'charger', col: 62, min: 58, max: 66 }
   ];
 
   // ----- LEVEL 7: The Brain (final boss arena — multi-cataract assault) -----
@@ -927,11 +976,11 @@
     '.....................................................................................................',
     '.....................................................................................................',
     '.....................................................................................................',
+    '..........VVVV..........VVVV..........VVVV..........VVVV..........VVVV...............................',
     '.....................................................................................................',
-    '..........VVVV..........VVVV....V.....VVVV..........VVVV..........VVVV...............................',
-    '...............................V.....................................................................',
+    '.....................................................................................................',
     '........QQQ..........................................................................................',
-    '...............VVVV..........VVVV..........VVVV..........VVVV........................................',
+    '...............VVVV..........VVVV..........VVVV..........VVVV......VVVV..............................',
     '.....................................................................................................',
     '.....................................................................................................',
     '.......................................................................................X.............',
@@ -939,12 +988,12 @@
     'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
   ];
   const LEVEL_7_COINS = [
-    [3, 10], [3, 11], [3, 12], [3, 37], [3, 38], [3, 39], [3, 51], [3, 52], [3, 53], [3, 65], [3, 66], [3, 67], [6, 15], [6, 16], [6, 17], [10, 40], [10, 42], [10, 50]
+    [2, 10], [2, 11], [2, 12], [2, 37], [2, 38], [2, 39], [2, 51], [2, 52], [2, 53], [2, 65], [2, 66], [2, 67], [6, 16], [6, 17], [6, 18], [10, 46], [10, 48], [10, 50]
   ];
   const LEVEL_7_ENEMIES = [
-    { type: 'cataract', col: 28, min: 24, max: 34 },
-    { type: 'cataract', col: 56, min: 52, max: 62 },
-    { type: 'cataract', col: 78, min: 74, max: 84 },
+    { type: 'cataract', col: 24, min: 22, max: 28 },
+    { type: 'cataract', col: 48, min: 46, max: 52 },
+    { type: 'cataract', col: 72, min: 70, max: 76 }
   ];
 
   // ----- LEVEL 8: Dr. Aberration's Lair (boss arena, non-scrolling) -----
@@ -975,7 +1024,7 @@
     {
       name: 'Welcome to the Practice',
       sub: 'Tutorial — basic running, stomping, jumping',
-      story: "Monday, 8 AM. Mr. Glass unlocks the office and starts his rounds.",
+      story: "Monday, 8 AM. Mr. Glass heads across town to unlock the office and start his day.",
       tiles: LEVEL_1_TILES, coins: LEVEL_1_COINS, enemies: LEVEL_1_ENEMIES,
       theme: 'office',
       gimmick: null,
@@ -1007,6 +1056,7 @@
     {
       name: 'The Phoropter Maze',
       airPuffs: true,
+      puffZones: [ {from: 8, to: 20}, {from: 36, to: 50}, {from: 60, to: 76} ],
       sub: 'Watch out — the lights flicker',
       story: "The exam room flickers. Twins of every patient appear. Stay sharp.",
       tiles: LEVEL_4_TILES, coins: LEVEL_4_COINS, enemies: LEVEL_4_ENEMIES,
@@ -1017,6 +1067,7 @@
     {
       name: 'The Optic Nerve Highway',
       airPuffs: true,
+      puffZones: [ {from: 10, to: 22}, {from: 38, to: 50}, {from: 56, to: 66} ],
       sub: 'Toward the brain — beware the cataract',
       story: "Mr. Glass shrinks down and rides the optic nerve toward the brain.",
       tiles: LEVEL_5_TILES, coins: LEVEL_5_COINS, enemies: LEVEL_5_ENEMIES,
@@ -1027,6 +1078,9 @@
     {
       name: 'Lasik Lane',
       airPuffs: true,
+      // Fixed puff-gauntlet zones (column ranges). Puffs fire in a rhythm here,
+      // and only here, so the player can read and learn the pattern.
+      puffZones: [ {from: 18, to: 27}, {from: 46, to: 55}, {from: 72, to: 88} ],
       sub: 'Pure-speed gauntlet — no slowing down',
       story: "Lasers everywhere. No time to think — just run, jump, and trust the high road.",
       tiles: LEVEL_6_TILES, coins: LEVEL_6_COINS, enemies: LEVEL_6_ENEMIES,
@@ -1042,6 +1096,7 @@
     {
       name: 'The Brain',
       airPuffs: true,
+      puffZones: [ {from: 14, to: 26}, {from: 40, to: 52}, {from: 66, to: 78} ],
       sub: 'Three cataracts. Earn your 20/20.',
       story: "The final stretch. Three cataracts cloud the way to clear vision.",
       tiles: LEVEL_7_TILES, coins: LEVEL_7_COINS, enemies: LEVEL_7_ENEMIES,
@@ -1304,8 +1359,10 @@
            ch === 'P' || ch === 'S' || ch === 'L' || ch === 'M' || ch === 'V' || ch === 'C';
   }
   function isWall(ch) {
-    // Walls cause wall-vault (vertical solid surfaces)
-    return ch === 'F' || ch === 'B' || ch === 'P' || ch === 'Q' || ch === 'C' || ch === 'V';
+    // Walls cause wall-vault (vertical solid surfaces).
+    // Note: 'Q' (question/coin block) is intentionally excluded — bumping a coin
+    // box should not trigger a backward wall-vault.
+    return ch === 'F' || ch === 'B' || ch === 'P' || ch === 'C' || ch === 'V';
   }
   function isSpring(ch) { return ch === 'S'; }
   function isGoal(ch) { return ch === 'X'; }
@@ -1809,7 +1866,9 @@
         sfx.jump();
       }
     } else if (vRes.bumpedHead) {
-      p.vy = 0;
+      // Gentle downward nudge instead of a dead stop, so hitting a coin box
+      // feels like a light tap and Mr. Glass keeps flowing forward.
+      p.vy = 60;
       checkBlockBump(p.x, newY, p.w, p.h);
     } else {
       p.onGround = false;
@@ -1852,6 +1911,15 @@
     let hitWall = false;
     let resolvedX = newX;
 
+    // A genuine vertical wall is too tall to simply hop onto: it has wall material
+    // directly ABOVE the contact tile. A horizontal ledge (open space above, so you
+    // can land on top) must NOT trigger a wall-vault — you should just bonk/stop.
+    function isVerticalWall(c, r) {
+      const ch = tileAt(game.level, c, r);
+      if (!isWall(ch)) return false;
+      return isWall(tileAt(game.level, c, r - 1));
+    }
+
     // Check forward edge (right side, since we run rightward)
     for (const r of rows) {
       const c = Math.floor(right / TILE);
@@ -1860,7 +1928,7 @@
         // Push player back so right edge sits flush with this tile's left side
         resolvedX = c * TILE - w - 0.01;
         blocked = true;
-        if (isWall(ch)) hitWall = true;
+        if (isVerticalWall(c, r)) hitWall = true;
         break;
       }
     }
@@ -1872,7 +1940,7 @@
         if (isSolid(ch)) {
           resolvedX = (c + 1) * TILE + 0.01;
           blocked = true;
-          if (isWall(ch)) hitWall = true;
+          if (isVerticalWall(c, r)) hitWall = true;
           break;
         }
       }
@@ -1932,24 +2000,20 @@
         game.bumpedBlocks.add(key);
         const bx = c * TILE + TILE/2;
         const by = r * TILE - TILE * 0.3;
-        // 70% chance: coin shower. 30%: powerup.
+        // 70% chance: coins (auto-awarded). 30%: powerup (homes to player).
         if (Math.random() < 0.7) {
-          // Coin shower — coins arc forward so the player runs into them
-          for (let i = 0; i < 3; i++) {
-            game.coins.push({
-              x: bx, y: by,
-              vx: 80 + i * 30,           // forward velocity, staggered
-              vy: -260 - i * 40,         // launched upward, staggered heights
-              r: TILE * 0.28,
-              collected: false,
-              phase: Math.random() * Math.PI * 2,
-              physics: true,             // mark coins that need gravity
-              spawnedFromBlock: true,
-            });
+          // Award 3 coins directly — no physics coins to chase, contents auto-collect.
+          const gained = 3;
+          game.coinsCollected += gained;
+          game.score += gained * 25;   // match the value of a normal coin pickup
+          updateHUD();
+          // Visual flourish: little "+" pops fly up where the block was
+          for (let i = 0; i < gained; i++) {
+            spawnFloatText(bx + (i-1) * 12, by - i * 6, '+25', '#fcd444');
           }
           spawnParticles(bx, by, '#fcd444', 14);
         } else {
-          // Powerup spawn — also launched forward so the player can catch it
+          // Powerup spawn — homes directly to the player (handled in updatePowerups)
           game.powerups.push({
             x: bx, y: by,
             vx: 90,
@@ -2010,41 +2074,60 @@
 
     const p = game.player;
     const bossArena = game.levelConfig.gimmick === 'boss-arena';
+    const zones = game.levelConfig.puffZones;
+    const playerCol = (p.x + p.w/2) / TILE;
 
-    // Spawn timer — emit a puff from ahead of the player, flying toward him
+    // If this level uses fixed puff zones, only fire while the player is inside one,
+    // and cycle heights in a readable rhythm (low, high, chest, repeat).
+    let inZone = true;
+    if (zones && !bossArena) {
+      inZone = zones.some(z => playerCol >= z.from && playerCol <= z.to);
+    }
+
     game.puffTimer -= dt;
-    if (game.puffTimer <= 0) {
+    if (game.puffTimer <= 0 && inZone) {
       const lvl = game.levelIndex;
-      const base = Math.max(1.3, 2.8 - lvl * 0.18);
-      game.puffTimer = base + Math.random() * 0.8;
 
       const groundY = findGroundYNear(p.x);
       const bands = [
-        groundY - TILE * 0.6,
-        groundY - TILE * 2.4,
-        groundY - TILE * 1.4,
+        groundY - TILE * 0.6,   // low — jump over
+        groundY - TILE * 2.4,   // high — stay grounded
+        groundY - TILE * 1.4,   // chest — jump over
       ];
-      const y = bands[Math.floor(Math.random() * bands.length)];
-      const speed = 200 + lvl * 18 + Math.random() * 40;
+      let y, speed, interval;
+      if (zones) {
+        // Patterned: steady rhythm, cycle through heights predictably
+        if (game._puffCycle === undefined) game._puffCycle = 0;
+        y = bands[game._puffCycle % bands.length];
+        game._puffCycle++;
+        interval = Math.max(0.9, 1.4 - lvl * 0.04);   // steady, learnable cadence
+        speed = 220 + lvl * 14;
+      } else {
+        // Fallback random behavior (other levels)
+        y = bands[Math.floor(Math.random() * bands.length)];
+        interval = Math.max(1.3, 2.8 - lvl * 0.18) + Math.random() * 0.8;
+        speed = 200 + lvl * 18 + Math.random() * 40;
+      }
+      game.puffTimer = interval;
 
       if (bossArena) {
-        // Fire from whichever wall the player is NOT near, flying across the arena
         const arenaW = game.levelW * TILE;
         const fromLeft = (p.x > arenaW / 2);
         game.airPuffs.push({
           x: fromLeft ? TILE * 1.5 : arenaW - TILE * 1.5,
-          y: y,
-          vx: fromLeft ? speed : -speed,
+          y: y, vx: fromLeft ? speed : -speed,
           r: TILE * 0.42, phase: Math.random() * Math.PI * 2, life: 6,
         });
       } else {
         const spawnX = game.cameraX + cssW + TILE;
         game.airPuffs.push({
-          x: spawnX, y: y,
-          vx: -speed,
+          x: spawnX, y: y, vx: -speed,
           r: TILE * 0.42, phase: Math.random() * Math.PI * 2, life: 6,
         });
       }
+    } else if (game.puffTimer <= 0) {
+      // Not in a zone — reset a short timer so puffs resume promptly on entering one
+      game.puffTimer = 0.4;
     }
 
     for (const puff of game.airPuffs) {
@@ -3925,6 +4008,7 @@
 
     // Resolve the equipped cosmetic style (cached on game for performance)
     const style = game.glassesStyle || glassesById('classic');
+    const gshape = style.shape || 'round';
     let frameStroke = style.frame;
     if (style.frame === 'rainbow') {
       const grad = ctx.createLinearGradient(leftX - lensR, 0, rightX + lensR, 0);
@@ -3936,24 +4020,33 @@
       frameStroke = grad;
     }
 
+    // Glow halo
+    if (style.glow) {
+      ctx.save();
+      ctx.shadowColor = style.glow; ctx.shadowBlur = 10;
+      ctx.fillStyle = style.glow; ctx.globalAlpha = 0.5;
+      drawLensShape(ctx, gshape, leftX, glassY, lensR);
+      ctx.fill();
+      drawLensShape(ctx, gshape, rightX, glassY, lensR);
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Frames
     ctx.strokeStyle = frameStroke;
     ctx.fillStyle = (typeof frameStroke === 'string') ? frameStroke : '#0d1420';
     ctx.lineWidth = 4;
 
-    // Left lens frame
-    ctx.beginPath();
-    ctx.arc(leftX, glassY, lensR, 0, Math.PI * 2);
+    // Lens frames (shaped)
+    drawLensShape(ctx, gshape, leftX, glassY, lensR);
     ctx.stroke();
-    // Right lens frame
-    ctx.beginPath();
-    ctx.arc(rightX, glassY, lensR, 0, Math.PI * 2);
+    drawLensShape(ctx, gshape, rightX, glassY, lensR);
     ctx.stroke();
     // Bridge
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(leftX + lensR, glassY);
-    ctx.lineTo(rightX - lensR, glassY);
+    ctx.moveTo(leftX + lensR * 0.8, glassY);
+    ctx.lineTo(rightX - lensR * 0.8, glassY);
     ctx.stroke();
     // Temples (arms of glasses going off the sides)
     ctx.beginPath();
@@ -3963,13 +4056,12 @@
     ctx.lineTo(headR + 2, glassY - 2);
     ctx.stroke();
 
-    // Glass tint (per style)
+    // Glass tint (per style; 3D glasses get two colors)
     ctx.fillStyle = style.lens || 'rgba(160, 200, 240, 0.2)';
-    ctx.beginPath();
-    ctx.arc(leftX, glassY, lensR - 2, 0, Math.PI * 2);
+    drawLensShape(ctx, gshape, leftX, glassY, lensR - 2);
     ctx.fill();
-    ctx.beginPath();
-    ctx.arc(rightX, glassY, lensR - 2, 0, Math.PI * 2);
+    ctx.fillStyle = style.lens2 || style.lens || 'rgba(160, 200, 240, 0.2)';
+    drawLensShape(ctx, gshape, rightX, glassY, lensR - 2);
     ctx.fill();
 
     // Eyes behind glasses — blink periodically (every ~3.5s, closed for ~120ms)
@@ -4225,12 +4317,18 @@
   const GLASSES_SHOP = [
     { id: 'classic',   name: 'Classic Black', cost: 0,    frame: '#0d1420', lens: 'rgba(160,200,240,0.2)' },
     { id: 'tortoise',  name: 'Tortoiseshell', cost: 100,  frame: '#6a4423', lens: 'rgba(200,170,120,0.25)' },
-    { id: 'rosegold',  name: 'Rose Gold',     cost: 200,  frame: '#d98a6a', lens: 'rgba(255,210,200,0.25)' },
-    { id: 'cherry',    name: 'Cherry Red',    cost: 250,  frame: '#c0392b', lens: 'rgba(255,180,180,0.25)' },
+    { id: 'rosegold',  name: 'Rose Gold',     cost: 150,  frame: '#d98a6a', lens: 'rgba(255,210,200,0.25)' },
+    { id: 'cherry',    name: 'Cherry Red',    cost: 200,  frame: '#c0392b', lens: 'rgba(255,180,180,0.25)' },
+    { id: 'sunglasses',name: 'Cool Shades',   cost: 250,  frame: '#1a1a1a', lens: 'rgba(20,20,30,0.78)' },
     { id: 'emerald',   name: 'Emerald',       cost: 300,  frame: '#0e7a4f', lens: 'rgba(160,255,200,0.25)' },
     { id: 'royal',     name: 'Royal Blue',    cost: 350,  frame: '#1f4fd8', lens: 'rgba(170,200,255,0.3)' },
+    { id: 'heart',     name: 'Heart Eyes',    cost: 400,  frame: '#ff5a8a', lens: 'rgba(255,200,220,0.3)', shape: 'heart' },
+    { id: 'star',      name: 'Star Spec',     cost: 450,  frame: '#ffb01f', lens: 'rgba(255,235,160,0.3)', shape: 'star' },
     { id: 'gold',      name: 'Solid Gold',    cost: 500,  frame: '#d4a000', lens: 'rgba(255,235,150,0.3)' },
+    { id: 'threed',    name: '3-D Glasses',   cost: 600,  frame: '#222222', lens: 'rgba(255,0,0,0.4)', lens2: 'rgba(0,180,255,0.4)' },
+    { id: 'neon',      name: 'Neon Glow',     cost: 700,  frame: '#39ff14', lens: 'rgba(180,255,180,0.3)', glow: '#39ff14' },
     { id: 'rainbow',   name: 'Rainbow',       cost: 800,  frame: 'rainbow', lens: 'rgba(255,255,255,0.25)' },
+    { id: 'diamond',   name: 'Diamond',       cost: 1200, frame: '#bff0ff', lens: 'rgba(200,240,255,0.35)', glow: '#bff0ff' },
   ];
   function glassesById(id) {
     return GLASSES_SHOP.find(g => g.id === id) || GLASSES_SHOP[0];
@@ -4506,10 +4604,10 @@
       document.getElementById('endTime').textContent = formatTime(game._earnedTime);
 
       if (isFinalLevel) {
-        document.getElementById('endTitle').innerHTML = 'You <em>made it!</em>';
-        document.getElementById('endMessage').textContent = `Mr. Glass cleared the optic nerve and reached the brain. Practice mastered. Total score: ${progress.totalScore}.`;
-        document.getElementById('btnRestart').textContent = 'Play again from level 1';
-        document.getElementById('btnRestart').dataset.action = 'replay-all';
+        // Show the dedicated ending / credits screen
+        showEnding(progress);
+        game.victoryFreeze = false;
+        return;
       } else {
         document.getElementById('endTitle').innerHTML = `Level ${completedIdx + 1} <em>Complete!</em>`;
         document.getElementById('endMessage').textContent = `Next: ${LEVELS[nextIdx].name} — ${LEVELS[nextIdx].sub}`;
@@ -4521,6 +4619,27 @@
       hud.hidden = true;
       game.victoryFreeze = false;
     }, 1400);
+  }
+
+  function showEnding(progress) {
+    // Compute totals across all levels
+    let totalStars = 0, maxStars = LEVELS.length * 3;
+    for (let i = 0; i < LEVELS.length; i++) totalStars += (progress.stars && progress.stars[i]) || 0;
+    let totalTime = 0;
+    for (let i = 0; i < LEVELS.length; i++) totalTime += (progress.bestTimes && progress.bestTimes[i]) || 0;
+    const coins = progress.coinBank || 0;
+
+    const stats = document.getElementById('endingStats');
+    stats.innerHTML = `
+      <div class="ending-stat"><div class="es-val gold">${totalStars}/${maxStars}</div><div class="es-label">Stars</div></div>
+      <div class="ending-stat"><div class="es-val">${coins}</div><div class="es-label">Coins</div></div>
+      <div class="ending-stat"><div class="es-val">${progress.totalScore || 0}</div><div class="es-label">Score</div></div>
+    `;
+    hud.hidden = true;
+    overlayEnd.hidden = true;
+    document.getElementById('overlayEnding').hidden = false;
+    // Big celebratory particle burst is already going; play the win sting again
+    sfx.win();
   }
 
   function pauseGame() {
@@ -4616,6 +4735,8 @@
     overlayEnd.hidden = true;
     overlayPause.hidden = true;
     overlayLevelSelect.hidden = true;
+    const endingOv = document.getElementById('overlayEnding');
+    if (endingOv) endingOv.hidden = true;
     if (typeof overlayShop !== 'undefined' && overlayShop) overlayShop.hidden = true;
     overlayStart.hidden = false;
     hud.hidden = true;
@@ -4624,6 +4745,18 @@
   const btnHomeEl = document.getElementById('btnHome');
   if (btnHomeEl) {
     btnHomeEl.addEventListener('click', returnToTitle);
+  }
+  // Ending screen buttons
+  const btnEndingReplay = document.getElementById('btnEndingReplay');
+  if (btnEndingReplay) {
+    btnEndingReplay.addEventListener('click', () => {
+      document.getElementById('overlayEnding').hidden = true;
+      startGame(0);
+    });
+  }
+  const btnEndingTitle = document.getElementById('btnEndingTitle');
+  if (btnEndingTitle) {
+    btnEndingTitle.addEventListener('click', returnToTitle);
   }
   const homeLinkEl = document.getElementById('homeLink');
   if (homeLinkEl) {
@@ -4794,6 +4927,29 @@
     drawStartCharacterOn(cv);
   }
 
+  // Helper: draw a lens of a given shape at (x,y) on context c
+  function drawLensShape(c, shape, x, y, r) {
+    c.beginPath();
+    if (shape === 'heart') {
+      // Heart shape
+      c.moveTo(x, y + r * 0.7);
+      c.bezierCurveTo(x - r * 1.2, y - r * 0.4, x - r * 0.5, y - r * 1.1, x, y - r * 0.4);
+      c.bezierCurveTo(x + r * 0.5, y - r * 1.1, x + r * 1.2, y - r * 0.4, x, y + r * 0.7);
+      c.closePath();
+    } else if (shape === 'star') {
+      // 5-point star
+      for (let i = 0; i < 10; i++) {
+        const ang = (Math.PI / 5) * i - Math.PI / 2;
+        const rr = i % 2 === 0 ? r : r * 0.45;
+        const px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr;
+        if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.closePath();
+    } else {
+      c.arc(x, y, r, 0, Math.PI * 2);
+    }
+  }
+
   // Draw a small glasses preview into a canvas
   function drawGlassesPreview(cv, g) {
     const c = cv.getContext('2d');
@@ -4801,11 +4957,22 @@
     const cx = cv.width / 2, cy = cv.height / 2;
     const lensR = 16;
     const leftX = cx - 18, rightX = cx + 18;
+    const shape = g.shape || 'round';
     // Soft rounded backdrop so frames pop
     c.fillStyle = '#f3eee2';
     c.beginPath();
     c.ellipse(cx, cy, cv.width * 0.4, cv.height * 0.38, 0, 0, Math.PI * 2);
     c.fill();
+    // Glow halo for glow styles
+    if (g.glow) {
+      c.save();
+      c.shadowColor = g.glow; c.shadowBlur = 12;
+      c.fillStyle = g.glow;
+      c.globalAlpha = 0.4;
+      drawLensShape(c, shape, leftX, cy, lensR); c.fill();
+      drawLensShape(c, shape, rightX, cy, lensR); c.fill();
+      c.restore();
+    }
     // Frame stroke (rainbow gets a gradient)
     if (g.frame === 'rainbow') {
       const grad = c.createLinearGradient(leftX - lensR, 0, rightX + lensR, 0);
@@ -4819,24 +4986,32 @@
       c.strokeStyle = g.frame;
     }
     c.lineWidth = 4;
-    // Lens tint
+    // Lens tint (3D glasses get two different colors)
     c.fillStyle = g.lens;
-    c.beginPath(); c.arc(leftX, cy, lensR, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.arc(rightX, cy, lensR, 0, Math.PI*2); c.fill();
+    drawLensShape(c, shape, leftX, cy, lensR); c.fill();
+    c.fillStyle = g.lens2 || g.lens;
+    drawLensShape(c, shape, rightX, cy, lensR); c.fill();
     // Frames
-    c.beginPath(); c.arc(leftX, cy, lensR, 0, Math.PI*2); c.stroke();
-    c.beginPath(); c.arc(rightX, cy, lensR, 0, Math.PI*2); c.stroke();
+    drawLensShape(c, shape, leftX, cy, lensR); c.stroke();
+    drawLensShape(c, shape, rightX, cy, lensR); c.stroke();
     // Bridge
-    c.beginPath(); c.moveTo(leftX + lensR, cy); c.lineTo(rightX - lensR, cy); c.stroke();
+    c.beginPath(); c.moveTo(leftX + lensR * 0.8, cy); c.lineTo(rightX - lensR * 0.8, cy); c.stroke();
     // Temples
     c.beginPath();
     c.moveTo(leftX - lensR, cy); c.lineTo(leftX - lensR - 8, cy - 3);
     c.moveTo(rightX + lensR, cy); c.lineTo(rightX + lensR + 8, cy - 3);
     c.stroke();
-    // Shine
-    c.fillStyle = 'rgba(255,255,255,0.7)';
-    c.beginPath(); c.arc(leftX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.arc(rightX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
+    // Shine (skip on dark sunglasses)
+    if (g.id !== 'sunglasses') {
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.beginPath(); c.arc(leftX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(rightX - 5, cy - 5, 3, 0, Math.PI*2); c.fill();
+    } else {
+      // sunglasses get a diagonal shine streak
+      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(leftX - 7, cy + 4); c.lineTo(leftX + 2, cy - 6); c.stroke();
+      c.beginPath(); c.moveTo(rightX - 7, cy + 4); c.lineTo(rightX + 2, cy - 6); c.stroke();
+    }
   }
 
   // Update start button label based on progress
@@ -4942,6 +5117,7 @@
 
     // --- The big glasses ---
     const lensR = 8, lx = -8, rx = 8, gy = -9;
+    const gshape = style.shape || 'round';
     let frameStroke = style.frame;
     if (style.frame === 'rainbow') {
       const g = c.createLinearGradient(lx - lensR, 0, rx + lensR, 0);
@@ -4949,13 +5125,21 @@
       g.addColorStop(0.5,'#44cc44'); g.addColorStop(0.7,'#4488ff'); g.addColorStop(1,'#cc44ff');
       frameStroke = g;
     }
+    // Glow
+    if (style.glow) {
+      c.save(); c.shadowColor = style.glow; c.shadowBlur = 6; c.globalAlpha = 0.5; c.fillStyle = style.glow;
+      drawLensShape(c, gshape, lx, gy, lensR); c.fill();
+      drawLensShape(c, gshape, rx, gy, lensR); c.fill();
+      c.restore();
+    }
     c.fillStyle = style.lens || 'rgba(160,200,240,0.2)';
-    c.beginPath(); c.arc(lx, gy, lensR-1, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.arc(rx, gy, lensR-1, 0, Math.PI*2); c.fill();
+    drawLensShape(c, gshape, lx, gy, lensR-1); c.fill();
+    c.fillStyle = style.lens2 || style.lens || 'rgba(160,200,240,0.2)';
+    drawLensShape(c, gshape, rx, gy, lensR-1); c.fill();
     c.strokeStyle = frameStroke; c.lineWidth = 2.5;
-    c.beginPath(); c.arc(lx, gy, lensR, 0, Math.PI*2); c.stroke();
-    c.beginPath(); c.arc(rx, gy, lensR, 0, Math.PI*2); c.stroke();
-    c.beginPath(); c.moveTo(lx+lensR, gy); c.lineTo(rx-lensR, gy); c.stroke();
+    drawLensShape(c, gshape, lx, gy, lensR); c.stroke();
+    drawLensShape(c, gshape, rx, gy, lensR); c.stroke();
+    c.beginPath(); c.moveTo(lx+lensR*0.8, gy); c.lineTo(rx-lensR*0.8, gy); c.stroke();
     c.beginPath(); c.moveTo(lx-lensR, gy); c.lineTo(-15, gy-1); c.moveTo(rx+lensR, gy); c.lineTo(15, gy-1); c.stroke();
     // Eyes (blink)
     const blink = (performance.now() % 3500) < 120;
@@ -4981,6 +5165,8 @@
     if (startOv && !startOv.hidden) drawStartCharacter();
     const shopOv = document.getElementById('overlayShop');
     if (shopOv && !shopOv.hidden) drawStartCharacterOn(document.getElementById('shopCharCanvas'));
+    const endOv = document.getElementById('overlayEnding');
+    if (endOv && !endOv.hidden) drawStartCharacterOn(document.getElementById('endingCharCanvas'));
     _startCharRAF = requestAnimationFrame(startCharLoop);
   }
 
