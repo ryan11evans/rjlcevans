@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#5c94fc">
-<title>Mr. Glass — Dr. Ryan Evans, OD</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>Dr. Glass</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,7 +53,10 @@
 
   /* HUD */
   .hud {
-    position: absolute; top: 14px; left: 16px; right: 16px;
+    position: absolute;
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
     display: flex; justify-content: space-between; align-items: flex-start;
     pointer-events: none;
     z-index: 5;
@@ -691,7 +698,7 @@
     <div class="overlay overlay-start-themed" id="overlayStart">
       <div class="overlay-card start-card">
         <canvas id="startCharCanvas" width="160" height="160" class="start-char"></canvas>
-        <h2 class="start-title">Mr. <em>Glass</em></h2>
+        <h2 class="start-title">Dr. <em>Glass</em></h2>
         <p class="byline">Created by Dr. Ryan Evans, OD</p>
         <p class="start-tagline">Run, jump &amp; stomp through 8 levels of optometry mayhem — office to optic nerve and beyond!</p>
         <div class="controls-pills">
@@ -711,7 +718,7 @@
     <div class="overlay" id="overlayLevelSelect" hidden>
       <div class="overlay-card overlay-levelmap">
         <h2>Choose a <em>Level</em></h2>
-        <p>Mr. Glass's journey through the eye. Beat a level to unlock the next.</p>
+        <p>Dr. Glass's journey through the eye. Beat a level to unlock the next.</p>
         <div class="level-map" id="levelMap"></div>
         <button class="btn ghost" id="btnLevelBack">← Back</button>
       </div>
@@ -722,7 +729,7 @@
       <div class="overlay-card overlay-levelmap shop-card-wrap">
         <canvas id="shopCharCanvas" width="160" height="160" class="shop-char"></canvas>
         <h2 class="start-title shop-title">Glasses <em>Shop</em></h2>
-        <p class="shop-blurb">Spend your eyeball coins on a fresh look for Mr. Glass!</p>
+        <p class="shop-blurb">Spend your eyeball coins on a fresh look for Dr. Glass!</p>
         <div class="coin-pill" id="shopCoinCount">👁 0 coins</div>
         <div class="level-map shop-grid-themed" id="shopGrid"></div>
         <button class="btn ghost shop-back-btn" id="btnShopBack">← Back</button>
@@ -733,7 +740,7 @@
     <div class="overlay" id="overlayEnd" hidden>
       <div class="overlay-card">
         <h2 id="endTitle">Game <em>Over</em></h2>
-        <p id="endMessage">Mr. Glass needs a moment.</p>
+        <p id="endMessage">Dr. Glass needs a moment.</p>
         <div class="end-stars" id="endStars" hidden></div>
         <div class="score-big" id="endScore">0</div>
         <div class="score-row">
@@ -751,10 +758,10 @@
       <div class="overlay-card start-card ending-card">
         <canvas id="endingCharCanvas" width="160" height="160" class="start-char"></canvas>
         <h2 class="start-title ending-title">20/20 <em>Vision!</em></h2>
-        <p class="ending-blurb">Mr. Glass defeated Dr. Aberration and restored clear sight to the whole eye. The practice is saved!</p>
+        <p class="ending-blurb">Dr. Glass defeated Dr. Aberration and restored clear sight to the whole eye. The practice is saved!</p>
         <div class="ending-stats" id="endingStats"></div>
         <div class="ending-credits">
-          <div class="ending-credits-title">— Mr. Glass —</div>
+          <div class="ending-credits-title">— Dr. Glass —</div>
           <div class="ending-credits-line">A game by Dr. Ryan Evans, OD</div>
           <div class="ending-credits-line">Built with love for Landon &amp; Cody</div>
           <div class="ending-credits-line">rjlcevans.com</div>
@@ -1077,7 +1084,7 @@
     {
       name: 'Welcome to the Practice',
       sub: 'Tutorial — basic running, stomping, jumping',
-      story: "Monday, 8 AM. Mr. Glass heads across town to unlock the office and start his day.",
+      story: "Monday, 8 AM. Dr. Glass heads across town to unlock the office and start his day.",
       tiles: LEVEL_1_TILES, coins: LEVEL_1_COINS, enemies: LEVEL_1_ENEMIES,
       theme: 'office',
       gimmick: null,
@@ -1122,7 +1129,7 @@
       airPuffs: true,
       puffZones: [ {from: 10, to: 22}, {from: 38, to: 50}, {from: 56, to: 66}, {from: 110, to: 122}, {from: 138, to: 150}, {from: 156, to: 166} ],
       sub: 'Toward the brain — beware the cataract',
-      story: "Mr. Glass shrinks down and rides the optic nerve toward the brain.",
+      story: "Dr. Glass shrinks down and rides the optic nerve toward the brain.",
       tiles: LEVEL_5_TILES, coins: LEVEL_5_COINS, enemies: LEVEL_5_ENEMIES,
       theme: 'opticnerve',
       gimmick: null,
@@ -1223,17 +1230,37 @@
       osc.stop(audioCtx.currentTime + dur);
     } catch(e) {}
   }
+  // ----- Native haptics (Capacitor) — gracefully no-ops in a plain browser -----
+  const Native = (typeof window !== 'undefined' && window.Capacitor) ? window.Capacitor : null;
+  function haptic(style) {
+    try {
+      if (Native && Native.Plugins && Native.Plugins.Haptics) {
+        const H = Native.Plugins.Haptics;
+        if (style === 'light') H.impact({ style: 'LIGHT' });
+        else if (style === 'medium') H.impact({ style: 'MEDIUM' });
+        else if (style === 'heavy') H.impact({ style: 'HEAVY' });
+        else if (style === 'success') H.notification({ type: 'SUCCESS' });
+        else if (style === 'error') H.notification({ type: 'ERROR' });
+      } else if (navigator.vibrate) {
+        // Web fallback (works on Android browsers; harmless elsewhere)
+        navigator.vibrate(style === 'heavy' ? 30 : style === 'medium' ? 18 : 10);
+      }
+    } catch (e) { /* haptics are optional */ }
+  }
+
   const sfx = {
-    jump: () => { tone(523, 0.06, 'square', 0.12); setTimeout(()=>tone(784, 0.08, 'square', 0.1), 50); },
+    jump: () => { haptic('light'); tone(523, 0.06, 'square', 0.12); setTimeout(()=>tone(784, 0.08, 'square', 0.1), 50); },
     coin: () => { tone(988, 0.06, 'square', 0.15); setTimeout(()=>tone(1319, 0.1, 'square', 0.13), 50); },
-    stomp: () => { tone(220, 0.06, 'square', 0.18); setTimeout(()=>tone(165, 0.1, 'square', 0.15), 50); },
-    wallVault: () => { tone(330, 0.05, 'square', 0.12); setTimeout(()=>tone(440, 0.08, 'square', 0.1), 40); },
+    stomp: () => { haptic('medium'); tone(220, 0.06, 'square', 0.18); setTimeout(()=>tone(165, 0.1, 'square', 0.15), 50); },
+    wallVault: () => { haptic('light'); tone(330, 0.05, 'square', 0.12); setTimeout(()=>tone(440, 0.08, 'square', 0.1), 40); },
     crash: () => {
+      haptic('error');
       tone(330, 0.1, 'sawtooth', 0.18);
       setTimeout(()=>tone(220, 0.15, 'sawtooth', 0.18), 100);
       setTimeout(()=>tone(110, 0.25, 'sawtooth', 0.18), 250);
     },
     win: () => {
+      haptic('success');
       [523, 659, 784, 1047].forEach((f, i) => setTimeout(()=>tone(f, 0.15, 'square', 0.16), i * 120));
     },
   };
@@ -1836,7 +1863,7 @@
     if (result.hitWall && (inBossArena ? Math.abs(p.vx) > 0 : p.vx > 0)) {
       // Wall vault! Reverse direction.
       if (inBossArena) {
-        // Flip run direction so Mr. Glass now runs the other way
+        // Flip run direction so Dr. Glass now runs the other way
         p.runDirection = -p.runDirection;
         p.vx = WALL_VAULT_VX * Math.sign(p.runDirection) * -1 * (p.runDirection > 0 ? -1 : 1);
         // Simpler: just set vx to bounce velocity in new direction
@@ -1920,7 +1947,7 @@
       }
     } else if (vRes.bumpedHead) {
       // Gentle downward nudge instead of a dead stop, so hitting a coin box
-      // feels like a light tap and Mr. Glass keeps flowing forward.
+      // feels like a light tap and Dr. Glass keeps flowing forward.
       p.vy = 60;
       checkBlockBump(p.x, newY, p.w, p.h);
     } else {
@@ -2099,7 +2126,7 @@
       if (pu.collected) continue;
       pu.phase += dt * 4;
 
-      // Glasses powerup ALWAYS homes in on Mr. Glass — no escape, no distance limit.
+      // Glasses powerup ALWAYS homes in on Dr. Glass — no escape, no distance limit.
       // Skip gravity and ground physics entirely; just fly toward him.
       const dx = px - pu.x;
       const dy = py - pu.y;
@@ -2126,7 +2153,7 @@
     game.powerups = game.powerups.filter(pu => !pu.collected);
   }
 
-  // Tonometer air puffs — horizontal projectiles on levels 4-8 that Mr. Glass must dodge.
+  // Tonometer air puffs — horizontal projectiles on levels 4-8 that Dr. Glass must dodge.
   function updateAirPuffs(dt) {
     if (!game.levelConfig.airPuffs) return;       // only enabled levels
 
@@ -2498,7 +2525,7 @@
       if (en.bossTimer <= 0) {
         en.bossState = 'wind-up';
         en.bossTimer = phase === 1 ? 0.6 : phase === 2 ? 0.45 : 0.3;
-        // Target Mr. Glass's current X
+        // Target Dr. Glass's current X
         en.targetX = Math.max(2 * TILE + 30, Math.min(arenaRight - 30, game.player.x + game.player.w/2 - en.w/2));
       }
     } else if (en.bossState === 'wind-up') {
@@ -3930,7 +3957,7 @@
       ctx.globalAlpha = 0.5;
     }
 
-    drawMrGlassSprite(p.h);
+    drawDrGlassSprite(p.h);
 
     ctx.restore();
 
@@ -3949,8 +3976,8 @@
     }
   }
 
-  // Draws Mr. Glass centered horizontally at origin, with feet at given height
-  function drawMrGlassSprite(height) {
+  // Draws Dr. Glass centered horizontally at origin, with feet at given height
+  function drawDrGlassSprite(height) {
     const h = height;
     const w = h * 0.55;
 
@@ -4977,7 +5004,7 @@
     });
   }
 
-  // Draw the big Mr. Glass preview at the top of the shop (wears equipped glasses)
+  // Draw the big Dr. Glass preview at the top of the shop (wears equipped glasses)
   function drawShopCharacter() {
     const cv = document.getElementById('shopCharCanvas');
     if (!cv) return;
@@ -5106,7 +5133,7 @@
     }
   }
 
-  // ===== Animated Mr. Glass on the start screen =====
+  // ===== Animated Dr. Glass on the start screen =====
   function drawStartCharacter() {
     drawStartCharacterOn(document.getElementById('startCharCanvas'));
   }
@@ -5244,6 +5271,33 @@
     }
   }
 })();
+</script>
+<script>
+// ---- Native app integration (runs only inside the Capacitor iOS app) ----
+(function () {
+  function whenReady(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  whenReady(function () {
+    if (window.Capacitor && window.Capacitor.Plugins) {
+      var P = window.Capacitor.Plugins;
+      // Hide the native splash once the game is up
+      try { if (P.SplashScreen) P.SplashScreen.hide(); } catch (e) {}
+      // Style the status bar to match the sky and overlay the full-screen game
+      try {
+        if (P.StatusBar) {
+          P.StatusBar.setOverlaysWebView({ overlay: true });
+          P.StatusBar.setStyle({ style: 'LIGHT' });
+        }
+      } catch (e) {}
+    }
+  });
+})();
+
+// ---- Service worker for offline play (PWA + review-proofing) ----
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline SW optional */ });
+  });
+}
 </script>
 </body>
 </html>
