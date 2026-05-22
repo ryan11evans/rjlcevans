@@ -824,8 +824,8 @@
     '..................BBBB......BBBB.................BBBB......BBBB...................BBBBBBBB..........BBBB........BBBB........BBBB...............BBBB............................................',
     '.............................................................................................BBB.......................................BBB.................BBB.................................',
     '..........BBBB................................BBBB............................................................................................BBBB.................BBBB........................',
-    '......QQ.......................................................................................................................................................................................',
-    '..........................................................................................................QQ...................................................................................',
+    '......QQ..................................................................................................QQ...................................................................................',
+    '...............................................................................................................................................................................................',
     '...........................................FFFF........................BBBB.......................................FFFF.............................................BBBB........X...............',
     'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG......FFFFFGGGGGGGGGG.....GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFFFFFGGGGGGGGGGGGG.....GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG.',
     'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDD.....DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.....DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
@@ -1973,11 +1973,16 @@
       return isWall(tileAt(game.level, c, r - 1));
     }
 
+    // For horizontal collision, coin boxes ('Q') are NOT blocking — you should be
+    // able to run/rise alongside one without being shoved backward. They still block
+    // vertically (land on top, bump from below), handled in resolveVertical.
+    const blocksHorizontally = (ch) => isSolid(ch) && ch !== 'Q';
+
     // Check forward edge (right side, since we run rightward)
     for (const r of rows) {
       const c = Math.floor(right / TILE);
       const ch = tileAt(game.level, c, r);
-      if (isSolid(ch)) {
+      if (blocksHorizontally(ch)) {
         // Push player back so right edge sits flush with this tile's left side
         resolvedX = c * TILE - w - 0.01;
         blocked = true;
@@ -1990,7 +1995,7 @@
       for (const r of rows) {
         const c = Math.floor(left / TILE);
         const ch = tileAt(game.level, c, r);
-        if (isSolid(ch)) {
+        if (blocksHorizontally(ch)) {
           resolvedX = (c + 1) * TILE + 0.01;
           blocked = true;
           if (isVerticalWall(c, r)) hitWall = true;
