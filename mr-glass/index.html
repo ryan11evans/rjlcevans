@@ -578,6 +578,30 @@
   }
   .home-link:hover { color: white; background: rgba(0,0,0,0.6); }
 
+  .save-indicator {
+    position: absolute; top: 14px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    z-index: 7;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+    color: #2a2118;
+    background: #6fd08c;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 2px solid #2a2118;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .save-indicator.warn { background: #ffb84a; }
+  .save-indicator.show { animation: saveFlash 1.8s ease-out forwards; }
+  @keyframes saveFlash {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    75% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  }
+
   .music-btn {
     position: absolute; bottom: 12px; left: 16px;
     z-index: 5;
@@ -699,6 +723,7 @@
 
     <button class="music-btn" id="btnMusic" title="Toggle music">🔊</button>
     <button class="home-link" id="homeLink" title="Back to title">← Title</button>
+    <div class="save-indicator" id="saveIndicator">Progress saved ✓</div>
   </div>
 </div>
 
@@ -2342,21 +2367,6 @@
       if (en.bossTimer <= 0) {
         en.bossState = 'swoop';
         en.bossTimer = 0.55;
-        // In phase 2+ drop a fog patch when starting swoop
-        if (phase >= 2) {
-          const cx = en.x + en.w/2;
-          // Find ground beneath boss center
-          let groundY = en.y + en.h;
-          const col = Math.floor(cx / TILE);
-          for (let r = Math.floor((en.y + en.h) / TILE); r < game.levelH; r++) {
-            if (isSolid(tileAt(game.level, col, r))) { groundY = r * TILE; break; }
-          }
-          game.fogPatches.push({
-            x: cx, y: groundY - TILE * 0.3,
-            w: TILE * 1.8, h: TILE * 0.5,
-            life: 2.2, maxLife: 2.2,
-          });
-        }
       }
     } else if (en.bossState === 'swoop') {
       // Dive down quickly
@@ -2592,9 +2602,7 @@
     intro.classList.remove('show');
     void intro.offsetWidth;
     intro.classList.add('show');
-    // Auto-begin after a readable pause if the player hasn't tapped
-    clearTimeout(intro._t);
-    intro._t = setTimeout(() => { beginLevelPlay(); }, 4000);
+    // Wait for the player to tap — no auto-start, so there's time to read.
   }
 
   // ============================================================
@@ -4120,29 +4128,97 @@
   // PROGRESS TRACKING (localStorage)
   // ============================================================
   const PROGRESS_KEY = 'evans_mr_glass_progress_v1';
+  const PROGRESS_BACKUP_KEY = 'evans_mr_glass_progress_v1_backup';
+  let _storageAvailable = null;
+
+  function storageWorks() {
+    if (_storageAvailable !== null) return _storageAvailable;
+    try {
+      const t = '__mrglass_test__';
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      _storageAvailable = true;
+    } catch (e) {
+      _storageAvailable = false;
+    }
+    return _storageAvailable;
+  }
+
+  function parseProgress(raw) {
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    const d = defaultProgress();
+    // Merge defaults so older saves gain any new fields
+    return Object.assign(d, p, {
+      bestScores: p.bestScores || {},
+      stars: p.stars || {},
+      bestTimes: p.bestTimes || {},
+      ownedGlasses: p.ownedGlasses || d.ownedGlasses,
+    });
+  }
 
   function loadProgress() {
+    // Try the primary key, then fall back to the backup if it's missing/corrupt.
     try {
-      const raw = localStorage.getItem(PROGRESS_KEY);
-      if (!raw) return defaultProgress();
-      const p = JSON.parse(raw);
-      const d = defaultProgress();
-      // Merge defaults so older saves get new fields
-      return Object.assign(d, p, { bestScores: p.bestScores || {}, ownedGlasses: p.ownedGlasses || d.ownedGlasses });
-    } catch(e) { return defaultProgress(); }
+      const primary = parseProgress(localStorage.getItem(PROGRESS_KEY));
+      if (primary) return primary;
+    } catch (e) { /* corrupt primary — try backup */ }
+    try {
+      const backup = parseProgress(localStorage.getItem(PROGRESS_BACKUP_KEY));
+      if (backup) {
+        // Restore the primary from the backup
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(backup)); } catch (e) {}
+        return backup;
+      }
+    } catch (e) { /* both gone */ }
+    return defaultProgress();
   }
+
   function defaultProgress() {
     return {
       highestUnlocked: 0,
       totalScore: 0,
       bestScores: {},
+      stars: {},
+      bestTimes: {},
       coinBank: 0,           // total coins banked across runs (spendable)
       ownedGlasses: ['classic'],   // owned cosmetic styles
       equippedGlasses: 'classic',
     };
   }
+
   function saveProgress(p) {
-    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch(e){}
+    if (!storageWorks()) {
+      showSaveIndicator(false);
+      return false;
+    }
+    try {
+      const json = JSON.stringify(p);
+      // Write backup first, then primary, then verify the primary read-back.
+      localStorage.setItem(PROGRESS_BACKUP_KEY, json);
+      localStorage.setItem(PROGRESS_KEY, json);
+      const check = localStorage.getItem(PROGRESS_KEY);
+      const ok = check === json;
+      showSaveIndicator(ok);
+      return ok;
+    } catch (e) {
+      showSaveIndicator(false);
+      return false;
+    }
+  }
+
+  // Flash a small "Progress saved" badge
+  let _saveIndicatorTimer = null;
+  function showSaveIndicator(ok) {
+    const el = document.getElementById('saveIndicator');
+    if (!el) return;
+    el.textContent = ok ? 'Progress saved ✓' : 'Save unavailable ⚠';
+    el.classList.toggle('warn', !ok);
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(_saveIndicatorTimer);
+    _saveIndicatorTimer = setTimeout(() => el.classList.remove('show'), 1800);
   }
 
   // Cosmetic glasses styles for the shop
@@ -4912,6 +4988,17 @@
   resizeCanvas();
   updateStartButton();
   startCharLoop();
+  // If localStorage isn't available (e.g. private browsing), let the player know
+  // their coins and glasses won't be remembered between sessions.
+  if (!storageWorks()) {
+    const tagline = document.querySelector('.start-tagline');
+    if (tagline) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'margin-top:10px;font-size:12px;color:#c0392b;font-weight:600;line-height:1.4;';
+      warn.textContent = '⚠ Progress can\u2019t be saved in private browsing mode. Use a normal browser tab to keep your coins and glasses.';
+      tagline.insertAdjacentElement('afterend', warn);
+    }
+  }
 })();
 </script>
 </body>
