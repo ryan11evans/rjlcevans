@@ -827,6 +827,23 @@
       </div>
     </div>
 
+    <!-- Privacy policy (shown in-app; the website links to its own page instead) -->
+    <div class="overlay overlay-start-themed" id="overlayPrivacy" hidden>
+      <div class="overlay-card start-card howto-card" style="text-align:left; max-height:80vh; overflow-y:auto;">
+        <h2 class="start-title howto-title" style="text-align:center;">Privacy <em>Policy</em></h2>
+        <p class="howto-intro">Dr. Glass respects your privacy. In short: the game collects nothing about you.</p>
+        <div style="font-size:13px; color:#3a3228; line-height:1.5;">
+          <p><strong>No data collection.</strong> Dr. Glass does not collect, store, or transmit any personal information. There are no accounts, no logins, and no tracking.</p>
+          <p><strong>On-device only.</strong> Your game progress, coins, glasses, and settings are saved only on your device. This information never leaves your phone and is not sent to us or anyone else.</p>
+          <p><strong>No ads or analytics.</strong> The game contains no advertising, no analytics, and no third-party tracking software.</p>
+          <p><strong>No internet required.</strong> Dr. Glass is fully playable offline.</p>
+          <p><strong>Children's privacy.</strong> Because the game collects no data at all, it collects no data from children.</p>
+          <p>If you have any questions, contact Dr. Ryan Evans, OD, via rjlcevans.com.</p>
+        </div>
+        <button class="btn btn-play" id="btnPrivacyClose" style="margin-top:14px;">Close</button>
+      </div>
+    </div>
+
     <!-- Level select map -->
     <div class="overlay" id="overlayLevelSelect" hidden>
       <div class="overlay-card overlay-levelmap">
@@ -1339,13 +1356,42 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', () => { setTimeout(resizeCanvas, 200); });
+  // The native web view may not have its final height on first paint, so
+  // re-measure a few times as the layout settles to avoid the game rendering
+  // into only the top portion of the screen.
+  [0, 60, 200, 500, 1000].forEach((ms) => setTimeout(resizeCanvas, ms));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resizeCanvas);
+  }
 
   // ============================================================
   // AUDIO
   // ============================================================
   let audioCtx = null;
+  let _silentUnlocked = false;
+  // iOS plays web-view audio through the "ambient" session by default, which the
+  // physical silent switch mutes. Playing a looping (near-)silent <audio> element
+  // nudges iOS into the "playback" session that ignores the silent switch, so the
+  // game's sound effects and music are audible even on silent. Must be triggered
+  // by a user gesture.
+  function unlockSilentMode() {
+    if (_silentUnlocked) return;
+    try {
+      const a = document.createElement('audio');
+      a.setAttribute('playsinline', '');
+      a.loop = true;
+      a.volume = 0.01;
+      // 0.05s of silence as a base64 WAV
+      a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+      const p = a.play();
+      if (p && p.catch) p.catch(() => {});
+      _silentUnlocked = true;
+    } catch (e) { /* best effort */ }
+  }
   function ensureAudio() {
     if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+    unlockSilentMode();
   }
   function tone(freq, dur, type = 'sine', vol = 0.18) {
     if (!audioCtx || !musicEnabled) return;
@@ -1841,6 +1887,7 @@
   // ============================================================
   let inputDown = false;
   function onPress(e) {
+    ensureAudio();  // unlock audio + silent-mode session on first interaction
     if (e && e.target && (e.target.closest('.btn') || e.target.closest('.overlay') || e.target.closest('.home-link') || e.target.closest('.music-btn') || e.target.closest('.pause-btn'))) return;
     if (e) e.preventDefault();
     // If the story intro is showing, the first tap begins play (doesn't jump)
@@ -1884,6 +1931,12 @@
     game.player.canExtendJump = false;
   }
   stage.addEventListener('pointerdown', onPress);
+  // Safety net: unlock audio (incl. iOS silent-mode session) on the very first
+  // tap anywhere — title-screen buttons don't route through onPress.
+  document.addEventListener('pointerdown', function _firstGesture() {
+    ensureAudio();
+    document.removeEventListener('pointerdown', _firstGesture);
+  }, { once: true });
   // Tapping the story intro begins play
   const levelIntroEl = document.getElementById('levelIntro');
   if (levelIntroEl) {
@@ -3032,6 +3085,7 @@
     // then center it as a block. This guarantees both side walls are visible and
     // nothing looks stretched, on any screen including narrow portrait phones.
     let bossFit = false;
+    let worldShiftY = 0;
     if (game.levelConfig.gimmick === 'boss-arena') {
       const arenaW = game.levelW * TILE;
       const arenaH = game.levelH * TILE;
@@ -3050,6 +3104,18 @@
       ctx.save();
       ctx.translate(offsetX, offsetY);
       ctx.scale(scale, scale);
+    } else {
+      // Normal levels: the level is a fixed pixel height (levelH * TILE). On tall
+      // screens (phones) shift the world down so the floor sits in the lower-middle,
+      // leaving comfortable empty room at the bottom for the player's tapping thumb
+      // (so their finger doesn't cover the action).
+      const levelPixelH = game.levelH * TILE;
+      const leftover = Math.max(0, cssH - levelPixelH);
+      worldShiftY = leftover * 0.55;   // 55% down -> ~45% of the gap left below for thumb room
+      if (worldShiftY > 0) {
+        ctx.save();
+        ctx.translate(0, worldShiftY);
+      }
     }
 
     drawLevelTiles();
@@ -3064,6 +3130,7 @@
     drawFloatTexts();
 
     if (bossFit) ctx.restore();   // undo the arena fit transform
+    if (worldShiftY > 0) ctx.restore();   // undo the vertical world shift
 
     // Flicker gimmick — vignette closes in periodically
     if (game.levelConfig.gimmick === 'flicker') {
@@ -5255,6 +5322,8 @@
     if (endingOv) endingOv.hidden = true;
     const achOv = document.getElementById('overlayAchievements');
     if (achOv) achOv.hidden = true;
+    const privOv = document.getElementById('overlayPrivacy');
+    if (privOv) privOv.hidden = true;
     if (typeof overlayShop !== 'undefined' && overlayShop) overlayShop.hidden = true;
     overlayStart.hidden = false;
     hud.hidden = true; setGameControlsVisible(false);
@@ -5282,6 +5351,16 @@
   if (homeLinkEl) {
     homeLinkEl.addEventListener('click', returnToTitle);
   }
+  // Detect whether we're running inside the native Capacitor app (vs. a browser)
+  function isNativeApp() {
+    try {
+      return !!(window.Capacitor && (
+        (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
+        window.Capacitor.isNative === true
+      ));
+    } catch (e) { return false; }
+  }
+
   // "Back to main website" link on the title screen — leaves the game to the site root
   function computeHomeUrl() {
     try {
@@ -5298,8 +5377,28 @@
   }
   const backToSiteEl = document.getElementById('backToSite');
   if (backToSiteEl) {
-    backToSiteEl.setAttribute('href', computeHomeUrl());
-    backToSiteEl.addEventListener('click', () => { stopMusic(); });
+    if (isNativeApp()) {
+      // In the App Store app: don't link out to the website (App Review guideline 4.2).
+      // Repurpose this link to show the in-app privacy policy instead.
+      backToSiteEl.textContent = '🔒 Privacy Policy';
+      backToSiteEl.removeAttribute('href');
+      backToSiteEl.style.cursor = 'pointer';
+      backToSiteEl.addEventListener('click', () => {
+        const ov = document.getElementById('overlayPrivacy');
+        if (ov) ov.hidden = false;
+      });
+    } else {
+      // On the website: keep the handy link back to rjlcevans.com
+      backToSiteEl.setAttribute('href', computeHomeUrl());
+      backToSiteEl.addEventListener('click', () => { stopMusic(); });
+    }
+  }
+  const btnPrivacyClose = document.getElementById('btnPrivacyClose');
+  if (btnPrivacyClose) {
+    btnPrivacyClose.addEventListener('click', () => {
+      const ov = document.getElementById('overlayPrivacy');
+      if (ov) ov.hidden = true;
+    });
   }
   document.getElementById('btnMusic').addEventListener('click', toggleMusic);
   document.getElementById('btnPause').addEventListener('click', () => {
