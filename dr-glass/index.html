@@ -277,6 +277,24 @@
     font-size: 16px; color: #2a2118; margin-bottom: 4px;
   }
   .ending-credits-line { font-size: 12px; color: #6c6055; }
+  /* How-to-play card */
+  .howto-card { max-width: 420px; }
+  .howto-title { color: #2a2118 !important; font-size: clamp(28px,7vw,42px) !important; margin-bottom: 6px !important; }
+  .howto-title em { color: #f5a623 !important; }
+  .howto-intro { color: #5a4f42 !important; font-size: 14px; line-height: 1.5; margin: 0 0 16px; font-weight: 500; }
+  .howto-list { display: flex; flex-direction: column; gap: 9px; margin: 0 0 18px; text-align: left; }
+  .howto-item {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff;
+    border: 2.5px solid #2a2118;
+    border-radius: 14px;
+    box-shadow: 2px 2px 0 #2a2118;
+    padding: 9px 14px;
+    font-size: 13px; color: #2a2118; line-height: 1.3;
+  }
+  .howto-item strong { font-weight: 700; }
+  .howto-emoji { font-size: 24px; width: 30px; text-align: center; flex-shrink: 0; }
+
   .controls-pills {
     display: flex; flex-wrap: wrap; gap: 7px; justify-content: center;
     margin: 0 0 18px;
@@ -643,20 +661,96 @@
     100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
   }
 
+  /* Achievement slide-in badge */
+  .ach-toast {
+    position: absolute;
+    top: calc(60px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 8;
+    display: flex; align-items: center; gap: 10px;
+    background: #fffdf6;
+    border: 3px solid #2a2118;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 #2a2118;
+    padding: 8px 16px 8px 10px;
+    opacity: 0;
+    pointer-events: none;
+    max-width: 80%;
+  }
+  .ach-toast.show { animation: achPop 2.6s ease-out forwards; }
+  @keyframes achPop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    8% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  }
+  .ach-icon { font-size: 26px; }
+  .ach-body { display: flex; flex-direction: column; line-height: 1.1; }
+  .ach-label {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #b8860b; font-weight: 700;
+  }
+  .ach-name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 15px; color: #2a2118; }
+
+  /* Achievements panel grid */
+  .ach-grid {
+    display: flex; flex-direction: column; gap: 8px;
+    margin: 4px 0 12px;
+    max-height: 52vh; overflow-y: auto;
+  }
+  .ach-row {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff;
+    border: 2.5px solid #2a2118;
+    border-radius: 14px;
+    box-shadow: 2px 2px 0 #2a2118;
+    padding: 9px 14px;
+    text-align: left;
+  }
+  .ach-row.locked { opacity: 0.5; background: #f0ece2; }
+  .ach-row .ar-icon { font-size: 24px; width: 30px; text-align: center; }
+  .ach-row .ar-text { flex: 1; line-height: 1.2; }
+  .ach-row .ar-name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 14px; color: #2a2118; }
+  .ach-row .ar-desc { font-size: 11px; color: #6c6055; margin-top: 1px; }
+  .ach-row .ar-check { font-size: 16px; color: #1a7a3a; }
+  .ach-row.locked .ar-check { color: #b8aa90; }
+
   .music-btn {
-    position: absolute; bottom: 12px; left: 16px;
+    position: absolute;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
     z-index: 5;
     appearance: none;
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     border-radius: 50%;
     background: rgba(0,0,0,0.45);
     border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .music-btn:hover { background: rgba(0,0,0,0.6); }
+
+  /* On-screen pause button (bottom-right during play, above the Title link) */
+  .pause-btn {
+    position: absolute;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    z-index: 6;
+    appearance: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.2);
     color: white;
     font-size: 16px;
     cursor: pointer;
     display: grid; place-items: center;
   }
-  .music-btn:hover { background: rgba(0,0,0,0.6); }
+  .pause-btn:hover { background: rgba(0,0,0,0.6); }
+  .pause-btn:active { transform: scale(0.92); }
 
   [hidden] { display: none !important; }
 </style>
@@ -710,7 +804,26 @@
         <button class="btn btn-play" id="btnStart">▶ Start playing</button>
         <button class="btn ghost" id="btnLevelSelect">🗺️ Choose level</button>
         <button class="btn ghost" id="btnShop">👓 Glasses shop</button>
+        <button class="btn ghost" id="btnAchievements">🏆 Achievements</button>
+        <a class="back-to-site" id="howToLink" style="cursor:pointer;">❔ How to play</a>
         <a class="back-to-site" id="backToSite" href="../">← Back to rjlcevans.com</a>
+      </div>
+    </div>
+
+    <!-- First-launch how-to-play card -->
+    <div class="overlay overlay-start-themed" id="overlayHowTo" hidden>
+      <div class="overlay-card start-card howto-card">
+        <h2 class="start-title howto-title">How to <em>Play</em></h2>
+        <p class="howto-intro">Dr. Glass runs forward on his own — you just handle the jumps!</p>
+        <div class="howto-list">
+          <div class="howto-item"><span class="howto-emoji">👆</span><div><strong>Tap</strong> anywhere to jump.</div></div>
+          <div class="howto-item"><span class="howto-emoji">✌️</span><div><strong>Tap again</strong> in the air for a double jump.</div></div>
+          <div class="howto-item"><span class="howto-emoji">👟</span><div><strong>Land on enemies</strong> to stomp them.</div></div>
+          <div class="howto-item"><span class="howto-emoji">🧱</span><div><strong>Hit a wall</strong> to vault off it backward.</div></div>
+          <div class="howto-item"><span class="howto-emoji">💨</span><div><strong>Dodge</strong> the air puffs — jump over or duck under.</div></div>
+          <div class="howto-item"><span class="howto-emoji">👁️</span><div><strong>Grab coins</strong> to buy fancy glasses in the shop.</div></div>
+        </div>
+        <button class="btn btn-play" id="btnHowToGo">▶ Let's go!</button>
       </div>
     </div>
 
@@ -753,6 +866,16 @@
       </div>
     </div>
 
+    <!-- Achievements panel -->
+    <div class="overlay overlay-start-themed" id="overlayAchievements" hidden>
+      <div class="overlay-card overlay-levelmap shop-card-wrap">
+        <h2 class="start-title shop-title">Achieve<em>ments</em></h2>
+        <p class="shop-blurb">Milestones on the way to 20/20.</p>
+        <div class="ach-grid" id="achGrid"></div>
+        <button class="btn ghost shop-back-btn" id="btnAchBack">← Back</button>
+      </div>
+    </div>
+
     <!-- Ending / credits screen (after beating the boss) -->
     <div class="overlay overlay-start-themed" id="overlayEnding" hidden>
       <div class="overlay-card start-card ending-card">
@@ -776,13 +899,22 @@
       <div class="overlay-card">
         <h2>Paused</h2>
         <button class="btn" id="btnResume">Resume</button>
+        <button class="btn ghost" id="btnPauseMute">🔊 Sound: On</button>
         <button class="btn ghost" id="btnQuit">End game</button>
       </div>
     </div>
 
-    <button class="music-btn" id="btnMusic" title="Toggle music">🔊</button>
-    <button class="home-link" id="homeLink" title="Back to title">← Title</button>
+    <button class="music-btn" id="btnMusic" title="Toggle music" hidden>🔊</button>
+    <button class="pause-btn" id="btnPause" title="Pause" hidden>⏸</button>
+    <button class="home-link" id="homeLink" title="Back to title" hidden>← Title</button>
     <div class="save-indicator" id="saveIndicator">Progress saved ✓</div>
+    <div class="ach-toast" id="achToast">
+      <span class="ach-icon">🏆</span>
+      <span class="ach-body">
+        <span class="ach-label">Achievement!</span>
+        <span class="ach-name">Name</span>
+      </span>
+    </div>
   </div>
 </div>
 
@@ -897,7 +1029,7 @@
     '..................................................CCC..........................................................CCC..........CCC...........CCC..........CCC..............................................',
     '.........QQ......................................CCC.........................................CCCC...........CCC..........CCC...........CCC..........CCC.................................................',
     '.....................................CCC......CCC........................................................CCC..........CCC...........CCC..........CCC....................................................',
-    '...........CCC.....CCC.......................CCC................CCC...CCC...CCC.......CCCC..............................................................................................................',
+    '..............CCC..CCC.......................CCC................CCC...CCC...CCC.......CCCC..............................................................................................................',
     '........................................................CCC..................................................QQ.................................................CCC.........................CCC.........',
     '........................................................................................................................................................................................................',
     '..................................................................................................................................................................................X.....................',
@@ -932,9 +1064,9 @@
     '.............................................................................................BBBB.........................................................................................................',
     '.......QQ.................BBBB................BBBB................BBBB....................................QQ...............................................................................BBB...BBB......',
     '......................................................................................BBBB......................BBBB..........BBBB..........BBBB..........................................................',
-    '..................F...............................F...........................BBB......................................F................F...............F.................................................',
-    '.................FF.............................FFF...................................................................FF...............FF...............FF................................................',
-    '................FF...............................FF..................................................................FF................FF...............FF...........................X....................',
+    '..............................................................................BBB.........................................................................................................................',
+    '..........................................................................................................................................................................................................',
+    '..................F.............................F....................................................................................................................................X....................',
     'BBBBBBBBBBBBBBBBBBBBBBBBBBBB......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB..BBBBBBBBBBBBBBBBBBBBBB......BBBBBBBBBBBB......BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     'DDDDDDDDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD..DDDDDDDDDDDDDDDDDDDDDD......DDDDDDDDDDDD......DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
   ];
@@ -1057,26 +1189,26 @@
   ];
 
   // ----- LEVEL 8: Dr. Aberration's Lair (boss arena, non-scrolling) -----
-  // Fixed 18-tile-wide arena. Walls on both sides. Player bounces off walls.
-  // Boss enemy spawned via a special enemy type 'aberration'.
+  // Fixed 16-tile-wide arena (narrowed so both side walls stay on-screen on phones).
+  // Walls on both sides. Player bounces off walls. Boss spawned via 'aberration'.
   const LEVEL_8_TILES = [
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'B................B',
-    'BMMMMMMMMMMMMMMMMB',
-    'BBBBBBBBBBBBBBBBBB',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'B..............B',
+    'BMMMMMMMMMMMMMMB',
+    'BBBBBBBBBBBBBBBB',
   ];
   const LEVEL_8_COINS = [];  // no coins in the boss arena
   const LEVEL_8_ENEMIES = [
-    { type: 'aberration', col: 9, min: 2, max: 16 },  // boss spawn
+    { type: 'aberration', col: 8, min: 2, max: 13 },  // boss spawn (centered in 16-wide arena)
   ];
 
   // Level definitions — pulled together
@@ -1216,7 +1348,7 @@
     if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
   }
   function tone(freq, dur, type = 'sine', vol = 0.18) {
-    if (!audioCtx) return;
+    if (!audioCtx || !musicEnabled) return;
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -1228,6 +1360,24 @@
       osc.connect(gain).connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+  }
+  // A tone that glides from one frequency to another (for swoops, springs, powerups)
+  function slide(f0, f1, dur, type = 'square', vol = 0.16) {
+    if (!audioCtx || !musicEnabled) return;
+    try {
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(f0, t0);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur);
+      gain.gain.value = 0.0001;
+      gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(t0 + dur);
     } catch(e) {}
   }
   // ----- Native haptics (Capacitor) — gracefully no-ops in a plain browser -----
@@ -1249,19 +1399,47 @@
   }
 
   const sfx = {
-    jump: () => { haptic('light'); tone(523, 0.06, 'square', 0.12); setTimeout(()=>tone(784, 0.08, 'square', 0.1), 50); },
-    coin: () => { tone(988, 0.06, 'square', 0.15); setTimeout(()=>tone(1319, 0.1, 'square', 0.13), 50); },
-    stomp: () => { haptic('medium'); tone(220, 0.06, 'square', 0.18); setTimeout(()=>tone(165, 0.1, 'square', 0.15), 50); },
-    wallVault: () => { haptic('light'); tone(330, 0.05, 'square', 0.12); setTimeout(()=>tone(440, 0.08, 'square', 0.1), 40); },
+    // Springy "boing" up for a jump
+    jump: () => { haptic('light'); slide(420, 720, 0.13, 'square', 0.13); },
+    // Bright two-note "ka-ching" with a sparkle on top
+    coin: () => {
+      tone(988, 0.05, 'square', 0.14);
+      setTimeout(()=>tone(1319, 0.09, 'square', 0.13), 45);
+      setTimeout(()=>tone(1760, 0.06, 'sine', 0.08), 90);
+    },
+    // Satisfying squish — descending thud
+    stomp: () => { haptic('medium'); slide(300, 120, 0.14, 'square', 0.18); tone(90, 0.1, 'sine', 0.12); },
+    // Whoosh up off a wall
+    wallVault: () => { haptic('light'); slide(300, 560, 0.12, 'triangle', 0.12); },
+    // Power-up: rising magic arpeggio
+    powerup: () => {
+      haptic('medium');
+      [523, 659, 784, 988, 1319].forEach((f,i)=>setTimeout(()=>tone(f,0.1,'square',0.14), i*55));
+    },
+    // Tonometer puff dodge isn't a sound; the puff fired uses a soft hiss
+    puff: () => { slide(900, 500, 0.18, 'sine', 0.05); },
+    // Boss hit — heavy double thud
+    bossHit: () => { haptic('heavy'); tone(140, 0.12, 'sawtooth', 0.2); setTimeout(()=>tone(90, 0.18, 'sawtooth', 0.2), 90); },
+    // Door opening — gentle wooden creak-and-chime
+    door: () => { slide(180, 120, 0.2, 'triangle', 0.12); setTimeout(()=>tone(660, 0.12, 'sine', 0.1), 120); },
+    // Hurt / death — descending sad slide
     crash: () => {
       haptic('error');
-      tone(330, 0.1, 'sawtooth', 0.18);
-      setTimeout(()=>tone(220, 0.15, 'sawtooth', 0.18), 100);
-      setTimeout(()=>tone(110, 0.25, 'sawtooth', 0.18), 250);
+      slide(440, 110, 0.45, 'sawtooth', 0.18);
+      setTimeout(()=>tone(98, 0.2, 'square', 0.12), 250);
     },
+    // Level complete — triumphant rising fanfare
     win: () => {
       haptic('success');
-      [523, 659, 784, 1047].forEach((f, i) => setTimeout(()=>tone(f, 0.15, 'square', 0.16), i * 120));
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((f, i) => setTimeout(()=>tone(f, 0.16, 'square', 0.16), i * 110));
+      setTimeout(()=>{ tone(1047,0.25,'square',0.14); tone(1319,0.25,'sine',0.1); }, notes.length*110);
+    },
+    // Title-screen flourish — a short cheerful 8-bit hook
+    title: () => {
+      const hook = [[659,0.12],[784,0.12],[988,0.12],[784,0.12],[1047,0.22]];
+      let t = 0;
+      hook.forEach(([f,d])=>{ setTimeout(()=>tone(f, d, 'square', 0.13), t*1000); t += d; });
     },
   };
 
@@ -1410,19 +1588,25 @@
       startMusic();
     }
   }
+  function syncMusicButtons() {
+    const b = document.getElementById('btnMusic');
+    if (b) b.textContent = musicEnabled ? '🔊' : '🔇';
+    const pm = document.getElementById('btnPauseMute');
+    if (pm) pm.textContent = musicEnabled ? '🔊 Sound: On' : '🔇 Sound: Off';
+  }
   function toggleMusic() {
     musicEnabled = !musicEnabled;
     try { localStorage.setItem('evans_mr_glass_music', musicEnabled ? '1' : '0'); } catch(e){}
-    document.getElementById('btnMusic').textContent = musicEnabled ? '🔊' : '🔇';
+    syncMusicButtons();
     if (musicEnabled && game && game.running) startMusic();
     else stopMusic();
   }
   try {
     if (localStorage.getItem('evans_mr_glass_music') === '0') {
       musicEnabled = false;
-      document.getElementById('btnMusic').textContent = '🔇';
     }
   } catch(e){}
+  syncMusicButtons();
 
   // ============================================================
   // LEVEL HELPERS
@@ -1459,6 +1643,9 @@
       gameOver: false,
       won: false,
       dying: false,
+      enteringDoor: false,
+      doorPhase: null,
+      doorCol: undefined,
 
       levelIndex: levelIndex,
       levelConfig: cfg,
@@ -1495,6 +1682,7 @@
         airStomps: 0,          // consecutive stomps without touching ground (combo)
         stunned: 0,            // stun-spin animation timer
         victory: 0,            // victory-hop animation timer
+        doorEnter: 0,          // 0..1 progress stepping into the exit door
       },
 
       lives: 3,
@@ -1653,7 +1841,7 @@
   // ============================================================
   let inputDown = false;
   function onPress(e) {
-    if (e && e.target && (e.target.closest('.btn') || e.target.closest('.overlay') || e.target.closest('.home-link') || e.target.closest('.music-btn'))) return;
+    if (e && e.target && (e.target.closest('.btn') || e.target.closest('.overlay') || e.target.closest('.home-link') || e.target.closest('.music-btn') || e.target.closest('.pause-btn'))) return;
     if (e) e.preventDefault();
     // If the story intro is showing, the first tap begins play (doesn't jump)
     if (game && game.introPaused) { beginLevelPlay(); return; }
@@ -1724,6 +1912,16 @@
   // ============================================================
   function update(dt) {
     if (!game || !game.running || game.paused) return;
+
+    // Door-entry sequence: drive only the entry animation, skip normal gameplay updates
+    if (game.enteringDoor) {
+      updateDoorEntry(dt);
+      // keep particles/floats animating for polish
+      updateFloatTexts(dt);
+      updateParticles(dt);
+      return;
+    }
+
     game.elapsed += dt;
     game.levelTime += dt;
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 60);
@@ -1739,11 +1937,11 @@
     updateGimmick(dt);
 
     // Camera follows player; lock left edge to 0
-    // Exception: boss-arena gimmick keeps camera centered on the arena (no scrolling)
+    // Exception: boss-arena gimmick keeps a fixed camera. The draw() routine applies
+    // a fit-to-width transform so both walls are always visible, so the camera is 0
+    // and the arena is rendered in absolute world coordinates.
     if (game.levelConfig.gimmick === 'boss-arena') {
-      // Center the fixed arena horizontally on screen
-      const arenaWidth = game.levelW * TILE;
-      game.cameraX = (arenaWidth - cssW) / 2;
+      game.cameraX = 0;
     } else {
       const targetCamX = game.player.x - cssW * 0.35;
       game.cameraX = Math.max(0, Math.min(game.levelW * TILE - cssW, targetCamX));
@@ -1955,20 +2153,22 @@
       // If we just walked off a ledge (was on ground last frame, not now), start coyote timer
       if (wasOnGround) p.coyoteTime = 0.12;
     }
-    p.y = vRes.landed ? vRes.y : newY;
+    // Apply the resolved Y for BOTH landing and head-bumps. Previously a head-bump
+    // left the player at the un-resolved newY (inside the brick), which caused a
+    // jitter/bounce loop when launched into a ceiling by a spring.
+    p.y = (vRes.landed || vRes.bumpedHead) ? vRes.y : newY;
 
     // Animation frame for run cycle
     if (p.onGround) p.runFrame += dt * 12;
 
-    // Check goal — win if player is in the door's column at any height (so jumping over still wins)
+    // Check goal — when Dr. Glass reaches the door column, walk into the door and enter it
     const playerCenterCol = Math.floor((p.x + p.w * 0.5) / TILE);
-    let inGoalColumn = false;
+    let goalCol = -1, goalRow = -1;
     for (let r = 0; r < game.levelH; r++) {
-      const ch = tileAt(game.level, playerCenterCol, r);
-      if (isGoal(ch)) { inGoalColumn = true; break; }
+      if (isGoal(tileAt(game.level, playerCenterCol, r))) { goalCol = playerCenterCol; goalRow = r; break; }
     }
-    if (inGoalColumn) {
-      winLevel();
+    if (goalCol >= 0 && !game.enteringDoor && !game.won) {
+      startDoorEntry(goalCol, goalRow);
       return;
     }
 
@@ -2147,7 +2347,7 @@
         game.score += 200;
         spawnFloatText(pu.x, pu.y - TILE * 0.5, 'SUPER GLASS!', '#a8e6ff');
         spawnParticles(pu.x, pu.y, '#a8e6ff', 20);
-        sfx.win();
+        sfx.powerup();
       }
     }
     game.powerups = game.powerups.filter(pu => !pu.collected);
@@ -2209,6 +2409,7 @@
           x: spawnX, y: y, vx: -speed,
           r: TILE * 0.42, phase: Math.random() * Math.PI * 2, life: 6,
         });
+        sfx.puff && sfx.puff();   // soft hiss as the tonometer fires
       }
     } else if (game.puffTimer <= 0) {
       // Not in a zone — reset a short timer so puffs resume promptly on entering one
@@ -2572,7 +2773,7 @@
         p.vy = STOMP_BOUNCE * 1.2;  // extra-bouncy bonk
         game.score += 500;
         game.stomps++;
-        sfx.stomp();
+        sfx.bossHit();   // heavy thud distinct from a normal stomp
         addShake(10);  // solid thump on every boss hit
         spawnParticles(en.x + en.w/2, en.y, '#ffffff', 20);
         spawnFloatText(en.x + en.w/2, en.y, en.hp > 0 ? `HIT! ${en.hp} left` : 'DOWN!', '#fcd444');
@@ -2751,6 +2952,40 @@
     hudLives.textContent = '❤︎'.repeat(Math.max(0, game.lives)) + '·'.repeat(Math.max(0, 3 - game.lives));
   }
 
+  // Show/hide the in-game controls (pause, music, title link) together with play
+  function setGameControlsVisible(show) {
+    ['btnPause', 'btnMusic', 'homeLink'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = !show;
+    });
+  }
+
+  // Slide-in achievement badge
+  let _achQueue = [];
+  let _achShowing = false;
+  function showAchievementToast(def) {
+    _achQueue.push(def);
+    if (!_achShowing) nextAchievementToast();
+  }
+  function nextAchievementToast() {
+    if (_achQueue.length === 0) { _achShowing = false; return; }
+    _achShowing = true;
+    const def = _achQueue.shift();
+    const el = document.getElementById('achToast');
+    if (!el) { _achShowing = false; return; }
+    el.querySelector('.ach-icon').textContent = def.icon;
+    el.querySelector('.ach-name').textContent = def.name;
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    if (sfx && sfx.win) { try { sfx.coin(); } catch(e){} }
+    clearTimeout(el._t);
+    el._t = setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(nextAchievementToast, 350);
+    }, 2600);
+  }
+
   function showToast(text) {
     toastText.textContent = text;
     toast.classList.remove('show');
@@ -2790,8 +3025,33 @@
     ctx.save();
     ctx.translate(shakeX, shakeY);
 
-    // Theme-specific background
+    // Theme-specific background (always fills the full screen, never scaled)
     drawThemedBackground();
+
+    // Boss arena: scale the whole arena UNIFORMLY (both axes) to fit the screen,
+    // then center it as a block. This guarantees both side walls are visible and
+    // nothing looks stretched, on any screen including narrow portrait phones.
+    let bossFit = false;
+    if (game.levelConfig.gimmick === 'boss-arena') {
+      const arenaW = game.levelW * TILE;
+      const arenaH = game.levelH * TILE;
+      const margin = 16;
+      // Scale so the full arena WIDTH fits within the screen with a margin on each
+      // side. Cap at 1 (never enlarge) and also ensure it fits vertically.
+      const scaleX = (cssW - margin * 2) / arenaW;
+      const scaleY = (cssH - margin * 2) / arenaH;
+      const scale = Math.min(1, scaleX, scaleY);
+      const drawnW = arenaW * scale;
+      const drawnH = arenaH * scale;
+      // Center the arena block both horizontally AND vertically on screen
+      const offsetX = (cssW - drawnW) / 2;
+      const offsetY = (cssH - drawnH) / 2;
+      bossFit = true;
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+    }
+
     drawLevelTiles();
     drawPlatforms();
     drawFogPatches();
@@ -2802,6 +3062,8 @@
     drawPlayer();
     drawParticles();
     drawFloatTexts();
+
+    if (bossFit) ctx.restore();   // undo the arena fit transform
 
     // Flicker gimmick — vignette closes in periodically
     if (game.levelConfig.gimmick === 'flicker') {
@@ -3154,8 +3416,12 @@
   }
 
   function drawLevelTiles() {
-    const startCol = Math.max(0, Math.floor(game.cameraX / TILE) - 1);
-    const endCol = Math.min(game.levelW, Math.ceil((game.cameraX + cssW) / TILE) + 1);
+    // In the boss arena the whole level is scaled to fit the screen, so the normal
+    // cssW-based column culling (which assumes 1:1 pixels) would wrongly clip the
+    // right side. Draw every column there instead.
+    const bossArena = game.levelConfig.gimmick === 'boss-arena';
+    const startCol = bossArena ? 0 : Math.max(0, Math.floor(game.cameraX / TILE) - 1);
+    const endCol = bossArena ? game.levelW : Math.min(game.levelW, Math.ceil((game.cameraX + cssW) / TILE) + 1);
     for (let r = 0; r < game.levelH; r++) {
       for (let c = startCol; c < endCol; c++) {
         const ch = tileAt(game.level, c, r);
@@ -3232,19 +3498,34 @@
       ctx.fillStyle = 'rgba(255,255,255,0.2)';
       ctx.fillRect(x, y, 2, TILE);
     } else if (ch === 'X') {
-      // Goal door — wooden, with "Exam Room" plaque
-      ctx.fillStyle = '#8a5a3a';
-      ctx.fillRect(x - 4, y - TILE, TILE + 8, TILE * 2);
+      // Goal door — wooden, with "EXIT" plaque. Opens during the entry sequence.
+      const entering = game.enteringDoor && game.doorCol !== undefined &&
+                       Math.floor((x + game.cameraX) / TILE) === game.doorCol;
+      const openAmt = entering ? Math.min(1, (game.player.doorEnter || 0) + (game.doorPhase === 'enter' ? 0.4 : 0)) : 0;
+      // Door frame
       ctx.fillStyle = '#5a3a22';
-      ctx.fillRect(x - 4, y - TILE, TILE + 8, 4);
-      // Door panels
-      ctx.fillStyle = '#6e4828';
-      ctx.fillRect(x + 4, y - TILE + 8, TILE - 8, TILE - 16);
-      // Doorknob
-      ctx.fillStyle = '#fcd444';
-      ctx.beginPath();
-      ctx.arc(x + TILE - 8, y, 3, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(x - 4, y - TILE, TILE + 8, TILE * 2);
+      // Dark interior (revealed as the door swings open)
+      ctx.fillStyle = '#1a120a';
+      ctx.fillRect(x - 2, y - TILE + 2, TILE + 4, TILE * 2 - 4);
+      // The door panel itself — shrinks toward the hinge (left) as it opens
+      const doorW = (TILE + 8) * (1 - openAmt * 0.85);
+      ctx.fillStyle = '#8a5a3a';
+      ctx.fillRect(x - 4, y - TILE, Math.max(2, doorW), TILE * 2);
+      ctx.fillStyle = '#5a3a22';
+      ctx.fillRect(x - 4, y - TILE, Math.max(2, doorW), 4);
+      // Door panel detail (only while mostly closed)
+      if (openAmt < 0.5) {
+        ctx.fillStyle = '#6e4828';
+        ctx.fillRect(x + 4, y - TILE + 8, (TILE - 8) * (1 - openAmt * 1.6), TILE - 16);
+      }
+      // Doorknob (rides with the door edge)
+      if (openAmt < 0.6) {
+        ctx.fillStyle = '#fcd444';
+        ctx.beginPath();
+        ctx.arc(x - 4 + Math.max(2, doorW) - 6, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
       // Plaque
       ctx.fillStyle = '#fdf6e3';
       ctx.fillRect(x + 4, y - TILE - 16, TILE - 8, 12);
@@ -3944,6 +4225,15 @@
     ctx.save();
     ctx.translate(sx + p.w/2, sy + bob);
 
+    // Door entry: shrink and fade into the doorway
+    if (p.doorEnter > 0) {
+      const t = p.doorEnter;          // 0..1
+      const s = 1 - t * 0.7;          // shrink toward the door
+      ctx.globalAlpha = 1 - t;        // fade out
+      ctx.scale(s, s);
+      ctx.translate(0, t * p.h * 0.3); // sink slightly as he steps through
+    }
+
     // Stunned: spin around when hit
     if (p.stunned > 0) {
       const spin = (1.2 - p.stunned) * Math.PI * 4;  // a couple of full rotations
@@ -4361,7 +4651,57 @@
       coinBank: 0,           // total coins banked across runs (spendable)
       ownedGlasses: ['classic'],   // owned cosmetic styles
       equippedGlasses: 'classic',
+      achievements: {},      // id -> true once unlocked
+      seenHowTo: false,      // first-launch how-to-play card shown
     };
+  }
+
+  // ---- Achievements ----
+  const ACHIEVEMENTS = [
+    { id: 'first_level',  icon: '🏆', name: 'First Day on the Job', desc: 'Complete your first level.' },
+    { id: 'no_death',     icon: '🛡️', name: 'Flawless Exam',        desc: 'Finish a level without dying.' },
+    { id: 'three_star',   icon: '⭐', name: 'Perfect Vision',       desc: 'Earn 3 stars on any level.' },
+    { id: 'coin_100',     icon: '👁️', name: 'Coin Collector',       desc: 'Bank 100 coins.' },
+    { id: 'coin_500',     icon: '💰', name: 'Big Spender',          desc: 'Bank 500 coins total.' },
+    { id: 'shopaholic',   icon: '👓', name: 'Frame Fanatic',        desc: 'Own 5 different glasses.' },
+    { id: 'all_glasses',  icon: '🕶️', name: 'Style Icon',           desc: 'Collect every pair of glasses.' },
+    { id: 'beat_boss',    icon: '🩺', name: '20/20 Vision',          desc: 'Defeat Dr. Aberration.' },
+    { id: 'all_levels',   icon: '🗺️', name: 'House Call Hero',       desc: 'Complete every level.' },
+    { id: 'all_stars',    icon: '🌟', name: 'Master Optometrist',    desc: 'Earn all 3 stars on every level.' },
+  ];
+
+  function unlockAchievement(id) {
+    const p = loadProgress();
+    if (!p.achievements) p.achievements = {};
+    if (p.achievements[id]) return;             // already unlocked
+    const def = ACHIEVEMENTS.find(a => a.id === id);
+    if (!def) return;
+    p.achievements[id] = true;
+    saveProgress(p);
+    showAchievementToast(def);
+  }
+
+  // Evaluate which achievements are newly earned. Pass optional context from a win.
+  function checkAchievements(ctx) {
+    const p = loadProgress();
+    const a = p.achievements || {};
+    const owned = p.ownedGlasses || ['classic'];
+    if (ctx) {
+      if (ctx.completedLevel && !a.first_level) unlockAchievement('first_level');
+      if (ctx.noDeath && !a.no_death) unlockAchievement('no_death');
+      if (ctx.stars >= 3 && !a.three_star) unlockAchievement('three_star');
+      if (ctx.beatBoss && !a.beat_boss) unlockAchievement('beat_boss');
+    }
+    if ((p.coinBank || 0) >= 100 && !a.coin_100) unlockAchievement('coin_100');
+    if ((p.coinBank || 0) >= 500 && !a.coin_500) unlockAchievement('coin_500');
+    if (owned.length >= 5 && !a.shopaholic) unlockAchievement('shopaholic');
+    if (owned.length >= GLASSES_SHOP.length && !a.all_glasses) unlockAchievement('all_glasses');
+    // All levels complete = highestUnlocked reached the end
+    if ((p.highestUnlocked || 0) >= LEVELS.length && !a.all_levels) unlockAchievement('all_levels');
+    // All stars: every level has 3
+    let allThree = true;
+    for (let i = 0; i < LEVELS.length; i++) { if (((p.stars && p.stars[i]) || 0) < 3) { allThree = false; break; } }
+    if (allThree && !a.all_stars) unlockAchievement('all_stars');
   }
 
   function saveProgress(p) {
@@ -4459,6 +4799,7 @@
     overlayEnd.hidden = true;
     overlayPause.hidden = true;
     hud.hidden = false;
+    setGameControlsVisible(true);
     showLevelIntro(levelIndex);
     document.getElementById('hudCoins').textContent = '0';
     // Update level indicator in HUD
@@ -4584,7 +4925,58 @@
     document.getElementById('btnRestart').textContent = 'Retry level';
     document.getElementById('btnRestart').dataset.action = 'retry';
     overlayEnd.hidden = false;
-    hud.hidden = true;
+    hud.hidden = true; setGameControlsVisible(false);
+  }
+
+  // Dr. Glass walks to the door, it opens, and he steps inside before the win screen.
+  function startDoorEntry(goalCol, goalRow) {
+    if (game.enteringDoor || game.won) return;
+    game.enteringDoor = true;
+    game.doorPhase = 'walk';        // walk -> enter -> done
+    game.doorTimer = 0;
+    // The door's center x (world), and the floor y the door stands on
+    game.doorTargetX = goalCol * TILE + TILE / 2;
+    game.doorCol = goalCol;
+    game.doorRow = goalRow;
+    // Stop auto-run input; we'll drive him manually toward the door
+    game.player.vx = 0;
+    game.player.canExtendJump = false;
+  }
+
+  function updateDoorEntry(dt) {
+    const p = game.player;
+    game.doorTimer += dt;
+    if (game.doorPhase === 'walk') {
+      // The y where his feet rest on the door's floor
+      const doorFloorY = (game.doorRow + 1) * TILE - p.h;
+      const targetX = game.doorTargetX - p.w / 2;
+      const dx = targetX - p.x;
+      const dy = doorFloorY - p.y;
+      const stepX = 150 * dt;       // gentle walk speed
+      const stepY = 360 * dt;       // glide down to the door floor if he finished up high
+      // Move toward the door horizontally
+      if (Math.abs(dx) <= stepX) p.x = targetX; else { p.x += Math.sign(dx) * stepX; p.runFrame += dt * 10; p.facing = Math.sign(dx); }
+      // Ease him down (or up) onto the door's floor level
+      if (Math.abs(dy) <= stepY) p.y = doorFloorY; else p.y += Math.sign(dy) * stepY;
+      p.vy = 0; p.onGround = true;
+      // Once centered on the door and standing on its floor, step inside
+      if (p.x === targetX && p.y === doorFloorY) {
+        p.runFrame = 0;
+        game.doorPhase = 'enter';
+        game.doorTimer = 0;
+        sfx.door && sfx.door();   // creak + chime as the door swings open
+      }
+    } else if (game.doorPhase === 'enter') {
+      // Door "opens" and he steps in — fade + shrink into the doorway over ~0.7s
+      const t = Math.min(1, game.doorTimer / 0.7);
+      game.player.doorEnter = t;     // 0..1, used by the renderer to fade/shrink him
+      if (t >= 1) {
+        game.doorPhase = 'done';
+        game.enteringDoor = false;
+        game.player.doorEnter = 0;
+        winLevel();
+      }
+    }
   }
 
   function winLevel() {
@@ -4623,6 +5015,14 @@
     if (prevTime === undefined || myTime < prevTime) progress.bestTimes[completedIdx] = myTime;
 
     saveProgress(progress);
+
+    // Evaluate achievements for this completion
+    checkAchievements({
+      completedLevel: true,
+      noDeath: game.deaths === 0,
+      stars: stars,
+      beatBoss: isFinalLevel,
+    });
 
     // Stash for the win screen display
     game._earnedStars = stars;
@@ -4701,7 +5101,7 @@
         document.getElementById('btnRestart').dataset.nextLevel = nextIdx;
       }
       overlayEnd.hidden = false;
-      hud.hidden = true;
+      hud.hidden = true; setGameControlsVisible(false);
       game.victoryFreeze = false;
     }, 1400);
   }
@@ -4720,7 +5120,7 @@
       <div class="ending-stat"><div class="es-val">${coins}</div><div class="es-label">Coins</div></div>
       <div class="ending-stat"><div class="es-val">${progress.totalScore || 0}</div><div class="es-label">Score</div></div>
     `;
-    hud.hidden = true;
+    hud.hidden = true; setGameControlsVisible(false);
     overlayEnd.hidden = true;
     document.getElementById('overlayEnding').hidden = false;
     // Big celebratory particle burst is already going; play the win sting again
@@ -4748,7 +5148,7 @@
     stopMusic();
     overlayPause.hidden = true;
     overlayStart.hidden = false;
-    hud.hidden = true;
+    hud.hidden = true; setGameControlsVisible(false);
     if (typeof updateStartButton === 'function') updateStartButton();
   }
 
@@ -4789,10 +5189,41 @@
 
   // Buttons
   document.getElementById('btnStart').addEventListener('click', () => {
-    // Start at the highest unlocked level
     const progress = loadProgress();
+    // First-ever launch: show the how-to card before starting
+    if (!progress.seenHowTo) {
+      window._howToFromTitle = false;
+      document.getElementById('btnHowToGo').textContent = '▶ Let\u2019s go!';
+      overlayStart.hidden = true;
+      document.getElementById('overlayHowTo').hidden = false;
+      return;
+    }
     startGame(progress.highestUnlocked || 0);
   });
+  // "Let's go!" on the how-to card — mark it seen, then start (or return to title)
+  document.getElementById('btnHowToGo').addEventListener('click', () => {
+    const progress = loadProgress();
+    progress.seenHowTo = true;
+    saveProgress(progress);
+    document.getElementById('overlayHowTo').hidden = true;
+    if (window._howToFromTitle) {
+      // Opened from the title link — just go back to the title screen
+      window._howToFromTitle = false;
+      overlayStart.hidden = false;
+    } else {
+      startGame(progress.highestUnlocked || 0);
+    }
+  });
+  // "How to play" link on the title — reopen the card for reference
+  const howToLink = document.getElementById('howToLink');
+  if (howToLink) {
+    howToLink.addEventListener('click', () => {
+      window._howToFromTitle = true;
+      document.getElementById('btnHowToGo').textContent = '← Back';
+      overlayStart.hidden = true;
+      document.getElementById('overlayHowTo').hidden = false;
+    });
+  }
   document.getElementById('btnRestart').addEventListener('click', () => {
     const action = document.getElementById('btnRestart').dataset.action;
     if (action === 'next-level') {
@@ -4822,10 +5253,14 @@
     overlayLevelSelect.hidden = true;
     const endingOv = document.getElementById('overlayEnding');
     if (endingOv) endingOv.hidden = true;
+    const achOv = document.getElementById('overlayAchievements');
+    if (achOv) achOv.hidden = true;
     if (typeof overlayShop !== 'undefined' && overlayShop) overlayShop.hidden = true;
     overlayStart.hidden = false;
-    hud.hidden = true;
+    hud.hidden = true; setGameControlsVisible(false);
     if (typeof updateStartButton === 'function') updateStartButton();
+    // A little flourish as the title comes up (audio is already unlocked by now)
+    setTimeout(() => { try { sfx.title(); } catch(e){} }, 250);
   }
   const btnHomeEl = document.getElementById('btnHome');
   if (btnHomeEl) {
@@ -4867,6 +5302,12 @@
     backToSiteEl.addEventListener('click', () => { stopMusic(); });
   }
   document.getElementById('btnMusic').addEventListener('click', toggleMusic);
+  document.getElementById('btnPause').addEventListener('click', () => {
+    if (!game || !game.running) return;
+    if (game.paused) resumeGame(); else pauseGame();
+  });
+  const btnPauseMute = document.getElementById('btnPauseMute');
+  if (btnPauseMute) btnPauseMute.addEventListener('click', toggleMusic);
 
   // Level select
   const overlayLevelSelect = document.getElementById('overlayLevelSelect');
@@ -4938,6 +5379,40 @@
     overlayStart.hidden = false;
   });
 
+  // ---- Achievements panel ----
+  const overlayAchievements = document.getElementById('overlayAchievements');
+  document.getElementById('btnAchievements').addEventListener('click', () => {
+    overlayStart.hidden = true;
+    overlayAchievements.hidden = false;
+    buildAchievements();
+  });
+  document.getElementById('btnAchBack').addEventListener('click', () => {
+    overlayAchievements.hidden = true;
+    overlayStart.hidden = false;
+  });
+
+  function buildAchievements() {
+    const p = loadProgress();
+    const got = p.achievements || {};
+    const host = document.getElementById('achGrid');
+    host.innerHTML = '';
+    const unlocked = ACHIEVEMENTS.filter(a => got[a.id]).length;
+    ACHIEVEMENTS.forEach(a => {
+      const has = !!got[a.id];
+      const row = document.createElement('div');
+      row.className = 'ach-row' + (has ? '' : ' locked');
+      row.innerHTML =
+        `<span class="ar-icon">${has ? a.icon : '🔒'}</span>` +
+        `<span class="ar-text"><span class="ar-name">${a.name}</span>` +
+        `<span class="ar-desc">${a.desc}</span></span>` +
+        `<span class="ar-check">${has ? '✓' : ''}</span>`;
+      host.appendChild(row);
+    });
+    // Update the blurb with progress count
+    const blurb = overlayAchievements.querySelector('.shop-blurb');
+    if (blurb) blurb.textContent = `Unlocked ${unlocked} of ${ACHIEVEMENTS.length} milestones.`;
+  }
+
   function buildShop() {
     const progress = loadProgress();
     const coinEl = document.getElementById('shopCoinCount');
@@ -4987,6 +5462,7 @@
           saveProgress(prog);
           sfx.win();
           buildShop();
+          checkAchievements();   // frame-fanatic / style-icon milestones
           // Bump the coin counter for feedback
           coinEl.classList.remove('bump');
           void coinEl.offsetWidth;  // reflow to restart animation
