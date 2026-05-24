@@ -89,7 +89,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
   .compare-line::before {
-    content: '\\2194'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    content: '↔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     z-index: 1; color: #0f1620; font-size: 18px; font-weight: 700;
   }
   .compare-tag { position: absolute; top: 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 999px; display: none; pointer-events: none; }
@@ -113,6 +113,15 @@
   .btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
   .btn-file { position: relative; overflow: hidden; }
   .btn-file input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  /* View-tool buttons (Compare, Snapshot) — set apart from source-action buttons
+     with a small leading icon. */
+  .btn .btn-ico { width: 16px; height: 16px; flex: 0 0 auto; }
+  /* Compare reads as a toggle: a pill with a switch-like outline when off,
+     filled/lit when on. */
+  .btn.toggle { border-radius: 999px; border-style: dashed; }
+  .btn.toggle[aria-pressed="true"] { border-style: solid; }
+  /* Snapshot: action pill, subtly tinted so it's distinct from plain ghost buttons */
+  .btn.tool { border-radius: 999px; }
 
   .section-title {
     font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
@@ -137,13 +146,15 @@
   .ctrl label { font-size: 12px; color: var(--ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
   .ctrl label .val { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-size: 13px; }
   input[type="range"] {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--line); border-radius: 2px; outline: none;
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--line); border-radius: 3px; outline: none;
+    padding: 14px 0; margin: 0; background-clip: content-box; touch-action: pan-y;
+    cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--line);
+    -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 4px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(0,0,0,0.4);
   }
   input[type="range"]::-moz-range-thumb {
-    width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--line);
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 4px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(0,0,0,0.4);
   }
 
   .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
@@ -163,6 +174,15 @@
   footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   footer a { color: var(--accent); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
+
+  /* Sample-image buttons: visually distinct from action buttons — pill-shaped,
+     inset, with a little preview thumbnail of the scene on the left. */
+  #sampleRow .btn[data-sample] {
+    padding: 7px 14px 7px 8px; border-radius: 999px; background: var(--panel-2);
+    border-color: var(--line); color: var(--ink-dim); font-size: 13px; gap: 9px;
+  }
+  #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
+  .sample-thumb { width: 26px; height: 20px; border-radius: 4px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
 </style>
 </head>
 <body>
@@ -198,16 +218,34 @@
     <label class="btn btn-file">Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
-    <button class="btn ghost" id="compareToggle" aria-pressed="false">Compare: Off</button>
-    <button class="btn ghost" id="snapshot">Snapshot</button>
+    <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><path d="M7 9l-2 3 2 3M17 9l2 3-2 3"/></svg>
+      <span id="compareLabel">Compare: Off</span>
+    </button>
+    <button class="btn ghost tool" id="snapshot">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      Snapshot
+    </button>
   </div>
 
   <div class="source-row" id="sampleRow">
     <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
-    <button class="btn ghost" data-sample="chart">Eye Chart</button>
-    <button class="btn ghost" data-sample="grid">Amsler Grid</button>
-    <button class="btn ghost" data-sample="street">Night Street</button>
-    <button class="btn ghost" data-sample="garden">Color Garden</button>
+    <button class="btn ghost" data-sample="chart">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
+      Eye Chart
+    </button>
+    <button class="btn ghost" data-sample="grid">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#0b0b0b"/><g stroke="#fff" stroke-width="0.5"><path d="M4 0V20M9 0V20M13 0V20M17 0V20M22 0V20M0 4H26M0 9H26M0 13H26M0 17H26"/></g><circle cx="13" cy="10" r="1.3" fill="#fff"/></svg>
+      Amsler Grid
+    </button>
+    <button class="btn ghost" data-sample="street">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#0d1422"/><circle cx="9" cy="11" r="2.5" fill="#fffdf0" opacity="0.9"/><circle cx="15" cy="11" r="2.5" fill="#fffdf0" opacity="0.9"/><circle cx="20" cy="6" r="1.5" fill="#fff0b0" opacity="0.8"/></svg>
+      Night Street
+    </button>
+    <button class="btn ghost" data-sample="garden">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#bfe3f7"/><rect y="12" width="26" height="8" fill="#6fae54"/><circle cx="6" cy="11" r="2" fill="#e0473e"/><circle cx="13" cy="12" r="2" fill="#f0d33b"/><circle cx="20" cy="11" r="2" fill="#d94f8a"/></svg>
+      Color Garden
+    </button>
   </div>
 
   <h2 class="section-title">Select Condition</h2>
@@ -291,10 +329,31 @@
   function resizeStage() {
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    stageCanvas.width = Math.max(1, Math.round(rect.width * dpr));
-    stageCanvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const newW = Math.max(1, Math.round(rect.width * dpr));
+    const newH = Math.max(1, Math.round(rect.height * dpr));
+    // Only resize the backing store if it actually changed — resizing clears the
+    // canvas to transparent/black, so we avoid needless clears (and redraw after).
+    if (newW !== stageCanvas.width || newH !== stageCanvas.height) {
+      stageCanvas.width = newW;
+      stageCanvas.height = newH;
+      // For a still image there's no animation loop to repaint, so redraw now.
+      if (currentSource === 'image' && !rafId) render();
+    }
   }
   window.addEventListener('resize', resizeStage);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeStage);
+  // While the stage is sticky-pinned during scroll, browsers can blank the canvas.
+  // Repaint a still image as the user scrolls (throttled via rAF). The camera path
+  // already repaints every frame, so this only matters for images.
+  let _scrollRaf = null;
+  window.addEventListener('scroll', () => {
+    if (currentSource !== 'image' || rafId) return;
+    if (_scrollRaf) return;
+    _scrollRaf = requestAnimationFrame(() => {
+      _scrollRaf = null;
+      render();
+    });
+  }, { passive: true });
 
   async function startCamera() {
     try {
@@ -983,7 +1042,8 @@
   compareBtn.addEventListener('click', () => {
     compareMode = !compareMode;
     compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
-    compareBtn.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
+    const lbl = document.getElementById('compareLabel');
+    if (lbl) lbl.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
     document.body.classList.toggle('compare', compareMode);
     positionDivider();
     if (currentSource === 'image') drawOnce();
