@@ -81,8 +81,17 @@
   #video, #sourceCanvas { display: none; }
   #stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
   .overlay { position: absolute; inset: 0; pointer-events: none; }
-  /* Divider line + labels shown when compare mode is on */
-  .compare-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.7); left: 50%; display: none; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,0.6); }
+  /* Divider line + labels shown when compare mode is on. Draggable. */
+  .compare-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.85); left: 50%; display: none; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,0.6); z-index: 6; }
+  .compare-line::after {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .compare-line::before {
+    content: '\\2194'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 1; color: #0f1620; font-size: 18px; font-weight: 700;
+  }
   .compare-tag { position: absolute; top: 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 999px; display: none; pointer-events: none; }
   .compare-tag.left { left: 10px; }
   .compare-tag.right { right: 10px; }
@@ -193,6 +202,14 @@
     <button class="btn ghost" id="snapshot">Snapshot</button>
   </div>
 
+  <div class="source-row" id="sampleRow">
+    <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
+    <button class="btn ghost" data-sample="chart">Eye Chart</button>
+    <button class="btn ghost" data-sample="grid">Amsler Grid</button>
+    <button class="btn ghost" data-sample="street">Night Street</button>
+    <button class="btn ghost" data-sample="garden">Color Garden</button>
+  </div>
+
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions" id="conditions">
     <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
@@ -202,6 +219,7 @@
     <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
     <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
     <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
+    <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span></button>
     <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
   </div>
 
@@ -240,6 +258,7 @@
   let facingMode = 'environment';
   let condition = 'none';
   let compareMode = false;
+  let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
 
   const defaults = {
     myopia:      { blurSigma: 8 },
@@ -248,6 +267,7 @@
     glaucoma:    { glaucomaStage: 2 },
     amd:         { amdSize: 25, amdDistortion: 0 },
     diabetic:    { drSeverity: 0.5 },
+    colorblind:  { cvdType: 'deutan' },
     floaters:    { floaterCount: 6 }
   };
 
@@ -260,6 +280,7 @@
     amdSize: 25,
     amdDistortion: 0,
     drSeverity: 0.5,
+    cvdType: 'deutan',
     floaterCount: 6
   };
 
@@ -527,6 +548,30 @@
     }
   }
 
+  // Color vision deficiency. Standard simulation matrices (Machado et al. style,
+  // common web values) for dichromacy: protanopia (red-weak), deuteranopia
+  // (green-weak), tritanopia (blue-weak). Applied per pixel via getImageData.
+  const cvdMatrices = {
+    protan: [0.567,0.433,0.0, 0.558,0.442,0.0, 0.0,0.242,0.758],
+    deutan: [0.625,0.375,0.0, 0.70,0.30,0.0, 0.0,0.30,0.70],
+    tritan: [0.95,0.05,0.0, 0.0,0.433,0.567, 0.0,0.475,0.525]
+  };
+  function applyColorBlind(type) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    const m = cvdMatrices[type] || cvdMatrices.deutan;
+    let img;
+    try { img = ctx.getImageData(0, 0, w, h); } catch (e) { return; }
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i+1], b = d[i+2];
+      d[i]   = Math.min(255, r*m[0] + g*m[1] + b*m[2]);
+      d[i+1] = Math.min(255, r*m[3] + g*m[4] + b*m[5]);
+      d[i+2] = Math.min(255, r*m[6] + g*m[7] + b*m[8]);
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
   let floaterState = null;
   function initFloaters(count) {
     floaterState = [];
@@ -573,6 +618,7 @@
       case 'glaucoma':   applyGlaucoma(params.glaucomaStage); clearOverlay(); break;
       case 'amd':        applyAMD(params.amdSize, params.amdDistortion); clearOverlay(); break;
       case 'diabetic':   applyDiabetic(params.drSeverity); clearOverlay(); break;
+      case 'colorblind': applyColorBlind(params.cvdType); clearOverlay(); break;
       case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloaters(); break;
     }
   }
@@ -583,17 +629,18 @@
 
     if (compareMode && condition !== 'none') {
       const w = stageCanvas.width, h = stageCanvas.height;
-      // Left half: normal (untouched source)
+      const splitX = Math.round(w * compareSplit);
+      // Left side: normal (untouched source)
       ctx.save();
       ctx.beginPath();
-      ctx.rect(0, 0, w / 2, h);
+      ctx.rect(0, 0, splitX, h);
       ctx.clip();
       ctx.drawImage(sourceCanvas, 0, 0);
       ctx.restore();
-      // Right half: impaired
+      // Right side: impaired
       ctx.save();
       ctx.beginPath();
-      ctx.rect(w / 2, 0, w / 2, h);
+      ctx.rect(splitX, 0, w - splitX, h);
       ctx.clip();
       applyCondition();
       ctx.restore();
@@ -694,6 +741,11 @@
         sliderControl('drSeverity', 'Severity', 0.1, 1, 0.05, '×', () => initDR(params.drSeverity))
       ]
     },
+    colorblind: {
+      title: 'Color Vision Deficiency',
+      note: 'Inherited color blindness affects how cone cells distinguish hues. <strong>Red-green types (protan/deutan)</strong> are most common, affecting ~8% of men; <strong>blue-yellow (tritan)</strong> is rare. This simulates dichromacy — the most complete form of each type.',
+      controls: () => [cvdTypeControl()]
+    },
     floaters: {
       title: 'Floaters & Posterior Vitreous Detachment',
       note: 'Vitreous opacities — collagen condensations, often following posterior vitreous detachment — cast shadows on the retina. They drift with eye movement and are most visible against bright, uniform backgrounds.',
@@ -776,6 +828,32 @@
     return wrap;
   }
 
+  function cvdTypeControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Deficiency type</label><div class="presets" id="cvdTypes"></div>`;
+    const types = [
+      { v: 'protan', label: 'Protan (red)' },
+      { v: 'deutan', label: 'Deutan (green)' },
+      { v: 'tritan', label: 'Tritan (blue)' }
+    ];
+    const host = wrap.querySelector('#cvdTypes');
+    types.forEach(t => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = t.label;
+      if (t.v === params.cvdType) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.cvdType = t.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
   function buildControls() {
     ctrlGrid.innerHTML = '';
     const meta = conditionMeta[condition];
@@ -799,20 +877,148 @@
     if (currentSource === 'image') drawOnce();
   });
 
+  // ===== Built-in sample images (drawn procedurally — no external/copyright assets) =====
+  function makeSample(kind) {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 900;
+    const g = c.getContext('2d');
+
+    if (kind === 'chart') {
+      // Snellen-style eye chart
+      g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const rows = [
+        { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
+        { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
+      ];
+      let y = 130;
+      rows.forEach(r => {
+        g.font = `700 ${r.s}px Arial, sans-serif`;
+        g.fillText(r.t, c.width / 2, y);
+        y += r.s * 0.95 + 24;
+      });
+    } else if (kind === 'grid') {
+      // Amsler grid with central dot
+      g.fillStyle = '#0b0b0b'; g.fillRect(0, 0, c.width, c.height);
+      g.strokeStyle = '#ffffff'; g.lineWidth = 2;
+      const step = 40, ox = (c.width % step) / 2, oy = (c.height % step) / 2;
+      g.beginPath();
+      for (let x = ox; x <= c.width; x += step) { g.moveTo(x, 0); g.lineTo(x, c.height); }
+      for (let y2 = oy; y2 <= c.height; y2 += step) { g.moveTo(0, y2); g.lineTo(c.width, y2); }
+      g.stroke();
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.arc(c.width / 2, c.height / 2, 9, 0, Math.PI * 2); g.fill();
+    } else if (kind === 'street') {
+      // Night street with headlight glare (great for cataract/astigmatism)
+      const sky = g.createLinearGradient(0, 0, 0, c.height);
+      sky.addColorStop(0, '#070b14'); sky.addColorStop(0.6, '#0d1422'); sky.addColorStop(1, '#161b24');
+      g.fillStyle = sky; g.fillRect(0, 0, c.width, c.height);
+      // road
+      g.fillStyle = '#1b1f27'; g.beginPath();
+      g.moveTo(c.width*0.42, c.height*0.55); g.lineTo(c.width*0.58, c.height*0.55);
+      g.lineTo(c.width*0.95, c.height); g.lineTo(c.width*0.05, c.height); g.closePath(); g.fill();
+      // lane dashes
+      g.strokeStyle = '#c9b15a'; g.lineWidth = 6; g.setLineDash([26, 30]);
+      g.beginPath(); g.moveTo(c.width/2, c.height*0.56); g.lineTo(c.width/2, c.height); g.stroke();
+      g.setLineDash([]);
+      // headlights / streetlights as bright glares
+      const lights = [[c.width*0.46, c.height*0.62, 26],[c.width*0.54, c.height*0.62, 26],[c.width*0.2, c.height*0.3, 16],[c.width*0.8, c.height*0.28, 18]];
+      lights.forEach(([x,y,r]) => {
+        const gr = g.createRadialGradient(x,y,0,x,y,r*6);
+        gr.addColorStop(0,'rgba(255,250,220,0.95)'); gr.addColorStop(0.3,'rgba(255,240,180,0.5)'); gr.addColorStop(1,'rgba(255,240,180,0)');
+        g.fillStyle = gr; g.fillRect(x-r*6,y-r*6,r*12,r*12);
+        g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
+      });
+    } else if (kind === 'garden') {
+      // Colorful flowers (great for color blindness + general)
+      g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
+      g.fillStyle = '#6fae54'; g.fillRect(0, c.height*0.62, c.width, c.height*0.38);
+      const cols = ['#e0473e','#e8913a','#f0d33b','#d94f8a','#7d4fc0','#ffffff'];
+      for (let i=0;i<70;i++){
+        const x=Math.random()*c.width, y=c.height*0.62+Math.random()*c.height*0.36;
+        const col=cols[(Math.random()*cols.length)|0], pr=10+Math.random()*16;
+        g.strokeStyle='#3f7d36'; g.lineWidth=3; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+18+Math.random()*20); g.stroke();
+        for(let p=0;p<6;p++){const a=p/6*Math.PI*2;g.fillStyle=col;g.beginPath();g.ellipse(x+Math.cos(a)*pr*0.6,y+Math.sin(a)*pr*0.6,pr*0.5,pr*0.32,a,0,Math.PI*2);g.fill();}
+        g.fillStyle='#f5d23b'; g.beginPath(); g.arc(x,y,pr*0.4,0,Math.PI*2); g.fill();
+      }
+    }
+    return c;
+  }
+
+  function loadSample(kind) {
+    stopCamera();
+    const c = makeSample(kind);
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      currentSource = 'image';
+      emptyState.style.display = 'none';
+      resizeStage();
+      drawOnce();
+    };
+    img.src = c.toDataURL('image/png');
+  }
+
   document.getElementById('startCam').addEventListener('click', startCamera);
   document.getElementById('stopCam').addEventListener('click', stopCamera);
   document.getElementById('flipCam').addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
   document.getElementById('snapshot').addEventListener('click', takeSnapshot);
 
+  document.getElementById('sampleRow').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-sample]');
+    if (!btn) return;
+    loadSample(btn.dataset.sample);
+  });
+
   const compareBtn = document.getElementById('compareToggle');
+  function positionDivider() {
+    compareLine.style.left = (compareSplit * 100) + '%';
+    const tagL = document.getElementById('compareTagL');
+    const tagR = document.getElementById('compareTagR');
+    // hide a label if the divider gets too close to that edge
+    if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
+    if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
+  }
   compareBtn.addEventListener('click', () => {
     compareMode = !compareMode;
     compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
     compareBtn.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
     document.body.classList.toggle('compare', compareMode);
+    positionDivider();
     if (currentSource === 'image') drawOnce();
   });
+
+  // Drag the compare divider across the stage (before/after wipe).
+  const stageWrap = document.querySelector('.stage-wrap');
+  let dragging = false;
+  function updateSplitFromEvent(clientX) {
+    const rect = stageWrap.getBoundingClientRect();
+    let t = (clientX - rect.left) / rect.width;
+    t = Math.max(0.02, Math.min(0.98, t));
+    compareSplit = t;
+    positionDivider();
+    if (currentSource === 'image') drawOnce();
+  }
+  stageWrap.addEventListener('pointerdown', (e) => {
+    if (!compareMode || condition === 'none') return;
+    dragging = true;
+    stageWrap.setPointerCapture(e.pointerId);
+    updateSplitFromEvent(e.clientX);
+    e.preventDefault();
+  });
+  stageWrap.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    updateSplitFromEvent(e.clientX);
+    e.preventDefault();
+  });
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { stageWrap.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  stageWrap.addEventListener('pointerup', endDrag);
+  stageWrap.addEventListener('pointercancel', endDrag);
 
   resizeStage();
   buildControls();
