@@ -615,12 +615,16 @@
     deutan: [0.625,0.375,0.0, 0.70,0.30,0.0, 0.0,0.30,0.70],
     tritan: [0.95,0.05,0.0, 0.0,0.433,0.567, 0.0,0.475,0.525]
   };
-  function applyColorBlind(type) {
+  function applyColorBlind(type, region) {
     const w = stageCanvas.width, h = stageCanvas.height;
     ctx.drawImage(sourceCanvas, 0, 0);
     const m = cvdMatrices[type] || cvdMatrices.deutan;
+    // Only process the requested horizontal band (used by compare mode). Default = full.
+    const x0 = region ? Math.max(0, Math.round(region.x)) : 0;
+    const rw = region ? Math.min(w - x0, Math.round(region.w)) : w;
+    if (rw <= 0) return;
     let img;
-    try { img = ctx.getImageData(0, 0, w, h); } catch (e) { return; }
+    try { img = ctx.getImageData(x0, 0, rw, h); } catch (e) { return; }
     const d = img.data;
     for (let i = 0; i < d.length; i += 4) {
       const r = d[i], g = d[i+1], b = d[i+2];
@@ -628,7 +632,7 @@
       d[i+1] = Math.min(255, r*m[3] + g*m[4] + b*m[5]);
       d[i+2] = Math.min(255, r*m[6] + g*m[7] + b*m[8]);
     }
-    ctx.putImageData(img, 0, 0);
+    ctx.putImageData(img, x0, 0);
   }
 
   let floaterState = null;
@@ -647,44 +651,64 @@
       });
     }
   }
-  function drawFloaters() {
+  function clearOverlay() { overlay.innerHTML = ''; }
+
+  // Floaters drawn directly on the canvas (respects clip regions, so compare works).
+  // We still advance the same floaterState so motion is consistent.
+  function stepFloaters() {
     if (!floaterState) return;
-    let svg = '';
     floaterState.forEach(f => {
       f.x += f.vx; f.y += f.vy;
       if (f.x < -5) f.x = 105; if (f.x > 105) f.x = -5;
       if (f.y < -5) f.y = 80; if (f.y > 80) f.y = -5;
+    });
+  }
+  function drawFloatersCanvas() {
+    if (!floaterState) return;
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.save();
+    floaterState.forEach(f => {
+      const px = (f.x / 100) * w;
+      const py = (f.y / 75) * h;
+      const sz = f.size * (Math.min(w, h) / 75);
+      ctx.fillStyle = `rgba(20,20,25,${f.opacity})`;
+      ctx.strokeStyle = `rgba(20,20,25,${f.opacity})`;
       if (f.type === 'blob') {
-        svg += `<ellipse cx="${f.x}" cy="${f.y}" rx="${f.size*0.8}" ry="${f.size*0.5}" fill="rgba(20,20,25,${f.opacity})" filter="url(#fblur)"/>`;
+        ctx.beginPath();
+        ctx.ellipse(px, py, sz * 0.8, sz * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
       } else {
-        const x2 = f.x + Math.cos(f.rot) * f.size * 2.5;
-        const y2 = f.y + Math.sin(f.rot) * f.size * 2.5;
-        svg += `<line x1="${f.x}" y1="${f.y}" x2="${x2}" y2="${y2}" stroke="rgba(20,20,25,${f.opacity})" stroke-width="${f.size*0.3}" stroke-linecap="round" filter="url(#fblur)"/>`;
+        const x2 = px + Math.cos(f.rot) * sz * 2.5;
+        const y2 = py + Math.sin(f.rot) * sz * 2.5;
+        ctx.lineWidth = Math.max(1, sz * 0.3);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(px, py); ctx.lineTo(x2, y2); ctx.stroke();
       }
     });
-    overlay.innerHTML = `<defs><filter id="fblur"><feGaussianBlur stdDeviation="0.4"/></filter></defs>${svg}`;
+    ctx.restore();
   }
-  function clearOverlay() { overlay.innerHTML = ''; }
 
-  // Dispatch the active condition's filter. Pulled out so compare mode can call it
-  // for a clipped region.
+  // Dispatch the active condition's filter onto the (already-clipped) canvas.
   function applyCondition() {
     switch (condition) {
-      case 'none':       ctx.drawImage(sourceCanvas, 0, 0); clearOverlay(); break;
-      case 'myopia':     applyBlur(params.blurSigma); clearOverlay(); break;
-      case 'astigmatism':applyAstigmatism(params.astigMag, params.axis); clearOverlay(); break;
-      case 'cataract':   applyCataract(params.cataractSev); clearOverlay(); break;
-      case 'glaucoma':   applyGlaucoma(params.glaucomaStage); clearOverlay(); break;
-      case 'amd':        applyAMD(params.amdSize, params.amdDistortion); clearOverlay(); break;
-      case 'diabetic':   applyDiabetic(params.drSeverity); clearOverlay(); break;
-      case 'colorblind': applyColorBlind(params.cvdType); clearOverlay(); break;
-      case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloaters(); break;
+      case 'none':       ctx.drawImage(sourceCanvas, 0, 0); break;
+      case 'myopia':     applyBlur(params.blurSigma); break;
+      case 'astigmatism':applyAstigmatism(params.astigMag, params.axis); break;
+      case 'cataract':   applyCataract(params.cataractSev); break;
+      case 'glaucoma':   applyGlaucoma(params.glaucomaStage); break;
+      case 'amd':        applyAMD(params.amdSize, params.amdDistortion); break;
+      case 'diabetic':   applyDiabetic(params.drSeverity); break;
+      case 'colorblind': applyColorBlind(params.cvdType); break;
+      case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloatersCanvas(); break;
     }
   }
 
   function render() {
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+    clearOverlay();                 // we now draw floaters on the canvas, not SVG
+    if (condition === 'floaters') stepFloaters();
 
     if (compareMode && condition !== 'none') {
       const w = stageCanvas.width, h = stageCanvas.height;
@@ -701,10 +725,13 @@
       ctx.beginPath();
       ctx.rect(splitX, 0, w - splitX, h);
       ctx.clip();
-      applyCondition();
+      // colorblind ignores canvas clip (putImageData), so pass it the region explicitly
+      if (condition === 'colorblind') {
+        applyColorBlind(params.cvdType, { x: splitX, w: w - splitX });
+      } else {
+        applyCondition();
+      }
       ctx.restore();
-      // floaters overlay only makes sense full-frame; keep it cleared in compare
-      if (condition === 'floaters') clearOverlay();
     } else {
       applyCondition();
     }
