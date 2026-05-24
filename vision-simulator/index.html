@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -36,120 +35,126 @@
   }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
 
-header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(–line); margin-bottom: 24px; }
-.eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(–ink-mute); margin: 0 0 10px; }
-h1 {
-font-family: ‘Fraunces’, serif; font-weight: 500;
-font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em;
-margin: 0 0 8px; color: var(–ink);
-}
-h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
-.sub { color: var(–ink-dim); font-size: 14px; max-width: 60ch; line-height: 1.55; }
-.credit {
-display: inline-block;
-margin-top: 14px;
-font-size: 13px;
-color: var(–ink);
-padding: 7px 16px;
-border: 1px solid var(–line);
-border-radius: 999px;
-background: rgba(255, 255, 255, 0.04);
-}
+  header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em;
+    margin: 0 0 8px; color: var(--ink);
+  }
+  h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .sub { color: var(--ink-dim); font-size: 14px; max-width: 60ch; line-height: 1.55; }
+  .credit {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--ink);
+    padding: 7px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+  }
 
-.stage-wrap { position: relative; background: #000; border-radius: var(–radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(–line); }
+  .stage-wrap { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(--line); }
 
-/* On mobile, pin the video to the top so it stays visible while scrolling controls. */
-@media (max-width: 900px) {
-.stage-wrap {
-position: sticky;
-top: 8px;
-z-index: 50;
-aspect-ratio: 16/10;  /* shorter height on phone so more controls are visible below */
-max-height: 42vh;
-box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px var(–line);
-}
-.wrap { padding-top: 16px; }
-header.hero { padding-bottom: 14px; margin-bottom: 14px; }
-h1 { font-size: clamp(22px, 5vw, 32px); }
-.sub { font-size: 13px; }
-.section-title { margin: 18px 0 8px; font-size: 17px; }
-.source-row { margin: 10px 0 4px; }
-.conditions { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-.cond { padding: 9px 8px; font-size: 12px; }
-.controls { padding: 14px; margin-top: 8px; }
-}
-.stage { position: absolute; inset: 0; display: grid; place-items: center; }
-#video, #sourceCanvas { display: none; }
-#stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
-.overlay { position: absolute; inset: 0; pointer-events: none; }
-.empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(–ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
-.empty-state svg { opacity: 0.3; }
+  /* On mobile, pin the video to the top so it stays visible while scrolling controls. */
+  @media (max-width: 900px) {
+    .stage-wrap {
+      position: sticky;
+      top: 8px;
+      z-index: 50;
+      aspect-ratio: 16/10;
+      max-height: 42vh;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px var(--line);
+    }
+    .wrap { padding-top: 16px; }
+    header.hero { padding-bottom: 14px; margin-bottom: 14px; }
+    h1 { font-size: clamp(22px, 5vw, 32px); }
+    .sub { font-size: 13px; }
+    .section-title { margin: 18px 0 8px; font-size: 17px; }
+    .source-row { margin: 10px 0 4px; }
+    .conditions { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .cond { padding: 9px 8px; font-size: 12px; }
+    .controls { padding: 14px; margin-top: 8px; }
+  }
+  .stage { position: absolute; inset: 0; display: grid; place-items: center; }
+  #video, #sourceCanvas { display: none; }
+  #stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  /* Divider line + labels shown when compare mode is on */
+  .compare-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.7); left: 50%; display: none; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,0.6); }
+  .compare-tag { position: absolute; top: 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 999px; display: none; pointer-events: none; }
+  .compare-tag.left { left: 10px; }
+  .compare-tag.right { right: 10px; }
+  body.compare .compare-line, body.compare .compare-tag { display: block; }
+  .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
+  .empty-state svg { opacity: 0.3; }
 
-.source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
-.btn {
-appearance: none; border: 1px solid var(–line); background: var(–panel); color: var(–ink);
-padding: 11px 16px; border-radius: var(–radius-sm); font-family: inherit; font-size: 14px;
-font-weight: 500; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px;
-}
-.btn:hover { border-color: var(–accent); background: var(–panel-2); }
-.btn:active { transform: translateY(1px); }
-.btn.primary { background: var(–accent); color: #1a1208; border-color: var(–accent); }
-.btn.primary:hover { background: #e0b483; }
-.btn.ghost { background: transparent; }
-.btn-file { position: relative; overflow: hidden; }
-.btn-file input[type=“file”] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 11px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--panel-2); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #1a1208; border-color: var(--accent); }
+  .btn.primary:hover { background: #e0b483; }
+  .btn.ghost { background: transparent; }
+  .btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
+  .btn-file { position: relative; overflow: hidden; }
+  .btn-file input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-.section-title {
-font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
-margin: 32px 0 12px; display: flex; align-items: center; gap: 12px;
-}
-.section-title::after { content: ‘’; flex: 1; height: 1px; background: var(–line); }
+  .section-title {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
+    margin: 32px 0 12px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
-.conditions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.cond {
-padding: 12px 10px; border: 1px solid var(–line); background: var(–panel); border-radius: var(–radius-sm);
-cursor: pointer; transition: all 0.15s ease; text-align: left; color: var(–ink); font-family: inherit;
-font-size: 13px; font-weight: 500;
-}
-.cond:hover { border-color: var(–accent-2); }
-.cond[aria-pressed=“true”] { background: var(–panel-2); border-color: var(–accent); box-shadow: inset 0 0 0 1px var(–accent); }
-.cond .name { display: block; }
-.cond .latin { display: block; font-family: ‘Fraunces’, serif; font-style: italic; font-size: 11px; color: var(–ink-mute); margin-top: 2px; font-weight: 400; }
+  .conditions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .cond {
+    padding: 12px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s ease; text-align: left; color: var(--ink); font-family: inherit;
+    font-size: 13px; font-weight: 500;
+  }
+  .cond:hover { border-color: var(--accent-2); }
+  .cond[aria-pressed="true"] { background: var(--panel-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cond .name { display: block; }
+  .cond .latin { display: block; font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; color: var(--ink-mute); margin-top: 2px; font-weight: 400; }
 
-.controls { background: var(–panel); border: 1px solid var(–line); border-radius: var(–radius); padding: 18px; margin-top: 12px; }
-.ctrl-grid { display: grid; gap: 16px; }
-.ctrl { display: grid; gap: 6px; }
-.ctrl label { font-size: 12px; color: var(–ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
-.ctrl label .val { font-family: ‘Fraunces’, serif; font-style: italic; color: var(–accent); font-size: 13px; }
-input[type=“range”] {
--webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(–line); border-radius: 2px; outline: none;
-}
-input[type=“range”]::-webkit-slider-thumb {
--webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(–accent); cursor: pointer; border: 3px solid var(–panel); box-shadow: 0 0 0 1px var(–line);
-}
-input[type=“range”]::-moz-range-thumb {
-width: 18px; height: 18px; border-radius: 50%; background: var(–accent); cursor: pointer; border: 3px solid var(–panel); box-shadow: 0 0 0 1px var(–line);
-}
+  .controls { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 12px; }
+  .ctrl-grid { display: grid; gap: 16px; }
+  .ctrl { display: grid; gap: 6px; }
+  .ctrl label { font-size: 12px; color: var(--ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
+  .ctrl label .val { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-size: 13px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--line); border-radius: 2px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--line);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--line);
+  }
 
-.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.preset {
-padding: 6px 10px; border: 1px solid var(–line); background: transparent; color: var(–ink-dim);
-border-radius: 999px; font-size: 11px; font-family: ‘Fraunces’, serif; font-style: italic; cursor: pointer; transition: all 0.15s;
-}
-.preset:hover { color: var(–ink); border-color: var(–accent-2); }
-.preset[aria-pressed=“true”] { background: var(–accent); color: #1a1208; border-color: var(–accent); font-style: normal; font-weight: 600; font-family: ‘Inter Tight’; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .preset {
+    padding: 6px 10px; border: 1px solid var(--line); background: transparent; color: var(--ink-dim);
+    border-radius: 999px; font-size: 11px; font-family: 'Fraunces', serif; font-style: italic; cursor: pointer; transition: all 0.15s;
+  }
+  .preset:hover { color: var(--ink); border-color: var(--accent-2); }
+  .preset[aria-pressed="true"] { background: var(--accent); color: #1a1208; border-color: var(--accent); font-style: normal; font-weight: 600; font-family: 'Inter Tight'; }
 
-.clinical-note {
-margin-top: 14px; padding: 12px 14px; background: rgba(90,143,184,0.06); border-left: 2px solid var(–accent-2);
-border-radius: 0 var(–radius-sm) var(–radius-sm) 0; font-size: 13px; color: var(–ink-dim); line-height: 1.55;
-}
-.clinical-note strong { color: var(–ink); font-weight: 600; }
+  .clinical-note {
+    margin-top: 14px; padding: 12px 14px; background: rgba(90,143,184,0.06); border-left: 2px solid var(--accent-2);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--ink-dim); line-height: 1.55;
+  }
+  .clinical-note strong { color: var(--ink); font-weight: 600; }
 
-footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(–line); color: var(–ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-footer a { color: var(–accent); text-decoration: none; }
-footer a:hover { text-decoration: underline; }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
 </style>
-
 </head>
 <body>
 <div class="wrap">
@@ -157,7 +162,7 @@ footer a:hover { text-decoration: underline; }
   <header class="hero">
     <p class="eyebrow">Patient education · Educational use only</p>
     <h1>How the World Looks <em>Through Other Eyes</em></h1>
-    <p class="sub">A clinically-informed simulator for refractive error, cataract, glaucoma, age-related macular degeneration, and vitreous floaters. Use the camera or upload an image to explore.</p>
+    <p class="sub">A clinically-informed simulator for refractive error, cataract, glaucoma, age-related macular degeneration, diabetic retinopathy, and vitreous floaters. Use the camera or upload an image to explore.</p>
     <span class="credit">Built by Dr. Ryan Evans, OD</span>
   </header>
 
@@ -167,6 +172,9 @@ footer a:hover { text-decoration: underline; }
       <canvas id="sourceCanvas"></canvas>
       <canvas id="stageCanvas"></canvas>
       <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
+      <div class="compare-line" id="compareLine"></div>
+      <div class="compare-tag left" id="compareTagL">Normal</div>
+      <div class="compare-tag right" id="compareTagR">Impaired</div>
       <div class="empty-state" id="emptyState">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
         <div>Start the camera or upload an image to begin.</div>
@@ -181,6 +189,8 @@ footer a:hover { text-decoration: underline; }
     <label class="btn btn-file">Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
+    <button class="btn ghost" id="compareToggle" aria-pressed="false">Compare: Off</button>
+    <button class="btn ghost" id="snapshot">Snapshot</button>
   </div>
 
   <h2 class="section-title">Select Condition</h2>
@@ -191,6 +201,7 @@ footer a:hover { text-decoration: underline; }
     <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
     <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
     <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
+    <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
     <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
   </div>
 
@@ -201,7 +212,7 @@ footer a:hover { text-decoration: underline; }
 
   <footer>
     <span>© Dr. Ryan Evans, OD · For educational demonstration only · Not a diagnostic tool</span>
-    <a href="https://rjlcevans.com/">← Return to Evans Family Home</a>
+    <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
   </footer>
 </div>
 
@@ -217,6 +228,7 @@ footer a:hover { text-decoration: underline; }
   const ctrlGrid = document.getElementById('ctrlGrid');
   const clinicalNote = document.getElementById('clinicalNote');
   const conditionsEl = document.getElementById('conditions');
+  const compareLine = document.getElementById('compareLine');
 
   const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
   const ctx = stageCanvas.getContext('2d');
@@ -227,16 +239,15 @@ footer a:hover { text-decoration: underline; }
   let uploadedImage = null;
   let facingMode = 'user';
   let condition = 'none';
+  let compareMode = false;
 
-  // Default values for every parameter — used to initialize sliders so they always start
-  // at a meaningful, visible level for the chosen condition (this is the fix for the
-  // "myopia not blurring" bug: blurSigma now starts at a real value, not zero).
   const defaults = {
     myopia:      { blurSigma: 8 },
     astigmatism: { astigMag: 6, axis: 90 },
     cataract:    { cataractSev: 0.5 },
     glaucoma:    { glaucomaStage: 2 },
     amd:         { amdSize: 25, amdDistortion: 0 },
+    diabetic:    { drSeverity: 0.5 },
     floaters:    { floaterCount: 6 }
   };
 
@@ -248,10 +259,10 @@ footer a:hover { text-decoration: underline; }
     glaucomaStage: 2,
     amdSize: 25,
     amdDistortion: 0,
+    drSeverity: 0.5,
     floaterCount: 6
   };
 
-  // Snellen presets → blur sigma (px). These are calibrated for a ~600px wide stage.
   const snellenBlur = {
     '20/20': 0, '20/40': 4, '20/70': 8, '20/100': 12, '20/200': 20, '20/400': 32
   };
@@ -339,9 +350,6 @@ footer a:hover { text-decoration: underline; }
   }
 
   // ===== Filters =====
-  // Reliable Gaussian-ish blur using multi-pass downsample/upsample.
-  // iOS Safari has historically had inconsistent ctx.filter='blur()' behavior, so
-  // we use this approach which works on every browser/device.
   const _blurCanvasA = document.createElement('canvas');
   const _blurCanvasB = document.createElement('canvas');
   function applyBlur(sigma) {
@@ -350,10 +358,6 @@ footer a:hover { text-decoration: underline; }
       return;
     }
     const w = stageCanvas.width, h = stageCanvas.height;
-
-    // Try the fast path first (ctx.filter), then composite over a downsampled fallback.
-    // The downsample-and-upsample technique gives us a strong, visible blur that's
-    // proportional to sigma and works reliably across all browsers.
     const scale = Math.max(0.04, Math.min(1, 1 / (sigma * 0.6 + 1)));
     const sw = Math.max(2, Math.round(w * scale));
     const sh = Math.max(2, Math.round(h * scale));
@@ -361,14 +365,11 @@ footer a:hover { text-decoration: underline; }
     _blurCanvasA.width = sw; _blurCanvasA.height = sh;
     _blurCanvasB.width = sw; _blurCanvasB.height = sh;
     const aCtx = _blurCanvasA.getContext('2d');
-    const bCtx = _blurCanvasB.getContext('2d');
 
-    // Downsample with smoothing
     aCtx.imageSmoothingEnabled = true;
     aCtx.imageSmoothingQuality = 'high';
     aCtx.drawImage(sourceCanvas, 0, 0, sw, sh);
 
-    // Box-blur passes on the small canvas (cheap because it's tiny)
     const passes = Math.min(3, Math.max(1, Math.round(sigma / 6)));
     let src = _blurCanvasA, dst = _blurCanvasB;
     for (let i = 0; i < passes; i++) {
@@ -380,14 +381,12 @@ footer a:hover { text-decoration: underline; }
       const tmp = src; src = dst; dst = tmp;
     }
 
-    // Upsample back to full size with smoothing — this is what produces the blur
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, sw, sh, 0, 0, w, h);
   }
 
   function applyAstigmatism(magnitude, axisDeg) {
-    ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
     ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
@@ -468,10 +467,6 @@ footer a:hover { text-decoration: underline; }
     const scotomaR = Math.min(w, h) * (sizePct / 100);
 
     if (distortion > 0) {
-      // Metamorphopsia: classic Amsler-grid effect where straight lines appear wavy.
-      // We render the image row-by-row with a sinusoidal horizontal shift. Patients
-      // perceive this distortion across their whole central visual field, not just
-      // in one ring — so we apply it uniformly. The dark scotoma is drawn on top after.
       const maxAmp = distortion * 22;
       const sliceH = 2;
       for (let y = 0; y < h; y += sliceH) {
@@ -483,13 +478,53 @@ footer a:hover { text-decoration: underline; }
       ctx.drawImage(sourceCanvas, 0, 0);
     }
 
-    // Central scotoma — soft dark blob drawn on top
     const grad = ctx.createRadialGradient(cx, cy, scotomaR * 0.2, cx, cy, scotomaR);
     grad.addColorStop(0, 'rgba(20,20,25,0.96)');
     grad.addColorStop(0.7, 'rgba(20,20,25,0.85)');
     grad.addColorStop(1, 'rgba(20,20,25,0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
+  }
+
+  // Diabetic retinopathy: scattered dark blot scotomas (microaneurysm/hemorrhage
+  // shadows) plus mild overall blur and a few larger blocked patches. Severity
+  // scales the number and size of the blots. Positions are seeded so they stay
+  // stable frame-to-frame (they don't twinkle).
+  let drBlots = null;
+  function initDR(severity) {
+    drBlots = [];
+    const n = Math.round(6 + severity * 30);
+    for (let i = 0; i < n; i++) {
+      drBlots.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: 0.01 + Math.random() * (0.02 + severity * 0.05),
+        op: 0.5 + Math.random() * 0.45
+      });
+    }
+  }
+  function applyDiabetic(severity) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    // mild blur + slight contrast loss
+    ctx.filter = `blur(${1 + severity * 3}px) contrast(${1 - severity * 0.15})`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+    if (!drBlots) initDR(severity);
+    // dark blots (blocked vision from hemorrhages)
+    drBlots.forEach(b => {
+      const cx = b.x * w, cy = b.y * h, r = b.r * Math.min(w, h) * 6;
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, `rgba(12,10,14,${b.op})`);
+      g.addColorStop(0.6, `rgba(12,10,14,${b.op * 0.8})`);
+      g.addColorStop(1, 'rgba(12,10,14,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    });
+    // subtle yellowish exudate haze at high severity
+    if (severity > 0.5) {
+      ctx.fillStyle = `rgba(200,180,90,${(severity - 0.5) * 0.12})`;
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   let floaterState = null;
@@ -527,39 +562,45 @@ footer a:hover { text-decoration: underline; }
   }
   function clearOverlay() { overlay.innerHTML = ''; }
 
+  // Dispatch the active condition's filter. Pulled out so compare mode can call it
+  // for a clipped region.
+  function applyCondition() {
+    switch (condition) {
+      case 'none':       ctx.drawImage(sourceCanvas, 0, 0); clearOverlay(); break;
+      case 'myopia':     applyBlur(params.blurSigma); clearOverlay(); break;
+      case 'astigmatism':applyAstigmatism(params.astigMag, params.axis); clearOverlay(); break;
+      case 'cataract':   applyCataract(params.cataractSev); clearOverlay(); break;
+      case 'glaucoma':   applyGlaucoma(params.glaucomaStage); clearOverlay(); break;
+      case 'amd':        applyAMD(params.amdSize, params.amdDistortion); clearOverlay(); break;
+      case 'diabetic':   applyDiabetic(params.drSeverity); clearOverlay(); break;
+      case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloaters(); break;
+    }
+  }
+
   function render() {
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
 
-    switch (condition) {
-      case 'none':
-        ctx.drawImage(sourceCanvas, 0, 0);
-        clearOverlay();
-        break;
-      case 'myopia':
-        applyBlur(params.blurSigma);
-        clearOverlay();
-        break;
-      case 'astigmatism':
-        applyAstigmatism(params.astigMag, params.axis);
-        clearOverlay();
-        break;
-      case 'cataract':
-        applyCataract(params.cataractSev);
-        clearOverlay();
-        break;
-      case 'glaucoma':
-        applyGlaucoma(params.glaucomaStage);
-        clearOverlay();
-        break;
-      case 'amd':
-        applyAMD(params.amdSize, params.amdDistortion);
-        clearOverlay();
-        break;
-      case 'floaters':
-        ctx.drawImage(sourceCanvas, 0, 0);
-        drawFloaters();
-        break;
+    if (compareMode && condition !== 'none') {
+      const w = stageCanvas.width, h = stageCanvas.height;
+      // Left half: normal (untouched source)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w / 2, h);
+      ctx.clip();
+      ctx.drawImage(sourceCanvas, 0, 0);
+      ctx.restore();
+      // Right half: impaired
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(w / 2, 0, w / 2, h);
+      ctx.clip();
+      applyCondition();
+      ctx.restore();
+      // floaters overlay only makes sense full-frame; keep it cleared in compare
+      if (condition === 'floaters') clearOverlay();
+    } else {
+      applyCondition();
     }
   }
 
@@ -569,11 +610,39 @@ footer a:hover { text-decoration: underline; }
   }
   function drawOnce() {
     if (rafId) cancelAnimationFrame(rafId);
-    if (condition === 'floaters') {
+    if (condition === 'floaters' || currentSource === 'camera') {
       loop();
     } else {
       render();
     }
+  }
+
+  // ===== Snapshot: save the current stage to a PNG =====
+  function takeSnapshot() {
+    if (!currentSource) { alert('Start the camera or upload an image first.'); return; }
+    // Compose stage + SVG overlay (floaters) into one canvas
+    const out = document.createElement('canvas');
+    out.width = stageCanvas.width; out.height = stageCanvas.height;
+    const o = out.getContext('2d');
+    o.drawImage(stageCanvas, 0, 0);
+    // burn in a small caption
+    const meta = conditionMeta[condition];
+    const label = (compareMode && condition !== 'none' ? 'Normal | ' : '') + (meta ? meta.title : '');
+    o.font = `${Math.round(out.width * 0.022)}px Inter Tight, sans-serif`;
+    o.fillStyle = 'rgba(0,0,0,0.55)';
+    const tw = o.measureText(label).width + 20;
+    o.fillRect(10, out.height - 38, tw, 26);
+    o.fillStyle = '#fff';
+    o.fillText(label, 20, out.height - 20);
+
+    out.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vision-sim-${condition}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
   }
 
   const conditionMeta = {
@@ -618,6 +687,13 @@ footer a:hover { text-decoration: underline; }
         sliderControl('amdDistortion', 'Metamorphopsia', 0, 1, 0.05, '×')
       ]
     },
+    diabetic: {
+      title: 'Diabetic Retinopathy',
+      note: 'Damage to retinal blood vessels causes microaneurysms, hemorrhages, and exudates that cast scattered dark patches across vision, along with general blur from macular edema. <strong>Often asymptomatic early</strong> — which is why dilated exams matter for patients with diabetes.',
+      controls: () => [
+        sliderControl('drSeverity', 'Severity', 0.1, 1, 0.05, '×', () => initDR(params.drSeverity))
+      ]
+    },
     floaters: {
       title: 'Floaters & Posterior Vitreous Detachment',
       note: 'Vitreous opacities — collagen condensations, often following posterior vitreous detachment — cast shadows on the retina. They drift with eye movement and are most visible against bright, uniform backgrounds.',
@@ -631,8 +707,6 @@ footer a:hover { text-decoration: underline; }
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
     const id = `ctrl_${key}`;
-    // Critical: read params[key] (which has been set to a meaningful default before we get here)
-    // and use it as the initial slider value — don't fall back to `min`.
     const initial = params[key];
     wrap.innerHTML = `
       <label for="${id}">${label} <span class="val" id="${id}_val"></span></label>
@@ -708,6 +782,7 @@ footer a:hover { text-decoration: underline; }
     clinicalNote.innerHTML = `<strong>${meta.title}.</strong> ${meta.note}`;
     meta.controls().forEach(node => ctrlGrid.appendChild(node));
     if (condition === 'floaters') initFloaters(params.floaterCount);
+    if (condition === 'diabetic') initDR(params.drSeverity);
     clearOverlay();
   }
 
@@ -717,7 +792,6 @@ footer a:hover { text-decoration: underline; }
     conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
     btn.setAttribute('aria-pressed', 'true');
     condition = btn.dataset.cond;
-    // Apply this condition's defaults BEFORE building controls so sliders init with real values
     if (defaults[condition]) {
       Object.assign(params, defaults[condition]);
     }
@@ -729,6 +803,16 @@ footer a:hover { text-decoration: underline; }
   document.getElementById('stopCam').addEventListener('click', stopCamera);
   document.getElementById('flipCam').addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
+  document.getElementById('snapshot').addEventListener('click', takeSnapshot);
+
+  const compareBtn = document.getElementById('compareToggle');
+  compareBtn.addEventListener('click', () => {
+    compareMode = !compareMode;
+    compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
+    compareBtn.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
+    document.body.classList.toggle('compare', compareMode);
+    if (currentSource === 'image') drawOnce();
+  });
 
   resizeStage();
   buildControls();
