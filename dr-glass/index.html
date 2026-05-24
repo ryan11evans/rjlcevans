@@ -1496,55 +1496,56 @@
   let musicMasterGain = null;
   let musicPaused = false;
 
-  // Per-theme music tracks. Each: { melody:[[midi,beats]...], bass:[...], beatMs, melodyType, bassType }
+  // Per-theme music tracks. Soft, soothing arrangements — gentle sine/triangle
+  // timbres, relaxed tempos, longer phrases with breathing room. A rest is note=0.
   const MUSIC_TRACKS = {
-    // Office — cheerful bouncy C major (the original)
+    // Office — gentle, warm C major lullaby feel
     office: {
-      beatMs: 220, melodyType: 'square', bassType: 'triangle',
-      melody: [[72,1],[76,1],[79,1],[76,1],[74,1],[77,1],[72,1],[69,2],[72,1],[76,1],[79,2],[77,1],[76,1],[72,1],[74,1],[72,4]],
-      bass: [[48,2],[55,2],[48,2],[55,2],[48,2],[55,2],[50,2],[57,2],[48,4],[55,4]],
+      beatMs: 380, melodyType: 'sine', bassType: 'sine',
+      melody: [[72,2],[76,2],[79,3],[0,1],[77,2],[74,2],[72,4],[0,2],[69,2],[72,2],[76,3],[0,1],[74,2],[72,2],[71,4],[0,2]],
+      bass: [[48,4],[0,4],[55,4],[0,4],[53,4],[0,4],[48,4],[0,4]],
     },
-    // Waiting room — relaxed, warm F major, slower
+    // Waiting room — calm, airy F major
     waiting: {
-      beatMs: 260, melodyType: 'triangle', bassType: 'sine',
-      melody: [[77,2],[81,1],[84,1],[81,2],[79,2],[77,1],[76,1],[77,4],[74,2],[77,1],[81,1],[79,4]],
-      bass: [[53,2],[60,2],[50,2],[57,2],[53,4],[55,4]],
+      beatMs: 420, melodyType: 'sine', bassType: 'sine',
+      melody: [[77,3],[0,1],[81,2],[79,2],[77,4],[0,2],[74,2],[77,3],[0,1],[76,2],[74,2],[72,4],[0,2]],
+      bass: [[53,4],[0,4],[60,4],[0,4],[50,4],[0,4],[57,4],[0,4]],
     },
-    // Dispensary — clean, curious A minor, mid tempo
+    // Dispensary — soft, curious A minor, unhurried
     dispensary: {
-      beatMs: 210, melodyType: 'square', bassType: 'triangle',
-      melody: [[81,1],[84,1],[88,1],[84,1],[83,1],[81,1],[79,2],[81,1],[84,1],[83,1],[81,1],[79,1],[76,2],[81,4]],
-      bass: [[45,2],[52,2],[48,2],[55,2],[45,2],[52,2],[47,4]],
+      beatMs: 400, melodyType: 'triangle', bassType: 'sine',
+      melody: [[81,2],[84,2],[83,3],[0,1],[81,2],[79,2],[77,4],[0,2],[76,2],[79,2],[81,3],[0,1],[79,2],[76,4],[0,2]],
+      bass: [[45,4],[0,4],[52,4],[0,4],[48,4],[0,4],[45,4],[0,4]],
     },
-    // Exam room — tense, mysterious E minor, brooding
+    // Exam room — soft, mysterious E minor, slow and spacious
     examroom: {
-      beatMs: 240, melodyType: 'sawtooth', bassType: 'triangle',
-      melody: [[76,1],[79,1],[83,2],[81,1],[79,1],[76,2],[74,1],[76,1],[79,2],[78,2],[76,4]],
-      bass: [[40,2],[47,2],[43,2],[45,2],[40,4]],
+      beatMs: 440, melodyType: 'sine', bassType: 'sine',
+      melody: [[76,3],[0,1],[79,2],[83,3],[0,1],[81,2],[79,2],[76,4],[0,2],[74,2],[76,3],[0,1],[71,4],[0,2]],
+      bass: [[40,4],[0,4],[47,4],[0,4],[43,4],[0,4],[40,4],[0,4]],
     },
-    // Optic nerve — surreal, floaty D dorian
+    // Optic nerve — dreamy, floaty D dorian, very gentle
     opticnerve: {
-      beatMs: 250, melodyType: 'sine', bassType: 'sine',
-      melody: [[74,2],[81,1],[79,1],[77,2],[74,1],[72,1],[74,4],[77,2],[79,1],[81,1],[83,4]],
-      bass: [[50,4],[57,4],[48,4],[55,4]],
+      beatMs: 460, melodyType: 'sine', bassType: 'sine',
+      melody: [[74,3],[0,1],[81,3],[0,1],[79,2],[77,4],[0,2],[74,2],[72,2],[74,4],[0,2],[77,3],[0,1],[79,4],[0,2]],
+      bass: [[50,4],[0,4],[57,4],[0,4],[48,4],[0,4],[55,4],[0,4]],
     },
-    // Lasik — fast, intense, driving G minor
+    // Lasik — still a bit more motion, but soft and not frantic
     lasik: {
-      beatMs: 160, melodyType: 'square', bassType: 'sawtooth',
-      melody: [[79,1],[79,1],[82,1],[79,1],[77,1],[79,2],[74,1],[79,1],[79,1],[82,1],[84,2],[82,1],[79,1],[77,4]],
-      bass: [[43,1],[43,1],[50,1],[43,1],[41,2],[43,2]],
+      beatMs: 320, melodyType: 'triangle', bassType: 'sine',
+      melody: [[79,2],[82,2],[79,2],[77,3],[0,1],[74,2],[79,3],[0,1],[82,2],[79,2],[77,4],[0,2]],
+      bass: [[43,4],[0,4],[50,4],[0,4],[41,4],[0,4],[43,4],[0,4]],
     },
-    // Brain — triumphant, bright C major fanfare-ish
+    // Brain — bright but mellow C major
     brain: {
-      beatMs: 200, melodyType: 'square', bassType: 'triangle',
-      melody: [[72,1],[76,1],[79,1],[84,2],[83,1],[79,1],[81,2],[84,1],[83,1],[81,1],[79,1],[76,2],[72,4]],
-      bass: [[48,2],[55,2],[53,2],[55,2],[48,4],[60,4]],
+      beatMs: 380, melodyType: 'triangle', bassType: 'sine',
+      melody: [[72,2],[76,2],[79,3],[0,1],[84,3],[0,1],[81,2],[79,4],[0,2],[76,2],[79,2],[72,4],[0,2]],
+      bass: [[48,4],[0,4],[55,4],[0,4],[53,4],[0,4],[48,4],[0,4]],
     },
-    // Boss lair — ominous, slow, low D minor
+    // Boss lair — soft, slow, low D minor — moody but not harsh
     lair: {
-      beatMs: 230, melodyType: 'sawtooth', bassType: 'triangle',
-      melody: [[62,2],[65,1],[69,1],[68,2],[65,2],[62,1],[60,1],[62,4],[57,2],[62,2]],
-      bass: [[38,2],[38,2],[45,2],[44,2],[38,4]],
+      beatMs: 420, melodyType: 'sine', bassType: 'sine',
+      melody: [[62,3],[0,1],[65,2],[69,3],[0,1],[68,2],[65,2],[62,4],[0,2],[57,2],[62,3],[0,3]],
+      bass: [[38,4],[0,4],[45,4],[0,4],[41,4],[0,4],[38,4],[0,4]],
     },
   };
 
@@ -1567,8 +1568,19 @@
 
     musicMasterGain = audioCtx.createGain();
     musicMasterGain.gain.value = 0.001;
-    musicMasterGain.connect(audioCtx.destination);
-    musicMasterGain.gain.linearRampToValueAtTime(0.32, audioCtx.currentTime + 0.6);
+    // A gentle low-pass filter rounds off harsh high harmonics for a softer sound
+    let musicOut = musicMasterGain;
+    try {
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 2000;   // soften brightness
+      lp.Q.value = 0.5;
+      musicMasterGain.connect(lp).connect(audioCtx.destination);
+    } catch (e) {
+      musicMasterGain.connect(audioCtx.destination);
+    }
+    // Lower, calmer overall level than before (was 0.32)
+    musicMasterGain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.2);
 
     const beatMs = track.beatMs;
     const playSequence = (notes, type, octaveShift, volMul) => {
@@ -1576,19 +1588,24 @@
       const playNext = () => {
         if (musicPaused || !musicEnabled || !musicMasterGain) return;
         const [note, beats] = notes[idx % notes.length];
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = noteFreq(note + octaveShift);
         const dur = beatMs * beats / 1000;
-        const now = audioCtx.currentTime;
-        gain.gain.value = 0.001;
-        gain.gain.exponentialRampToValueAtTime(0.4 * volMul, now + 0.005);
-        gain.gain.linearRampToValueAtTime(0.25 * volMul, now + dur * 0.7);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-        osc.connect(gain).connect(musicMasterGain);
-        osc.start();
-        osc.stop(now + dur + 0.05);
+        // note === 0 is a rest — stay silent for its duration
+        if (note > 0) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.value = noteFreq(note + octaveShift);
+          const now = audioCtx.currentTime;
+          // Gentle swell in and slow fade out (no hard pop), quieter overall
+          const peak = 0.22 * volMul;
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(peak, now + Math.min(0.12, dur * 0.35));
+          gain.gain.linearRampToValueAtTime(peak * 0.7, now + dur * 0.7);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur + 0.18);
+          osc.connect(gain).connect(musicOut);
+          osc.start();
+          osc.stop(now + dur + 0.22);
+        }
         idx++;
         const t = setTimeout(playNext, beatMs * beats);
         musicTimers.push(t);
@@ -1596,7 +1613,7 @@
       playNext();
     };
     playSequence(track.melody, track.melodyType, 0, 0.7);
-    playSequence(track.bass, track.bassType, 0, 0.55);
+    playSequence(track.bass, track.bassType, 0, 0.5);
   }
   function stopMusic() {
     if (musicMasterGain && audioCtx) {
