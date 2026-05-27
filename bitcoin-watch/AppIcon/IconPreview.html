@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BTC App Icon Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    color: #fff;
+    padding: 40px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+  h1 { font-size: 20px; font-weight: 600; color: #aaa; }
+  .export-note {
+    font-size: 13px;
+    color: #555;
+    text-align: center;
+    max-width: 540px;
+    line-height: 1.7;
+  }
+  .export-note code {
+    background: #222; padding: 2px 6px; border-radius: 4px;
+    font-family: "SF Mono", monospace; font-size: 11px; color: #aaa;
+  }
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+  }
+  .size-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .size-label {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .icon-wrap {
+    border-radius: var(--r);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .icon-wrap img, .icon-wrap svg { display: block; }
+
+  button {
+    margin-top: 12px;
+    background: #F7931A;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover { background: #ffab40; }
+
+  .divider {
+    width: 100%;
+    max-width: 600px;
+    border: none;
+    border-top: 1px solid #222;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<h1>Bitcoin Watch — App Icon</h1>
+
+<p class="export-note">
+  Open this file in <strong>Safari or Chrome</strong>. Right-click the 1024×1024 icon below
+  and save as PNG — or click <strong>Export 1024×1024 PNG</strong>.
+  Drop the exported file into both asset catalogs:
+  <code>BitcoinWatch/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png</code> and
+  <code>WatchApp/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png</code>.
+  Xcode auto-generates all other sizes from the single 1024pt image.
+</p>
+
+<hr class="divider">
+<span class="section-title">App Store / Primary (1024 pt)</span>
+
+<div class="size-card">
+  <div class="icon-wrap" style="--r:22.4%; width:256px; height:256px;" id="mainIcon">
+    <svg width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0%" stop-color="#1C1C1E"/>
+          <stop offset="100%" stop-color="#000000"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="50%" cy="46%" r="42%">
+          <stop offset="0%" stop-color="#F7931A" stop-opacity="0.28"/>
+          <stop offset="70%" stop-color="#F7931A" stop-opacity="0.06"/>
+          <stop offset="100%" stop-color="#F7931A" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="1024" height="1024" fill="url(#bg)"/>
+      <ellipse cx="512" cy="472" rx="360" ry="340" fill="url(#glow)"/>
+      <rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/>
+      <path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/>
+      <path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/>
+      <rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/>
+      <rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/>
+      <rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/>
+      <rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/>
+    </svg>
+  </div>
+  <div class="size-label">1024 × 1024 pt<br>App Store + asset catalog master</div>
+</div>
+
+<button onclick="exportIcon()">Export 1024×1024 PNG</button>
+
+<hr class="divider">
+<span class="section-title">iPhone sizes</span>
+
+<div class="grid">
+  <!-- iPhone @3x home screen -->
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:22.4%; width:180px; height:180px;">
+      <svg width="180" height="180" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg2" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient><radialGradient id="g2" cx="50%" cy="46%" r="42%"><stop offset="0%" stop-color="#F7931A" stop-opacity="0.28"/><stop offset="100%" stop-color="#F7931A" stop-opacity="0"/></radialGradient></defs><rect width="1024" height="1024" fill="url(#bg2)"/><ellipse cx="512" cy="472" rx="360" ry="340" fill="url(#g2)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">180 × 180 px<br>iPhone @3x home</div>
+  </div>
+
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:22.4%; width:120px; height:120px;">
+      <svg width="120" height="120" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg3" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg3)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">120 × 120 px<br>iPhone @2x home</div>
+  </div>
+
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:22.4%; width:87px; height:87px;">
+      <svg width="87" height="87" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg4" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg4)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">87 × 87 px<br>iPhone @3x Settings</div>
+  </div>
+</div>
+
+<hr class="divider">
+<span class="section-title">Apple Watch sizes</span>
+
+<div class="grid">
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:50%; width:88px; height:88px;">
+      <svg width="88" height="88" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg5" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg5)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">88 × 88 px<br>Watch 45mm home</div>
+  </div>
+
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:50%; width:80px; height:80px;">
+      <svg width="80" height="80" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg6" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg6)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">80 × 80 px<br>Watch 41mm home</div>
+  </div>
+
+  <div class="size-card">
+    <div class="icon-wrap" style="--r:22.4%; width:44px; height:44px;">
+      <svg width="44" height="44" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg7" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0%" stop-color="#1C1C1E"/><stop offset="100%" stop-color="#000000"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg7)"/><rect x="388" y="196" width="72" height="632" rx="12" fill="#F7931A"/><path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472 L 424 472 L 424 404 L 614 404 Q 690 404 690 336 Q 690 268 614 268 L 424 268 Z" fill="#F7931A"/><path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756 L 424 756 L 424 688 L 628 688 Q 718 688 718 620 Q 718 540 628 540 L 424 540 Z" fill="#F7931A"/><rect x="356" y="178" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="244" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="736" width="196" height="44" rx="22" fill="#F7931A"/><rect x="356" y="802" width="196" height="44" rx="22" fill="#F7931A"/></svg>
+    </div>
+    <div class="size-label">44 × 44 px<br>Notification</div>
+  </div>
+</div>
+
+<script>
+function exportIcon() {
+  const svg = document.querySelector('#mainIcon svg');
+  const svgData = new XMLSerializer().serializeToString(svg);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+
+  const img = new Image();
+  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = function() {
+    // Draw at 4× for 1024px output from the 256px preview
+    ctx.drawImage(img, 0, 0, 1024, 1024);
+    URL.revokeObjectURL(url);
+
+    const a = document.createElement('a');
+    a.download = 'AppIcon-1024.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.src = url;
+}
+</script>
+
+</body>
+</html>
