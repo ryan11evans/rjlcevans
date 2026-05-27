@@ -8,25 +8,25 @@ private let sampleEntry = WatchBTCEntry(
 )
 
 #Preview("Circular", as: .accessoryCircular) {
-    BTCWatchComplication()
+    BTCWatchComplicationBundle()
 } timeline: {
     sampleEntry
 }
 
 #Preview("Rectangular", as: .accessoryRectangular) {
-    BTCWatchComplication()
+    BTCWatchComplicationBundle()
 } timeline: {
     sampleEntry
 }
 
 #Preview("Inline", as: .accessoryInline) {
-    BTCWatchComplication()
+    BTCWatchComplicationBundle()
 } timeline: {
     sampleEntry
 }
 
 #Preview("Corner", as: .accessoryCorner) {
-    BTCWatchComplication()
+    BTCWatchComplicationBundle()
 } timeline: {
     sampleEntry
 }
