@@ -1076,9 +1076,28 @@
             gray[j] = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0;
           }
 
-          // Otsu's method to find optimal threshold
+          // Separable 5-tap Gaussian blur to suppress noise before thresholding
+          const kG = [1, 4, 6, 4, 1], kGS = 16;
+          const tmp = new Uint8ClampedArray(n);
+          const blurred = new Uint8ClampedArray(n);
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              let s = 0;
+              for (let k = -2; k <= 2; k++) s += gray[y * w + Math.min(w - 1, Math.max(0, x + k))] * kG[k + 2];
+              tmp[y * w + x] = (s / kGS) | 0;
+            }
+          }
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              let s = 0;
+              for (let k = -2; k <= 2; k++) s += tmp[Math.min(h - 1, Math.max(0, y + k)) * w + x] * kG[k + 2];
+              blurred[y * w + x] = (s / kGS) | 0;
+            }
+          }
+
+          // Otsu's method on blurred data
           const hist = new Int32Array(256);
-          for (let j = 0; j < n; j++) hist[gray[j]]++;
+          for (let j = 0; j < n; j++) hist[blurred[j]]++;
           let sum = 0;
           for (let i = 0; i < 256; i++) sum += i * hist[i];
           let sumB = 0, wB = 0, maxVar = 0, thresh = 128;
@@ -1093,12 +1112,12 @@
 
           // Detect light-on-dark (e.g. white text on coloured bg) and invert
           let brightPixels = 0;
-          for (let j = 0; j < n; j++) if (gray[j] > thresh) brightPixels++;
+          for (let j = 0; j < n; j++) if (blurred[j] > thresh) brightPixels++;
           const lightOnDark = brightPixels < n * 0.5;
 
           // Output: always dark text on white background for Tesseract
           for (let i = 0, j = 0; j < n; i += 4, j++) {
-            const isText = lightOnDark ? (gray[j] > thresh) : (gray[j] <= thresh);
+            const isText = lightOnDark ? (blurred[j] > thresh) : (blurred[j] <= thresh);
             const val = isText ? 0 : 255;
             d[i] = d[i + 1] = d[i + 2] = val; d[i + 3] = 255;
           }
@@ -1149,6 +1168,8 @@
             }
           }
         });
+        // PSM 11 = sparse text: finds text anywhere without assuming page layout
+        await worker.setParameters({ tessedit_pageseg_mode: '11' });
         const result = await worker.recognize(processedUrl);
         await worker.terminate();
         const text = result.data.text.trim() || 'No text found — try a clearer photo or better lighting.';
