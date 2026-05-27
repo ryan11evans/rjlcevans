@@ -7,6 +7,28 @@
   <title>Evans Family — rjlcevans.com</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
   <meta name="description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Ryan Evans",
+    "honorificPrefix": "Dr.",
+    "jobTitle": "Optometrist",
+    "url": "https://rjlcevans.com",
+    "email": "ryan@rjlcevans.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Murrieta",
+      "addressRegion": "CA",
+      "addressCountry": "US"
+    },
+    "spouse": {
+      "@type": "Person",
+      "name": "Jadyn Evans",
+      "jobTitle": "Optometrist"
+    }
+  }
+  </script>
   <style>
     :root {
       --bg: #ececec;
@@ -282,6 +304,30 @@ footer {
 .info-card h3 { margin-top: 0; }
 .superpower-items { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 
+/* ===== Night mode (8 pm – 6 am) ===== */
+body { transition: background-color 0.6s ease, color 0.6s ease; }
+body.night {
+  --bg: #111827;
+  --card-bg: #1e2533;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --shadow: 0 6px 20px rgba(0,0,0,.35);
+}
+body.night .caption {
+  color: #e2e8f0;
+  background: linear-gradient(180deg, rgba(30,37,51,.8), rgba(30,37,51,.96));
+  border-top-color: rgba(255,255,255,.06);
+}
+body.night .contact a {
+  background: var(--card-bg);
+  border-color: rgba(255,255,255,.12);
+}
+body.night .contact a:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+body.night .joke-controls button { background: var(--card-bg); border-color: rgba(255,255,255,.12); }
+body.night .joke-controls button:hover { background: var(--text); color: var(--bg); }
+body.night #timer { color: #f87171; }
+body.night .widget-card { border-color: rgba(255,255,255,.06); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
@@ -309,7 +355,7 @@ footer {
     <source srcset="family.webp" type="image/webp">
     <img src="family.jpg" alt="The Evans Family" loading="eager" />
   </picture>
-  <div class="caption">The Evans Family — Murrieta, 2025</div>
+  <div class="caption">The Evans Family — Murrieta, 2026</div>
 </section>
 
 <section class="card info-card">
@@ -522,6 +568,14 @@ footer {
     }
     btn.addEventListener('click', showJoke);
     el.textContent = pickJoke();
+  })();
+
+  // ===== Night mode (8 pm – 6 am) =====
+  (function () {
+    function isNight() { const h = new Date().getHours(); return h >= 20 || h < 6; }
+    function applyTheme() { document.body.classList.toggle('night', isNight()); }
+    applyTheme();
+    setInterval(applyTheme, 60000);
   })();
 
   // ===== This Week in Our House — varies by day =====
