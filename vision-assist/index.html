@@ -961,10 +961,13 @@
         visW = zW; visH = zH;
       }
 
-      // Crop to the guide box (88% wide, 48% tall, centered)
-      const cropW = visW * 0.88, cropH = visH * 0.48;
-      const cropX = offX + (visW - cropW) / 2;
-      const cropY = offY + (visH - cropH) / 2;
+      // Crop to guide box (88% × 48%) + 4% padding so edge letters aren't clipped
+      const boxW = visW * 0.88, boxH = visH * 0.48;
+      const padX = visW * 0.04, padY = visH * 0.04;
+      const cropW = Math.min(visW, boxW + padX * 2);
+      const cropH = Math.min(visH, boxH + padY * 2);
+      const cropX = offX + Math.max(0, (visW - cropW) / 2);
+      const cropY = offY + Math.max(0, (visH - cropH) / 2);
 
       const canvas = document.createElement('canvas');
       canvas.width  = Math.round(cropW);
@@ -1048,6 +1051,66 @@
     }
 
     // ═══════════════════════════════════════════════
+    // IMAGE PREPROCESSING (for better OCR)
+    // ═══════════════════════════════════════════════
+    function preprocessImage(dataUrl) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          // Scale up so text is at least 40px tall for Tesseract
+          const scale = Math.max(1, Math.min(4, 1600 / Math.max(img.width, img.height)));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const id = ctx.getImageData(0, 0, w, h);
+          const d = id.data;
+          const n = w * h;
+
+          // Convert to grayscale
+          const gray = new Uint8ClampedArray(n);
+          for (let i = 0, j = 0; j < n; i += 4, j++) {
+            gray[j] = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0;
+          }
+
+          // Otsu's method to find optimal threshold
+          const hist = new Int32Array(256);
+          for (let j = 0; j < n; j++) hist[gray[j]]++;
+          let sum = 0;
+          for (let i = 0; i < 256; i++) sum += i * hist[i];
+          let sumB = 0, wB = 0, maxVar = 0, thresh = 128;
+          for (let t = 0; t < 256; t++) {
+            wB += hist[t]; if (!wB) continue;
+            const wF = n - wB; if (!wF) break;
+            sumB += t * hist[t];
+            const mB = sumB / wB, mF = (sum - sumB) / wF;
+            const v = wB * wF * (mB - mF) ** 2;
+            if (v > maxVar) { maxVar = v; thresh = t; }
+          }
+
+          // Detect light-on-dark (e.g. white text on coloured bg) and invert
+          let brightPixels = 0;
+          for (let j = 0; j < n; j++) if (gray[j] > thresh) brightPixels++;
+          const lightOnDark = brightPixels < n * 0.5;
+
+          // Output: always dark text on white background for Tesseract
+          for (let i = 0, j = 0; j < n; i += 4, j++) {
+            const isText = lightOnDark ? (gray[j] > thresh) : (gray[j] <= thresh);
+            const val = isText ? 0 : 255;
+            d[i] = d[i + 1] = d[i + 2] = val; d[i + 3] = 255;
+          }
+          ctx.putImageData(id, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(dataUrl); // fallback: use original
+        img.src = dataUrl;
+      });
+    }
+
+    // ═══════════════════════════════════════════════
     // OCR
     // ═══════════════════════════════════════════════
     async function startOCR() {
@@ -1069,8 +1132,11 @@
       textBody.classList.add('hidden');
       controls.classList.add('hidden');
       document.getElementById('read-save-btn').className = 'save-btn';
+      document.getElementById('read-save-btn').textContent = 'Save';
       bar.style.width = '0%';
-      statusEl.textContent = 'Preparing…';
+      statusEl.textContent = 'Enhancing image…';
+
+      const processedUrl = await preprocessImage(imageUrl);
 
       try {
         const worker = await Tesseract.createWorker('eng', 1, {
@@ -1083,7 +1149,7 @@
             }
           }
         });
-        const result = await worker.recognize(imageUrl);
+        const result = await worker.recognize(processedUrl);
         await worker.terminate();
         const text = result.data.text.trim() || 'No text found — try a clearer photo or better lighting.';
         state.ocrText = text;
