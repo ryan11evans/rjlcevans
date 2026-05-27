@@ -514,7 +514,7 @@
       tab: 'camera', prevTab: 'camera',
       stream: null, torchTrack: null, torchOn: false, liveContrastOn: false,
       capturedDataUrl: null, capScale: 1, capLastScale: 1, capPinchDist: 0,
-      ocrText: '', isSpeaking: false, currentScanSaved: false,
+      ocrText: '', isSpeaking: false, currentScanSaved: false, usingCSSZoom: false,
       settings: { highContrast: false, autoRead: false, defaultFont: 32, defaultSpeed: 0.85 }
     };
 
@@ -553,21 +553,61 @@
         const caps = state.torchTrack.getCapabilities && state.torchTrack.getCapabilities();
         if (caps && caps.zoom) {
           state.torchTrack.applyConstraints({ advanced: [{ zoom: parseFloat(val) }] });
-          video.style.transform = ''; return;
+          video.style.transform = '';
+          state.usingCSSZoom = false;
+          return;
         }
       }
       video.style.transform = `scale(${val})`;
+      state.usingCSSZoom = true;
     }
 
     function capturePhoto() {
       const video = document.getElementById('live-video');
       if (!video.videoWidth) { toast('Camera not ready yet'); return; }
+
+      const container = document.querySelector('.camera-live');
+      const cW = container.clientWidth, cH = container.clientHeight;
+      const vW = video.videoWidth,     vH = video.videoHeight;
+
+      // Work out which portion of the video is visible after object-fit:cover
+      let visW, visH, offX, offY;
+      if (vW / vH > cW / cH) {
+        // video wider — height fills, sides cropped
+        visH = vH;
+        visW = cW * (vH / cH);
+        offX = (vW - visW) / 2;
+        offY = 0;
+      } else {
+        // video taller — width fills, top/bottom cropped
+        visW = vW;
+        visH = cH * (vW / cW);
+        offX = 0;
+        offY = (vH - visH) / 2;
+      }
+
+      // Account for CSS zoom: visible region shrinks to center 1/zoom of the frame
+      const cssZoom = state.usingCSSZoom ? (parseFloat(document.getElementById('live-zoom').value) || 1) : 1;
+      if (cssZoom > 1) {
+        const zW = visW / cssZoom, zH = visH / cssZoom;
+        offX += (visW - zW) / 2;
+        offY += (visH - zH) / 2;
+        visW = zW; visH = zH;
+      }
+
+      // Crop to the guide box: 88% wide, 48% tall, centered
+      const cropW = visW * 0.88, cropH = visH * 0.48;
+      const cropX = offX + (visW - cropW) / 2;
+      const cropY = offY + (visH - cropH) / 2;
+
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      canvas.width  = Math.round(cropW);
+      canvas.height = Math.round(cropH);
       const ctx = canvas.getContext('2d');
       if (state.liveContrastOn) ctx.filter = 'contrast(200%) brightness(1.1)';
-      ctx.drawImage(video, 0, 0);
-      state.capturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+      state.capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
       showCaptured(state.capturedDataUrl);
     }
 
