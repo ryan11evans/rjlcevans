@@ -1,47 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Background -->
-  <rect width="100" height="100" rx="22" fill="url(#bgGrad)"/>
   <defs>
-    <radialGradient id="bgGrad" cx="50%" cy="35%" r="70%">
-      <stop offset="0%" stop-color="#b8d8f8"/>
-      <stop offset="100%" stop-color="#7ab0e8"/>
+    <radialGradient id="bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#c8dffa"/>
+      <stop offset="100%" stop-color="#7ab2e8"/>
+    </radialGradient>
+    <radialGradient id="lensL" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#f0f7ff"/>
+      <stop offset="100%" stop-color="#dceefa"/>
+    </radialGradient>
+    <radialGradient id="lensR" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#f0f7ff"/>
+      <stop offset="100%" stop-color="#dceefa"/>
     </radialGradient>
   </defs>
 
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+
   <!-- Hair -->
-  <ellipse cx="50" cy="30" rx="20" ry="14" fill="#6b3e1e"/>
-  <rect x="30" y="30" width="40" height="8" fill="#6b3e1e"/>
+  <rect x="28" y="10" width="44" height="22" rx="4" fill="#5a3010"/>
+  <ellipse cx="50" cy="28" rx="22" ry="10" fill="#5a3010"/>
 
   <!-- Face -->
-  <ellipse cx="50" cy="52" rx="19" ry="20" fill="#f5c89a"/>
+  <ellipse cx="50" cy="46" rx="22" ry="23" fill="#f0c090"/>
 
-  <!-- Glasses frames -->
-  <circle cx="39" cy="52" r="11" fill="white" stroke="#8B6914" stroke-width="2.5"/>
-  <circle cx="61" cy="52" r="11" fill="white" stroke="#8B6914" stroke-width="2.5"/>
-  <!-- Bridge -->
-  <line x1="50" y1="52" x2="50" y2="52" stroke="#8B6914" stroke-width="2.5"/>
-  <path d="M50 51 Q50 52 50 53" stroke="#8B6914" stroke-width="2" fill="none"/>
-  <!-- Nose piece left -->
-  <path d="M28 50 Q26 48 27 52" stroke="#8B6914" stroke-width="1.5" fill="none"/>
-  <!-- Nose piece right -->
-  <path d="M72 50 Q74 48 73 52" stroke="#8B6914" stroke-width="1.5" fill="none"/>
-
-  <!-- Eyes (pupils) -->
-  <circle cx="39" cy="52" r="5" fill="#111"/>
-  <circle cx="61" cy="52" r="5" fill="#111"/>
-  <circle cx="41" cy="50" r="1.5" fill="white"/>
-  <circle cx="63" cy="50" r="1.5" fill="white"/>
-
-  <!-- Smile -->
-  <path d="M42 64 Q50 71 58 64" stroke="#c0784a" stroke-width="2" fill="none" stroke-linecap="round"/>
-
-  <!-- Shirt collar -->
-  <path d="M31 78 L50 70 L69 78 L69 100 L31 100 Z" fill="white"/>
-  <path d="M50 70 L42 85 L50 82 L58 85 L50 70 Z" fill="white"/>
+  <!-- Shirt (white rounded rect) -->
+  <rect x="28" y="76" width="44" height="28" rx="8" fill="white"/>
 
   <!-- Tie -->
-  <path d="M47 72 L53 72 L55 88 L50 92 L45 88 Z" fill="#c0392b"/>
-  <line x1="47" y1="76" x2="53" y2="76" stroke="#2980b9" stroke-width="1.5"/>
-  <line x1="46" y1="80" x2="54" y2="80" stroke="#2980b9" stroke-width="1.5"/>
-  <line x1="46" y1="84" x2="54" y2="84" stroke="#2980b9" stroke-width="1.5"/>
+  <rect x="44" y="76" width="12" height="6" rx="1" fill="#4a7fc1"/>
+  <rect x="44" y="82" width="12" height="2" rx="0" fill="white"/>
+  <rect x="44" y="84" width="12" height="6" rx="1" fill="#c0432a"/>
+  <rect x="44" y="90" width="12" height="2" rx="0" fill="white"/>
+  <rect x="45" y="92" width="10" height="10" rx="1" fill="#c0432a"/>
+  <polygon points="45,100 55,100 55,102 50,106 45,102" fill="#c0432a"/>
+
+  <!-- Glasses frames (large, tan/gold) -->
+  <circle cx="37" cy="46" r="15" fill="none" stroke="#c8956a" stroke-width="3.5"/>
+  <circle cx="63" cy="46" r="15" fill="none" stroke="#c8956a" stroke-width="3.5"/>
+  <!-- Lenses -->
+  <circle cx="37" cy="46" r="13.5" fill="url(#lensL)"/>
+  <circle cx="63" cy="46" r="13.5" fill="url(#lensR)"/>
+  <!-- Frame overlay (on top of lens) -->
+  <circle cx="37" cy="46" r="13.5" fill="none" stroke="#c8956a" stroke-width="3"/>
+  <circle cx="63" cy="46" r="13.5" fill="none" stroke="#c8956a" stroke-width="3"/>
+  <!-- Bridge -->
+  <path d="M51 46 Q54 43 49 46" stroke="#c8956a" stroke-width="2.5" fill="none"/>
+  <!-- Temples -->
+  <line x1="22" y1="44" x2="24" y2="46" stroke="#c8956a" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="78" y1="44" x2="76" y2="46" stroke="#c8956a" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Pupils -->
+  <circle cx="37" cy="46" r="5.5" fill="#111"/>
+  <circle cx="63" cy="46" r="5.5" fill="#111"/>
+  <circle cx="35" cy="44" r="1.8" fill="white"/>
+  <circle cx="61" cy="44" r="1.8" fill="white"/>
+
+  <!-- Smile -->
+  <path d="M42 60 Q50 67 58 60" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>
 </svg>
