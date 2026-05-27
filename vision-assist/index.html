@@ -21,7 +21,10 @@
       --nav-h: 76px;
     }
 
-    html, body { height: 100%; overflow: hidden; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
     body {
       background: var(--bg);
       color: var(--text);
@@ -31,6 +34,7 @@
       height: 100dvh;
     }
 
+    /* ─── TOP HEADER ─── */
     .app-header {
       background: var(--surface);
       padding: 14px 20px;
@@ -54,6 +58,7 @@
       text-transform: uppercase;
     }
 
+    /* ─── SCREENS ─── */
     .app-body { flex: 1; overflow: hidden; position: relative; }
 
     .screen {
@@ -65,22 +70,33 @@
     }
     .screen.active { display: flex; }
 
+    /* ─── CAMERA SCREEN ─── */
     #camera-screen { background: #000; }
 
-    .camera-live { flex: 1; position: relative; overflow: hidden; background: #000; }
+    .camera-live {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
     #live-video {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       transform-origin: center;
       transition: transform 0.1s;
     }
     .scan-guide {
-      position: absolute; inset: 0;
+      position: absolute;
+      inset: 0;
       pointer-events: none;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .scan-box {
-      width: 88%; height: 48%;
+      width: 88%;
+      height: 48%;
       border: 2.5px solid rgba(0,204,255,0.65);
       border-radius: 18px;
       box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
@@ -88,81 +104,147 @@
     }
     .scan-box::before {
       content: 'Point at text to scan';
-      position: absolute; bottom: -34px; left: 50%;
+      position: absolute;
+      bottom: -34px;
+      left: 50%;
       transform: translateX(-50%);
-      color: rgba(255,255,255,0.65); font-size: 14px; white-space: nowrap;
+      color: rgba(255,255,255,0.65);
+      font-size: 14px;
+      white-space: nowrap;
     }
 
     .camera-bar {
       background: #000;
       padding: 14px 24px 12px;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .cam-side { display: flex; gap: 14px; align-items: center; }
     .cam-icon-btn {
       background: rgba(255,255,255,0.1);
-      border: none; border-radius: 50%;
-      width: 52px; height: 52px; font-size: 22px;
-      cursor: pointer; color: white;
-      display: flex; align-items: center; justify-content: center;
+      border: none;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.2s;
     }
     .cam-icon-btn:active { background: rgba(255,255,255,0.25); }
     .cam-icon-btn.lit { background: #ffd000; color: #000; }
 
     .shutter {
-      width: 76px; height: 76px;
+      width: 76px;
+      height: 76px;
       border: 4px solid rgba(255,255,255,0.5);
-      border-radius: 50%; background: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.1s; flex-shrink: 0;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+      flex-shrink: 0;
     }
     .shutter:active { transform: scale(0.88); }
-    .shutter-inner { width: 58px; height: 58px; background: white; border-radius: 50%; pointer-events: none; }
+    .shutter-inner {
+      width: 58px;
+      height: 58px;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+    }
 
     .zoom-strip {
-      background: #000; padding: 0 24px 16px;
-      display: flex; align-items: center; gap: 12px;
+      background: #000;
+      padding: 0 24px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .zoom-strip .z-label { color: var(--text-muted); font-size: 13px; min-width: 28px; }
-    .zoom-strip input[type="range"] { flex: 1; height: 4px; accent-color: var(--accent); cursor: pointer; }
+    .zoom-strip input[type="range"] {
+      flex: 1;
+      height: 4px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
 
+    /* ─── CAPTURED OVERLAY ─── */
     #captured-overlay {
-      position: absolute; inset: 0; background: #000;
-      z-index: 10; display: none; flex-direction: column;
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 10;
+      display: none;
+      flex-direction: column;
     }
     #captured-overlay.show { display: flex; }
 
     .cap-img-wrap {
-      flex: 1; position: relative; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       touch-action: none;
     }
     #cap-img {
-      max-width: 100%; max-height: 100%;
-      object-fit: contain; transform-origin: center;
-      user-select: none; pointer-events: none;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transform-origin: center;
+      user-select: none;
+      pointer-events: none;
     }
     .cap-zoom-btns {
-      position: absolute; right: 12px; bottom: 12px;
-      display: flex; flex-direction: column; gap: 8px;
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .cap-zoom-btn {
-      width: 44px; height: 44px;
+      width: 44px;
+      height: 44px;
       background: rgba(0,0,0,0.7);
       border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 50%; color: white; font-size: 22px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .cap-actions { background: var(--bg); padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 10px; }
+    .cap-actions {
+      background: var(--bg);
+      padding: 16px 20px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     .cap-actions-row { display: flex; gap: 10px; }
 
     .action-btn {
-      border: none; border-radius: var(--radius);
-      font-size: 18px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 16px 20px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 20px;
       transition: opacity 0.15s, transform 0.1s;
     }
     .action-btn:active { opacity: 0.8; transform: scale(0.97); }
@@ -170,130 +252,263 @@
     .action-btn.half { flex: 1; }
     .action-btn.primary { background: var(--accent); color: #000; }
     .action-btn.dark { background: var(--surface2); color: white; }
-    .action-btn.ghost { background: none; color: var(--text-muted); font-size: 15px; padding: 10px; }
+    .action-btn.ghost {
+      background: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      padding: 10px;
+    }
 
+    /* ─── READ SCREEN ─── */
     #read-screen { background: var(--bg); }
 
     .read-top {
-      background: var(--surface); padding: 12px 16px;
-      display: flex; align-items: center; gap: 10px;
-      border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+      background: var(--surface);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #2a2a2a;
+      flex-shrink: 0;
     }
     .back-btn {
-      background: none; border: none; color: var(--accent);
-      font-size: 17px; font-weight: 600; cursor: pointer; padding: 4px 0;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .read-label {
-      flex: 1; font-size: 17px; font-weight: 700;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      flex: 1;
+      font-size: 17px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .save-btn {
-      background: none; border: 1px solid var(--accent); color: var(--accent);
-      border-radius: 8px; font-size: 14px; font-weight: 700;
-      padding: 6px 12px; cursor: pointer;
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 12px;
+      cursor: pointer;
     }
     .save-btn.saved { border-color: var(--success); color: var(--success); }
 
+    /* OCR loading */
     .ocr-loading {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px; padding: 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 40px;
     }
     .ocr-loading.hidden { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
-      width: 52px; height: 52px;
-      border: 4px solid #333; border-top-color: var(--accent);
-      border-radius: 50%; animation: spin 0.75s linear infinite;
+      width: 52px;
+      height: 52px;
+      border: 4px solid #333;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
     }
     .ocr-status { font-size: 20px; color: var(--text-muted); text-align: center; }
-    .ocr-bar-wrap { width: 240px; height: 5px; background: #333; border-radius: 3px; overflow: hidden; }
-    .ocr-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+    .ocr-bar-wrap {
+      width: 240px;
+      height: 5px;
+      background: #333;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .ocr-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s;
+    }
 
+    /* Text display */
     .text-body {
-      flex: 1; overflow-y: auto; padding: 20px;
-      font-size: 32px; line-height: 1.65;
-      white-space: pre-wrap; word-break: break-word;
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      font-size: 32px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .text-body.hidden { display: none; }
     .text-body.hi-con { background: #000; color: #ffff00; }
 
     .read-controls {
-      background: var(--surface); border-top: 1px solid #2a2a2a;
+      background: var(--surface);
+      border-top: 1px solid #2a2a2a;
       padding: 14px 16px 10px;
-      display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
     }
     .read-controls.hidden { display: none; }
 
     .tts-row { display: flex; gap: 10px; }
     .tts-btn {
-      flex: 1; padding: 15px; border: none; border-radius: 12px;
-      font-size: 17px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
     .tts-btn.play { background: var(--accent); color: #000; }
     .tts-btn.stop { background: var(--surface2); color: white; }
     .tts-btn.play.speaking { background: #0099cc; }
 
-    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .slider-row .s-label { font-size: 13px; color: var(--text-muted); min-width: 62px; }
-    .slider-row input[type="range"] { flex: 1; height: 4px; accent-color: var(--accent); cursor: pointer; }
+    .slider-row input[type="range"] {
+      flex: 1;
+      height: 4px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
     .slider-row .s-val { font-size: 13px; color: var(--text-muted); min-width: 32px; text-align: right; }
 
+    /* ─── LIBRARY SCREEN ─── */
     #library-screen { background: var(--bg); }
 
     .lib-header {
-      background: var(--surface); padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+      background: var(--surface);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2a2a;
+      flex-shrink: 0;
     }
     .lib-title { font-size: 20px; font-weight: 700; }
     .lib-count { font-size: 14px; color: var(--text-muted); }
 
     .lib-list {
-      flex: 1; overflow-y: auto; padding: 12px;
-      display: flex; flex-direction: column; gap: 10px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .lib-empty {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 14px; color: var(--text-muted); padding: 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--text-muted);
+      padding: 40px;
     }
     .lib-empty-icon { font-size: 60px; }
     .lib-empty-text { font-size: 18px; text-align: center; line-height: 1.5; }
 
     .lib-item {
-      background: var(--surface); border-radius: var(--radius);
-      overflow: hidden; display: flex; cursor: pointer; transition: background 0.15s;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      cursor: pointer;
+      transition: background 0.15s;
     }
     .lib-item:active { background: var(--surface2); }
-    .lib-thumb { width: 80px; height: 80px; object-fit: cover; background: #000; flex-shrink: 0; }
-    .lib-info {
-      flex: 1; padding: 10px 12px;
-      display: flex; flex-direction: column; justify-content: space-between;
-      overflow: hidden; min-width: 0;
+    .lib-thumb {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      background: #000;
+      flex-shrink: 0;
     }
-    .lib-item-label { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .lib-item-preview { font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lib-info {
+      flex: 1;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .lib-item-label {
+      font-size: 17px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lib-item-preview {
+      font-size: 13px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .lib-item-date { font-size: 12px; color: var(--text-muted); }
     .lib-del-btn {
-      background: none; border: none; color: var(--text-muted);
-      font-size: 18px; padding: 10px 14px; cursor: pointer;
-      align-self: center; flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      padding: 10px 14px;
+      cursor: pointer;
+      align-self: center;
+      flex-shrink: 0;
     }
     .lib-del-btn:active { color: var(--danger); }
 
+    /* ─── SETTINGS SCREEN ─── */
     #settings-screen { background: var(--bg); overflow-y: auto; }
+
     .settings-body { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
 
-    .settings-section { background: var(--surface); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
+    .settings-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
     .settings-section-title {
-      font-size: 12px; font-weight: 700; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 1px; padding: 14px 16px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 14px 16px 8px;
     }
     .settings-row {
-      padding: 14px 16px; display: flex; align-items: center;
-      justify-content: space-between; border-top: 1px solid #2a2a2a; gap: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #2a2a2a;
+      gap: 12px;
     }
     .settings-row:first-of-type { border-top: none; }
     .settings-row-info { flex: 1; }
@@ -301,76 +516,157 @@
     .settings-row-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
     .toggle-btn {
-      width: 50px; height: 28px; background: #3a3a3a;
-      border-radius: 14px; position: relative; cursor: pointer;
-      border: none; transition: background 0.2s; flex-shrink: 0;
+      width: 50px;
+      height: 28px;
+      background: #3a3a3a;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+      flex-shrink: 0;
     }
     .toggle-btn.on { background: var(--accent); }
     .toggle-btn::after {
-      content: ''; position: absolute;
-      width: 22px; height: 22px; background: white;
-      border-radius: 50%; top: 3px; left: 3px;
-      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
     .toggle-btn.on::after { transform: translateX(22px); }
 
-    .settings-slider-wrap { display: flex; align-items: center; gap: 10px; width: 160px; }
-    .settings-slider-wrap input[type="range"] { flex: 1; height: 4px; accent-color: var(--accent); }
-    .settings-slider-val { font-size: 14px; color: var(--text-muted); min-width: 28px; text-align: right; }
+    .settings-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 160px;
+    }
+    .settings-slider-wrap input[type="range"] {
+      flex: 1;
+      height: 4px;
+      accent-color: var(--accent);
+    }
+    .settings-slider-val {
+      font-size: 14px;
+      color: var(--text-muted);
+      min-width: 28px;
+      text-align: right;
+    }
 
-    .about-text { font-size: 14px; color: var(--text-muted); line-height: 1.6; padding: 14px 16px; }
+    .about-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 14px 16px;
+    }
 
+    /* ─── BOTTOM NAV ─── */
     .bottom-nav {
-      height: var(--nav-h); background: var(--surface);
-      border-top: 1px solid #2a2a2a; display: flex; flex-shrink: 0;
+      height: var(--nav-h);
+      background: var(--surface);
+      border-top: 1px solid #2a2a2a;
+      display: flex;
+      flex-shrink: 0;
     }
     .nav-tab {
-      flex: 1; background: none; border: none; color: var(--text-muted);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; cursor: pointer; font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.6px;
-      transition: color 0.15s; padding-bottom: 4px;
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      transition: color 0.15s;
+      padding-bottom: 4px;
     }
     .nav-tab .nav-icon { font-size: 24px; line-height: 1; }
     .nav-tab.active { color: var(--accent); }
+    .nav-tab .lib-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
     .nav-icon-wrap { position: relative; }
 
+    /* ─── TOAST ─── */
     #toast {
-      position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%;
+      position: fixed;
+      bottom: calc(var(--nav-h) + 16px);
+      left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: #222; color: white; padding: 12px 20px;
-      border-radius: 24px; font-size: 16px; font-weight: 600;
-      opacity: 0; transition: opacity 0.25s, transform 0.25s;
-      z-index: 100; pointer-events: none; white-space: nowrap; border: 1px solid #333;
+      background: #222;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 100;
+      pointer-events: none;
+      white-space: nowrap;
+      border: 1px solid #333;
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
 
+  <!-- ─── HEADER ─── -->
   <div class="app-header">
     <div class="app-title">Vision <span>Assist</span></div>
     <div class="header-badge">Dr. Evans</div>
   </div>
 
+  <!-- ─── BODY ─── -->
   <div class="app-body">
 
+    <!-- ══ CAMERA SCREEN ══ -->
     <div id="camera-screen" class="screen active">
       <div class="camera-live">
         <video id="live-video" autoplay playsinline muted></video>
-        <div class="scan-guide"><div class="scan-box"></div></div>
+        <div class="scan-guide">
+          <div class="scan-box"></div>
+        </div>
       </div>
       <div class="camera-bar">
         <div class="cam-side">
-          <button class="cam-icon-btn" id="flash-btn" onclick="toggleTorch()">💡</button>
-          <button class="cam-icon-btn" id="upload-btn" onclick="triggerUpload()">🖼️</button>
+          <button class="cam-icon-btn" id="flash-btn" onclick="toggleTorch()" title="Flashlight">💡</button>
+          <button class="cam-icon-btn" id="upload-btn" onclick="triggerUpload()" title="Upload photo">🖼️</button>
           <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(event)">
         </div>
-        <button class="shutter" onclick="capturePhoto()">
+        <button class="shutter" onclick="capturePhoto()" id="shutter-btn">
           <div class="shutter-inner"></div>
         </button>
         <div class="cam-side">
-          <button class="cam-icon-btn" id="contrast-btn" onclick="toggleLiveContrast()">🌗</button>
+          <button class="cam-icon-btn" id="contrast-btn" onclick="toggleLiveContrast()" title="Boost contrast">🌗</button>
           <div style="width:52px"></div>
         </div>
       </div>
@@ -380,6 +676,7 @@
         <span class="z-label" id="live-zoom-label">1×</span>
       </div>
 
+      <!-- Captured overlay -->
       <div id="captured-overlay">
         <div class="cap-img-wrap" id="cap-img-wrap">
           <img id="cap-img" alt="Captured">
@@ -390,25 +687,38 @@
         </div>
         <div class="cap-actions">
           <div class="cap-actions-row">
-            <button class="action-btn half primary" onclick="startOCR()">🔊 Read To Me</button>
-            <button class="action-btn half dark" onclick="saveAndGoLib()">💾 Save</button>
+            <button class="action-btn half primary" onclick="startOCR()">
+              🔊 Read To Me
+            </button>
+            <button class="action-btn half dark" onclick="saveAndGoLib()">
+              💾 Save
+            </button>
           </div>
-          <button class="action-btn full ghost" onclick="dismissCapture()">✕ Discard &amp; Retake</button>
+          <button class="action-btn full ghost" onclick="dismissCapture()">
+            ✕ Discard &amp; Retake
+          </button>
         </div>
       </div>
     </div>
 
+    <!-- ══ READ SCREEN ══ -->
     <div id="read-screen" class="screen">
       <div class="read-top">
         <button class="back-btn" onclick="goBack()">‹ Back</button>
         <div class="read-label" id="read-label">Scanned Text</div>
         <button class="save-btn" id="read-save-btn" onclick="saveCurrentScan()">Save</button>
       </div>
+
+      <!-- Loading state -->
       <div class="ocr-loading" id="ocr-loading">
         <div class="spinner"></div>
         <div class="ocr-status" id="ocr-status">Reading text…</div>
-        <div class="ocr-bar-wrap"><div class="ocr-bar" id="ocr-bar"></div></div>
+        <div class="ocr-bar-wrap">
+          <div class="ocr-bar" id="ocr-bar"></div>
+        </div>
       </div>
+
+      <!-- Text output -->
       <div class="text-body" id="text-body"></div>
       <div class="read-controls" id="read-controls">
         <div class="tts-row">
@@ -419,17 +729,20 @@
         </div>
         <div class="slider-row">
           <span class="s-label">Font</span>
-          <input type="range" id="font-slider" min="18" max="72" value="32" oninput="setFontSize(this.value)">
+          <input type="range" id="font-slider" min="18" max="72" value="32"
+            oninput="setFontSize(this.value)">
           <span class="s-val" id="font-val">32</span>
         </div>
         <div class="slider-row">
           <span class="s-label">Speed</span>
-          <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="0.85" oninput="setTTSSpeed(this.value)">
+          <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="0.85"
+            oninput="setTTSSpeed(this.value)">
           <span class="s-val" id="speed-val">0.9×</span>
         </div>
       </div>
     </div>
 
+    <!-- ══ LIBRARY SCREEN ══ -->
     <div id="library-screen" class="screen">
       <div class="lib-header">
         <div class="lib-title">Saved Scans</div>
@@ -438,8 +751,10 @@
       <div class="lib-list" id="lib-list"></div>
     </div>
 
+    <!-- ══ SETTINGS SCREEN ══ -->
     <div id="settings-screen" class="screen">
       <div class="settings-body">
+
         <div class="settings-section">
           <div class="settings-section-title">Display</div>
           <div class="settings-row">
@@ -455,11 +770,13 @@
               <div class="settings-row-sub">Size of extracted text</div>
             </div>
             <div class="settings-slider-wrap">
-              <input type="range" id="default-font-slider" min="18" max="72" value="32" oninput="setDefaultFont(this.value)">
+              <input type="range" id="default-font-slider" min="18" max="72" value="32"
+                oninput="setDefaultFont(this.value)">
               <span class="settings-slider-val" id="default-font-val">32</span>
             </div>
           </div>
         </div>
+
         <div class="settings-section">
           <div class="settings-section-title">Text-to-Speech</div>
           <div class="settings-row">
@@ -474,11 +791,13 @@
               <div class="settings-row-label">Default Speed</div>
             </div>
             <div class="settings-slider-wrap">
-              <input type="range" id="default-speed-slider" min="0.5" max="2" step="0.1" value="0.85" oninput="setDefaultSpeed(this.value)">
+              <input type="range" id="default-speed-slider" min="0.5" max="2" step="0.1" value="0.85"
+                oninput="setDefaultSpeed(this.value)">
               <span class="settings-slider-val" id="default-speed-val">0.9×</span>
             </div>
           </div>
         </div>
+
         <div class="settings-section">
           <div class="settings-section-title">About</div>
           <div class="about-text">
@@ -487,22 +806,30 @@
             on your device — no photos are uploaded anywhere.
           </div>
         </div>
+
       </div>
     </div>
 
-  </div>
+  </div><!-- end app-body -->
 
+  <!-- ─── BOTTOM NAV ─── -->
   <nav class="bottom-nav">
     <button class="nav-tab active" id="tab-camera" onclick="goTab('camera')">
-      <div class="nav-icon-wrap"><span class="nav-icon">📷</span></div>
+      <div class="nav-icon-wrap">
+        <span class="nav-icon">📷</span>
+      </div>
       Scan
     </button>
     <button class="nav-tab" id="tab-library" onclick="goTab('library')">
-      <div class="nav-icon-wrap"><span class="nav-icon">📋</span></div>
+      <div class="nav-icon-wrap">
+        <span class="nav-icon">📋</span>
+      </div>
       Library
     </button>
     <button class="nav-tab" id="tab-settings" onclick="goTab('settings')">
-      <div class="nav-icon-wrap"><span class="nav-icon">⚙️</span></div>
+      <div class="nav-icon-wrap">
+        <span class="nav-icon">⚙️</span>
+      </div>
       Settings
     </button>
   </nav>
@@ -510,24 +837,59 @@
   <div id="toast"></div>
 
   <script>
+    // ═══════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════
     const state = {
-      tab: 'camera', prevTab: 'camera',
-      stream: null, torchTrack: null, torchOn: false, liveContrastOn: false,
-      capturedDataUrl: null, capScale: 1, capLastScale: 1, capPinchDist: 0,
-      ocrText: '', isSpeaking: false, currentScanSaved: false, usingCSSZoom: false,
-      settings: { highContrast: false, autoRead: false, defaultFont: 32, defaultSpeed: 0.85 }
+      tab: 'camera',
+      prevTab: 'camera',
+      stream: null,
+      torchTrack: null,
+      torchOn: false,
+      liveContrastOn: false,
+      capturedDataUrl: null,
+      capScale: 1,
+      capLastScale: 1,
+      capPinchDist: 0,
+      ocrText: '',
+      isSpeaking: false,
+      currentScanSaved: false,
+      usingCSSZoom: false,
+      settings: {
+        highContrast: false,
+        autoRead: false,
+        defaultFont: 32,
+        defaultSpeed: 0.85,
+      }
     };
 
+    // ═══════════════════════════════════════════════
+    // CAMERA
+    // ═══════════════════════════════════════════════
     async function startCamera() {
       if (state.stream) return;
       try {
         state.stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
         });
         const video = document.getElementById('live-video');
         video.srcObject = state.stream;
         state.torchTrack = state.stream.getVideoTracks()[0];
-      } catch { toast('Camera unavailable — you can still upload photos'); }
+      } catch {
+        toast('Camera unavailable — you can still upload photos');
+      }
+    }
+
+    function stopCamera() {
+      if (state.stream) {
+        state.stream.getTracks().forEach(t => t.stop());
+        state.stream = null;
+        state.torchTrack = null;
+      }
     }
 
     async function toggleTorch() {
@@ -535,7 +897,11 @@
       state.torchOn = !state.torchOn;
       try {
         await state.torchTrack.applyConstraints({ advanced: [{ torch: state.torchOn }] });
-      } catch { state.torchOn = !state.torchOn; toast('Torch not supported on this device'); return; }
+      } catch {
+        state.torchOn = !state.torchOn;
+        toast('Torch not supported on this device');
+        return;
+      }
       document.getElementById('flash-btn').classList.toggle('lit', state.torchOn);
     }
 
@@ -547,8 +913,8 @@
     }
 
     function setLiveZoom(val) {
-      document.getElementById('live-zoom-label').textContent = parseFloat(val).toFixed(1) + '×';
       const video = document.getElementById('live-video');
+      document.getElementById('live-zoom-label').textContent = parseFloat(val).toFixed(1) + '×';
       if (state.torchTrack) {
         const caps = state.torchTrack.getCapabilities && state.torchTrack.getCapabilities();
         if (caps && caps.zoom) {
@@ -573,20 +939,20 @@
       // Work out which portion of the video is visible after object-fit:cover
       let visW, visH, offX, offY;
       if (vW / vH > cW / cH) {
-        // video wider — height fills, sides cropped
+        // video wider than container — height fills, sides cropped
         visH = vH;
         visW = cW * (vH / cH);
         offX = (vW - visW) / 2;
         offY = 0;
       } else {
-        // video taller — width fills, top/bottom cropped
+        // video taller than container — width fills, top/bottom cropped
         visW = vW;
         visH = cH * (vW / cW);
         offX = 0;
         offY = (vH - visH) / 2;
       }
 
-      // Account for CSS zoom: visible region shrinks to center 1/zoom of the frame
+      // If CSS zoom is active, the visible region is the center 1/zoom of the visible area
       const cssZoom = state.usingCSSZoom ? (parseFloat(document.getElementById('live-zoom').value) || 1) : 1;
       if (cssZoom > 1) {
         const zW = visW / cssZoom, zH = visH / cssZoom;
@@ -595,10 +961,13 @@
         visW = zW; visH = zH;
       }
 
-      // Crop to the guide box: 88% wide, 48% tall, centered
-      const cropW = visW * 0.88, cropH = visH * 0.48;
-      const cropX = offX + (visW - cropW) / 2;
-      const cropY = offY + (visH - cropH) / 2;
+      // Crop to guide box (88% × 48%) + 4% padding so edge letters aren't clipped
+      const boxW = visW * 0.88, boxH = visH * 0.48;
+      const padX = visW * 0.04, padY = visH * 0.04;
+      const cropW = Math.min(visW, boxW + padX * 2);
+      const cropH = Math.min(visH, boxH + padY * 2);
+      const cropX = offX + Math.max(0, (visW - cropW) / 2);
+      const cropY = offY + Math.max(0, (visH - cropH) / 2);
 
       const canvas = document.createElement('canvas');
       canvas.width  = Math.round(cropW);
@@ -611,18 +980,30 @@
       showCaptured(state.capturedDataUrl);
     }
 
-    function triggerUpload() { document.getElementById('file-input').click(); }
-
-    function handleUpload(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => { state.capturedDataUrl = ev.target.result; showCaptured(state.capturedDataUrl); };
-      reader.readAsDataURL(file); e.target.value = '';
+    function triggerUpload() {
+      document.getElementById('file-input').click();
     }
 
+    function handleUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        state.capturedDataUrl = ev.target.result;
+        showCaptured(state.capturedDataUrl);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    // ═══════════════════════════════════════════════
+    // CAPTURED OVERLAY + PINCH ZOOM
+    // ═══════════════════════════════════════════════
     function showCaptured(dataUrl) {
       const img = document.getElementById('cap-img');
-      img.src = dataUrl; state.capScale = 1; state.capLastScale = 1;
+      img.src = dataUrl;
+      state.capScale = 1;
+      state.capLastScale = 1;
       img.style.transform = 'scale(1)';
       document.getElementById('captured-overlay').classList.add('show');
     }
@@ -638,37 +1019,124 @@
       document.getElementById('cap-img').style.transform = `scale(${state.capScale})`;
     }
 
+    // Pinch zoom
     const capWrap = document.getElementById('cap-img-wrap');
+
     capWrap.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) { e.preventDefault(); state.capPinchDist = pinchDist(e.touches); }
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        state.capPinchDist = pinchDist(e.touches);
+      }
     }, { passive: false });
+
     capWrap.addEventListener('touchmove', e => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        const newScale = state.capLastScale * (pinchDist(e.touches) / state.capPinchDist);
+        const d = pinchDist(e.touches);
+        const newScale = state.capLastScale * (d / state.capPinchDist);
         state.capScale = Math.min(8, Math.max(1, newScale));
         document.getElementById('cap-img').style.transform = `scale(${state.capScale})`;
       }
     }, { passive: false });
-    capWrap.addEventListener('touchend', () => { state.capLastScale = state.capScale; });
-    function pinchDist(t) { return Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY); }
 
+    capWrap.addEventListener('touchend', () => {
+      state.capLastScale = state.capScale;
+    });
+
+    function pinchDist(touches) {
+      return Math.hypot(
+        touches[1].clientX - touches[0].clientX,
+        touches[1].clientY - touches[0].clientY
+      );
+    }
+
+    // ═══════════════════════════════════════════════
+    // IMAGE PREPROCESSING (for better OCR)
+    // ═══════════════════════════════════════════════
+    function preprocessImage(dataUrl) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          // Scale up so text is at least 40px tall for Tesseract
+          const scale = Math.max(1, Math.min(4, 1600 / Math.max(img.width, img.height)));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const id = ctx.getImageData(0, 0, w, h);
+          const d = id.data;
+          const n = w * h;
+
+          // Convert to grayscale
+          const gray = new Uint8ClampedArray(n);
+          for (let i = 0, j = 0; j < n; i += 4, j++) {
+            gray[j] = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0;
+          }
+
+          // Otsu's method to find optimal threshold
+          const hist = new Int32Array(256);
+          for (let j = 0; j < n; j++) hist[gray[j]]++;
+          let sum = 0;
+          for (let i = 0; i < 256; i++) sum += i * hist[i];
+          let sumB = 0, wB = 0, maxVar = 0, thresh = 128;
+          for (let t = 0; t < 256; t++) {
+            wB += hist[t]; if (!wB) continue;
+            const wF = n - wB; if (!wF) break;
+            sumB += t * hist[t];
+            const mB = sumB / wB, mF = (sum - sumB) / wF;
+            const v = wB * wF * (mB - mF) ** 2;
+            if (v > maxVar) { maxVar = v; thresh = t; }
+          }
+
+          // Detect light-on-dark (e.g. white text on coloured bg) and invert
+          let brightPixels = 0;
+          for (let j = 0; j < n; j++) if (gray[j] > thresh) brightPixels++;
+          const lightOnDark = brightPixels < n * 0.5;
+
+          // Output: always dark text on white background for Tesseract
+          for (let i = 0, j = 0; j < n; i += 4, j++) {
+            const isText = lightOnDark ? (gray[j] > thresh) : (gray[j] <= thresh);
+            const val = isText ? 0 : 255;
+            d[i] = d[i + 1] = d[i + 2] = val; d[i + 3] = 255;
+          }
+          ctx.putImageData(id, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(dataUrl); // fallback: use original
+        img.src = dataUrl;
+      });
+    }
+
+    // ═══════════════════════════════════════════════
+    // OCR
+    // ═══════════════════════════════════════════════
     async function startOCR() {
       if (!state.capturedDataUrl) return;
       const imageUrl = state.capturedDataUrl;
-      state.prevTab = state.tab;
       dismissCapture();
       state.currentScanSaved = false;
+
+      goTab('camera'); // stay on camera tab, but open read screen on top
       showReadScreen();
 
+      const loading = document.getElementById('ocr-loading');
+      const textBody = document.getElementById('text-body');
+      const controls = document.getElementById('read-controls');
       const bar = document.getElementById('ocr-bar');
       const statusEl = document.getElementById('ocr-status');
-      document.getElementById('ocr-loading').classList.remove('hidden');
-      document.getElementById('text-body').classList.add('hidden');
-      document.getElementById('read-controls').classList.add('hidden');
+
+      loading.classList.remove('hidden');
+      textBody.classList.add('hidden');
+      controls.classList.add('hidden');
       document.getElementById('read-save-btn').className = 'save-btn';
       document.getElementById('read-save-btn').textContent = 'Save';
-      bar.style.width = '0%'; statusEl.textContent = 'Preparing…';
+      bar.style.width = '0%';
+      statusEl.textContent = 'Enhancing image…';
+
+      const processedUrl = await preprocessImage(imageUrl);
 
       try {
         const worker = await Tesseract.createWorker('eng', 1, {
@@ -681,10 +1149,11 @@
             }
           }
         });
-        const result = await worker.recognize(imageUrl);
+        const result = await worker.recognize(processedUrl);
         await worker.terminate();
         const text = result.data.text.trim() || 'No text found — try a clearer photo or better lighting.';
-        state.ocrText = text; showText(text);
+        state.ocrText = text;
+        showText(text);
       } catch {
         state.ocrText = 'Could not read text. Please try a clearer photo.';
         showText(state.ocrText);
@@ -692,10 +1161,14 @@
     }
 
     function showText(text) {
-      document.getElementById('ocr-loading').classList.add('hidden');
+      const loading = document.getElementById('ocr-loading');
       const textBody = document.getElementById('text-body');
+      const controls = document.getElementById('read-controls');
+
+      loading.classList.add('hidden');
       textBody.classList.remove('hidden');
-      document.getElementById('read-controls').classList.remove('hidden');
+      controls.classList.remove('hidden');
+
       textBody.textContent = text;
       textBody.style.fontSize = state.settings.defaultFont + 'px';
       textBody.classList.toggle('hi-con', state.settings.highContrast);
@@ -703,86 +1176,159 @@
       document.getElementById('font-val').textContent = state.settings.defaultFont;
       document.getElementById('speed-slider').value = state.settings.defaultSpeed;
       document.getElementById('speed-val').textContent = parseFloat(state.settings.defaultSpeed).toFixed(1) + '×';
+
       const firstLine = text.split('\n').find(l => l.trim().length > 2)?.trim().substring(0, 40) || 'Scanned Text';
       document.getElementById('read-label').textContent = firstLine;
-      if (state.settings.autoRead) setTimeout(() => speakText(text, state.settings.defaultSpeed), 400);
+
+      if (state.settings.autoRead) {
+        setTimeout(() => speakText(text, state.settings.defaultSpeed), 400);
+      }
     }
 
+    // ═══════════════════════════════════════════════
+    // READ SCREEN NAV
+    // ═══════════════════════════════════════════════
     function showReadScreen() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('read-screen').classList.add('active');
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     }
 
     function goBack() {
       stopTTS();
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(state.prevTab + '-screen').classList.add('active');
-      document.getElementById('tab-' + state.prevTab).classList.add('active');
     }
 
+    // ═══════════════════════════════════════════════
+    // TEXT-TO-SPEECH
+    // ═══════════════════════════════════════════════
     let utterance = null;
+
     function toggleTTS() {
-      if (state.isSpeaking) stopTTS();
-      else speakText(document.getElementById('text-body').textContent, parseFloat(document.getElementById('speed-slider').value));
+      if (state.isSpeaking) {
+        stopTTS();
+      } else {
+        const text = document.getElementById('text-body').textContent;
+        const speed = parseFloat(document.getElementById('speed-slider').value);
+        speakText(text, speed);
+      }
     }
+
     function speakText(text, speed) {
       window.speechSynthesis.cancel();
       utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = speed || 0.85;
-      utterance.onstart = () => { state.isSpeaking = true; updateTTSUI(); };
-      utterance.onend = utterance.onerror = () => { state.isSpeaking = false; updateTTSUI(); };
+      utterance.onstart = () => {
+        state.isSpeaking = true;
+        updateTTSUI();
+      };
+      utterance.onend = utterance.onerror = () => {
+        state.isSpeaking = false;
+        updateTTSUI();
+      };
       window.speechSynthesis.speak(utterance);
     }
-    function stopTTS() { window.speechSynthesis.cancel(); state.isSpeaking = false; updateTTSUI(); }
-    function updateTTSUI() {
-      document.getElementById('tts-play-btn').classList.toggle('speaking', state.isSpeaking);
-      document.getElementById('tts-icon').textContent = state.isSpeaking ? '⏸' : '▶';
-      document.getElementById('tts-label').textContent = state.isSpeaking ? 'Pause' : 'Read Aloud';
-    }
-    function setFontSize(val) { document.getElementById('text-body').style.fontSize = val + 'px'; document.getElementById('font-val').textContent = val; }
-    function setTTSSpeed(val) {
-      document.getElementById('speed-val').textContent = parseFloat(val).toFixed(1) + '×';
-      if (state.isSpeaking) speakText(document.getElementById('text-body').textContent, parseFloat(val));
+
+    function stopTTS() {
+      window.speechSynthesis.cancel();
+      state.isSpeaking = false;
+      updateTTSUI();
     }
 
+    function updateTTSUI() {
+      const btn = document.getElementById('tts-play-btn');
+      const icon = document.getElementById('tts-icon');
+      const label = document.getElementById('tts-label');
+      btn.classList.toggle('speaking', state.isSpeaking);
+      icon.textContent = state.isSpeaking ? '⏸' : '▶';
+      label.textContent = state.isSpeaking ? 'Pause' : 'Read Aloud';
+    }
+
+    function setFontSize(val) {
+      document.getElementById('text-body').style.fontSize = val + 'px';
+      document.getElementById('font-val').textContent = val;
+    }
+
+    function setTTSSpeed(val) {
+      document.getElementById('speed-val').textContent = parseFloat(val).toFixed(1) + '×';
+      if (state.isSpeaking) {
+        const text = document.getElementById('text-body').textContent;
+        speakText(text, parseFloat(val));
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    // LIBRARY
+    // ═══════════════════════════════════════════════
     const LIB_KEY = 'va_library_v1';
-    function getItems() { try { return JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { return []; } }
+
+    function getItems() {
+      try { return JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); }
+      catch { return []; }
+    }
+
     function makeThumbnail(dataUrl) {
       return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxW = 160, scale = Math.min(1, maxW / img.width);
-          canvas.width = img.width * scale; canvas.height = img.height * scale;
+          const maxW = 160;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           resolve(canvas.toDataURL('image/jpeg', 0.65));
         };
-        img.onerror = () => resolve(''); img.src = dataUrl;
+        img.onerror = () => resolve('');
+        img.src = dataUrl;
       });
     }
+
     async function saveItem(dataUrl, text) {
       const items = getItems();
       const thumb = await makeThumbnail(dataUrl);
       const label = text.split('\n').find(l => l.trim().length > 2)?.trim().substring(0, 50) || 'Scanned Item';
-      const item = { id: Date.now(), label, text, thumb, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) };
-      items.unshift(item); if (items.length > 30) items.pop();
-      try { localStorage.setItem(LIB_KEY, JSON.stringify(items)); }
-      catch { items.splice(20); try { localStorage.setItem(LIB_KEY, JSON.stringify(items)); } catch {} }
+      const item = {
+        id: Date.now(),
+        label,
+        text,
+        thumb,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      };
+      items.unshift(item);
+      if (items.length > 30) items.pop();
+      try {
+        localStorage.setItem(LIB_KEY, JSON.stringify(items));
+      } catch {
+        // Storage full: trim and retry
+        items.splice(20);
+        try { localStorage.setItem(LIB_KEY, JSON.stringify(items)); } catch {}
+      }
       return item;
     }
+
     function deleteItem(id) {
-      localStorage.setItem(LIB_KEY, JSON.stringify(getItems().filter(i => i.id !== id)));
-      renderLibrary(); toast('Deleted');
+      const items = getItems().filter(i => i.id !== id);
+      localStorage.setItem(LIB_KEY, JSON.stringify(items));
+      renderLibrary();
+      toast('Deleted');
     }
+
     function renderLibrary() {
       const items = getItems();
-      document.getElementById('lib-count').textContent = items.length > 0 ? items.length + ' item' + (items.length !== 1 ? 's' : '') : '';
       const list = document.getElementById('lib-list');
+      const count = document.getElementById('lib-count');
+      count.textContent = items.length > 0 ? items.length + ' item' + (items.length !== 1 ? 's' : '') : '';
+
       if (!items.length) {
-        list.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">📋</div><div class="lib-empty-text">No saved scans yet.<br>Scan a label and tap Save.</div></div>`;
+        list.innerHTML = `
+          <div class="lib-empty">
+            <div class="lib-empty-icon">📋</div>
+            <div class="lib-empty-text">No saved scans yet.<br>Scan a label and tap Save.</div>
+          </div>`;
         return;
       }
+
       list.innerHTML = items.map(item => `
         <div class="lib-item" onclick="openLibItem(${item.id})">
           ${item.thumb ? `<img class="lib-thumb" src="${item.thumb}" alt="">` : `<div class="lib-thumb" style="background:#111;display:flex;align-items:center;justify-content:center;font-size:28px;">📄</div>`}
@@ -791,74 +1337,137 @@
             <div class="lib-item-preview">${escHtml(item.text.substring(0, 60))}</div>
             <div class="lib-item-date">${item.date}</div>
           </div>
-          <button class="lib-del-btn" onclick="event.stopPropagation();deleteItem(${item.id})">🗑</button>
-        </div>`).join('');
+          <button class="lib-del-btn" onclick="event.stopPropagation(); deleteItem(${item.id})">🗑</button>
+        </div>
+      `).join('');
     }
+
     function openLibItem(id) {
-      const item = getItems().find(i => i.id === id); if (!item) return;
-      state.ocrText = item.text; state.currentScanSaved = true; state.prevTab = 'library';
+      const item = getItems().find(i => i.id === id);
+      if (!item) return;
+      state.ocrText = item.text;
+      state.currentScanSaved = true;
+      state.prevTab = 'library';
       showReadScreen();
       document.getElementById('read-label').textContent = item.label;
       document.getElementById('read-save-btn').className = 'save-btn saved';
       document.getElementById('read-save-btn').textContent = 'Saved ✓';
-      document.getElementById('ocr-loading').classList.add('hidden');
-      document.getElementById('text-body').classList.remove('hidden');
-      document.getElementById('read-controls').classList.remove('hidden');
+
+      const loading = document.getElementById('ocr-loading');
+      const textBody = document.getElementById('text-body');
+      const controls = document.getElementById('read-controls');
+      loading.classList.add('hidden');
+      textBody.classList.remove('hidden');
+      controls.classList.remove('hidden');
       showText(item.text);
     }
+
     async function saveCurrentScan() {
       if (state.currentScanSaved || !state.capturedDataUrl || !state.ocrText) return;
       const btn = document.getElementById('read-save-btn');
       btn.textContent = 'Saving…';
       await saveItem(state.capturedDataUrl, state.ocrText);
       state.currentScanSaved = true;
-      btn.className = 'save-btn saved'; btn.textContent = 'Saved ✓';
+      btn.className = 'save-btn saved';
+      btn.textContent = 'Saved ✓';
       toast('Saved to Library');
     }
+
     async function saveAndGoLib() {
       if (!state.capturedDataUrl) return;
-      await saveItem(state.capturedDataUrl, '[Image saved]');
-      dismissCapture(); goTab('library'); toast('Saved to Library');
+      const text = '[Image saved — tap "Read To Me" to extract text]';
+      await saveItem(state.capturedDataUrl, text);
+      dismissCapture();
+      goTab('library');
+      toast('Saved to Library');
     }
-    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-    function toggleSetting(key) { state.settings[key] = !state.settings[key]; applySettings(); saveSettings(); }
-    function setDefaultFont(val) { state.settings.defaultFont = parseInt(val); document.getElementById('default-font-val').textContent = val; saveSettings(); }
-    function setDefaultSpeed(val) { state.settings.defaultSpeed = parseFloat(val); document.getElementById('default-speed-val').textContent = parseFloat(val).toFixed(1) + '×'; saveSettings(); }
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ═══════════════════════════════════════════════
+    // SETTINGS
+    // ═══════════════════════════════════════════════
+    function toggleSetting(key) {
+      state.settings[key] = !state.settings[key];
+      applySettings();
+      saveSettings();
+    }
+
+    function setDefaultFont(val) {
+      state.settings.defaultFont = parseInt(val);
+      document.getElementById('default-font-val').textContent = val;
+      saveSettings();
+    }
+
+    function setDefaultSpeed(val) {
+      state.settings.defaultSpeed = parseFloat(val);
+      document.getElementById('default-speed-val').textContent = parseFloat(val).toFixed(1) + '×';
+      saveSettings();
+    }
+
     function applySettings() {
       const s = state.settings;
-      document.getElementById('toggle-contrast').classList.toggle('on', s.highContrast);
-      document.getElementById('toggle-autoread').classList.toggle('on', s.autoRead);
+      ['toggle-contrast', 'toggle-autoread'].forEach(id => {
+        document.getElementById(id).classList.remove('on');
+      });
+      if (s.highContrast) document.getElementById('toggle-contrast').classList.add('on');
+      if (s.autoRead) document.getElementById('toggle-autoread').classList.add('on');
+
       document.getElementById('default-font-slider').value = s.defaultFont;
       document.getElementById('default-font-val').textContent = s.defaultFont;
       document.getElementById('default-speed-slider').value = s.defaultSpeed;
       document.getElementById('default-speed-val').textContent = parseFloat(s.defaultSpeed).toFixed(1) + '×';
+
+      // Apply contrast to live text if on read screen
       document.getElementById('text-body').classList.toggle('hi-con', s.highContrast);
     }
-    function saveSettings() { localStorage.setItem('va_settings_v1', JSON.stringify(state.settings)); }
+
+    function saveSettings() {
+      localStorage.setItem('va_settings_v1', JSON.stringify(state.settings));
+    }
+
     function loadSettings() {
-      try { Object.assign(state.settings, JSON.parse(localStorage.getItem('va_settings_v1') || '{}')); } catch {}
+      try {
+        const saved = JSON.parse(localStorage.getItem('va_settings_v1') || '{}');
+        Object.assign(state.settings, saved);
+      } catch {}
       applySettings();
     }
 
+    // ═══════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════
     function goTab(tab) {
-      stopTTS(); state.prevTab = state.tab; state.tab = tab;
+      stopTTS();
+      state.prevTab = state.tab;
+      state.tab = tab;
+
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       document.getElementById(tab + '-screen').classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
+
       if (tab === 'library') renderLibrary();
       if (tab === 'camera' && !state.stream) startCamera();
     }
 
+    // ═══════════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════════
     let toastTimer = null;
     function toast(msg) {
       const el = document.getElementById('toast');
-      el.textContent = msg; el.classList.add('show');
+      el.textContent = msg;
+      el.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
     }
 
+    // ═══════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════
     loadSettings();
     startCamera();
   </script>
