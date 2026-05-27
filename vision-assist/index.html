@@ -854,7 +854,7 @@
       ocrText: '',
       isSpeaking: false,
       currentScanSaved: false,
-      backTarget: 'camera',
+      usingCSSZoom: false,
       settings: {
         highContrast: false,
         autoRead: false,
@@ -920,25 +920,60 @@
         if (caps && caps.zoom) {
           state.torchTrack.applyConstraints({ advanced: [{ zoom: parseFloat(val) }] });
           video.style.transform = '';
+          state.usingCSSZoom = false;
           return;
         }
       }
-      // CSS fallback
       video.style.transform = `scale(${val})`;
+      state.usingCSSZoom = true;
     }
 
     function capturePhoto() {
       const video = document.getElementById('live-video');
       if (!video.videoWidth) { toast('Camera not ready yet'); return; }
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (state.liveContrastOn) {
-        ctx.filter = 'contrast(200%) brightness(1.1)';
+
+      const container = document.querySelector('.camera-live');
+      const cW = container.clientWidth, cH = container.clientHeight;
+      const vW = video.videoWidth,     vH = video.videoHeight;
+
+      // Work out which portion of the video is visible after object-fit:cover
+      let visW, visH, offX, offY;
+      if (vW / vH > cW / cH) {
+        // video wider than container — height fills, sides cropped
+        visH = vH;
+        visW = cW * (vH / cH);
+        offX = (vW - visW) / 2;
+        offY = 0;
+      } else {
+        // video taller than container — width fills, top/bottom cropped
+        visW = vW;
+        visH = cH * (vW / cW);
+        offX = 0;
+        offY = (vH - visH) / 2;
       }
-      ctx.drawImage(video, 0, 0);
-      state.capturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+      // If CSS zoom is active, the visible region is the center 1/zoom of the visible area
+      const cssZoom = state.usingCSSZoom ? (parseFloat(document.getElementById('live-zoom').value) || 1) : 1;
+      if (cssZoom > 1) {
+        const zW = visW / cssZoom, zH = visH / cssZoom;
+        offX += (visW - zW) / 2;
+        offY += (visH - zH) / 2;
+        visW = zW; visH = zH;
+      }
+
+      // Crop to the guide box (88% wide, 48% tall, centered)
+      const cropW = visW * 0.88, cropH = visH * 0.48;
+      const cropX = offX + (visW - cropW) / 2;
+      const cropY = offY + (visH - cropH) / 2;
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(cropW);
+      canvas.height = Math.round(cropH);
+      const ctx = canvas.getContext('2d');
+      if (state.liveContrastOn) ctx.filter = 'contrast(200%) brightness(1.1)';
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+      state.capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
       showCaptured(state.capturedDataUrl);
     }
 
