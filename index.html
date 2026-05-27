@@ -301,10 +301,11 @@ footer {
 
 /* ===== Photo Carousel ===== */
 .carousel-wrap { position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
-.carousel-track { display: grid; }
-.carousel-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 0.75s ease; pointer-events: none; }
+.carousel-track { display: grid; aspect-ratio: 1 / 1; }
+.carousel-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 0.75s ease; pointer-events: none; overflow: hidden; }
 .carousel-slide.active { opacity: 1; pointer-events: auto; }
-.carousel-slide picture, .carousel-slide img { display: block; width: 100%; height: auto; }
+.carousel-slide picture { display: block; width: 100%; height: 100%; }
+.carousel-slide picture img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .carousel-btn {
   position: absolute; top: 50%; transform: translateY(-50%);
   background: rgba(0,0,0,.32); backdrop-filter: blur(4px);
