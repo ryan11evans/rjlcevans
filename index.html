@@ -299,6 +299,37 @@ footer {
   border-color: var(--text);
 }
 
+/* ===== Photo Carousel ===== */
+.carousel-wrap { position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
+.carousel-track { display: grid; }
+.carousel-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 0.75s ease; pointer-events: none; }
+.carousel-slide.active { opacity: 1; pointer-events: auto; }
+.carousel-slide picture, .carousel-slide img { display: block; width: 100%; height: auto; }
+.carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,.32); backdrop-filter: blur(4px);
+  color: #fff; border: none; border-radius: 50%;
+  width: 46px; height: 46px; font-size: 1.8rem; line-height: 1;
+  cursor: pointer; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.carousel-btn:hover { background: rgba(0,0,0,.62); transform: translateY(-50%) scale(1.08); }
+.carousel-prev { left: 14px; }
+.carousel-next { right: 14px; }
+.carousel-dots {
+  display: flex; justify-content: center; gap: 9px;
+  padding: 11px 0 5px; background: var(--card-bg);
+}
+.carousel-dot {
+  width: 8px; height: 8px; border-radius: 50%; border: none;
+  background: rgba(0,0,0,.18); cursor: pointer; padding: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+.carousel-dot.active { background: rgba(0,0,0,.55); transform: scale(1.4); }
+body.night .carousel-dot { background: rgba(255,255,255,.22); }
+body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
+
 /* ===== Shared info cards ===== */
 .info-card { padding: 18px; text-align: center; }
 .info-card h3 { margin-top: 0; }
@@ -350,12 +381,30 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
 
 
 <!-- ===== FAMILY CONTENT ===== -->
-<section class="photo card">
-  <picture>
-    <source srcset="family.webp" type="image/webp">
-    <img src="family.jpg" alt="The Evans Family" loading="eager" />
-  </picture>
-  <div class="caption">The Evans Family — Murrieta, 2026</div>
+<section class="card" style="overflow:visible">
+  <div class="carousel-wrap">
+    <div class="carousel-track">
+      <div class="carousel-slide active" data-caption="The Evans Family — Murrieta, 2026">
+        <picture>
+          <source srcset="family.webp" type="image/webp">
+          <img src="family.jpg" alt="The Evans Family" loading="eager">
+        </picture>
+      </div>
+      <div class="carousel-slide" data-caption="The Evans Family — 2026">
+        <picture>
+          <source srcset="family2.webp" type="image/webp">
+          <img src="family2.jpg" alt="The Evans Family" loading="lazy">
+        </picture>
+      </div>
+    </div>
+    <button class="carousel-btn carousel-prev" aria-label="Previous photo">&#8249;</button>
+    <button class="carousel-btn carousel-next" aria-label="Next photo">&#8250;</button>
+  </div>
+  <div class="carousel-dots">
+    <button class="carousel-dot active" aria-label="Photo 1"></button>
+    <button class="carousel-dot" aria-label="Photo 2"></button>
+  </div>
+  <div class="caption" id="carousel-caption">The Evans Family — Murrieta, 2026</div>
 </section>
 
 <section class="card info-card">
@@ -456,6 +505,44 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   <footer>© 2026 Evans Family · rjlcevans.com</footer>
 
   <script>
+  // ===== Photo Carousel =====
+  (function () {
+    const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+    const dots   = Array.from(document.querySelectorAll('.carousel-dot'));
+    const caption = document.getElementById('carousel-caption');
+    let current = 0, timer;
+
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = (n + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      dots[current].classList.add('active');
+      if (caption) caption.textContent = slides[current].dataset.caption || '';
+    }
+
+    function startAuto() { timer = setInterval(() => goTo(current + 1), 5000); }
+    function stopAuto()  { clearInterval(timer); }
+
+    document.querySelector('.carousel-next').addEventListener('click', () => { stopAuto(); goTo(current + 1); startAuto(); });
+    document.querySelector('.carousel-prev').addEventListener('click', () => { stopAuto(); goTo(current - 1); startAuto(); });
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); }));
+
+    const wrap = document.querySelector('.carousel-wrap');
+    wrap.addEventListener('mouseenter', stopAuto);
+    wrap.addEventListener('mouseleave', startAuto);
+
+    // Swipe support
+    let touchX = 0;
+    wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    wrap.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) { stopAuto(); goTo(current + (dx < 0 ? 1 : -1)); startAuto(); }
+    }, { passive: true });
+
+    startAuto();
+  })();
+
   // ===== Holiday Countdown =====
   (function () {
     function nthWeekdayOfMonth(year, month, weekday, n) {
