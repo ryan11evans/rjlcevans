@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Vision Assist • Dr. Evans</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- No OCR library needed — uses Google Cloud Vision API -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -566,6 +566,36 @@
       padding: 14px 16px;
     }
 
+    .api-key-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .api-key-input-wrap {
+      padding: 0 16px 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .api-key-input-wrap input {
+      flex: 1;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      color: white;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
+      outline: none;
+      font-family: monospace;
+    }
+    .api-key-input-wrap input:focus { border-color: var(--accent); }
+    .api-key-input-wrap button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
     /* ─── BOTTOM NAV ─── */
     .bottom-nav {
       height: var(--nav-h);
@@ -795,6 +825,18 @@
                 oninput="setDefaultSpeed(this.value)">
               <span class="settings-slider-val" id="default-speed-val">0.9×</span>
             </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">OCR Engine</div>
+          <div class="settings-row api-key-row">
+            <div class="settings-row-label">Google Vision API Key</div>
+            <div class="settings-row-sub">Required for text recognition. Get a free key from Google Cloud Console — enable the Cloud Vision API, then create an API key. Free tier: 1,000 scans/month.</div>
+          </div>
+          <div class="api-key-input-wrap">
+            <input type="text" id="api-key-input" placeholder="Paste key here (AIza…)" autocomplete="off" spellcheck="false">
+            <button onclick="saveApiKey()">Save</button>
           </div>
         </div>
 
@@ -1051,94 +1093,21 @@
     }
 
     // ═══════════════════════════════════════════════
-    // IMAGE PREPROCESSING (for better OCR)
-    // ═══════════════════════════════════════════════
-    function preprocessImage(dataUrl) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          // Scale up so text is at least 40px tall for Tesseract
-          const scale = Math.max(1, Math.min(4, 1600 / Math.max(img.width, img.height)));
-          const w = Math.round(img.width * scale);
-          const h = Math.round(img.height * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-
-          const id = ctx.getImageData(0, 0, w, h);
-          const d = id.data;
-          const n = w * h;
-
-          // Convert to grayscale
-          const gray = new Uint8ClampedArray(n);
-          for (let i = 0, j = 0; j < n; i += 4, j++) {
-            gray[j] = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0;
-          }
-
-          // Separable 5-tap Gaussian blur to suppress noise before thresholding
-          const kG = [1, 4, 6, 4, 1], kGS = 16;
-          const tmp = new Uint8ClampedArray(n);
-          const blurred = new Uint8ClampedArray(n);
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              let s = 0;
-              for (let k = -2; k <= 2; k++) s += gray[y * w + Math.min(w - 1, Math.max(0, x + k))] * kG[k + 2];
-              tmp[y * w + x] = (s / kGS) | 0;
-            }
-          }
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              let s = 0;
-              for (let k = -2; k <= 2; k++) s += tmp[Math.min(h - 1, Math.max(0, y + k)) * w + x] * kG[k + 2];
-              blurred[y * w + x] = (s / kGS) | 0;
-            }
-          }
-
-          // Otsu's method on blurred data
-          const hist = new Int32Array(256);
-          for (let j = 0; j < n; j++) hist[blurred[j]]++;
-          let sum = 0;
-          for (let i = 0; i < 256; i++) sum += i * hist[i];
-          let sumB = 0, wB = 0, maxVar = 0, thresh = 128;
-          for (let t = 0; t < 256; t++) {
-            wB += hist[t]; if (!wB) continue;
-            const wF = n - wB; if (!wF) break;
-            sumB += t * hist[t];
-            const mB = sumB / wB, mF = (sum - sumB) / wF;
-            const v = wB * wF * (mB - mF) ** 2;
-            if (v > maxVar) { maxVar = v; thresh = t; }
-          }
-
-          // Detect light-on-dark (e.g. white text on coloured bg) and invert
-          let brightPixels = 0;
-          for (let j = 0; j < n; j++) if (blurred[j] > thresh) brightPixels++;
-          const lightOnDark = brightPixels < n * 0.5;
-
-          // Output: always dark text on white background for Tesseract
-          for (let i = 0, j = 0; j < n; i += 4, j++) {
-            const isText = lightOnDark ? (blurred[j] > thresh) : (blurred[j] <= thresh);
-            const val = isText ? 0 : 255;
-            d[i] = d[i + 1] = d[i + 2] = val; d[i + 3] = 255;
-          }
-          ctx.putImageData(id, 0, 0);
-          resolve(canvas.toDataURL('image/png'));
-        };
-        img.onerror = () => resolve(dataUrl); // fallback: use original
-        img.src = dataUrl;
-      });
-    }
-
-    // ═══════════════════════════════════════════════
-    // OCR
+    // OCR — Google Cloud Vision API
     // ═══════════════════════════════════════════════
     async function startOCR() {
       if (!state.capturedDataUrl) return;
+
+      const apiKey = localStorage.getItem('va_apikey_v1') || '';
+      if (!apiKey) {
+        toast('Add your Google Vision API key in Settings first');
+        return;
+      }
+
       const imageUrl = state.capturedDataUrl;
       dismissCapture();
       state.currentScanSaved = false;
-
-      goTab('camera'); // stay on camera tab, but open read screen on top
+      goTab('camera');
       showReadScreen();
 
       const loading = document.getElementById('ocr-loading');
@@ -1152,32 +1121,53 @@
       controls.classList.add('hidden');
       document.getElementById('read-save-btn').className = 'save-btn';
       document.getElementById('read-save-btn').textContent = 'Save';
-      bar.style.width = '0%';
-      statusEl.textContent = 'Enhancing image…';
+      bar.style.width = '5%';
+      statusEl.textContent = 'Sending to Google Vision…';
 
-      const processedUrl = await preprocessImage(imageUrl);
+      // Animate progress bar while waiting for API response
+      let fakeVal = 5;
+      const fakeTimer = setInterval(() => {
+        fakeVal = Math.min(88, fakeVal + Math.random() * 7 + 2);
+        bar.style.width = fakeVal + '%';
+      }, 350);
 
       try {
-        const worker = await Tesseract.createWorker('eng', 1, {
-          logger: m => {
-            if (m.status === 'recognizing text') {
-              bar.style.width = (m.progress * 100).toFixed(0) + '%';
-              statusEl.textContent = 'Reading text… ' + (m.progress * 100).toFixed(0) + '%';
-            } else if (m.status) {
-              statusEl.textContent = m.status.charAt(0).toUpperCase() + m.status.slice(1) + '…';
-            }
+        const base64 = imageUrl.split(',')[1];
+        const resp = await fetch(
+          `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requests: [{
+                image: { content: base64 },
+                features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
+              }]
+            })
           }
-        });
-        // PSM 11 = sparse text: finds text anywhere without assuming page layout
-        await worker.setParameters({ tessedit_pageseg_mode: '11' });
-        const result = await worker.recognize(processedUrl);
-        await worker.terminate();
-        const text = result.data.text.trim() || 'No text found — try a clearer photo or better lighting.';
+        );
+
+        clearInterval(fakeTimer);
+        bar.style.width = '100%';
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        const text = data.responses?.[0]?.fullTextAnnotation?.text?.trim()
+          || 'No text found — try a clearer photo or better lighting.';
         state.ocrText = text;
         showText(text);
-      } catch {
-        state.ocrText = 'Could not read text. Please try a clearer photo.';
-        showText(state.ocrText);
+      } catch (err) {
+        clearInterval(fakeTimer);
+        const msg = (err.message || '').toLowerCase();
+        const friendly = msg.includes('api key') || msg.includes('403') || msg.includes('400')
+          ? 'Invalid API key — check Settings.'
+          : 'Could not reach Google Vision. Check your internet connection.';
+        state.ocrText = friendly;
+        showText(friendly);
       }
     }
 
@@ -1408,6 +1398,23 @@
     }
 
     // ═══════════════════════════════════════════════
+    // API KEY
+    // ═══════════════════════════════════════════════
+    function saveApiKey() {
+      const input = document.getElementById('api-key-input');
+      const val = input.value.trim();
+      if (!val || val.endsWith('…')) return;
+      localStorage.setItem('va_apikey_v1', val);
+      input.value = val.substring(0, 10) + '…';
+      toast('API key saved');
+    }
+
+    function loadApiKey() {
+      const key = localStorage.getItem('va_apikey_v1') || '';
+      if (key) document.getElementById('api-key-input').value = key.substring(0, 10) + '…';
+    }
+
+    // ═══════════════════════════════════════════════
     // SETTINGS
     // ═══════════════════════════════════════════════
     function toggleSetting(key) {
@@ -1490,6 +1497,7 @@
     // INIT
     // ═══════════════════════════════════════════════
     loadSettings();
+    loadApiKey();
     startCamera();
   </script>
 </body>
