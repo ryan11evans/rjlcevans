@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#bgGrad)"/>
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#b8d8f8"/>
+      <stop offset="100%" stop-color="#7ab0e8"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Hair -->
+  <ellipse cx="50" cy="30" rx="20" ry="14" fill="#6b3e1e"/>
+  <rect x="30" y="30" width="40" height="8" fill="#6b3e1e"/>
+
+  <!-- Face -->
+  <ellipse cx="50" cy="52" rx="19" ry="20" fill="#f5c89a"/>
+
+  <!-- Glasses frames -->
+  <circle cx="39" cy="52" r="11" fill="white" stroke="#8B6914" stroke-width="2.5"/>
+  <circle cx="61" cy="52" r="11" fill="white" stroke="#8B6914" stroke-width="2.5"/>
+  <!-- Bridge -->
+  <line x1="50" y1="52" x2="50" y2="52" stroke="#8B6914" stroke-width="2.5"/>
+  <path d="M50 51 Q50 52 50 53" stroke="#8B6914" stroke-width="2" fill="none"/>
+  <!-- Nose piece left -->
+  <path d="M28 50 Q26 48 27 52" stroke="#8B6914" stroke-width="1.5" fill="none"/>
+  <!-- Nose piece right -->
+  <path d="M72 50 Q74 48 73 52" stroke="#8B6914" stroke-width="1.5" fill="none"/>
+
+  <!-- Eyes (pupils) -->
+  <circle cx="39" cy="52" r="5" fill="#111"/>
+  <circle cx="61" cy="52" r="5" fill="#111"/>
+  <circle cx="41" cy="50" r="1.5" fill="white"/>
+  <circle cx="63" cy="50" r="1.5" fill="white"/>
+
+  <!-- Smile -->
+  <path d="M42 64 Q50 71 58 64" stroke="#c0784a" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Shirt collar -->
+  <path d="M31 78 L50 70 L69 78 L69 100 L31 100 Z" fill="white"/>
+  <path d="M50 70 L42 85 L50 82 L58 85 L50 70 Z" fill="white"/>
+
+  <!-- Tie -->
+  <path d="M47 72 L53 72 L55 88 L50 92 L45 88 Z" fill="#c0392b"/>
+  <line x1="47" y1="76" x2="53" y2="76" stroke="#2980b9" stroke-width="1.5"/>
+  <line x1="46" y1="80" x2="54" y2="80" stroke="#2980b9" stroke-width="1.5"/>
+  <line x1="46" y1="84" x2="54" y2="84" stroke="#2980b9" stroke-width="1.5"/>
+</svg>
