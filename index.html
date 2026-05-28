@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Evans Family — rjlcevans.com</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1f1f1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Evans Family">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://rjlcevans.com/" />
@@ -123,9 +128,17 @@ footer {
   max-width: var(--maxw);
   color: var(--muted);
   font-size: .9rem;
-  padding: 14px 18px 36px;
+  padding: 14px 18px 40px;
   text-align: center;
 }
+.footer-links {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 4px 16px; margin-bottom: 10px;
+}
+.footer-links a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+.footer-links a:hover { color: var(--text); }
+footer .footer-copy a { color: var(--muted); text-decoration: none; }
+footer .footer-copy a:hover { color: var(--text); }
 
 /* ===== Clinical Tools Section ===== */
 .tools-section {
@@ -536,7 +549,17 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
 
   </main>
 
-  <footer>© 2026 Evans Family · rjlcevans.com</footer>
+  <footer>
+    <nav class="footer-links">
+      <a href="vision-simulator/">Vision Simulator</a>
+      <a href="vision-assist/">Vision Assist</a>
+      <a href="visual-acuity/">Acuity Test</a>
+      <a href="eye-wellness/">Eye Wellness</a>
+      <a href="iris-drift/">Iris Drift</a>
+      <a href="dr-glass/">Dr. Glass</a>
+    </nav>
+    <p class="footer-copy">© 2026 Evans Family · rjlcevans.com · <a href="mailto:ryan@rjlcevans.com">Contact</a></p>
+  </footer>
 
   <script>
   // ===== Photo Carousel =====
@@ -691,24 +714,60 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     setInterval(applyTheme, 60000);
   })();
 
-  // ===== This Week in Our House — varies by day =====
+  // ===== This Week in Our House — seasonal + day =====
   (function () {
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const lines = {
-      0: "Pancakes, slow mornings, and one of the boys insisting on baseball.",
-      1: "School drop-off chaos, coffee, and a fresh week of patients.",
-      2: "Practice night — gloves, shin guards, and snacks in the car.",
-      3: "Hump day. Ryan’s probably reviewing OCTs; Jadyn’s probably winning.",
-      4: "Soccer, homework, and someone asking for a second dinner.",
-      5: "Pizza night, movie picks, and one kid falling asleep on the couch.",
-      6: "Tournaments, sunshine, and a backyard full of laughter."
+    const days = [‘Sunday’,’Monday’,’Tuesday’,’Wednesday’,’Thursday’,’Friday’,’Saturday’];
+    const m = new Date().getMonth();
+    const season = m >= 2 && m <= 4 ? ‘spring’ : m >= 5 && m <= 7 ? ‘summer’ : m >= 8 && m <= 10 ? ‘fall’ : ‘winter’;
+    const messages = {
+      spring: [
+        "Slow start — outdoor breakfast if the weather cooperates.",
+        "School drop-off, coffee, and the final stretch of the school year.",
+        "Sports practice and snacks in the car — spring season is in full swing.",
+        "Midweek. Ryan’s probably reviewing OCTs; Jadyn’s probably winning.",
+        "Soccer, homework, and someone asking for a second dinner.",
+        "Fri-yay — pizza night and zero school alarms tomorrow.",
+        "Game day. Lawn chairs, snacks, and cheering on the sideline."
+      ],
+      summer: [
+        "Lazy Sunday — pool, backyard, and no alarm clocks.",
+        "Summer Monday — slower pace, later mornings, happy boys.",
+        "Pool day, popsicles, and someone already asking what’s for dinner.",
+        "Midweek summer — outdoor adventures and sunscreen reapplied eight times.",
+        "The boys have already been outside for three hours.",
+        "Summer Friday — weekend starts now, sunscreen ready.",
+        "Full summer Saturday — tournaments, splash pads, or just the backyard."
+      ],
+      fall: [
+        "Sunday prep — lunches packed, backpacks by the door.",
+        "Back to the routine — school drop-off, coffee, ready to see patients.",
+        "Practice night — cleats, water bottles, and a packed car.",
+        "Hump day. Ryan’s probably reviewing OCTs; Jadyn’s probably winning.",
+        "Homework push and an early bedtime attempt (emphasis on attempt).",
+        "Friday! Pizza, movies, and one kid asleep before the credits.",
+        "Game day — lawn chairs, snacks, and loud sideline energy."
+      ],
+      winter: [
+        "Cozy Sunday — hot chocolate, family, and nowhere to be.",
+        "Monday reset — school’s back and the week begins again.",
+        "Rainy Tuesday — everybody’s under a blanket by 7.",
+        "Midweek. Ryan’s probably reviewing OCTs; Jadyn’s probably winning.",
+        "Almost Friday. Boys already planning the weekend.",
+        "Friday night and the house smells like something good.",
+        "Warm layers, good games, and a big family dinner."
+      ]
     };
     const day = new Date().getDay();
-    const label = document.getElementById('week-day-label');
-    const line  = document.getElementById('week-line');
+    const label = document.getElementById(‘week-day-label’);
+    const line  = document.getElementById(‘week-line’);
     if (label) label.textContent = days[day];
-    if (line)  line.textContent  = lines[day];
+    if (line)  line.textContent  = messages[season][day];
   })();
+
+  // ===== Service Worker =====
+  if (‘serviceWorker’ in navigator) {
+    navigator.serviceWorker.register(‘/sw.js’).catch(() => {});
+  }
   </script>
 
 </body>
