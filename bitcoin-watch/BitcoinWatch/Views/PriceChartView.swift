@@ -36,7 +36,7 @@ struct BitcoinInfoView: View {
     }
 
     private func shortPrice(_ v: Double) -> String {
-        v >= 1000 ? String(format: "$%.0fK", v / 1000) : String(format: "$%.0f", v)
+        "$\(Int(v).formatted())"
     }
 
     private func athDateString(_ d: Date) -> String {
