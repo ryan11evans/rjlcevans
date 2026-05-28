@@ -7,10 +7,8 @@ struct ContentView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 PriceHeaderView(price: service.currentPrice, isLoading: service.isLoading)
-                if service.priceHistory.count > 1 {
-                    PriceChartView(history: service.priceHistory)
-                        .padding(.horizontal)
-                }
+                BitcoinInfoView(history: service.priceHistory)
+                    .padding(.horizontal)
                 Spacer()
                 RefreshStatusView(price: service.currentPrice, error: service.error)
                     .padding(.bottom, 12)
