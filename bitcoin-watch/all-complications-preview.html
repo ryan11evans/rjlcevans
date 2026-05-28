@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TapBTC – All Complications</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', sans-serif;
+    gap: 48px;
+    color: #fff;
+  }
+
+  h1 { font-size: 18px; color: #fff; font-weight: 600; }
+  h2 { font-size: 11px; color: #8e8e93; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ─── Watch frame ─────────────────────────────────────── */
+  .watch {
+    width: 210px;
+    height: 256px;
+    background: #000;
+    border-radius: 58px;
+    border: 6px solid #2a2a2a;
+    box-shadow: 0 0 0 1px #444, 0 24px 48px rgba(0,0,0,0.9);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .w-inline {
+    margin-top: 17px;
+    font-size: 10px; font-weight: 600; color: #ff9f0a;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .w-dot { width: 5px; height: 5px; border-radius: 50%; background: #ff9f0a; }
+  .w-time { font-size: 50px; font-weight: 200; color: #fff; letter-spacing: -2px; line-height: 1; margin-top: 4px; }
+  .w-date { font-size: 10px; color: #8e8e93; margin-top: 1px; }
+
+  .w-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+
+  /* ─── Circular ────────────────────────────────────────── */
+  .c-circ {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    animation: spin-pulse 6s ease-in-out infinite;
+    cursor: pointer;
+  }
+  .c-circ:hover { opacity: 0.75; }
+  .c-circ-price { font-size: 13px; font-weight: 700; color: #ff9f0a; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .c-circ-time  { font-size: 9px;  font-weight: 500; color: rgba(255,255,255,0.45); line-height: 1.2; }
+
+  /* ─── Rectangular ─────────────────────────────────────── */
+  .c-rect {
+    width: 178px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 11px;
+    padding: 6px 9px;
+    cursor: pointer;
+  }
+  .c-rect:hover { opacity: 0.75; }
+  .c-rect-hdr { display: flex; align-items: center; gap: 3px; }
+  .c-rect-icon  { font-size: 9px; color: #ff9f0a; }
+  .c-rect-lbl   { font-size: 9px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px; flex: 1; }
+  .c-rect-arr   { font-size: 7px; color: rgba(255,255,255,0.15); }
+
+  /* NEW larger price */
+  .c-rect-price { font-size: 24px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .c-rect-time  { font-size: 7.5px; color: rgba(255,255,255,0.35); margin-top: 0; }
+
+  /* ─── Inline ──────────────────────────────────────────── */
+  .c-inline-chip {
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: flex; align-items: center; gap: 5px;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 178px;
+  }
+  .c-inline-chip:hover { opacity: 0.75; }
+  .c-inline-icon  { font-size: 12px; color: #ff9f0a; }
+  .c-inline-text  { font-size: 12px; font-weight: 600; color: #ff9f0a; font-variant-numeric: tabular-nums; }
+
+  /* ─── Corner ──────────────────────────────────────────── */
+  .c-corner {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    cursor: pointer;
+  }
+  .c-corner:hover { opacity: 0.75; }
+  .c-corner-price { font-size: 18px; font-weight: 700; color: #ff9f0a; font-variant-numeric: tabular-nums; }
+  .c-corner-row   { display: flex; align-items: center; gap: 3px; }
+  .c-corner-icon  { font-size: 10px; color: #ff9f0a; opacity: 0.6; }
+  .c-corner-lbl   { font-size: 10px; color: #ff9f0a; opacity: 0.6; }
+
+  /* ─── Close-up cards ─────────────────────────────────── */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .card {
+    background: #1c1c1e;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card-lbl { font-size: 10px; color: #8e8e93; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tap-hint { font-size: 9px; color: #3a3a3c; text-align: center; }
+
+  .card-circ {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto;
+  }
+  .card-circ-price { font-size: 16px; font-weight: 700; color: #ff9f0a; font-variant-numeric: tabular-nums; }
+  .card-circ-time  { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.4); }
+
+  .card-inline {
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 8px 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-inline-icon { font-size: 13px; color: #ff9f0a; }
+  .card-inline-text { font-size: 13px; font-weight: 600; color: #ff9f0a; font-variant-numeric: tabular-nums; }
+
+  .card-corner {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0;
+  }
+  .card-corner-price { font-size: 22px; font-weight: 700; color: #ff9f0a; font-variant-numeric: tabular-nums; }
+  .card-corner-row   { display: flex; align-items: center; gap: 4px; }
+  .card-corner-icon  { font-size: 11px; color: #ff9f0a; opacity: 0.6; }
+  .card-corner-lbl   { font-size: 11px; color: #ff9f0a; opacity: 0.6; }
+
+  .new-badge {
+    display: inline-block;
+    background: #ff9f0a;
+    color: #000;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<h1>TapBTC — All Complications</h1>
+
+<!-- Watch face showing all complications in context -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+  <h2>Watch Face Preview</h2>
+  <div class="watch">
+    <!-- Inline at top -->
+    <div class="w-inline">
+      <div class="w-dot"></div>
+      ₿ BTC &nbsp;$104,382
+    </div>
+
+    <div class="w-time">8:38</div>
+    <div class="w-date">THU 28</div>
+
+    <!-- Middle row: circular + placeholder -->
+    <div class="w-row">
+      <div class="c-circ">
+        <span class="c-circ-price">104.4K</span>
+        <span class="c-circ-time">56s</span>
+      </div>
+      <div class="c-circ" style="background:rgba(255,255,255,0.06)">
+        <span style="font-size:11px;color:#8e8e93">❤️</span>
+        <span style="font-size:10px;color:#8e8e93">72</span>
+      </div>
+    </div>
+
+    <!-- Rectangular -->
+    <div class="c-rect" style="margin-top:8px">
+      <div class="c-rect-hdr">
+        <span class="c-rect-icon">₿</span>
+        <span class="c-rect-lbl">BITCOIN</span>
+        <span class="c-rect-arr">↻</span>
+      </div>
+      <div class="c-rect-price">$104,382</div>
+      <div class="c-rect-time">6 min ago</div>
+    </div>
+  </div>
+</div>
+
+<!-- Close-up cards -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:480px">
+  <h2>Close-ups — all 4 families</h2>
+  <div class="cards">
+
+    <!-- Circular -->
+    <div class="card">
+      <span class="card-lbl">.accessoryCircular</span>
+      <div class="card-circ">
+        <span class="card-circ-price">104.4K</span>
+        <span class="card-circ-time">56 sec</span>
+      </div>
+      <div class="tap-hint">tap to refresh</div>
+    </div>
+
+    <!-- Rectangular (NEW) -->
+    <div class="card">
+      <span class="card-lbl">.accessoryRectangular <span class="new-badge">UPDATED</span></span>
+      <div class="c-rect">
+        <div class="c-rect-hdr">
+          <span class="c-rect-icon">₿</span>
+          <span class="c-rect-lbl">BITCOIN</span>
+          <span class="c-rect-arr">↻</span>
+        </div>
+        <div class="c-rect-price">$104,382</div>
+        <div class="c-rect-time">6 min ago</div>
+      </div>
+      <div class="tap-hint">tap to refresh</div>
+    </div>
+
+    <!-- Inline -->
+    <div class="card">
+      <span class="card-lbl">.accessoryInline</span>
+      <div class="card-inline">
+        <span class="card-inline-icon">₿</span>
+        <span class="card-inline-text">BTC &nbsp;$104,382</span>
+      </div>
+      <div class="tap-hint">tap to refresh</div>
+    </div>
+
+    <!-- Corner -->
+    <div class="card">
+      <span class="card-lbl">.accessoryCorner</span>
+      <div class="card-corner">
+        <div class="card-corner-price">$104K</div>
+        <div class="card-corner-row">
+          <span class="card-corner-icon">₿</span>
+          <span class="card-corner-lbl">BTC</span>
+        </div>
+      </div>
+      <div class="tap-hint">tap to refresh</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
