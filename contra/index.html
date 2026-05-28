@@ -23,11 +23,28 @@
   }
   .tbtn:active,.tbtn.pressed{background:rgba(255,255,255,0.28)}
 
-  /* Left side — movement (bigger targets) */
-  #tbl{width:72px;height:72px;border-radius:18px;font-size:30px;
-       bottom:calc(80px + env(safe-area-inset-bottom,0px));left:calc(10px + env(safe-area-inset-left,0px))}
-  #tbr{width:72px;height:72px;border-radius:18px;font-size:30px;
-       bottom:calc(80px + env(safe-area-inset-bottom,0px));left:calc(94px + env(safe-area-inset-left,0px))}
+  /* Left side — virtual joystick */
+  #joy-zone{
+    position:absolute;pointer-events:all;
+    width:140px;height:140px;
+    bottom:calc(30px + env(safe-area-inset-bottom,0px));
+    left:calc(8px + env(safe-area-inset-left,0px));
+  }
+  #joy-base{
+    position:absolute;top:20px;left:20px;
+    width:100px;height:100px;border-radius:50%;
+    background:rgba(255,255,255,0.07);
+    border:2px solid rgba(255,255,255,0.2);
+  }
+  #joy-knob{
+    position:absolute;top:33px;left:33px;
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 38% 35%,rgba(255,255,255,0.55),rgba(255,255,255,0.2));
+    border:2px solid rgba(255,255,255,0.45);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    pointer-events:none;
+    will-change:transform;
+  }
   /* Right side — jump + fire + weapon */
   #tbj{width:68px;height:68px;border-radius:50%;font-size:13px;font-weight:800;
        background:rgba(50,110,255,0.18);border-color:rgba(80,150,255,0.42);
@@ -62,8 +79,9 @@
 <canvas id="c"></canvas>
 
 <div id="touch-ui" style="display:none">
-  <div class="tbtn" id="tbl">◀</div>
-  <div class="tbtn" id="tbr">▶</div>
+  <div id="joy-zone">
+    <div id="joy-base"><div id="joy-knob"></div></div>
+  </div>
   <div class="tbtn" id="tbj">JUMP</div>
   <div class="tbtn" id="tbs">FIRE</div>
   <div class="tbtn" id="tbw">WPN</div>
@@ -77,7 +95,7 @@
   <p class="hint" id="ov-hint">
     Arrow / WASD = move &nbsp;|&nbsp; X or Up = jump<br>
     Z or Space = shoot &nbsp;|&nbsp; E = switch weapon<br>
-    Touch: on-screen controls
+    Touch: joystick (left) · JUMP · FIRE · WPN (right)
   </p>
 </div>
 
@@ -222,22 +240,71 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();});
 addEventListener('keyup',e=>{keys[e.code]=false});
 
-const tb={left:false,right:false,jump:false,shoot:false,wpn:false};
+const tb={jump:false,shoot:false,wpn:false};
 function hook(id,k){
   const el=document.getElementById(id);
   if(!el)return;
   ['touchstart','mousedown'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();tb[k]=true;el.classList.add('pressed')},{passive:false}));
   ['touchend','touchcancel','mouseup'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();tb[k]=false;el.classList.remove('pressed')},{passive:false}));
 }
-hook('tbl','left');hook('tbr','right');hook('tbj','jump');hook('tbs','shoot');hook('tbw','wpn');
+hook('tbj','jump');hook('tbs','shoot');hook('tbw','wpn');
+
+// ─── VIRTUAL JOYSTICK ────────────────────────────────────────────────────────
+const joy={dx:0,dy:0,id:-1,bx:0,by:0};
+const JOY_R=32, JOY_DEAD=8;
+
+function joySet(cx,cy){
+  let dx=cx-joy.bx,dy=cy-joy.by;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d>JOY_R){dx=dx/d*JOY_R;dy=dy/d*JOY_R;}
+  joy.dx=dx;joy.dy=dy;
+  const k=document.getElementById('joy-knob');
+  if(k)k.style.transform=`translate(${dx|0}px,${dy|0}px)`;
+}
+function joyReset(){
+  joy.id=-1;joy.dx=0;joy.dy=0;
+  const k=document.getElementById('joy-knob');
+  if(k)k.style.transform='translate(0,0)';
+}
+function setupJoy(){
+  const zone=document.getElementById('joy-zone');
+  if(!zone)return;
+  const base=document.getElementById('joy-base');
+  function getCenter(){
+    const r=base.getBoundingClientRect();
+    joy.bx=r.left+r.width/2;joy.by=r.top+r.height/2;
+  }
+  zone.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(joy.id!==-1)return;
+    const t=e.changedTouches[0];
+    joy.id=t.identifier;
+    getCenter();
+    joySet(t.clientX,t.clientY);
+  },{passive:false});
+  zone.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches)if(t.identifier===joy.id){joySet(t.clientX,t.clientY);break;}
+  },{passive:false});
+  ['touchend','touchcancel'].forEach(ev=>zone.addEventListener(ev,e=>{
+    e.preventDefault();
+    for(const t of e.changedTouches)if(t.identifier===joy.id){joyReset();break;}
+  },{passive:false}));
+  // mouse fallback for desktop testing
+  let md=false;
+  zone.addEventListener('mousedown',e=>{md=true;getCenter();joySet(e.clientX,e.clientY);});
+  addEventListener('mousemove',e=>{if(md)joySet(e.clientX,e.clientY);});
+  addEventListener('mouseup',()=>{if(md){md=false;joyReset();}});
+}
 
 const inp={left:0,right:0,jump:0,shoot:0,wpn:0};
 let prevJump=0,prevWpn=0;
 function readInput(){
-  inp.left  =(keys.ArrowLeft ||keys.KeyA)?1:tb.left?1:0;
-  inp.right =(keys.ArrowRight||keys.KeyD)?1:tb.right?1:0;
+  const jL=joy.dx<-JOY_DEAD,jR=joy.dx>JOY_DEAD,jU=joy.dy<-JOY_DEAD;
+  inp.left  =(keys.ArrowLeft ||keys.KeyA)?1:jL?1:0;
+  inp.right =(keys.ArrowRight||keys.KeyD)?1:jR?1:0;
   inp.shoot =(keys.KeyZ||keys.Space)?1:tb.shoot?1:0;
-  const j=(keys.ArrowUp||keys.KeyX||keys.KeyW)?1:tb.jump?1:0;
+  const j=(keys.ArrowUp||keys.KeyX||keys.KeyW)?1:(tb.jump||jU)?1:0;
   inp.jumpPress=j&&!prevJump;inp.jump=j;prevJump=j;
   const w=(keys.KeyE||keys.KeyQ)?1:tb.wpn?1:0;
   inp.wpnPress=w&&!prevWpn;prevWpn=w;
@@ -1130,6 +1197,7 @@ document.getElementById('ov-btn').addEventListener('touchend',e=>{e.preventDefau
 // show title screen hint only on desktop-ish
 document.getElementById('ov-hint').style.display=('ontouchstart' in window)?'none':'';
 
+setupJoy();
 requestAnimationFrame(ts=>{last=ts;requestAnimationFrame(loop);});
 </script>
 </body>
