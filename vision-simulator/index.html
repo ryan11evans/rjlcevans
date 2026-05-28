@@ -96,6 +96,12 @@
   .compare-tag.left { left: 10px; }
   .compare-tag.right { right: 10px; }
   body.compare .compare-line, body.compare .compare-tag { display: block; }
+  .active-badge {
+    position: absolute; bottom: 10px; left: 10px; z-index: 5;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #fff; background: rgba(0,0,0,0.58); padding: 4px 10px;
+    border-radius: 999px; pointer-events: none; display: none;
+  }
   .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
   .empty-state svg { opacity: 0.3; }
 
@@ -204,6 +210,7 @@
       <div class="compare-line" id="compareLine"></div>
       <div class="compare-tag left" id="compareTagL">Normal</div>
       <div class="compare-tag right" id="compareTagR">Impaired</div>
+      <div class="active-badge" id="activeBadge"></div>
       <div class="empty-state" id="emptyState">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
         <div>Start the camera or upload an image to begin.</div>
@@ -246,6 +253,14 @@
       <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#bfe3f7"/><rect y="12" width="26" height="8" fill="#6fae54"/><circle cx="6" cy="11" r="2" fill="#e0473e"/><circle cx="13" cy="12" r="2" fill="#f0d33b"/><circle cx="20" cy="11" r="2" fill="#d94f8a"/></svg>
       Color Garden
     </button>
+    <button class="btn ghost" data-sample="face">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#d4c5b0"/><ellipse cx="13" cy="9" rx="5" ry="6" fill="#f0c890"/><ellipse cx="13" cy="2.5" rx="5.5" ry="3" fill="#5c3a1e"/><circle cx="11" cy="8" r="1.3" fill="#3d6e8e"/><circle cx="15" cy="8" r="1.3" fill="#3d6e8e"/><path d="M10.5 12 Q13 14 15.5 12" stroke="#cc6050" stroke-width="0.9" fill="none" stroke-linecap="round"/></svg>
+      Portrait
+    </button>
+    <button class="btn ghost" data-sample="reading">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
+      Reading
+    </button>
   </div>
 
   <h2 class="section-title">Select Condition</h2>
@@ -259,6 +274,8 @@
     <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
     <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span></button>
     <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
+    <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span></button>
+    <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
   </div>
 
   <div class="controls" id="controlsPanel">
@@ -271,6 +288,20 @@
     <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
   </footer>
 </div>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="cvd-protan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-deutan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-tritan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
 
 <script>
 (() => {
@@ -306,7 +337,9 @@
     amd:         { amdSize: 25, amdDistortion: 0 },
     diabetic:    { drSeverity: 0.5 },
     colorblind:  { cvdType: 'deutan' },
-    floaters:    { floaterCount: 6 }
+    floaters:    { floaterCount: 6 },
+    rp:          { rpStage: 2 },
+    presbyopia:  { presbySev: 2 }
   };
 
   const params = {
@@ -319,7 +352,9 @@
     amdDistortion: 0,
     drSeverity: 0.5,
     cvdType: 'deutan',
-    floaterCount: 6
+    floaterCount: 6,
+    rpStage: 2,
+    presbySev: 2
   };
 
   const snellenBlur = {
@@ -607,32 +642,83 @@
     }
   }
 
-  // Color vision deficiency. Standard simulation matrices (Machado et al. style,
-  // common web values) for dichromacy: protanopia (red-weak), deuteranopia
-  // (green-weak), tritanopia (blue-weak). Applied per pixel via getImageData.
-  const cvdMatrices = {
-    protan: [0.567,0.433,0.0, 0.558,0.442,0.0, 0.0,0.242,0.758],
-    deutan: [0.625,0.375,0.0, 0.70,0.30,0.0, 0.0,0.30,0.70],
-    tritan: [0.95,0.05,0.0, 0.0,0.433,0.567, 0.0,0.475,0.525]
-  };
-  function applyColorBlind(type, region) {
-    const w = stageCanvas.width, h = stageCanvas.height;
+  // Color vision deficiency — SVG feColorMatrix filter applied via ctx.filter.
+  // Much faster than per-pixel getImageData; respects canvas clip for compare mode.
+  function applyColorBlind(type) {
+    const filterId = { protan: 'cvd-protan', deutan: 'cvd-deutan', tritan: 'cvd-tritan' }[type] || 'cvd-deutan';
+    ctx.filter = `url(#${filterId})`;
     ctx.drawImage(sourceCanvas, 0, 0);
-    const m = cvdMatrices[type] || cvdMatrices.deutan;
-    // Only process the requested horizontal band (used by compare mode). Default = full.
-    const x0 = region ? Math.max(0, Math.round(region.x)) : 0;
-    const rw = region ? Math.min(w - x0, Math.round(region.w)) : w;
-    if (rw <= 0) return;
-    let img;
-    try { img = ctx.getImageData(x0, 0, rw, h); } catch (e) { return; }
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], g = d[i+1], b = d[i+2];
-      d[i]   = Math.min(255, r*m[0] + g*m[1] + b*m[2]);
-      d[i+1] = Math.min(255, r*m[3] + g*m[4] + b*m[5]);
-      d[i+2] = Math.min(255, r*m[6] + g*m[7] + b*m[8]);
+    ctx.filter = 'none';
+  }
+
+  // Retinitis Pigmentosa — peripheral rod loss with scalloped irregular tunnel,
+  // bone-spicule deposits, and mild night-blindness darkening.
+  let rpSpicules = null;
+  function initRP(stage) {
+    rpSpicules = [];
+    const n = 28 + stage * 14;
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      rpSpicules.push({
+        angle,
+        rFrac: 0.28 + Math.random() * 0.18,
+        size: 0.011 + Math.random() * 0.018,
+        opacity: 0.5 + Math.random() * 0.42
+      });
     }
-    ctx.putImageData(img, x0, 0);
+  }
+  function applyRP(stage) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const cx = w / 2, cy = h / 2;
+    const minDim = Math.min(w, h);
+
+    ctx.filter = `brightness(${0.88 - stage * 0.07}) saturate(0.82)`;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+
+    if (!rpSpicules) initRP(stage);
+    const spRing = minDim * (0.32 - stage * 0.04);
+    rpSpicules.forEach(sp => {
+      const r = spRing * (0.88 + sp.rFrac);
+      const px = cx + Math.cos(sp.angle) * r;
+      const py = cy + Math.sin(sp.angle) * r;
+      const sz = sp.size * minDim;
+      ctx.fillStyle = `rgba(0,0,0,${sp.opacity})`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, sz, sz * 0.5, sp.angle + 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    const halfDiag = Math.hypot(w, h) / 2;
+    const cfg = ({ 1:{c:0.56,e:0.73}, 2:{c:0.41,e:0.58}, 3:{c:0.26,e:0.42}, 4:{c:0.11,e:0.22} })[stage] || {c:0.41,e:0.58};
+    const grad = ctx.createRadialGradient(cx, cy, halfDiag * cfg.c, cx, cy, halfDiag * cfg.e);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Irregular (scalloped) hard edge via sin-wave perturbed circle
+    const perimR = halfDiag * cfg.e;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, w, h);
+    const steps = 52;
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const noise = 1 + Math.sin(a * 7 + 2.3) * 0.07 + Math.sin(a * 13 + 1.1) * 0.04 + Math.sin(a * 3 + 3.7) * 0.09;
+      const px2 = cx + Math.cos(a) * perimR * noise;
+      const py2 = cy + Math.sin(a) * perimR * noise;
+      if (i === 0) ctx.moveTo(px2, py2); else ctx.lineTo(px2, py2);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#000';
+    ctx.fill('evenodd');
+    ctx.restore();
+  }
+
+  // Presbyopia — loss of near accommodation. Simulates blur at reading distance.
+  function applyPresbyopia(sev) {
+    applyBlur([0, 4, 11, 22][sev] || 11);
   }
 
   let floaterState = null;
@@ -701,6 +787,8 @@
       case 'diabetic':   applyDiabetic(params.drSeverity); break;
       case 'colorblind': applyColorBlind(params.cvdType); break;
       case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloatersCanvas(); break;
+      case 'rp':         applyRP(params.rpStage); break;
+      case 'presbyopia': applyPresbyopia(params.presbySev); break;
     }
   }
 
@@ -725,12 +813,7 @@
       ctx.beginPath();
       ctx.rect(splitX, 0, w - splitX, h);
       ctx.clip();
-      // colorblind ignores canvas clip (putImageData), so pass it the region explicitly
-      if (condition === 'colorblind') {
-        applyColorBlind(params.cvdType, { x: splitX, w: w - splitX });
-      } else {
-        applyCondition();
-      }
+      applyCondition();
       ctx.restore();
     } else {
       applyCondition();
@@ -768,11 +851,20 @@
     o.fillStyle = '#fff';
     o.fillText(label, 20, out.height - 20);
 
-    out.toBlob((blob) => {
+    out.toBlob(async (blob) => {
+      const filename = `vision-sim-${condition}.png`;
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'Vision Simulator', text: label });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `vision-sim-${condition}.png`;
+      a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, 'image/png');
@@ -838,6 +930,16 @@
       controls: () => [
         sliderControl('floaterCount', 'Number of floaters', 1, 25, 1, '', () => initFloaters(params.floaterCount))
       ]
+    },
+    rp: {
+      title: 'Retinitis Pigmentosa',
+      note: 'Progressive rod photoreceptor degeneration produces characteristic peripheral field loss with an irregular, scalloped boundary — distinct from the smoother gradient of glaucoma. Pathognomonic <strong>bone spicule pigment deposits</strong> form in the mid-periphery. Rod involvement causes significant night vision loss early. Central acuity is often preserved until late stages, which can delay diagnosis.',
+      controls: () => [rpStageControl()]
+    },
+    presbyopia: {
+      title: 'Presbyopia',
+      note: '<strong>This simulation represents near vision at reading distance (~40 cm)</strong> without reading correction. Age-related loss of crystalline lens flexibility reduces the eye\'s accommodative amplitude through the 40s–60s. Unlike myopia, distance vision remains clear — only near focus is impaired. Nearly universal by age 50; corrected with reading glasses, bifocals, or progressive lenses.',
+      controls: () => [presbySevControl()]
     }
   };
 
@@ -940,6 +1042,54 @@
     return wrap;
   }
 
+  function rpStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="rpStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Early' }, { v: 2, label: 'Moderate' },
+      { v: 3, label: 'Advanced' }, { v: 4, label: 'End-stage' }
+    ];
+    const host = wrap.querySelector('#rpStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.rpStage) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.rpStage = s.v;
+        rpSpicules = null;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function presbySevControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Stage</label><div class="presets" id="presbyStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Early (~45y)' }, { v: 2, label: 'Moderate (~55y)' }, { v: 3, label: 'Advanced (~65y+)' }
+    ];
+    const host = wrap.querySelector('#presbyStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.presbySev) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.presbySev = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
   function buildControls() {
     ctrlGrid.innerHTML = '';
     const meta = conditionMeta[condition];
@@ -947,7 +1097,17 @@
     meta.controls().forEach(node => ctrlGrid.appendChild(node));
     if (condition === 'floaters') initFloaters(params.floaterCount);
     if (condition === 'diabetic') initDR(params.drSeverity);
+    if (condition === 'rp') { rpSpicules = null; initRP(params.rpStage); }
     clearOverlay();
+
+    const badge = document.getElementById('activeBadge');
+    if (badge) {
+      const short = meta.title.split(' (')[0].split(' — ')[0];
+      badge.textContent = short;
+      badge.style.display = condition === 'none' ? 'none' : '';
+    }
+    const tagR = document.getElementById('compareTagR');
+    if (tagR) tagR.textContent = condition === 'none' ? 'Impaired' : meta.title.split(' (')[0];
   }
 
   conditionsEl.addEventListener('click', e => {
@@ -1014,6 +1174,102 @@
         gr.addColorStop(0,'rgba(255,250,220,0.95)'); gr.addColorStop(0.3,'rgba(255,240,180,0.5)'); gr.addColorStop(1,'rgba(255,240,180,0)');
         g.fillStyle = gr; g.fillRect(x-r*6,y-r*6,r*12,r*12);
         g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
+      });
+    } else if (kind === 'face') {
+      c.width = 900; c.height = 1100;
+      g.fillStyle = '#cfc4b4'; g.fillRect(0, 0, c.width, c.height);
+      const bgg = g.createRadialGradient(c.width/2, c.height*0.38, 0, c.width/2, c.height*0.38, c.width*0.9);
+      bgg.addColorStop(0, 'rgba(255,248,240,0.55)'); bgg.addColorStop(1, 'rgba(158,146,132,0.38)');
+      g.fillStyle = bgg; g.fillRect(0, 0, c.width, c.height);
+      const cx = c.width/2, hy = c.height*0.42;
+      // Neck
+      g.fillStyle = '#e8b080';
+      g.beginPath(); g.roundRect(cx-75, hy+235, 150, 220, 8); g.fill();
+      // Head
+      g.fillStyle = '#f2c085';
+      g.beginPath(); g.ellipse(cx, hy, 210, 260, 0, 0, Math.PI*2); g.fill();
+      // Hair
+      g.fillStyle = '#5c3a1e';
+      g.beginPath(); g.ellipse(cx, hy-130, 225, 155, 0, Math.PI, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx-200, hy+15, 35, 120, -0.25, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+200, hy+15, 35, 120, 0.25, 0, Math.PI*2); g.fill();
+      // Ears
+      g.fillStyle = '#e0a870';
+      g.beginPath(); g.ellipse(cx-208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      // Eyebrows
+      g.strokeStyle='#4a2e18'; g.lineWidth=9; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-95, hy-64); g.quadraticCurveTo(cx-58, hy-80, cx-18, hy-68); g.stroke();
+      g.beginPath(); g.moveTo(cx+18, hy-68); g.quadraticCurveTo(cx+58, hy-80, cx+95, hy-64); g.stroke();
+      // Eye whites
+      g.fillStyle='#fff';
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      // Iris
+      g.fillStyle='#3d6e8e';
+      g.beginPath(); g.arc(cx-62, hy-18, 15, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 15, 0, Math.PI*2); g.fill();
+      // Pupil
+      g.fillStyle='#160e0a';
+      g.beginPath(); g.arc(cx-62, hy-18, 7, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 7, 0, Math.PI*2); g.fill();
+      // Highlight
+      g.fillStyle='rgba(255,255,255,0.82)';
+      g.beginPath(); g.arc(cx-57, hy-24, 4, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+67, hy-24, 4, 0, Math.PI*2); g.fill();
+      // Upper lid
+      g.strokeStyle='#1e1008'; g.lineWidth=3;
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      // Nose
+      g.strokeStyle='#c47e50'; g.lineWidth=3.5; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-10,hy-8); g.lineTo(cx-18,hy+62); g.quadraticCurveTo(cx-32,hy+72,cx-28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx+10,hy-8); g.lineTo(cx+18,hy+62); g.quadraticCurveTo(cx+32,hy+72,cx+28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx-28,hy+82); g.quadraticCurveTo(cx,hy+92,cx+28,hy+82); g.stroke();
+      // Lips
+      g.fillStyle='#cc7060';
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx-24,hy+112,cx,hy+115); g.quadraticCurveTo(cx+24,hy+112,cx+48,hy+122); g.quadraticCurveTo(cx+30,hy+148,cx,hy+152); g.quadraticCurveTo(cx-30,hy+148,cx-48,hy+122); g.closePath(); g.fill();
+      g.strokeStyle='#a85045'; g.lineWidth=2;
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx,hy+132,cx+48,hy+122); g.stroke();
+      // Clothing
+      g.fillStyle='#2e4f7a';
+      g.beginPath(); g.moveTo(0,c.height); g.lineTo(0,hy+360); g.quadraticCurveTo(cx-280,hy+290,cx-90,hy+240); g.lineTo(cx-78,hy+232); g.lineTo(cx+78,hy+232); g.lineTo(cx+90,hy+240); g.quadraticCurveTo(cx+280,hy+290,c.width,hy+360); g.lineTo(c.width,c.height); g.closePath(); g.fill();
+    } else if (kind === 'reading') {
+      c.width = 900; c.height = 1200;
+      g.fillStyle = '#fdfaf4'; g.fillRect(0, 0, c.width, c.height);
+      g.strokeStyle = '#e8e2d4'; g.lineWidth = 1;
+      g.strokeRect(48, 48, c.width-96, c.height-96);
+      g.textAlign = 'left'; g.textBaseline = 'top';
+      g.fillStyle = '#14142a';
+      g.font = '700 48px Georgia, serif'; g.fillText('Physician Referral Note', 70, 72);
+      g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
+      let ry = 152;
+      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
+        g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
+        g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
+        ry += 38;
+      });
+      ry += 10;
+      g.strokeStyle = '#d8d0c0'; g.lineWidth = 1; g.beginPath(); g.moveTo(70,ry); g.lineTo(c.width-70,ry); g.stroke(); ry += 20;
+      const paras = [
+        { text: 'Rx: Progressive addition lenses. Distance: +0.25 −0.50 × 095 / +0.50 −0.25 × 085. Add: +2.25 OU. PD: 63/61.', size: 23 },
+        { text: 'Instructions: Wear full time. Avoid progressives while driving until adapted (allow 2–3 weeks). Return visit in 6 weeks.', size: 19 },
+        { text: 'The patient reports increasing difficulty reading small print and near tasks over the past 18 months. Best corrected visual acuity is 20/20 OD and 20/20 OS at distance. Near acuity without correction is J5 at 40 cm bilaterally.', size: 15 },
+        { text: 'Side effects may include: dizziness, peripheral distortion, and difficulty with stairs during adaptation. If symptoms persist beyond two weeks, contact our office at (555) 867-5309. Do not adjust the frame yourself.', size: 12 },
+        { text: 'This prescription is valid for 24 months from the date of examination. Frame selection, lens material, coatings, and fitting are the responsibility of the dispensing optician. Insurance benefits apply subject to plan limitations and co-pay is due at time of dispensing. Lens prescription is not transferable.', size: 9 },
+        { text: 'Fine print: Warranty covers manufacturing defects only and does not include scratches, breakage, or loss. Anti-reflective coating void if cleaned with abrasive materials. Progressive lens designs may vary by manufacturer. All measurements are in millimetres unless otherwise stated. Patient acknowledges receipt of this prescription.', size: 7 },
+      ];
+      paras.forEach(p => {
+        g.font = `400 ${p.size}px Georgia, serif`; g.fillStyle = '#1a1a2a';
+        const maxW = c.width - 140; let line = '';
+        p.text.split(' ').forEach(word => {
+          const test = line + (line ? ' ' : '') + word;
+          if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += p.size*1.65; line = word; }
+          else line = test;
+        });
+        if (line) { g.fillText(line, 70, ry); ry += p.size*1.65; }
+        ry += p.size * 1.2;
       });
     } else if (kind === 'garden') {
       // Colorful flowers (great for color blindness + general)
