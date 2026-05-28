@@ -88,6 +88,3 @@ targets:
         INFOPLIST_FILE: WatchComplication/Info.plist
     entitlements:
       path: WatchComplication/BTCWatchComplication.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.rjlcevans.bitcoinwatch
