@@ -832,6 +832,7 @@ function drawHUD(){
 // ─── LOOP ────────────────────────────────────────────────────────────────────
 let last=0;
 function loop(ts){
+  requestAnimationFrame(loop); // schedule first so an error can never kill the loop
   const dt=Math.min((ts-last)/1000,.05);last=ts;
   dc.clearRect(0,0,VW,VH);
 
@@ -845,24 +846,25 @@ function loop(ts){
   }
 
   drawBG();
-  // tiles
-  const stx=Math.max(0,camX/T-1|0),etx=Math.min(COLS-1,(camX+VW)/T+1|0);
-  for(let ty=0;ty<ROWS;ty++)for(let tx=stx;tx<=etx;tx++){const t=map[ty][tx];if(t)drawTile(tx,ty,t);}
-  // entities
-  for(const k of pickups)drawPickup(k);
-  drawBullets();drawLaser();
-  for(const e of enemies)drawEnemy(e);
-  if(boss)drawBoss();
-  if(!player.dead||player.ddt<2)drawPlayer();
-  drawParts();
-  if(gstate==='playing')drawHUD();
+
+  if(map){
+    // tiles
+    const stx=Math.max(0,camX/T-1|0),etx=Math.min(COLS-1,(camX+VW)/T+1|0);
+    for(let ty=0;ty<ROWS;ty++)for(let tx=stx;tx<=etx;tx++){const t=map[ty][tx];if(t)drawTile(tx,ty,t);}
+    // entities
+    for(const k of pickups)drawPickup(k);
+    drawBullets();drawLaser();
+    for(const e of enemies)drawEnemy(e);
+    if(boss)drawBoss();
+    if(player&&(!player.dead||player.ddt<2))drawPlayer();
+    drawParts();
+    if(gstate==='playing')drawHUD();
+  }
 
   // blit to screen
   cx.clearRect(0,0,canvas.width,canvas.height);
   cx.save();cx.translate(offX,offY);cx.scale(scaleF,scaleF);
   cx.drawImage(buf,0,0);cx.restore();
-
-  requestAnimationFrame(loop);
 }
 
 // ─── OVERLAY ─────────────────────────────────────────────────────────────────
