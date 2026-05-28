@@ -6,6 +6,7 @@ import WidgetKit
 struct RefreshBTCIntent: AppIntent {
     static var title: LocalizedStringResource = "Refresh Bitcoin Price"
     static var description = IntentDescription("Fetches the latest BTC/USD price from Coinbase.")
+    static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult {
         guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-USD/spot"),
