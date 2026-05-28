@@ -25,7 +25,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.bitcoinwatch
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch
         INFOPLIST_FILE: BitcoinWatch/App/Info.plist
     entitlements:
       path: BitcoinWatch/BitcoinWatch.entitlements
@@ -46,7 +46,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.bitcoinwatch.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.widget
         INFOPLIST_FILE: BitcoinWatchWidget/Info.plist
     entitlements:
       path: BitcoinWatchWidget/BitcoinWatchWidget.entitlements
@@ -64,7 +64,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.bitcoinwatch.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.watchapp
         INFOPLIST_FILE: WatchApp/App/Info.plist
     entitlements:
       path: WatchApp/WatchApp.entitlements
@@ -72,11 +72,9 @@ targets:
         com.apple.security.application-groups:
           - group.com.rjlcevans.bitcoinwatch
     dependencies:
-      - target: BTCWatchComplication  # embed the complication widget extension
+      - target: BTCWatchComplication
 
   # ── Watch Complication (WidgetKit, watchOS 10+) ──────────────────────────────
-  # Tap the complication → AppIntent fires in background → price refreshes,
-  # complication reloads — no app launch required.
   BTCWatchComplication:
     type: app-extension
     platform: watchOS
@@ -86,7 +84,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.bitcoinwatch.watchcomplication
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.complication
         INFOPLIST_FILE: WatchComplication/Info.plist
     entitlements:
       path: WatchComplication/BTCWatchComplication.entitlements
