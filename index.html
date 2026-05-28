@@ -345,6 +345,12 @@ body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
 .info-card h3 { margin-top: 0; }
 .superpower-items { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 
+/* ===== Scroll fade-in ===== */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+}
+
 /* ===== Night mode (8 pm – 6 am) ===== */
 body { transition: background-color 0.6s ease, color 0.6s ease; }
 body.night {
@@ -419,17 +425,17 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<section class="card info-card">
+<section class="card info-card reveal">
   <h3>About</h3>
   <p>Ryan and Jadyn Evans are both optometrists living in Murrieta, California. They have two sons, Landon and Cody. 😊</p>
 </section>
 
-<section class="card info-card">
+<section class="card info-card reveal">
   <h3>This Week In Our House</h3>
   <p id="week-line">Probably coaching, probably snacks, definitely sports.</p>
 </section>
 
-<section class="card info-card">
+<section class="card info-card reveal">
   <h3>Family Superpowers</h3>
   <div class="superpower-items">
     <div>Ryan — Vision &amp; patience 👓</div>
@@ -439,8 +445,8 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<!-- Widgets: holiday + dad joke -->
-<section class="widgets">
+<!-- Widgets: holiday + dad joke + weather -->
+<section class="widgets reveal">
   <div class="widget-grid">
     <div class="card widget-card">
       <h3>Next Holiday</h3>
@@ -455,11 +461,18 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
         <button id="joke-next" type="button">Another one →</button>
       </div>
     </div>
+    <div class="card widget-card">
+      <h3>Murrieta Weather</h3>
+      <div id="weather-icon" style="font-size:2.4rem;margin:4px 0 6px">🌤️</div>
+      <div id="weather-temp" style="font-size:2.2rem;font-weight:700;letter-spacing:1px;color:var(--text)">—</div>
+      <p id="weather-desc" style="margin:6px 0 2px;font-size:.95rem;color:var(--muted)">—</p>
+      <p id="weather-feels" style="margin:0;font-size:.85rem;color:var(--muted)">—</p>
+    </div>
   </div>
 </section>
 
 <!-- ===== CLINICAL TOOLS SECTION ===== -->
-<section class="tools-section">
+<section class="tools-section reveal">
   <div class="tools-card">
     <p class="tools-eyebrow">From the practice of Dr. Ryan Evans, OD</p>
     <h2>Patient Education Tools</h2>
@@ -647,7 +660,27 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
       "I asked the librarian if they had any books on paranoia. She whispered, \u201cThey\u2019re right behind you.\u201d",
       "What does a nosy pepper do? Gets jalape\u00f1o business.",
       "Why don\u2019t skeletons fight each other? They don\u2019t have the guts.",
-      "I gave away all my dead batteries today \u2014 free of charge."
+      "I gave away all my dead batteries today \u2014 free of charge.",
+      "I tried to write a joke about bifocals, but I couldn\u2019t focus.",
+      "Why did the eye go to school? To improve its pupils.",
+      "Did you hear about the optician who fell into the lens grinder? He made a spectacle of himself.",
+      "What do you call a fish without eyes? A fsh.",
+      "I only know 25 letters of the alphabet. I don\u2019t know y.",
+      "Why did the bicycle fall over? It was two-tired.",
+      "I don\u2019t trust stairs. They\u2019re always up to something.",
+      "What\u2019s the best thing about Switzerland? The flag is a big plus.",
+      "Did you hear about the claustrophobic astronaut? He just needed a little space.",
+      "I\u2019m afraid for the calendar. Its days are numbered.",
+      "Why can\u2019t you give Elsa a balloon? She\u2019ll let it go.",
+      "I used to think I was indecisive, but now I\u2019m not so sure.",
+      "What do you call a sleeping dinosaur? A dino-snore.",
+      "Why did the golfer bring an extra pair of socks? In case he got a hole in one.",
+      "I told my doctor I broke my arm in two places. He told me to stop going to those places.",
+      "What do you call cheese that isn\u2019t yours? Nacho cheese.",
+      "Why don\u2019t eggs tell jokes? They\u2019d crack each other up.",
+      "Time flies like an arrow. Fruit flies like a banana.",
+      "My optometrist\u2019s office is a real sight for sore eyes.",
+      "What do you call a factory that makes okay products? A satisfactory."
     ];
     const el = document.getElementById('joke-text');
     const btn = document.getElementById('joke-next');
@@ -667,6 +700,48 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     }
     btn.addEventListener('click', showJoke);
     el.textContent = pickJoke();
+  })();
+
+  // ===== Murrieta Weather =====
+  (function () {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=33.5539&longitude=-117.2139&current=temperature_2m,apparent_temperature,weathercode&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles';
+    function icon(c) {
+      if (c === 0) return '☀️';
+      if (c <= 2) return '🌤️';
+      if (c === 3) return '☁️';
+      if (c <= 48) return '🌫️';
+      if (c <= 57) return '🌦️';
+      if (c <= 67) return '🌧️';
+      if (c <= 77) return '❄️';
+      if (c <= 82) return '🌦️';
+      return '⛈️';
+    }
+    function desc(c) {
+      if (c === 0) return 'Clear sky';
+      if (c <= 2) return 'Partly cloudy';
+      if (c === 3) return 'Overcast';
+      if (c <= 48) return 'Foggy';
+      if (c <= 57) return 'Drizzle';
+      if (c <= 67) return 'Rainy';
+      if (c <= 77) return 'Snowy';
+      if (c <= 82) return 'Showers';
+      return 'Thunderstorm';
+    }
+    fetch(url).then(r => r.json()).then(d => {
+      const w = d.current;
+      document.getElementById('weather-icon').textContent = icon(w.weathercode);
+      document.getElementById('weather-temp').textContent = Math.round(w.temperature_2m) + '°F';
+      document.getElementById('weather-desc').textContent = desc(w.weathercode);
+      document.getElementById('weather-feels').textContent = 'Feels like ' + Math.round(w.apparent_temperature) + '°F';
+    }).catch(() => {});
+  })();
+
+  // ===== Scroll fade-in =====
+  (function () {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   })();
 
   // ===== Night mode (8 pm – 6 am) =====
