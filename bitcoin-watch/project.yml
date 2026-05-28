@@ -12,11 +12,9 @@ schemes:
     build:
       targets:
         BitcoinWatch: all
-        BitcoinWatchWidget: all
-        BitcoinWatchWatchApp: all
-        BTCWatchComplication: all
     run:
       config: Debug
+      executable: BitcoinWatch
     test:
       config: Debug
     profile:
