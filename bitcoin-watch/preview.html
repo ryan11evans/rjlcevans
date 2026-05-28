@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BitcoinWatch – iPhone App Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', sans-serif;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #000;
+    border-radius: 54px;
+    border: 10px solid #333;
+    box-shadow: 0 0 0 2px #555, 0 40px 80px rgba(0,0,0,0.8);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .statusbar {
+    height: 52px;
+    background: #000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 6px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .statusbar-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* Nav bar */
+  .navbar {
+    background: #1c1c1e;
+    border-bottom: 1px solid #2c2c2e;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .navbar-title { color: #fff; font-size: 17px; font-weight: 600; }
+  .navbar-btn {
+    position: absolute;
+    right: 20px;
+    color: #ff9f0a;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    padding-bottom: 20px;
+  }
+
+  /* Price header */
+  .price-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px 16px;
+    gap: 6px;
+  }
+  .btc-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8e8e93;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .btc-icon { color: #ff9f0a; font-size: 20px; }
+  .price-big {
+    font-size: 52px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  /* Orbit logo area */
+  .orbit-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 20px 0;
+    gap: 28px;
+    width: 100%;
+    flex: 1;
+  }
+
+  .orbit-logo {
+    width: 160px;
+    height: 160px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .orbit-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(255, 159, 10, 0.08);
+  }
+
+  .btc-symbol {
+    font-size: 72px;
+    color: #ff9f0a;
+    position: relative;
+    z-index: 2;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(255,159,10,0.4);
+  }
+
+  .orbit-ring {
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    animation: spin 6s linear infinite;
+  }
+
+  .orbit-ring svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* Stat tiles */
+  .stat-tiles {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .stat-tile {
+    flex: 1;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: #8e8e93;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.green { color: #30d158; }
+  .stat-value.red   { color: #ff453a; }
+
+  /* Refresh status */
+  .refresh-status {
+    color: #8e8e93;
+    font-size: 12px;
+    margin-top: auto;
+    padding-bottom: 4px;
+  }
+
+  /* Home indicator */
+  .home-indicator {
+    height: 34px;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .home-bar {
+    width: 134px;
+    height: 5px;
+    background: #fff;
+    border-radius: 3px;
+    opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Status bar -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="statusbar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="white">
+        <rect x="0" y="3" width="3" height="9" rx="1" opacity="0.4"/>
+        <rect x="4.5" y="2" width="3" height="10" rx="1" opacity="0.6"/>
+        <rect x="9" y="0" width="3" height="12" rx="1"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+        <path d="M8 2.4C10.4 2.4 12.6 3.4 14.1 5L15.5 3.5C13.6 1.3 10.9 0 8 0S2.4 1.3 0.5 3.5L1.9 5C3.4 3.4 5.6 2.4 8 2.4Z" opacity="0.4"/>
+        <path d="M8 5.2C9.7 5.2 11.2 5.9 12.3 7L13.7 5.5C12.2 3.9 10.2 3 8 3S3.8 3.9 2.3 5.5L3.7 7C4.8 5.9 6.3 5.2 8 5.2Z" opacity="0.6"/>
+        <circle cx="8" cy="10" r="2"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="white">
+        <rect x="0" y="1" width="21" height="10" rx="3" stroke="white" stroke-width="1" fill="none" opacity="0.4"/>
+        <rect x="1.5" y="2.5" width="15" height="7" rx="2" fill="white"/>
+        <path d="M22.5 4.5v3a1.5 1.5 0 000-3z" fill="white" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav bar -->
+  <div class="navbar">
+    <span class="navbar-title">Bitcoin</span>
+    <span class="navbar-btn">↻</span>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Price header -->
+    <div class="price-header">
+      <div class="btc-label">
+        <span class="btc-icon">₿</span>
+        <span>BTC / USD</span>
+      </div>
+      <div class="price-big">$104,382</div>
+    </div>
+
+    <!-- Orbit logo + stats -->
+    <div class="orbit-area">
+      <div class="orbit-logo">
+        <div class="orbit-bg"></div>
+        <div class="btc-symbol">₿</div>
+        <div class="orbit-ring">
+          <svg viewBox="0 0 152 152" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Top-right arc -->
+            <path d="M 113 39 A 52 52 0 0 1 113 113" stroke="#ff9f0a" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <!-- Top-right arrowhead -->
+            <polygon points="113,113 104,107 119,103" fill="#ff9f0a"/>
+
+            <!-- Bottom-left arc -->
+            <path d="M 39 113 A 52 52 0 0 1 39 39" stroke="#ff9f0a" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <!-- Bottom-left arrowhead -->
+            <polygon points="39,39 48,45 33,49" fill="#ff9f0a"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Stat tiles -->
+      <div class="stat-tiles">
+        <div class="stat-tile">
+          <span class="stat-label">Session High</span>
+          <span class="stat-value green">$104K</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Session Low</span>
+          <span class="stat-value red">$103K</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Change</span>
+          <span class="stat-value green">+0.84%</span>
+        </div>
+      </div>
+
+      <div class="refresh-status">Updated 8s ago</div>
+    </div>
+  </div>
+
+  <!-- Home indicator -->
+  <div class="home-indicator">
+    <div class="home-bar"></div>
+  </div>
+</div>
+
+</body>
+</html>
