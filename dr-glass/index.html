@@ -3015,8 +3015,8 @@
     const p = game.player;
     const px = p.x + p.w/2;
     const py = p.y + p.h/2;
-    const MAGNET_RADIUS = TILE * 10;       // wide pull radius
-    const MAGNET_STRENGTH = 9500;          // strong pull
+    const MAGNET_RADIUS = TILE * 8;        // wide pull radius
+    const MAGNET_STRENGTH = 6500;          // strong pull
 
     for (const c of game.coins) {
       if (c.collected) continue;
@@ -3062,8 +3062,8 @@
         c.vx += (dx / dist) * pull * dt;
         c.vy += (dy / dist) * pull * dt;
         // Light damping so they don't oscillate, but allow buildup of speed
-        c.vx *= 0.87;
-        c.vy *= 0.87;
+        c.vx *= 0.90;
+        c.vy *= 0.90;
         c.x += c.vx * dt;
         c.y += c.vy * dt;
       }
