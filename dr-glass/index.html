@@ -1814,6 +1814,7 @@
         stunned: 0,            // stun-spin animation timer
         victory: 0,            // victory-hop animation timer
         doorEnter: 0,          // 0..1 progress stepping into the exit door
+        squashTime: 0,         // seconds remaining of squash animation after landing
       },
 
       lives: 3,
@@ -1833,6 +1834,7 @@
       platforms: [], // {type:'moving'|'crumbling', x, y, w, h, ...}
       particles: [],
       shake: 0,      // screen-shake magnitude, decays each frame
+      stompFlash: 0, // 0..1 white flash intensity after stomping an enemy
       airPuffs: [],  // {x, y, vx, r, phase} — tonometer air puffs to dodge
       puffTimer: 2.5,// seconds until next air puff (levels 4-8)
 
@@ -2063,6 +2065,9 @@
     game.elapsed += dt;
     game.levelTime += dt;
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 60);
+    if (game.stompFlash > 0) game.stompFlash = Math.max(0, game.stompFlash - dt * 5);
+    const p = game.player;
+    if (p.squashTime > 0) p.squashTime = Math.max(0, p.squashTime - dt * 8);
 
     updatePlatforms(dt);
     updatePlayer(dt);
@@ -2245,12 +2250,28 @@
     }
 
     if (vRes.landed || onPlatform) {
+      const landingVy = p.vy;
       p.onGround = true;
       p.vy = 0;
       p.canExtendJump = false;
       p.jumpHoldTime = 0;
       p.airStomps = 0;      // reset combo counter on landing
       p.jumpsRemaining = 2;  // refill jumps
+      // Squash + land dust on meaningful landings
+      if (!wasOnGround && landingVy > 150) {
+        p.squashTime = 0.14;
+        for (let i = 0; i < 6; i++) {
+          game.particles.push({
+            x: p.x + p.w * (0.15 + Math.random() * 0.7),
+            y: p.y + p.h,
+            vx: (Math.random() - 0.5) * 110,
+            vy: -40 - Math.random() * 50,
+            life: 0.45, maxLife: 0.45,
+            color: 'rgba(200,180,150,0.75)',
+            size: 3 + Math.random() * 3,
+          });
+        }
+      }
       // Carry the player with a moving platform
       if (onPlatform && onPlatform.type === 'moving') {
         p.x += (onPlatform.x - onPlatform.prevX);
@@ -2627,6 +2648,7 @@
         game.score += points;
         game.stomps++;
         sfx.stomp();
+        game.stompFlash = 0.45;
         spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 10);
         if (p.airStomps >= 2) {
           const labels = ['', '', 'Double Stomp!', 'Triple Stomp!', 'QUAD STOMP!!', 'PENTA STOMP!!!'];
@@ -2644,6 +2666,7 @@
         game.score += 150;
         game.stomps++;
         sfx.stomp();
+        game.stompFlash = 0.35;
         spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 12);
         spawnFloatText(en.x + en.w/2, en.y - 8, 'CRUSHED! +150', '#a8e6ff');
       } else {
@@ -3225,6 +3248,11 @@
     if (game.levelConfig.gimmick === 'lasers') {
       drawLasers();
     }
+    // Stomp flash — brief white overlay when stomping an enemy
+    if (game.stompFlash > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${game.stompFlash * 0.55})`;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
     ctx.restore();
   }
 
@@ -3248,6 +3276,33 @@
     }
   }
 
+  function drawFarLayer() {
+    // Very slow parallax (0.12x) — faint distant shapes behind everything
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    const parallax = 0.12;
+    const camX = game.cameraX * parallax;
+    const spacing = 320;
+    const start = Math.floor(camX / spacing) - 1;
+    const end = Math.floor((camX + cssW) / spacing) + 2;
+    for (let i = start; i <= end; i++) {
+      const seed = i * 2654435761;
+      const r1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+      const r2 = (((seed * 1234567) ^ ((seed * 1234567) >>> 13)) >>> 0) / 4294967295;
+      const x = i * spacing - camX + r1 * 120;
+      const y = cssH * 0.15 + r2 * cssH * 0.55;
+      const size = 30 + r1 * 50;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + size * 0.9, y - size * 0.3, size * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawThemedBackground() {
     const cfg = game.levelConfig;
     const grad = ctx.createLinearGradient(0, 0, 0, cssH);
@@ -3256,6 +3311,8 @@
     grad.addColorStop(1, cfg.sky[2]);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, cssW, cssH);
+
+    drawFarLayer();
 
     // Theme-specific background details
     if (cfg.theme === 'office') {
@@ -3796,6 +3853,15 @@
       ctx.fillStyle = `rgba(255, 100, 180, ${pulse * 0.15})`;
       ctx.fillRect(x, y, TILE, TILE);
     }
+    // Bevel: top/left highlight, bottom/right shadow
+    if (ch !== 'X' && ch !== 'S') {
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';
+      ctx.fillRect(x, y, TILE, 2);
+      ctx.fillRect(x, y, 2, TILE);
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.fillRect(x, y + TILE - 2, TILE, 2);
+      ctx.fillRect(x + TILE - 2, y, 2, TILE);
+    }
   }
 
   function drawPlatforms() {
@@ -3908,6 +3974,23 @@
         ctx.beginPath();
         ctx.arc(-c.r * widthScale * 0.18, -c.r * 0.18, c.r * 0.1, 0, Math.PI * 2);
         ctx.fill();
+      }
+      // Sparkle twinkles orbiting the coin
+      const now = performance.now() / 1000;
+      const sparkCount = 3;
+      for (let i = 0; i < sparkCount; i++) {
+        const ang = now * 2.2 + (i / sparkCount) * Math.PI * 2;
+        const dist = c.r * 1.8;
+        const ox = Math.cos(ang) * dist;
+        const oy = Math.sin(ang) * dist * 0.6;
+        const alpha = 0.5 + 0.5 * Math.sin(now * 4 + i * 2);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(ox, oy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
       ctx.restore();
     }
@@ -4391,7 +4474,14 @@
       const spin = (1.2 - p.stunned) * Math.PI * 4;  // a couple of full rotations
       ctx.rotate(spin);
     } else {
-      ctx.scale(facing, 1);
+      let sqY = 1;
+      if (p.squashTime > 0) {
+        sqY = 0.82 + (p.squashTime / 0.14) * 0.18;
+      } else if (!p.onGround) {
+        if (p.vy < -250) sqY = 1.10;
+        else if (p.vy > 400) sqY = 1.06;
+      }
+      ctx.scale(facing / sqY, sqY);
     }
 
     // Victory: little hop handled elsewhere; flicker on invincibility
