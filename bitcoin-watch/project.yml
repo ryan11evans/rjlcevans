@@ -102,7 +102,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.watch.complication
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.watch.price
         INFOPLIST_FILE: WatchComplication/Info.plist
     entitlements:
       path: WatchComplication/BTCWatchComplication.entitlements
