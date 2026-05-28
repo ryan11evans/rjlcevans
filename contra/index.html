@@ -45,15 +45,15 @@
     box-shadow:0 2px 10px rgba(0,0,0,0.55);
     pointer-events:none;will-change:transform;
   }
-  /* Right side — jump + fire + weapon (bigger, easier to tap) */
-  #tbj{width:86px;height:86px;border-radius:50%;font-size:14px;font-weight:800;
+  /* Right side — jump + fire + weapon */
+  #tbj{width:114px;height:114px;border-radius:50%;font-size:15px;font-weight:800;
        background:rgba(50,110,255,0.18);border-color:rgba(80,150,255,0.45);
-       bottom:calc(62px + env(safe-area-inset-bottom,0px));right:calc(118px + env(safe-area-inset-right,0px))}
+       bottom:calc(52px + env(safe-area-inset-bottom,0px));right:calc(118px + env(safe-area-inset-right,0px))}
   #tbs{width:98px;height:98px;border-radius:50%;font-size:15px;font-weight:900;
        background:rgba(255,50,50,0.2);border-color:rgba(255,80,80,0.48);
        bottom:calc(56px + env(safe-area-inset-bottom,0px));right:calc(10px + env(safe-area-inset-right,0px))}
   #tbw{width:50px;height:50px;border-radius:50%;font-size:10px;
-       bottom:calc(168px + env(safe-area-inset-bottom,0px));right:calc(40px + env(safe-area-inset-right,0px))}
+       bottom:calc(182px + env(safe-area-inset-bottom,0px));right:calc(40px + env(safe-area-inset-right,0px))}
 
   #ov{
     position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
@@ -265,9 +265,12 @@ function joyReset(){
 }
 
 function hitTest(x,y){
-  // Test buttons first (with generous padding so they're easy to hit)
+  // Test JUMP first and with extra padding — it's the one that needs to feel instant
+  const jEl=document.getElementById('tbj');
+  if(jEl){const r=jEl.getBoundingClientRect(),P=24;if(x>=r.left-P&&x<=r.right+P&&y>=r.top-P&&y<=r.bottom+P)return'jump';}
+  // Then fire and wpn with standard padding
   const P=14;
-  for(const[id,name]of[['tbs','fire'],['tbj','jump'],['tbw','wpn']]){
+  for(const[id,name]of[['tbs','fire'],['tbw','wpn']]){
     const el=document.getElementById(id);
     if(!el)continue;
     const r=el.getBoundingClientRect();
