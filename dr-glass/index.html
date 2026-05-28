@@ -49,7 +49,9 @@
     overflow: hidden;
     cursor: pointer;
   }
-  #gameCanvas { display: block; width: 100%; height: 100%; }
+  #gameCanvas { display: block; width: 100%; height: 100%; outline: none; }
+  #gameCanvas:focus, #gameCanvas:focus-visible,
+  .stage:focus, .stage:focus-visible { outline: none !important; }
 
   /* HUD */
   .hud {
@@ -1229,6 +1231,52 @@
     { type: 'aberration', col: 8, min: 2, max: 13 },  // boss spawn (centered in 16-wide arena)
   ];
 
+  // ============================================================
+  // BONUS LEVEL CONSTANTS
+  // ============================================================
+  const MAIN_LEVEL_COUNT = 8;       // levels 0-7 are the main game
+  const BONUS_COIN_THRESHOLD = 100; // coinBank needed to unlock the bonus level
+
+  // ----- LEVEL 9: The Coin Vault (secret bonus level) -----
+  const LEVEL_9_TILES = [
+    '.......................................................................................',
+    '.......................................................................................',
+    '.......................................................................................',
+    '....BBBB..............BBBB..............BBBB..............BBBB..............BBBB.....',
+    '.......................................................................................',
+    '............BBBB..............BBBB..............BBBB..............BBBB.............',
+    '.......................................................................................',
+    '....BBBB..............BBBB..............BBBB..............BBBB..............BBBB.....',
+    '............QQ................QQ................QQ................QQ.................',
+    '.......................................................................................',
+    '..FFFF........FFFF........FFFF........FFFF........FFFF........FFFF........X..........',
+    'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL',
+    'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+  ];
+  const LEVEL_9_COINS = [
+    // Arcs above high platforms (row 3) — cols 4-7, 20-23, 36-39, 52-55, 68-71
+    [1,4],[1,5],[1,6],[1,7],   [1,20],[1,21],[1,22],[1,23],
+    [1,36],[1,37],[1,38],[1,39], [1,52],[1,53],[1,54],[1,55],
+    [1,68],[1,69],[1,70],[1,71],
+    // Arcs above mid platforms (row 5) — cols 12-15, 28-31, 44-47, 60-63
+    [3,12],[3,13],[3,14],[3,15], [3,28],[3,29],[3,30],[3,31],
+    [3,44],[3,45],[3,46],[3,47], [3,60],[3,61],[3,62],[3,63],
+    // Arcs above lower platforms (row 7) — same cols as high platforms
+    [5,4],[5,5],[5,6],[5,7],   [5,20],[5,21],[5,22],[5,23],
+    [5,36],[5,37],[5,38],[5,39], [5,52],[5,53],[5,54],[5,55],
+    [5,68],[5,69],[5,70],[5,71],
+    // Ground-level trail (row 9)
+    [9,8],[9,11],[9,14],[9,17],[9,20],[9,25],[9,28],[9,31],[9,34],[9,37],
+    [9,40],[9,43],[9,46],[9,49],[9,52],[9,57],[9,60],[9,63],[9,66],[9,69],[9,72],[9,75],
+  ];
+  const LEVEL_9_ENEMIES = [
+    { type: 'gremlin', col: 17, min: 14, max: 20 },
+    { type: 'hopper',  col: 33, min: 30, max: 36 },
+    { type: 'gremlin', col: 49, min: 46, max: 52 },
+    { type: 'hopper',  col: 65, min: 62, max: 68 },
+    { type: 'gremlin', col: 72, min: 69, max: 75 },
+  ];
+
   // Level definitions — pulled together
   const LEVELS = [
     {
@@ -1322,6 +1370,16 @@
       theme: 'lair',
       gimmick: 'boss-arena',
       sky: ['#1a0838', '#3a1858', '#5a2878'],
+    },
+    {
+      name: 'The Coin Vault',
+      sub: `Secret bonus level — bank ${BONUS_COIN_THRESHOLD} coins to unlock`,
+      story: "Behind the secret panel: Dr. Glass finds the optometry coin vault. Grab it all!",
+      tiles: LEVEL_9_TILES, coins: LEVEL_9_COINS, enemies: LEVEL_9_ENEMIES,
+      theme: 'dispensary',
+      gimmick: null,
+      sky: ['#2a1a04', '#5a3a10', '#8a6030'],
+      isBonus: true,
     },
   ];
 
@@ -4753,6 +4811,8 @@
     { id: 'beat_boss',    icon: '🩺', name: '20/20 Vision',          desc: 'Defeat Dr. Aberration.' },
     { id: 'all_levels',   icon: '🗺️', name: 'House Call Hero',       desc: 'Complete every level.' },
     { id: 'all_stars',    icon: '🌟', name: 'Master Optometrist',    desc: 'Earn all 3 stars on every level.' },
+    { id: 'bonus_unlock', icon: '🔑', name: 'The Vault Key',         desc: `Unlock the secret bonus level with ${BONUS_COIN_THRESHOLD} coins.` },
+    { id: 'beat_bonus',   icon: '💎', name: 'True 20/20',            desc: 'Complete the secret Coin Vault bonus level.' },
   ];
 
   function unlockAchievement(id) {
@@ -4776,16 +4836,18 @@
       if (ctx.noDeath && !a.no_death) unlockAchievement('no_death');
       if (ctx.stars >= 3 && !a.three_star) unlockAchievement('three_star');
       if (ctx.beatBoss && !a.beat_boss) unlockAchievement('beat_boss');
+      if (ctx.beatBoss && (p.coinBank || 0) >= BONUS_COIN_THRESHOLD && !a.bonus_unlock) unlockAchievement('bonus_unlock');
+      if (ctx.beatBonus && !a.beat_bonus) unlockAchievement('beat_bonus');
     }
     if ((p.coinBank || 0) >= 100 && !a.coin_100) unlockAchievement('coin_100');
     if ((p.coinBank || 0) >= 500 && !a.coin_500) unlockAchievement('coin_500');
     if (owned.length >= 5 && !a.shopaholic) unlockAchievement('shopaholic');
     if (owned.length >= GLASSES_SHOP.length && !a.all_glasses) unlockAchievement('all_glasses');
-    // All levels complete = highestUnlocked reached the end
-    if ((p.highestUnlocked || 0) >= LEVELS.length && !a.all_levels) unlockAchievement('all_levels');
-    // All stars: every level has 3
+    // All main levels complete (excludes bonus level)
+    if ((p.highestUnlocked || 0) >= MAIN_LEVEL_COUNT && !a.all_levels) unlockAchievement('all_levels');
+    // All stars: every main level has 3
     let allThree = true;
-    for (let i = 0; i < LEVELS.length; i++) { if (((p.stars && p.stars[i]) || 0) < 3) { allThree = false; break; } }
+    for (let i = 0; i < MAIN_LEVEL_COUNT; i++) { if (((p.stars && p.stars[i]) || 0) < 3) { allThree = false; break; } }
     if (allThree && !a.all_stars) unlockAchievement('all_stars');
   }
 
@@ -5072,11 +5134,15 @@
 
     const completedIdx = game.levelIndex;
     const nextIdx = completedIdx + 1;
-    const isFinalLevel = nextIdx >= LEVELS.length;
+    const isBossJustDefeated = completedIdx === MAIN_LEVEL_COUNT - 1;
+    const isBonusJustCompleted = completedIdx >= MAIN_LEVEL_COUNT;
 
-    // Save progress — unlock next level
+    // Save progress — unlock next level (bonus only unlocked if coins qualify)
     const progress = loadProgress();
-    progress.highestUnlocked = Math.max(progress.highestUnlocked, nextIdx);
+    const hasBonusCoins = (progress.coinBank || 0) + game.coinsCollected >= BONUS_COIN_THRESHOLD;
+    const bonusUnlocked = isBossJustDefeated && hasBonusCoins;
+    const isFinalLevel = isBonusJustCompleted || (isBossJustDefeated && !hasBonusCoins);
+    progress.highestUnlocked = Math.max(progress.highestUnlocked, isFinalLevel ? nextIdx - 1 : nextIdx);
     progress.totalScore = (progress.totalScore || 0) + game.score;
     progress.coinBank = (progress.coinBank || 0) + game.coinsCollected;
     if (!progress.bestScores) progress.bestScores = {};
@@ -5106,7 +5172,8 @@
       completedLevel: true,
       noDeath: game.deaths === 0,
       stars: stars,
-      beatBoss: isFinalLevel,
+      beatBoss: isBossJustDefeated,
+      beatBonus: isBonusJustCompleted,
     });
 
     // Stash for the win screen display
@@ -5178,6 +5245,10 @@
         showEnding(progress);
         game.victoryFreeze = false;
         return;
+      } else if (bonusUnlocked) {
+        document.getElementById('endTitle').innerHTML = `🔑 <em>Bonus Unlocked!</em>`;
+        document.getElementById('endMessage').textContent = `Your coins opened The Coin Vault — a secret bonus level!`;
+        document.getElementById('btnRestart').textContent = `Enter the Coin Vault →`;
       } else {
         document.getElementById('endTitle').innerHTML = `Level ${completedIdx + 1} <em>Complete!</em>`;
         document.getElementById('endMessage').textContent = `Next: ${LEVELS[nextIdx].name} — ${LEVELS[nextIdx].sub}`;
@@ -5443,7 +5514,10 @@
     const host = document.getElementById('levelMap');
     host.innerHTML = '';
     LEVELS.forEach((lvl, i) => {
-      const unlocked = i <= progress.highestUnlocked;
+      const isBonus = !!lvl.isBonus;
+      const coinBank = progress.coinBank || 0;
+      const bonusEligible = coinBank >= BONUS_COIN_THRESHOLD;
+      const unlocked = isBonus ? (i <= progress.highestUnlocked && bonusEligible) : (i <= progress.highestUnlocked);
       const completed = i < progress.highestUnlocked;
       const best = (progress.bestScores && progress.bestScores[i]) || 0;
       const stars = (progress.stars && progress.stars[i]) || 0;
@@ -5463,11 +5537,15 @@
       const detailHtml = (best > 0 || bestTime !== null)
         ? `<div class="lvl-best">${best > 0 ? `Best: ${best}` : ''}${bestTime !== null ? `  ·  ⏱ ${formatTime(bestTime)}` : ''}</div>`
         : '';
+      const bonusLockHint = isBonus && !unlocked
+        ? `<div class="lvl-sub" style="color:#fcd444;margin-top:4px;">🔑 Need ${BONUS_COIN_THRESHOLD} coins (you have ${coinBank})</div>`
+        : '';
       card.innerHTML = `
-        <div class="lvl-num">${i + 1}</div>
+        <div class="lvl-num" style="${isBonus ? 'background:#fcd444;' : ''}">${isBonus ? '★' : i + 1}</div>
         <div class="lvl-info">
           <div class="lvl-name">${lvl.name}</div>
           <div class="lvl-sub">${lvl.sub}</div>
+          ${bonusLockHint}
           ${starHtml}
           ${detailHtml}
         </div>
