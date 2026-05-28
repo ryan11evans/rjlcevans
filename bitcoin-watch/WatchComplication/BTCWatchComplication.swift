@@ -121,13 +121,13 @@ struct RectangularView: View {
                     .foregroundStyle(.tertiary)
             }
             Text(entry.price?.formatted ?? "---")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.6)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .minimumScaleFactor(0.5)
                 .lineLimit(1)
                 .widgetAccentable()
             if let price = entry.price {
-                Text(price.timestamp, style: .relative) + Text(" ago")
-                    .foregroundStyle(.secondary)
+                Text(price.timestamp, style: .relative)
+                    .foregroundStyle(.tertiary)
             }
         }
         .font(.caption2)
