@@ -5,6 +5,26 @@ options:
     iOS: "16.0"
     watchOS: "10.0"
   xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+schemes:
+  BitcoinWatch:
+    build:
+      targets:
+        BitcoinWatch: all
+        BitcoinWatchWidget: all
+        BitcoinWatchWatchApp: all
+        BTCWatchComplication: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
 
 settings:
   base:
