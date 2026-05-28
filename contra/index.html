@@ -13,47 +13,47 @@
   html,body{width:100%;height:100%;background:#000;overflow:hidden}
   #c{display:block;position:absolute;top:0;left:0;width:100%;height:100%}
 
-  #touch-ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+  /* Touch UI — one handler on parent, children are visual only */
+  #touch-ui{position:fixed;inset:0;pointer-events:all;z-index:10}
   .tbtn{
-    position:absolute;pointer-events:all;
+    position:absolute;pointer-events:none;
     display:flex;align-items:center;justify-content:center;
     background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);
     color:rgba(255,255,255,0.55);font-weight:700;font-family:monospace;
-    -webkit-touch-callout:none;transition:background 0.05s;
+    -webkit-touch-callout:none;transition:background 0.08s;
   }
-  .tbtn:active,.tbtn.pressed{background:rgba(255,255,255,0.28)}
+  .tbtn.pressed{background:rgba(255,255,255,0.32)}
 
   /* Left side — virtual joystick */
   #joy-zone{
-    position:absolute;pointer-events:all;
-    width:140px;height:140px;
-    bottom:calc(30px + env(safe-area-inset-bottom,0px));
+    position:absolute;pointer-events:none;
+    width:150px;height:150px;
+    bottom:calc(24px + env(safe-area-inset-bottom,0px));
     left:calc(8px + env(safe-area-inset-left,0px));
   }
   #joy-base{
     position:absolute;top:20px;left:20px;
-    width:100px;height:100px;border-radius:50%;
+    width:110px;height:110px;border-radius:50%;
     background:rgba(255,255,255,0.07);
     border:2px solid rgba(255,255,255,0.2);
   }
   #joy-knob{
-    position:absolute;top:33px;left:33px;
-    width:34px;height:34px;border-radius:50%;
-    background:radial-gradient(circle at 38% 35%,rgba(255,255,255,0.55),rgba(255,255,255,0.2));
-    border:2px solid rgba(255,255,255,0.45);
-    box-shadow:0 2px 8px rgba(0,0,0,0.5);
-    pointer-events:none;
-    will-change:transform;
+    position:absolute;top:37px;left:37px;
+    width:36px;height:36px;border-radius:50%;
+    background:radial-gradient(circle at 38% 35%,rgba(255,255,255,0.58),rgba(255,255,255,0.2));
+    border:2px solid rgba(255,255,255,0.48);
+    box-shadow:0 2px 10px rgba(0,0,0,0.55);
+    pointer-events:none;will-change:transform;
   }
-  /* Right side — jump + fire + weapon */
-  #tbj{width:68px;height:68px;border-radius:50%;font-size:13px;font-weight:800;
-       background:rgba(50,110,255,0.18);border-color:rgba(80,150,255,0.42);
-       bottom:calc(80px + env(safe-area-inset-bottom,0px));right:calc(104px + env(safe-area-inset-right,0px))}
-  #tbs{width:84px;height:84px;border-radius:50%;font-size:14px;font-weight:900;
-       background:rgba(255,50,50,0.2);border-color:rgba(255,80,80,0.45);
-       bottom:calc(68px + env(safe-area-inset-bottom,0px));right:calc(10px + env(safe-area-inset-right,0px))}
-  #tbw{width:48px;height:48px;border-radius:50%;font-size:10px;
-       bottom:calc(172px + env(safe-area-inset-bottom,0px));right:calc(38px + env(safe-area-inset-right,0px))}
+  /* Right side — jump + fire + weapon (bigger, easier to tap) */
+  #tbj{width:86px;height:86px;border-radius:50%;font-size:14px;font-weight:800;
+       background:rgba(50,110,255,0.18);border-color:rgba(80,150,255,0.45);
+       bottom:calc(62px + env(safe-area-inset-bottom,0px));right:calc(118px + env(safe-area-inset-right,0px))}
+  #tbs{width:98px;height:98px;border-radius:50%;font-size:15px;font-weight:900;
+       background:rgba(255,50,50,0.2);border-color:rgba(255,80,80,0.48);
+       bottom:calc(56px + env(safe-area-inset-bottom,0px));right:calc(10px + env(safe-area-inset-right,0px))}
+  #tbw{width:50px;height:50px;border-radius:50%;font-size:10px;
+       bottom:calc(168px + env(safe-area-inset-bottom,0px));right:calc(40px + env(safe-area-inset-right,0px))}
 
   #ov{
     position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
@@ -78,7 +78,7 @@
 
 <canvas id="c"></canvas>
 
-<div id="touch-ui" style="display:none">
+<div id="touch-ui" style="pointer-events:none">
   <div id="joy-zone">
     <div id="joy-base"><div id="joy-knob"></div></div>
   </div>
@@ -240,18 +240,15 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();});
 addEventListener('keyup',e=>{keys[e.code]=false});
 
-const tb={jump:false,shoot:false,wpn:false};
-function hook(id,k){
-  const el=document.getElementById(id);
-  if(!el)return;
-  ['touchstart','mousedown'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();tb[k]=true;el.classList.add('pressed')},{passive:false}));
-  ['touchend','touchcancel','mouseup'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();tb[k]=false;el.classList.remove('pressed')},{passive:false}));
-}
-hook('tbj','jump');hook('tbs','shoot');hook('tbw','wpn');
+// ─── VIRTUAL CONTROLS — single unified touch handler ─────────────────────────
+// All touches handled on the #touch-ui parent to guarantee simultaneous
+// joystick + button presses work on iOS (separate element listeners can miss
+// multi-touch when another element already has an active touch).
 
-// ─── VIRTUAL JOYSTICK ────────────────────────────────────────────────────────
+const tb={jump:false,shoot:false,wpn:false};
 const joy={dx:0,dy:0,id:-1,bx:0,by:0};
-const JOY_R=32, JOY_DEAD=8;
+const JOY_R=36, JOY_DEAD=9;
+const touchTarget={}; // identifier → 'joy'|'fire'|'jump'|'wpn'
 
 function joySet(cx,cy){
   let dx=cx-joy.bx,dy=cy-joy.by;
@@ -266,35 +263,89 @@ function joyReset(){
   const k=document.getElementById('joy-knob');
   if(k)k.style.transform='translate(0,0)';
 }
-function setupJoy(){
-  const zone=document.getElementById('joy-zone');
-  if(!zone)return;
-  const base=document.getElementById('joy-base');
-  function getCenter(){
-    const r=base.getBoundingClientRect();
-    joy.bx=r.left+r.width/2;joy.by=r.top+r.height/2;
+
+function hitTest(x,y){
+  // Test buttons first (with generous padding so they're easy to hit)
+  const P=14;
+  for(const[id,name]of[['tbs','fire'],['tbj','jump'],['tbw','wpn']]){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    const r=el.getBoundingClientRect();
+    if(x>=r.left-P&&x<=r.right+P&&y>=r.top-P&&y<=r.bottom+P)return name;
   }
-  zone.addEventListener('touchstart',e=>{
+  // Then joystick zone
+  const jz=document.getElementById('joy-zone');
+  if(jz){const r=jz.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return'joy';}
+  return null;
+}
+
+function setBtn(name,on){
+  const idMap={fire:'tbs',jump:'tbj',wpn:'tbw'};
+  const id=idMap[name];
+  if(id){const el=document.getElementById(id);if(el)el.classList.toggle('pressed',on);}
+  if(name==='fire')tb.shoot=on;
+  else if(name==='jump')tb.jump=on;
+  else if(name==='wpn')tb.wpn=on;
+}
+
+function setupControls(){
+  const ui=document.getElementById('touch-ui');
+  const base=document.getElementById('joy-base');
+  if(!ui)return;
+
+  ui.addEventListener('touchstart',e=>{
     e.preventDefault();
-    if(joy.id!==-1)return;
-    const t=e.changedTouches[0];
-    joy.id=t.identifier;
-    getCenter();
-    joySet(t.clientX,t.clientY);
+    for(const t of e.changedTouches){
+      const name=hitTest(t.clientX,t.clientY);
+      if(!name)continue;
+      touchTarget[t.identifier]=name;
+      if(name==='joy'){
+        if(joy.id!==-1)continue;
+        joy.id=t.identifier;
+        const r=base.getBoundingClientRect();
+        joy.bx=r.left+r.width/2;joy.by=r.top+r.height/2;
+        joySet(t.clientX,t.clientY);
+      }else setBtn(name,true);
+    }
   },{passive:false});
-  zone.addEventListener('touchmove',e=>{
+
+  ui.addEventListener('touchmove',e=>{
     e.preventDefault();
-    for(const t of e.changedTouches)if(t.identifier===joy.id){joySet(t.clientX,t.clientY);break;}
+    for(const t of e.changedTouches)
+      if(touchTarget[t.identifier]==='joy'&&t.identifier===joy.id)joySet(t.clientX,t.clientY);
   },{passive:false});
-  ['touchend','touchcancel'].forEach(ev=>zone.addEventListener(ev,e=>{
+
+  function onEnd(e){
     e.preventDefault();
-    for(const t of e.changedTouches)if(t.identifier===joy.id){joyReset();break;}
-  },{passive:false}));
-  // mouse fallback for desktop testing
-  let md=false;
-  zone.addEventListener('mousedown',e=>{md=true;getCenter();joySet(e.clientX,e.clientY);});
-  addEventListener('mousemove',e=>{if(md)joySet(e.clientX,e.clientY);});
-  addEventListener('mouseup',()=>{if(md){md=false;joyReset();}});
+    for(const t of e.changedTouches){
+      const name=touchTarget[t.identifier];
+      if(!name)continue;
+      if(name==='joy'&&t.identifier===joy.id)joyReset();
+      else setBtn(name,false);
+      delete touchTarget[t.identifier];
+    }
+  }
+  ui.addEventListener('touchend',onEnd,{passive:false});
+  ui.addEventListener('touchcancel',onEnd,{passive:false});
+
+  // Mouse fallback for desktop
+  let mTgt=null,mDown=false;
+  ui.addEventListener('mousedown',e=>{
+    const name=hitTest(e.clientX,e.clientY);
+    if(!name)return;
+    mTgt=name;mDown=true;
+    if(name==='joy'){
+      const r=base.getBoundingClientRect();
+      joy.bx=r.left+r.width/2;joy.by=r.top+r.height/2;
+      joySet(e.clientX,e.clientY);
+    }else setBtn(name,true);
+  });
+  addEventListener('mousemove',e=>{if(mDown&&mTgt==='joy')joySet(e.clientX,e.clientY);});
+  addEventListener('mouseup',()=>{
+    if(!mDown)return;mDown=false;
+    if(mTgt==='joy')joyReset();else if(mTgt)setBtn(mTgt,false);
+    mTgt=null;
+  });
 }
 
 const inp={left:0,right:0,jump:0,shoot:0,wpn:0};
@@ -1176,7 +1227,7 @@ function showOv(title,desc,btn){
   document.getElementById('ov-btn').textContent=btn;
   document.getElementById('ov-hint').style.display=btn==='START GAME'?'':'none';
   ov.classList.remove('hide');
-  document.getElementById('touch-ui').style.display='none';
+  showMenu();
 }
 
 function startGame(){
@@ -1188,7 +1239,17 @@ function startGame(){
   player=mkPlayer();
   gstate='playing';
   document.getElementById('ov').classList.add('hide');
-  document.getElementById('touch-ui').style.display='';
+  document.getElementById('touch-ui').style.pointerEvents='all';
+  document.getElementById('joy-zone').style.visibility='';
+  document.getElementById('tbj').style.visibility='';
+  document.getElementById('tbs').style.visibility='';
+  document.getElementById('tbw').style.visibility='';
+}
+
+function showMenu(){
+  document.getElementById('touch-ui').style.pointerEvents='none';
+  // Hide controls visually while menu is up
+  ['joy-zone','tbj','tbs','tbw'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.visibility='hidden';});
 }
 
 document.getElementById('ov-btn').addEventListener('click',startGame);
@@ -1197,7 +1258,7 @@ document.getElementById('ov-btn').addEventListener('touchend',e=>{e.preventDefau
 // show title screen hint only on desktop-ish
 document.getElementById('ov-hint').style.display=('ontouchstart' in window)?'none':'';
 
-setupJoy();
+setupControls();
 requestAnimationFrame(ts=>{last=ts;requestAnimationFrame(loop);});
 </script>
 </body>
