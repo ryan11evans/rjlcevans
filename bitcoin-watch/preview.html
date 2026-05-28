@@ -29,7 +29,6 @@
     flex-direction: column;
   }
 
-  /* Status bar */
   .statusbar {
     height: 52px;
     background: #000;
@@ -44,7 +43,6 @@
   }
   .statusbar-icons { display: flex; gap: 6px; align-items: center; }
 
-  /* Nav bar */
   .navbar {
     background: #1c1c1e;
     border-bottom: 1px solid #2c2c2e;
@@ -56,15 +54,8 @@
     flex-shrink: 0;
   }
   .navbar-title { color: #fff; font-size: 17px; font-weight: 600; }
-  .navbar-btn {
-    position: absolute;
-    right: 20px;
-    color: #ff9f0a;
-    font-size: 20px;
-    cursor: pointer;
-  }
+  .navbar-btn { position: absolute; right: 20px; color: #ff9f0a; font-size: 20px; cursor: pointer; }
 
-  /* Content */
   .content {
     flex: 1;
     background: #000;
@@ -72,131 +63,84 @@
     flex-direction: column;
     align-items: center;
     overflow: hidden;
-    padding-bottom: 20px;
   }
 
-  /* Price header */
   .price-header {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 20px 16px;
+    padding: 20px 20px 14px;
     gap: 6px;
   }
-  .btc-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #8e8e93;
-    font-size: 15px;
-    font-weight: 500;
-  }
+  .btc-label { display: flex; align-items: center; gap: 6px; color: #8e8e93; font-size: 15px; font-weight: 500; }
   .btc-icon { color: #ff9f0a; font-size: 20px; }
-  .price-big {
-    font-size: 52px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -1px;
-    line-height: 1;
-  }
+  .price-big { font-size: 52px; font-weight: 700; color: #fff; letter-spacing: -1px; line-height: 1; }
 
-  /* Orbit logo area */
   .orbit-area {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 8px 20px 0;
-    gap: 28px;
+    gap: 22px;
     width: 100%;
     flex: 1;
   }
 
   .orbit-logo {
-    width: 160px;
-    height: 160px;
+    width: 150px;
+    height: 150px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-
-  .orbit-bg {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: rgba(255, 159, 10, 0.08);
-  }
-
+  .orbit-bg { position: absolute; inset: 0; border-radius: 50%; background: rgba(255,159,10,0.08); }
   .btc-symbol {
-    font-size: 72px;
+    font-size: 68px;
     color: #ff9f0a;
     position: relative;
     z-index: 2;
     line-height: 1;
     text-shadow: 0 0 30px rgba(255,159,10,0.4);
   }
-
   .orbit-ring {
     position: absolute;
     inset: 4px;
     border-radius: 50%;
     animation: spin 6s linear infinite;
   }
+  .orbit-ring svg { width: 100%; height: 100%; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-  .orbit-ring svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-
-  /* Stat tiles */
-  .stat-tiles {
-    display: flex;
+  /* 2x2 stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     width: 100%;
   }
 
   .stat-tile {
-    flex: 1;
     background: rgba(255,255,255,0.07);
     border-radius: 12px;
-    padding: 10px 8px;
+    padding: 10px 8px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
   }
+  .stat-label { font-size: 10px; color: #8e8e93; text-align: center; letter-spacing: 0.2px; }
+  .stat-value { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .stat-sub { font-size: 10px; color: #8e8e93; }
+  .stat-sub-blank { font-size: 10px; color: transparent; }
+  .green { color: #30d158; }
+  .red   { color: #ff453a; }
+  .orange { color: #ff9f0a; }
+  .cyan  { color: #64d2ff; }
 
-  .stat-label {
-    font-size: 10px;
-    color: #8e8e93;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
+  .refresh-status { color: #8e8e93; font-size: 12px; margin-top: auto; padding-bottom: 8px; }
 
-  .stat-value {
-    font-size: 15px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-  .stat-value.green { color: #30d158; }
-  .stat-value.red   { color: #ff453a; }
-
-  /* Refresh status */
-  .refresh-status {
-    color: #8e8e93;
-    font-size: 12px;
-    margin-top: auto;
-    padding-bottom: 4px;
-  }
-
-  /* Home indicator */
   .home-indicator {
     height: 34px;
     background: #000;
@@ -205,19 +149,12 @@
     justify-content: center;
     flex-shrink: 0;
   }
-  .home-bar {
-    width: 134px;
-    height: 5px;
-    background: #fff;
-    border-radius: 3px;
-    opacity: 0.3;
-  }
+  .home-bar { width: 134px; height: 5px; background: #fff; border-radius: 3px; opacity: 0.3; }
 </style>
 </head>
 <body>
 
 <div class="phone">
-  <!-- Status bar -->
   <div class="statusbar">
     <span>9:41</span>
     <div class="statusbar-icons">
@@ -240,15 +177,12 @@
     </div>
   </div>
 
-  <!-- Nav bar -->
   <div class="navbar">
     <span class="navbar-title">Bitcoin</span>
     <span class="navbar-btn">↻</span>
   </div>
 
-  <!-- Content -->
   <div class="content">
-    <!-- Price header -->
     <div class="price-header">
       <div class="btc-label">
         <span class="btc-icon">₿</span>
@@ -257,39 +191,40 @@
       <div class="price-big">$104,382</div>
     </div>
 
-    <!-- Orbit logo + stats -->
     <div class="orbit-area">
       <div class="orbit-logo">
         <div class="orbit-bg"></div>
         <div class="btc-symbol">₿</div>
         <div class="orbit-ring">
           <svg viewBox="0 0 152 152" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Top-right arc -->
             <path d="M 113 39 A 52 52 0 0 1 113 113" stroke="#ff9f0a" stroke-width="3" stroke-linecap="round" fill="none"/>
-            <!-- Top-right arrowhead -->
             <polygon points="113,113 104,107 119,103" fill="#ff9f0a"/>
-
-            <!-- Bottom-left arc -->
             <path d="M 39 113 A 52 52 0 0 1 39 39" stroke="#ff9f0a" stroke-width="3" stroke-linecap="round" fill="none"/>
-            <!-- Bottom-left arrowhead -->
             <polygon points="39,39 48,45 33,49" fill="#ff9f0a"/>
           </svg>
         </div>
       </div>
 
-      <!-- Stat tiles -->
-      <div class="stat-tiles">
+      <div class="stat-grid">
         <div class="stat-tile">
-          <span class="stat-label">Session High</span>
-          <span class="stat-value green">$104K</span>
+          <span class="stat-label">24h High</span>
+          <span class="stat-value green">$105K</span>
+          <span class="stat-sub-blank">·</span>
         </div>
         <div class="stat-tile">
-          <span class="stat-label">Session Low</span>
-          <span class="stat-value red">$103K</span>
+          <span class="stat-label">24h Low</span>
+          <span class="stat-value red">$102K</span>
+          <span class="stat-sub-blank">·</span>
         </div>
         <div class="stat-tile">
-          <span class="stat-label">Change</span>
-          <span class="stat-value green">+0.84%</span>
+          <span class="stat-label">All-Time High</span>
+          <span class="stat-value orange">$109K</span>
+          <span class="stat-sub">Jan 20, 2025</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-label">Block Height</span>
+          <span class="stat-value cyan">#897,412</span>
+          <span class="stat-sub-blank">·</span>
         </div>
       </div>
 
@@ -297,7 +232,6 @@
     </div>
   </div>
 
-  <!-- Home indicator -->
   <div class="home-indicator">
     <div class="home-bar"></div>
   </div>

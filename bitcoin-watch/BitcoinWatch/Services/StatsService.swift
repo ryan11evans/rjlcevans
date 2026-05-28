@@ -1,0 +1,60 @@
+import Foundation
+
+@MainActor
+class StatsService: ObservableObject {
+    static let shared = StatsService()
+
+    @Published var stats: BitcoinStats?
+
+    private let geckoURL = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
+    private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
+
+    func fetch() async {
+        async let market = fetchMarket()
+        async let block  = fetchBlock()
+        let (m, b) = await (market, block)
+        guard let m, let b else { return }
+        stats = BitcoinStats(high24h: m.high24h, low24h: m.low24h,
+                             ath: m.ath, athDate: m.athDate, blockHeight: b)
+    }
+
+    private struct MarketResult {
+        let high24h, low24h, ath: Double
+        let athDate: Date
+    }
+
+    private func fetchMarket() async -> MarketResult? {
+        guard let (data, _) = try? await URLSession.shared.data(from: geckoURL) else { return nil }
+        struct R: Decodable {
+            struct MD: Decodable {
+                struct V: Decodable { let usd: Double }
+                struct D: Decodable { let usd: String }
+                let high_24h: V; let low_24h: V; let ath: V; let ath_date: D
+            }
+            let market_data: MD
+        }
+        guard let r = try? JSONDecoder().decode(R.self, from: data) else { return nil }
+        let df = ISO8601DateFormatter()
+        df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let date = df.date(from: r.market_data.ath_date.usd) ?? Date()
+        return MarketResult(high24h: r.market_data.high_24h.usd,
+                            low24h:  r.market_data.low_24h.usd,
+                            ath:     r.market_data.ath.usd,
+                            athDate: date)
+    }
+
+    private func fetchBlock() async -> Int? {
+        guard let (data, _) = try? await URLSession.shared.data(from: blockURL),
+              let text = String(data: data, encoding: .utf8),
+              let h = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        return h
+    }
+}
+
+struct BitcoinStats {
+    let high24h: Double
+    let low24h:  Double
+    let ath:     Double
+    let athDate: Date
+    let blockHeight: Int
+}

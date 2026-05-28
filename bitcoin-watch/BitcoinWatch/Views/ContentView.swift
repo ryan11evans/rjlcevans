@@ -2,12 +2,13 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
+    @StateObject private var statsService = StatsService.shared
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 PriceHeaderView(price: service.currentPrice, isLoading: service.isLoading)
-                BitcoinInfoView(history: service.priceHistory)
+                BitcoinInfoView(stats: statsService.stats)
                     .padding(.horizontal)
                 Spacer()
                 RefreshStatusView(price: service.currentPrice, error: service.error)
@@ -15,6 +16,7 @@ struct ContentView: View {
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
+            .task { await statsService.fetch() }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
