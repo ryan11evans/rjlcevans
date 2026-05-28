@@ -12,6 +12,15 @@ struct BitcoinPrice: Codable, Equatable {
         return formatter.string(from: NSNumber(value: usd)) ?? "$\(Int(usd))"
     }
 
+    var circularFormatted: String {
+        if usd >= 1_000_000 {
+            return String(format: "%.2fM", usd / 1_000_000)
+        } else if usd >= 1_000 {
+            return String(format: "%.1fK", usd / 1_000)
+        }
+        return String(format: "%.0f", usd)
+    }
+
     var shortFormatted: String {
         if usd >= 1_000_000 {
             return String(format: "$%.2fM", usd / 1_000_000)

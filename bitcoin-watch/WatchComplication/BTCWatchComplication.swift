@@ -79,16 +79,18 @@ struct CircularView: View {
         ZStack {
             AccessoryWidgetBackground()
             VStack(spacing: 0) {
-                Text(entry.price?.shortFormatted ?? "---")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                Text(entry.price?.circularFormatted ?? "---")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
+                    .multilineTextAlignment(.center)
                     .widgetAccentable()
                 if let price = entry.price {
                     Text(price.timestamp, style: .relative)
                         .font(.system(size: 9, weight: .medium, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(.secondary)
                 } else {
                     Image(systemName: "bitcoinsign")
@@ -96,6 +98,7 @@ struct CircularView: View {
                         .widgetAccentable()
                 }
             }
+            .frame(maxWidth: .infinity)
         }
     }
 }
