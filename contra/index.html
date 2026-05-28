@@ -287,7 +287,7 @@ function setBtn(name,on){
   const id=idMap[name];
   if(id){const el=document.getElementById(id);if(el)el.classList.toggle('pressed',on);}
   if(name==='fire')tb.shoot=on;
-  else if(name==='jump')tb.jump=on;
+  else if(name==='jump'){tb.jump=on;if(on)jmpLatch=5;} // latch survives a tap faster than one frame
   else if(name==='wpn')tb.wpn=on;
 }
 
@@ -352,13 +352,14 @@ function setupControls(){
 }
 
 const inp={left:0,right:0,jump:0,shoot:0,wpn:0};
-let prevJump=0,prevWpn=0;
+let prevJump=0,prevWpn=0,jmpLatch=0;
 function readInput(){
   const jL=joy.dx<-JOY_DEAD,jR=joy.dx>JOY_DEAD,jU=joy.dy<-JOY_DEAD;
   inp.left  =(keys.ArrowLeft ||keys.KeyA)?1:jL?1:0;
   inp.right =(keys.ArrowRight||keys.KeyD)?1:jR?1:0;
   inp.shoot =(keys.KeyZ||keys.Space)?1:tb.shoot?1:0;
-  const j=(keys.ArrowUp||keys.KeyX||keys.KeyW)?1:(tb.jump||jU)?1:0;
+  if(jmpLatch>0)jmpLatch--;
+  const j=(keys.ArrowUp||keys.KeyX||keys.KeyW)?1:((tb.jump||jmpLatch>0)||jU)?1:0;
   inp.jumpPress=j&&!prevJump;inp.jump=j;prevJump=j;
   const w=(keys.KeyE||keys.KeyQ)?1:tb.wpn?1:0;
   inp.wpnPress=w&&!prevWpn;prevWpn=w;
