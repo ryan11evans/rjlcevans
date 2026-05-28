@@ -1,18 +1,15 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <!-- Background: deep charcoal, subtle top-down gradient -->
   <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%"  stop-color="#23211F"/>
     <stop offset="55%" stop-color="#121110"/>
     <stop offset="100%" stop-color="#050505"/>
   </linearGradient>
-  <!-- Coin face: warm orange, lighter at top for a crisp metallic read -->
   <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%"  stop-color="#FBB347"/>
     <stop offset="48%" stop-color="#F7931A"/>
     <stop offset="100%" stop-color="#E37F0A"/>
   </linearGradient>
-  <!-- Arrow stroke: same family, slightly brighter -->
   <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0%"  stop-color="#FFB23E"/>
     <stop offset="100%" stop-color="#F7931A"/>
@@ -22,25 +19,12 @@
 <!-- Background -->
 <rect width="1024" height="1024" fill="url(#bg)"/>
 
-<!--
-  COMPOSITION (no blur — all crisp vector edges):
-    • Solid orange coin, r = 250, centered.
-    • Dark ₿ knocked onto the coin (high contrast).
-    • Two clockwise orbit arrows, radius 360, crisp round-cap strokes
-      with solid triangle arrowheads.
-  Angles clockwise from 12 o'clock:  P(a) = (512 + 360·sin a, 512 − 360·cos a)
-    Arc 1 stroke  22° → 152°,  arrowhead tip ~166°
-    Arc 2 stroke 202° → 332°,  arrowhead tip ~346°
--->
-
-<!-- Orbit arrows (behind the coin so the coin sits cleanly on top) -->
+<!-- Orbit arrows — radius 360, two clockwise arc arrows -->
 <g>
-  <!-- Arc 1 (right side, sweeping down toward 5 o'clock) -->
   <path d="M 646.9 178.2 A 360 360 0 0 1 681.0 829.8"
         stroke="url(#arrow)" stroke-width="46" fill="none" stroke-linecap="round"/>
   <polygon points="599.1,861.3 711,856.7 673,790.9" fill="#F7931A"/>
 
-  <!-- Arc 2 (left side, sweeping up toward 11 o'clock) -->
   <path d="M 377.1 845.8 A 360 360 0 0 1 343.0 194.2"
         stroke="url(#arrow)" stroke-width="46" fill="none" stroke-linecap="round"/>
   <polygon points="424.9,162.7 313,167.3 351,233.1" fill="#F7931A"/>
@@ -48,26 +32,17 @@
 
 <!-- Coin -->
 <circle cx="512" cy="512" r="250" fill="url(#coin)"/>
-<!-- Crisp 1px-ish inner rim for definition (no blur) -->
 <circle cx="512" cy="512" r="250" fill="none" stroke="#C96E06" stroke-width="4" opacity="0.6"/>
 
-<!-- ₿ symbol — dark, scaled 0.49, glyph center (573,512) → canvas center (512,512) -->
-<g transform="translate(512,512) scale(0.49) translate(-573,-512)" fill="#1A1206">
-  <!-- vertical stem -->
-  <rect x="388" y="196" width="72" height="632" rx="12"/>
-  <!-- upper bump -->
-  <path d="M 424 200 L 614 200 Q 762 200 762 336 Q 762 472 614 472
-           L 424 472 L 424 404 L 614 404 Q 690 404 690 336
-           Q 690 268 614 268 L 424 268 Z"/>
-  <!-- lower bump -->
-  <path d="M 424 472 L 628 472 Q 790 472 790 620 Q 790 756 628 756
-           L 424 756 L 424 688 L 628 688 Q 718 688 718 620
-           Q 718 540 628 540 L 424 540 Z"/>
-  <!-- top serifs -->
-  <rect x="356" y="178" width="196" height="44" rx="22"/>
-  <rect x="356" y="244" width="196" height="44" rx="22"/>
-  <!-- bottom serifs -->
-  <rect x="356" y="736" width="196" height="44" rx="22"/>
-  <rect x="356" y="802" width="196" height="44" rx="22"/>
-</g>
+<!-- ₿ symbol using Liberation Sans Bold for a proper Bitcoin glyph -->
+<text
+  x="516"
+  y="515"
+  font-family="Liberation Sans, Arial, sans-serif"
+  font-size="310"
+  font-weight="bold"
+  text-anchor="middle"
+  dominant-baseline="central"
+  fill="#1A1206">&#x20BF;</text>
+
 </svg>
