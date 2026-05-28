@@ -1302,8 +1302,34 @@
     return c;
   }
 
+  // Real photos drop-in: place files in vision-simulator/samples/ and they
+  // override the procedural fallback automatically.
+  const PHOTO_SAMPLES = {
+    street: 'samples/night-street.jpg',
+    garden: 'samples/garden.jpg',
+    face:   'samples/portrait.jpg'
+  };
+
   function loadSample(kind) {
     stopCamera();
+    const photoPath = PHOTO_SAMPLES[kind];
+    if (photoPath) {
+      const img = new Image();
+      img.onload = () => {
+        uploadedImage = img;
+        currentSource = 'image';
+        emptyState.style.display = 'none';
+        resizeStage();
+        drawOnce();
+      };
+      img.onerror = () => _loadSampleProcedural(kind);
+      img.src = photoPath;
+      return;
+    }
+    _loadSampleProcedural(kind);
+  }
+
+  function _loadSampleProcedural(kind) {
     const c = makeSample(kind);
     const img = new Image();
     img.onload = () => {
