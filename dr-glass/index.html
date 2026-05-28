@@ -1849,6 +1849,8 @@
       particles: [],
       shake: 0,      // screen-shake magnitude, decays each frame
       stompFlash: 0, // 0..1 white flash intensity after stomping an enemy
+      deathTimer: 0, // seconds elapsed in current death animation
+      deathVy: 0,    // vertical velocity during death float
       airPuffs: [],  // {x, y, vx, r, phase} — tonometer air puffs to dodge
       puffTimer: 2.5,// seconds until next air puff (levels 4-8)
 
@@ -3265,6 +3267,15 @@
     // Stomp flash — brief white overlay when stomping an enemy
     if (game.stompFlash > 0) {
       ctx.fillStyle = `rgba(255,255,255,${game.stompFlash * 0.55})`;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
+    // Death vignette — red fade-in when dying
+    if (game.dying && game.deathTimer > 0) {
+      const t = Math.min(1, game.deathTimer / 0.6);
+      const grad = ctx.createRadialGradient(cssW/2, cssH/2, cssH*0.1, cssW/2, cssH/2, cssH*0.85);
+      grad.addColorStop(0, `rgba(160,0,0,0)`);
+      grad.addColorStop(1, `rgba(160,0,0,${t * 0.72})`);
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, cssW, cssH);
     }
     ctx.restore();
@@ -5091,6 +5102,25 @@
     game.deaths++;
     addShake(12);
     game.player.stunned = 1.2;   // trigger stunned spin animation
+    // Death animation state
+    game.deathTimer = 0;
+    game.deathVy = -260;          // initial upward pop
+    game.player.vx = 0;
+    game.player.onGround = false;
+    // Glasses flying off — particles from the head area
+    const headX = game.player.x + game.player.w / 2;
+    const headY = game.player.y + game.player.h * 0.3;
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      game.particles.push({
+        x: headX, y: headY,
+        vx: Math.cos(ang) * (90 + Math.random() * 80),
+        vy: Math.sin(ang) * (90 + Math.random() * 80) - 60,
+        life: 0.7, maxLife: 0.7,
+        color: i % 2 === 0 ? '#c8956a' : '#f0c090',
+        size: 3 + Math.random() * 3,
+      });
+    }
     if (game.lives <= 0) {
       // Pause for the death animation before showing game over screen
       game.dying = true;
@@ -5118,7 +5148,10 @@
         game.player.vy = 0;
         game.player.invincible = 1.8;
         game.player.stunned = 0;
+        game.player.onGround = true;
         game.dying = false;
+        game.deathTimer = 0;
+        game.deathVy = 0;
         game.running = true;
         game.lastFrameTime = performance.now();
         startMusic();
@@ -5444,6 +5477,12 @@
       game.lastFrameTime = now;
       if (game.player.stunned > 0) game.player.stunned = Math.max(0, game.player.stunned - dt);
       if (game.player.victory > 0) game.player.victory = Math.max(0, game.player.victory - dt);
+      // Death float: arc upward then drift off-screen
+      if (game.dying) {
+        game.deathTimer += dt;
+        game.deathVy += 480 * dt;  // half-gravity arc
+        game.player.y += game.deathVy * dt;
+      }
       updateParticles(dt);
       updateFloatTexts(dt);
       draw();
