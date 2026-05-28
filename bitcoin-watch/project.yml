@@ -2,7 +2,7 @@ name: BitcoinWatch
 options:
   bundleIdPrefix: com.rjlcevans
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "17.0"
     watchOS: "10.0"
   xcodeVersion: "15.0"
   createIntermediateGroups: true
@@ -37,7 +37,7 @@ targets:
   BitcoinWatch:
     type: application
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources:
       - path: BitcoinWatch
       - path: Shared
@@ -58,7 +58,7 @@ targets:
   BitcoinWatchWidget:
     type: app-extension
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources:
       - path: BitcoinWatchWidget
       - path: Shared

@@ -100,10 +100,9 @@ struct MediumWidgetView: View {
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                Label(entry.date, format: .dateTime.hour().minute().second())
+                Text(entry.date, format: .dateTime.hour().minute().second())
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .labelStyle(.titleOnly)
             }
             Spacer()
         }
