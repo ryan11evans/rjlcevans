@@ -137,12 +137,11 @@ struct RectangularView: View {
 struct InlineView: View {
     let entry: WatchBTCEntry
     var body: some View {
-        Label {
-            Text("BTC \(entry.price?.shortFormatted ?? "---")")
-        } icon: {
-            Image(systemName: "bitcoinsign.circle.fill")
+        if let price = entry.price {
+            Text(price.formatted + " · ") + Text(price.timestamp, style: .relative)
+        } else {
+            Text("BTC ---")
         }
-        .widgetAccentable()
     }
 }
 
@@ -152,8 +151,13 @@ struct CornerView: View {
         Text(entry.price?.shortFormatted ?? "---")
             .font(.system(size: 13, weight: .bold, design: .rounded))
             .widgetLabel {
-                Label("BTC", systemImage: "bitcoinsign.circle.fill")
-                    .widgetAccentable()
+                if let price = entry.price {
+                    Text(price.timestamp, style: .relative)
+                        .widgetAccentable()
+                } else {
+                    Text("TapBTC")
+                        .widgetAccentable()
+                }
             }
     }
 }
