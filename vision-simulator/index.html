@@ -538,7 +538,7 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base pass: blur + contrast reduction gives the cloudy, foggy look
+    // Base: foggy blur + contrast reduction
     ctx.filter = `blur(${2 + s * 7}px) contrast(${1 - s * 0.35}) brightness(${1 + s * 0.05})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
@@ -549,16 +549,20 @@
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Scatter pass last — after the tint so halos visibly bloom through the haze.
-    // Screen blend only adds light: dark areas unaffected, bright sources spread
-    // outward into the warm glare cataracts are known for.
+    // Content-aware light scatter: blurred + heavily boosted source in screen mode.
+    // High brightness means only genuinely bright pixels (lights, windows) bloom —
+    // dark areas stay dark. Low alpha preserves the foggy cloudiness.
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = 0.3 + s * 0.4;
-    ctx.filter = `blur(${10 + s * 30}px) brightness(${1.5 + s})`;
+    ctx.globalAlpha = 0.06 + s * 0.14;
+    ctx.filter = `blur(${12 + s * 28}px) brightness(${3 + s * 3})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
+
+    // Warm finishing overlay
+    ctx.fillStyle = `rgba(240, 220, 180, ${s * 0.1})`;
+    ctx.fillRect(0, 0, w, h);
   }
 
   function applyGlaucoma(stage) {
