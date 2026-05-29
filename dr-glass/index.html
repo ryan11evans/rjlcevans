@@ -767,7 +767,6 @@
   <meta name="twitter:image" content="https://rjlcevans.com/dr-glass/drglass-current-icon-1024.png">
 </head>
 <body>
-<a href="/" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
 
 <div class="game-root">
   <div class="stage" id="stage">
@@ -819,7 +818,7 @@
         <button class="btn ghost" id="btnAchievements">🏆 Achievements</button>
         <a class="back-to-site" id="howToLink" style="cursor:pointer;">❔ How to play</a>
         <a class="back-to-site" id="backToSite" href="../">← Back to rjlcevans.com</a>
-        <div style="margin-top:14px;">
+        <div id="appStoreBadge" style="margin-top:14px;">
           <a href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
             <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:32px;display:inline-block;">
           </a>
@@ -5600,6 +5599,9 @@
   // Detect whether we're running inside the native Capacitor app (vs. a browser)
   function isNativeApp() {
     try {
+      // URL parameter set by the WKWebView Swift app
+      if (window.location.search.includes('nativeapp=1')) return true;
+      // Capacitor wrapper (legacy)
       return !!(window.Capacitor && (
         (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
         window.Capacitor.isNative === true
@@ -5621,6 +5623,12 @@
       return '../';
     }
   }
+  // Hide App Store badge when running inside the native app
+  if (isNativeApp()) {
+    const badge = document.getElementById('appStoreBadge');
+    if (badge) badge.hidden = true;
+  }
+
   const backToSiteEl = document.getElementById('backToSite');
   if (backToSiteEl) {
     if (isNativeApp()) {
@@ -5706,7 +5714,7 @@
           ${starHtml}
           ${detailHtml}
         </div>
-        ${!unlocked ? '<span class="lvl-lock">🔒</span>' : ''}
+        ${!unlocked && !isBonus ? '<span class="lvl-lock">🔒</span>' : ''}
         ${completed ? '<span class="lvl-check">✓</span>' : ''}
       `;
       if (unlocked) {
