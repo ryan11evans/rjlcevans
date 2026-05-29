@@ -1113,12 +1113,21 @@ jzone.addEventListener('touchend', e => {
     jtid=null; jstick.style.transform='translate(-50%,-50%)'; joyDir.set(0,0);
   }
 });
+// camera touch (right half) — FPS look
+// Also claimed by the fire button so hold-and-drag fires + aims simultaneously
+let ctid=null, ctlast={x:0,y:0};
+
 document.getElementById('fire-btn').addEventListener('touchstart', e => {
   e.preventDefault(); ensureAudio(); player.startFire();
+  // claim the look-camera slot so dragging this touch aims
+  const t = e.changedTouches[0];
+  ctid = t.identifier; ctlast = {x:t.clientX, y:t.clientY};
 }, {passive:false});
 document.getElementById('fire-btn').addEventListener('touchend', e => {
   e.preventDefault(); player.stopFire();
+  for (const t of e.changedTouches) if (t.identifier===ctid) ctid=null;
 }, {passive:false});
+
 document.getElementById('roll-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   const d = buildDir();
@@ -1126,8 +1135,6 @@ document.getElementById('roll-btn').addEventListener('touchstart', e => {
   else player.roll(new THREE.Vector3(-Math.sin(camYaw),0,-Math.cos(camYaw)));
 }, {passive:false});
 
-// camera touch (right half) — FPS look
-let ctid=null, ctlast={x:0,y:0};
 document.addEventListener('touchstart', e => {
   for (const t of e.changedTouches) {
     if (t.clientX > window.innerWidth*0.5 && ctid===null) {
