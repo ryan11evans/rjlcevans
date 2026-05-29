@@ -227,21 +227,39 @@ renderer.outputColorSpace    = THREE.SRGBColorSpace;
 
 // ── SCENE + SKY ──────────────────────────────────────────────────────────────
 const scene  = new THREE.Scene();
-scene.fog    = new THREE.FogExp2(0x4A5A68, 0.013);
+scene.background = new THREE.Color(0x4A6075);
+scene.fog        = new THREE.FogExp2(0x4A6075, 0.013);
 
 // gradient sky dome
 const skyMat = new THREE.ShaderMaterial({
   side: THREE.BackSide,
   uniforms: {
-    top:    { value: new THREE.Color(0x1A2535) },
-    bottom: { value: new THREE.Color(0x4A6075) },
+    skyTop:    { value: new THREE.Color(0x1A2535) },
+    skyBottom: { value: new THREE.Color(0x4A6075) },
   },
-  vertexShader:   'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader: 'uniform vec3 top,bottom; varying vec3 vP; void main(){ float h=normalize(vP).y*.5+.5; gl_FragColor=vec4(mix(bottom,top,h),1.); }',
+  vertexShader: `
+    varying vec3 vWorldPos;
+    void main() {
+      vWorldPos = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 skyTop;
+    uniform vec3 skyBottom;
+    varying vec3 vWorldPos;
+    void main() {
+      float h = normalize(vWorldPos).y * 0.5 + 0.5;
+      gl_FragColor = vec4(mix(skyBottom, skyTop, h), 1.0);
+    }
+  `,
 });
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(250, 32, 16), skyMat));
+const skyDome = new THREE.Mesh(new THREE.SphereGeometry(250, 32, 16), skyMat);
+scene.add(skyDome);
 
 const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 300);
+camera.position.set(0, 8, 12);
+camera.lookAt(0, 1, 0);
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0xC8D8E8, 0.55));
@@ -256,7 +274,9 @@ sun.shadow.camera.left   = sun.shadow.camera.bottom = -60;
 sun.shadow.camera.right  = sun.shadow.camera.top    =  60;
 sun.shadow.bias = -0.0008;
 scene.add(sun);
-scene.add(Object.assign(new THREE.DirectionalLight(0x6688BB, 0.4), { position: new THREE.Vector3(-18, 12, -22) }));
+const fillLight = new THREE.DirectionalLight(0x6688BB, 0.4);
+fillLight.position.set(-18, 12, -22);
+scene.add(fillLight);
 
 const muzzleLight = new THREE.PointLight(0xFF9900, 0, 6);
 scene.add(muzzleLight);
@@ -504,7 +524,9 @@ function buildRifle() {
   const wood   = pbr(0x5A3A1A, 0.88);
 
   // receiver body
-  g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.08, 0.54), steel), { position: new THREE.Vector3(0, 0, 0.02) }));
+  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.08, 0.54), steel);
+  receiver.position.set(0, 0, 0.02);
+  g.add(receiver);
   // magazine
   const mag = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.24, 0.068), dksteel);
   mag.position.set(0, -0.15, 0.06); mag.rotation.x = 0.14; g.add(mag);
@@ -515,7 +537,9 @@ function buildRifle() {
   const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.42, 8), steel);
   barrel.rotation.x = Math.PI/2; barrel.position.set(0, 0.008, 0.44); g.add(barrel);
   // handguard
-  g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.046, 0.26), dksteel), { position: new THREE.Vector3(0, -0.008, 0.24) }));
+  const handguard = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.046, 0.26), dksteel);
+  handguard.position.set(0, -0.008, 0.24);
+  g.add(handguard);
   // scope body
   const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.2, 8), steel);
   scope.rotation.x = Math.PI/2; scope.position.set(0, 0.066, 0.05); g.add(scope);
