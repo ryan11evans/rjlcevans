@@ -635,23 +635,31 @@
     const cx = w/2, cy = h/2;
     const scotomaR = Math.min(w, h) * (sizePct / 100);
 
+    // Always draw the full image normally — peripheral vision is unaffected.
+    ctx.drawImage(sourceCanvas, 0, 0);
+
+    // Distortion is confined to the scotoma region only, falling off to zero
+    // at the scotoma edge (where it meets normal peripheral vision).
     if (distortion > 0) {
       const maxAmp = distortion * 22;
       const sliceH = 2;
-      for (let y = 0; y < h; y += sliceH) {
-        const phase = y * 0.05;
-        const dx = Math.sin(phase) * maxAmp;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, scotomaR, 0, Math.PI * 2);
+      ctx.clip();
+      for (let y = Math.floor(cy - scotomaR); y < cy + scotomaR; y += sliceH) {
+        const r = Math.abs(y - cy) / scotomaR;       // 0 at center row, 1 at edge
+        const fade = 1 - r * r;                       // quadratic: strongest centrally
+        const dx = Math.sin(y * 0.05) * maxAmp * fade;
         ctx.drawImage(sourceCanvas, 0, y, w, sliceH, dx, y, w, sliceH);
       }
-    } else {
-      ctx.drawImage(sourceCanvas, 0, 0);
+      ctx.restore();
     }
 
-    // Opacity scales with size: early AMD (small) is semi-transparent; end-stage
-    // (large) is a solid black scotoma you cannot read through at all.
+    // Scotoma opacity scales with size.
     const sev = Math.min(1, (sizePct - 5) / 55);
-    const centerOp = 0.55 + sev * 0.45;   // 0.55 → 1.0
-    const midOp    = 0.35 + sev * 0.55;   // 0.35 → 0.90
+    const centerOp = 0.55 + sev * 0.45;
+    const midOp    = 0.35 + sev * 0.55;
     const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, scotomaR);
     grad.addColorStop(0,    `rgba(12,12,16,${centerOp})`);
     grad.addColorStop(0.55, `rgba(12,12,16,${midOp})`);
