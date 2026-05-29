@@ -335,25 +335,69 @@ body.night .carousel-dot { background: rgba(255,255,255,.22); }
 body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
 
 /* ===== Shared info cards ===== */
-.info-card { padding: 20px 18px 22px; text-align: center; }
-.info-card h3 { margin-top: 0; }
+.info-card { padding: 24px 20px 26px; text-align: center; }
+.info-card h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.35rem; }
+.info-card > p { color: var(--muted); line-height: 1.6; margin: 0; }
 .card-eyebrow {
-  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--muted); margin: 0 0 6px; font-weight: 600;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 8px; font-weight: 700;
 }
+
+/* About card */
+.about-card {
+  background: linear-gradient(145deg, #fffaf4, #f7f7f7);
+  border-top: 3px solid #f59e0b;
+}
+.about-card .card-eyebrow { color: #d97706; }
+
+/* This Week card */
+.week-card {
+  background: linear-gradient(145deg, #f0f7ff, #f7f7f7);
+  border-top: 3px solid #3b82f6;
+}
+.week-card .card-eyebrow {
+  display: inline-block;
+  background: #3b82f6;
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
 /* Superpowers grid */
 .superpower-items {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;
 }
 .superpower-item {
-  background: rgba(0,0,0,.04); border: 1px solid rgba(0,0,0,.05);
-  border-radius: 12px; padding: 16px 10px;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  border-radius: 12px; padding: 18px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: transform 0.2s ease;
 }
-.sp-icon { font-size: 1.7rem; margin-bottom: 2px; }
-.sp-name { font-weight: 700; font-size: .95rem; }
+.superpower-item:hover { transform: translateY(-2px); }
+.sp-ryan   { background: #eff6ff; border: 1px solid #bfdbfe; }
+.sp-jadyn  { background: #faf5ff; border: 1px solid #e9d5ff; }
+.sp-landon { background: #fffbeb; border: 1px solid #fde68a; }
+.sp-cody   { background: #ecfdf5; border: 1px solid #a7f3d0; }
+.sp-ryan .sp-name   { color: #1d4ed8; }
+.sp-jadyn .sp-name  { color: #7c3aed; }
+.sp-landon .sp-name { color: #b45309; }
+.sp-cody .sp-name   { color: #047857; }
+.sp-icon { font-size: 2rem; margin-bottom: 4px; }
+.sp-name { font-weight: 700; font-size: 1rem; }
 .sp-power { font-size: .82rem; color: var(--muted); }
-body.night .superpower-item { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.06); }
+
+/* Night mode */
+body.night .about-card { background: linear-gradient(145deg, #251e14, #1e2533); border-top-color: #f59e0b; }
+body.night .week-card  { background: linear-gradient(145deg, #111d2e, #1e2533); border-top-color: #3b82f6; }
+body.night .sp-ryan   { background: rgba(59,130,246,.12);  border-color: rgba(59,130,246,.25); }
+body.night .sp-jadyn  { background: rgba(139,92,246,.12);  border-color: rgba(139,92,246,.25); }
+body.night .sp-landon { background: rgba(245,158,11,.12);  border-color: rgba(245,158,11,.25); }
+body.night .sp-cody   { background: rgba(16,185,129,.12);  border-color: rgba(16,185,129,.25); }
+body.night .sp-ryan .sp-name   { color: #93c5fd; }
+body.night .sp-jadyn .sp-name  { color: #c4b5fd; }
+body.night .sp-landon .sp-name { color: #fbbf24; }
+body.night .sp-cody .sp-name   { color: #6ee7b7; }
 
 /* ===== Scroll fade-in ===== */
 @media (prefers-reduced-motion: no-preference) {
@@ -428,13 +472,13 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<section class="card info-card reveal">
-  <p class="card-eyebrow">Murrieta, California</p>
+<section class="card info-card about-card reveal">
+  <p class="card-eyebrow">📍 Murrieta, California</p>
   <h3>The Evans Family</h3>
   <p>Ryan and Jadyn Evans are both optometrists with two sons, Landon and Cody. 😊</p>
 </section>
 
-<section class="card info-card reveal">
+<section class="card info-card week-card reveal">
   <p class="card-eyebrow" id="week-day-label">Today</p>
   <h3>This Week In Our House</h3>
   <p id="week-line">Probably coaching, probably snacks, definitely sports.</p>
@@ -443,22 +487,22 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
 <section class="card info-card reveal">
   <h3>Family Superpowers</h3>
   <div class="superpower-items">
-    <div class="superpower-item">
+    <div class="superpower-item sp-ryan">
       <span class="sp-icon">👓</span>
       <div class="sp-name">Ryan</div>
       <div class="sp-power">Vision &amp; patience</div>
     </div>
-    <div class="superpower-item">
+    <div class="superpower-item sp-jadyn">
       <span class="sp-icon">✨</span>
       <div class="sp-name">Jadyn</div>
       <div class="sp-power">Organization &amp; calm</div>
     </div>
-    <div class="superpower-item">
+    <div class="superpower-item sp-landon">
       <span class="sp-icon">😄</span>
       <div class="sp-name">Landon</div>
       <div class="sp-power">Humor &amp; curiosity</div>
     </div>
-    <div class="superpower-item">
+    <div class="superpower-item sp-cody">
       <span class="sp-icon">⚡</span>
       <div class="sp-name">Cody</div>
       <div class="sp-power">Creativity &amp; speed</div>
