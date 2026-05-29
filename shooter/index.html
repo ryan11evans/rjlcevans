@@ -137,10 +137,29 @@
   }
   #restart-btn:hover { background: rgba(255,255,255,0.08); border-color: #fff; }
 
+  /* click-to-play overlay */
+  #lock-overlay {
+    position: fixed; inset: 0; z-index: 90;
+    background: rgba(0,0,0,0.78);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; cursor: pointer;
+    color: #fff;
+  }
+  #lock-overlay h2 {
+    font-size: 42px; letter-spacing: 8px; margin-bottom: 14px;
+    text-shadow: 0 0 18px rgba(255,255,255,0.4);
+  }
+  #lock-overlay p {
+    font-size: 14px; color: #aaa; letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  #lock-overlay .hint { font-size: 12px; color: #777; margin-top: 22px; }
+
   @media (pointer: coarse) {
     #mob { display: block; }
-    #xhair { display: none; }
+    #xhair { display: block; }
     #controls-hint { display: none; }
+    #lock-overlay { display: none !important; }
   }
 </style>
 </head>
@@ -169,7 +188,13 @@
   <div id="info">Wave 0 &nbsp;|&nbsp; Enemies: 0<br>Kills: 0</div>
   <div id="wave-announce"></div>
   <div id="dmg-flash"></div>
-  <div id="controls-hint">WASD — Move &nbsp;·&nbsp; Drag — Camera &nbsp;·&nbsp; Click/Hold — Fire &nbsp;·&nbsp; R — Reload &nbsp;·&nbsp; Shift — Roll</div>
+  <div id="controls-hint">WASD — Move &nbsp;·&nbsp; Mouse — Aim &nbsp;·&nbsp; Click/Hold — Fire &nbsp;·&nbsp; R — Reload &nbsp;·&nbsp; Shift — Roll &nbsp;·&nbsp; ESC — Release Mouse</div>
+</div>
+
+<div id="lock-overlay">
+  <h2>STRIKER ZERO</h2>
+  <p>CLICK TO PLAY</p>
+  <div class="hint">WASD — Move · Mouse — Aim · Click — Fire · R — Reload · Shift — Roll</div>
 </div>
 
 <div id="mob">
@@ -257,9 +282,10 @@ const skyMat = new THREE.ShaderMaterial({
 const skyDome = new THREE.Mesh(new THREE.SphereGeometry(250, 32, 16), skyMat);
 scene.add(skyDome);
 
-const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 300);
-camera.position.set(0, 8, 12);
-camera.lookAt(0, 1, 0);
+const camera = new THREE.PerspectiveCamera(74, window.innerWidth/window.innerHeight, 0.05, 300);
+camera.rotation.order = 'YXZ';
+camera.position.set(0, 1.6, 0);
+scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0xC8D8E8, 0.55));
@@ -575,10 +601,14 @@ class Player {
     this.mesh.position.set(0, 0, 0);
     scene.add(this.mesh);
 
+    // viewmodel rifle: attached to camera so it moves/aims with view
     this.rifle = buildRifle();
-    // gun held out to the right, aimed forward
-    this.rifle.position.set(0.36, 0.56, 0.28);
-    this.mesh.add(this.rifle);
+    this.rifle.rotation.y = Math.PI;          // barrel now points -Z (camera forward)
+    this.rifle.position.set(0.32, -0.22, -0.48);
+    camera.add(this.rifle);
+
+    // hide body — first person, we don't see ourselves
+    this.mesh.visible = false;
 
     this.hp          = MAX_HP;
     this.ammo        = MAG;
@@ -736,10 +766,14 @@ class Player {
       if (rL) rL.rotation.x *= 0.8;
     }
 
-    // gun bob while walking
+    // viewmodel bob while walking
     if (md.lengthSq() > 0.01) {
-      this.shootClock += dt * 7;
-      this.rifle.position.y = 0.56 + Math.sin(this.shootClock) * 0.018;
+      this.shootClock += dt * 9;
+      this.rifle.position.y = -0.22 + Math.sin(this.shootClock) * 0.012;
+      this.rifle.position.x =  0.32 + Math.sin(this.shootClock * 0.5) * 0.008;
+    } else {
+      this.rifle.position.y += (-0.22 - this.rifle.position.y) * 0.15;
+      this.rifle.position.x += ( 0.32 - this.rifle.position.x) * 0.15;
     }
   }
 }
@@ -966,23 +1000,24 @@ function updateCrosshair(moving) {
 
 setTimeout(() => { document.getElementById('controls-hint').style.opacity = '0'; }, 5500);
 
-// ── CAMERA ────────────────────────────────────────────────────────────────────
-let camH = 0, camV = 0.38;
-const CAM_DIST = 7.8;
+// ── CAMERA (FPS) ──────────────────────────────────────────────────────────────
+let camYaw = 0, camPitch = 0;
+const PITCH_MAX = Math.PI / 2 - 0.02;
 let shakeAmt = 0;
+const EYE_HEIGHT = 1.55;
 
 function tickCamera(dt) {
-  const look = player.pos.clone().add(new THREE.Vector3(0, 1.35, 0));
-  const cx = look.x + Math.sin(camH)*Math.cos(camV)*CAM_DIST;
-  const cy = look.y + Math.sin(camV)*CAM_DIST + 1.1;
-  const cz = look.z + Math.cos(camH)*Math.cos(camV)*CAM_DIST;
-  camera.position.lerp(new THREE.Vector3(cx, cy, cz), 0.14);
+  camera.position.set(player.pos.x, player.pos.y + EYE_HEIGHT, player.pos.z);
+
   if (shakeAmt > 0) {
     camera.position.x += (Math.random()-0.5)*shakeAmt;
     camera.position.y += (Math.random()-0.5)*shakeAmt*0.5;
+    camera.position.z += (Math.random()-0.5)*shakeAmt*0.5;
     shakeAmt = Math.max(0, shakeAmt - dt*7);
   }
-  camera.lookAt(look);
+
+  camera.rotation.y = camYaw;
+  camera.rotation.x = camPitch;
 }
 
 // ── INPUT ─────────────────────────────────────────────────────────────────────
@@ -996,25 +1031,45 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => keys[e.code] = false);
 
-let drag=false, dragX=0, dragY=0;
-document.addEventListener('mousedown', e => {
+// Pointer lock for FPS mouse-look
+const canvasEl = document.getElementById('canvas');
+const lockOverlay = document.getElementById('lock-overlay');
+const MOUSE_SENS = 0.0022;
+
+lockOverlay.addEventListener('click', () => {
   ensureAudio();
-  drag=true; dragX=e.clientX; dragY=e.clientY;
-  if (e.button===0) player.startFire();
+  canvasEl.requestPointerLock?.();
 });
-document.addEventListener('mouseup',   e => { drag=false; if (e.button===0) player.stopFire(); });
+canvasEl.addEventListener('click', () => {
+  if (document.pointerLockElement !== canvasEl) canvasEl.requestPointerLock?.();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  const locked = document.pointerLockElement === canvasEl;
+  lockOverlay.style.display = locked ? 'none' : 'flex';
+  if (!locked) player.stopFire();
+});
+
 document.addEventListener('mousemove', e => {
-  if (!drag) return;
-  camH -= (e.clientX-dragX)*0.005;
-  camV  = Math.max(0.1, Math.min(1.3, camV+(e.clientY-dragY)*0.005));
-  dragX=e.clientX; dragY=e.clientY;
+  if (document.pointerLockElement !== canvasEl) return;
+  camYaw   -= e.movementX * MOUSE_SENS;
+  camPitch -= e.movementY * MOUSE_SENS;
+  camPitch = Math.max(-PITCH_MAX, Math.min(PITCH_MAX, camPitch));
+});
+
+document.addEventListener('mousedown', e => {
+  if (document.pointerLockElement !== canvasEl) return;
+  if (e.button === 0) player.startFire();
+});
+document.addEventListener('mouseup', e => {
+  if (e.button === 0) player.stopFire();
 });
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 const joyDir = new THREE.Vector2();
 function buildDir() {
-  const fwd   = new THREE.Vector3(-Math.sin(camH), 0, -Math.cos(camH));
-  const right = new THREE.Vector3( Math.cos(camH), 0, -Math.sin(camH));
+  const fwd   = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw));
+  const right = new THREE.Vector3( Math.cos(camYaw), 0, -Math.sin(camYaw));
   const d = new THREE.Vector3();
   if (keys['KeyW']||keys['ArrowUp'])    d.addScaledVector(fwd,    1);
   if (keys['KeyS']||keys['ArrowDown'])  d.addScaledVector(fwd,   -1);
@@ -1068,10 +1123,10 @@ document.getElementById('roll-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   const d = buildDir();
   if (d.lengthSq()>0.01) player.roll(d);
-  else player.roll(new THREE.Vector3(Math.sin(camH),0,Math.cos(camH)));
+  else player.roll(new THREE.Vector3(-Math.sin(camYaw),0,-Math.cos(camYaw)));
 }, {passive:false});
 
-// camera touch (right half)
+// camera touch (right half) — FPS look
 let ctid=null, ctlast={x:0,y:0};
 document.addEventListener('touchstart', e => {
   for (const t of e.changedTouches) {
@@ -1086,8 +1141,9 @@ document.addEventListener('touchstart', e => {
 document.addEventListener('touchmove', e => {
   for (const t of e.changedTouches) {
     if (t.identifier!==ctid) continue;
-    camH -= (t.clientX-ctlast.x)*0.008;
-    camV   = Math.max(0.1,Math.min(1.3, camV+(t.clientY-ctlast.y)*0.008));
+    camYaw   -= (t.clientX-ctlast.x)*0.006;
+    camPitch -= (t.clientY-ctlast.y)*0.006;
+    camPitch = Math.max(-PITCH_MAX, Math.min(PITCH_MAX, camPitch));
     ctlast={x:t.clientX,y:t.clientY};
   }
 }, {passive:true});
