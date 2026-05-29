@@ -538,36 +538,39 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur + strong, monotonic darkening and contrast loss.
+    // Base: blur + heavy, monotonic darkening and contrast loss.
     // At s=0 this is a no-op (full clarity); at s=1 it's nearly black.
-    ctx.filter = `blur(${s * 11}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.68})`;
+    ctx.filter = `blur(${s * 12}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.72})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
     // Brown nuclear tint (multiply) — browns and deepens the midtones.
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(140, 85, 38, ${s * 0.85})`;
+    ctx.fillStyle = `rgba(135, 80, 35, ${s * 0.9})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dense brown veil — ramps to an almost-opaque dark brown at max severity,
-    // so the original scene all but disappears behind the haze.
-    ctx.fillStyle = `rgba(48, 29, 12, ${s * 0.82})`;
+    // Dark brown veil — reaches FULL opacity at max, so the scene is gone and
+    // the frame is a completely solid dark brown.
+    ctx.fillStyle = `rgba(40, 24, 10, ${Math.min(1, s * 1.08)})`;
     ctx.fillRect(0, 0, w, h);
 
-    // Veiling glare LAST, in screen blend — two passes for heavy light scatter.
-    // A lower contrast threshold lets more of the scene's brights bloom, and a
-    // very wide blur spreads them far, so light smears across the whole frame.
+    // Heavy light scatter LAST, additive (lighter) blend — three stacked bloom
+    // passes at ever-wider blur. Additive accumulates overlapping light so it
+    // blows out to white far from each source; the harder the severity, the
+    // more the glare floods across the whole dark brown frame.
     if (s > 0) {
-      ctx.globalCompositeOperation = 'screen';
-      // Wide soft scatter — light bleeds far from every bright region
-      ctx.globalAlpha = Math.min(1, s * 1.2);
-      ctx.filter = `contrast(${1.4 + s * 1.2}) brightness(${1.4 + s * 1.4}) blur(${30 + s * 90}px)`;
-      ctx.drawImage(sourceCanvas, 0, 0);
-      // Tighter bright halos right around the sources
-      ctx.globalAlpha = Math.min(1, s);
-      ctx.filter = `contrast(${2.5 + s * 2}) brightness(${1.6 + s * 1.6}) blur(${10 + s * 35}px)`;
-      ctx.drawImage(sourceCanvas, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      const passes = [
+        { con: 1.6 + s * 1.5, bri: 1 + s * 1.6, blur: 6  + s * 35,  a: 0.55 * s },
+        { con: 1.4 + s,       bri: 1 + s * 2.2, blur: 22 + s * 90,  a: 0.7  * s },
+        { con: 1.3 + s,       bri: 1 + s * 2.8, blur: 55 + s * 170, a: 0.85 * s },
+      ];
+      for (const p of passes) {
+        ctx.globalAlpha = Math.min(1, p.a);
+        ctx.filter = `contrast(${p.con}) brightness(${p.bri}) blur(${p.blur}px)`;
+        ctx.drawImage(sourceCanvas, 0, 0);
+      }
       ctx.filter = 'none';
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
