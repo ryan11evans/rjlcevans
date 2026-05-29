@@ -538,22 +538,23 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur + heavy darkening.
-    ctx.filter = `blur(${s * 12}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.72})`;
+    // Base: blur + darkening — eases in slowly.
+    ctx.filter = `blur(${s * 12}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.55})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Additive bloom FIRST — three stacked passes create intense halos from
-    // bright sources before the brown layers are applied on top.
+    // Additive bloom FIRST — four stacked passes, heavy alpha/brightness so
+    // bright sources blow out into massive halos before the brown sits on top.
     if (s > 0) {
       ctx.globalCompositeOperation = 'lighter';
       const passes = [
-        { con: 1.6 + s * 1.5, bri: 1 + s * 1.6, blur: 6  + s * 35,  a: 0.55 * s },
-        { con: 1.4 + s,       bri: 1 + s * 2.2, blur: 22 + s * 90,  a: 0.7  * s },
-        { con: 1.3 + s,       bri: 1 + s * 2.8, blur: 55 + s * 170, a: 0.85 * s },
+        { con: 1.8 + s * 2,   bri: 1.5 + s * 2,   blur: 4  + s * 28,  a: Math.min(1, 0.7  * s) },
+        { con: 1.5 + s * 1.5, bri: 1.3 + s * 2.5,  blur: 18 + s * 80,  a: Math.min(1, 0.85 * s) },
+        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 150, a: Math.min(1, 0.9  * s) },
+        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 220, a: Math.min(1, 0.75 * s) },
       ];
       for (const p of passes) {
-        ctx.globalAlpha = Math.min(1, p.a);
+        ctx.globalAlpha = p.a;
         ctx.filter = `contrast(${p.con}) brightness(${p.bri}) blur(${p.blur}px)`;
         ctx.drawImage(sourceCanvas, 0, 0);
       }
@@ -562,15 +563,15 @@
       ctx.globalCompositeOperation = 'source-over';
     }
 
-    // Brown multiply tint — warms the blown-out glare to amber and tints the scene.
+    // Brown multiply tint — warms the glare to amber and tints the scene.
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(155, 88, 35, ${0.35 + s * 0.55})`;
+    ctx.fillStyle = `rgba(155, 88, 35, ${0.2 + s * 0.5})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dark brown veil on top of everything — at max severity this is a nearly
-    // solid dark brown. Glare areas are bright enough to still show through.
-    ctx.fillStyle = `rgba(38, 22, 8, ${s * 0.85})`;
+    // Dark brown veil — quadratic ramp so it stays lighter in the mid-range
+    // and only gets very dark near the top of the slider.
+    ctx.fillStyle = `rgba(38, 22, 8, ${s * s * 0.82})`;
     ctx.fillRect(0, 0, w, h);
   }
 
