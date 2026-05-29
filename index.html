@@ -251,7 +251,7 @@ footer .footer-copy a:hover { color: var(--text); }
 .widget-card {
   flex: 1 1 280px;
   min-width: 260px;
-  padding: 18px;
+  padding: 24px 20px 22px;
   text-align: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid rgba(0,0,0,.05);
@@ -266,6 +266,20 @@ footer .footer-copy a:hover { color: var(--text); }
   font-size: 1.25rem;
   color: var(--muted);
 }
+.joke-card {
+  background: linear-gradient(145deg, #fffbeb, #f7f7f7);
+  border-top: 3px solid #f59e0b;
+}
+.joke-card h3 { color: #b45309; }
+.weather-card {
+  background: linear-gradient(145deg, #f0f9ff, #f7f7f7);
+  border-top: 3px solid #0ea5e9;
+}
+.weather-card h3 { color: #0369a1; }
+body.night .joke-card    { background: linear-gradient(145deg, #251e0a, #1e2533); border-top-color: #f59e0b; }
+body.night .joke-card h3 { color: #fbbf24; }
+body.night .weather-card    { background: linear-gradient(145deg, #0a1e2e, #1e2533); border-top-color: #0ea5e9; }
+body.night .weather-card h3 { color: #38bdf8; }
 .joke-text {
   font-size: 1.1rem;
   min-height: 80px;
@@ -513,14 +527,14 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
 <!-- Widgets: dad joke + weather -->
 <section class="widgets reveal">
   <div class="widget-grid">
-    <div class="card widget-card">
+    <div class="card widget-card joke-card">
       <h3>Dad Joke Time</h3>
       <div id="joke-text" class="joke-text">Loading a groaner...</div>
       <div class="joke-controls">
         <button id="joke-next" type="button">Another one →</button>
       </div>
     </div>
-    <div class="card widget-card">
+    <div class="card widget-card weather-card">
       <h3>Murrieta Weather</h3>
       <div id="weather-icon" style="font-size:2.4rem;margin:4px 0 6px">🌤️</div>
       <div id="weather-temp" style="font-size:2.2rem;font-weight:700;letter-spacing:1px;color:var(--text)">—</div>
