@@ -818,7 +818,7 @@
         <button class="btn ghost" id="btnAchievements">🏆 Achievements</button>
         <a class="back-to-site" id="howToLink" style="cursor:pointer;">❔ How to play</a>
         <a class="back-to-site" id="backToSite" href="../">← Back to rjlcevans.com</a>
-        <div style="margin-top:14px;">
+        <div id="appStoreBadge" style="margin-top:14px;">
           <a href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
             <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:32px;display:inline-block;">
           </a>
@@ -5623,6 +5623,12 @@
       return '../';
     }
   }
+  // Hide App Store badge when running inside the native app
+  if (isNativeApp()) {
+    const badge = document.getElementById('appStoreBadge');
+    if (badge) badge.hidden = true;
+  }
+
   const backToSiteEl = document.getElementById('backToSite');
   if (backToSiteEl) {
     if (isNativeApp()) {
@@ -5708,7 +5714,7 @@
           ${starHtml}
           ${detailHtml}
         </div>
-        ${!unlocked ? '<span class="lvl-lock">🔒</span>' : ''}
+        ${!unlocked && !isBonus ? '<span class="lvl-lock">🔒</span>' : ''}
         ${completed ? '<span class="lvl-check">✓</span>' : ''}
       `;
       if (unlocked) {
