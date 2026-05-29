@@ -549,12 +549,12 @@
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Content-aware light scatter: blurred + heavily boosted source in screen mode.
-    // High brightness means only genuinely bright pixels (lights, windows) bloom —
-    // dark areas stay dark. Low alpha preserves the foggy cloudiness.
+    // Veiling glare + light scatter: heavily blurred source in screen mode.
+    // Screen blend spreads bright areas outward while adding a milky wash —
+    // the signature look of cataracts in bright or high-contrast scenes.
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = 0.06 + s * 0.14;
-    ctx.filter = `blur(${12 + s * 28}px) brightness(${3 + s * 3})`;
+    ctx.globalAlpha = 0.2 + s * 0.4;
+    ctx.filter = `blur(${20 + s * 40}px) brightness(${1.3 + s * 0.6})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
