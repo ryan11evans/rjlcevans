@@ -1056,10 +1056,10 @@
     wrap.className = 'ctrl';
     wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="amdStages"></div>`;
     const stages = [
-      { v: 12, label: 'Mild' },
-      { v: 28, label: 'Moderate' },
-      { v: 44, label: 'Advanced' },
-      { v: 60, label: 'End Stage' }
+      { v: 12, label: 'Mild',      distortion: 0.05 },
+      { v: 28, label: 'Moderate',  distortion: 0.15 },
+      { v: 44, label: 'Advanced',  distortion: 0.35 },
+      { v: 60, label: 'End Stage', distortion: 0.55 }
     ];
     const host = wrap.querySelector('#amdStages');
     stages.forEach(s => {
@@ -1069,6 +1069,13 @@
       if (s.v === params.amdSize) b.setAttribute('aria-pressed', 'true');
       b.addEventListener('click', () => {
         params.amdSize = s.v;
+        // Also update the metamorphopsia slider to match the stage
+        params.amdDistortion = s.distortion;
+        const slider = document.getElementById('ctrl_amdDistortion');
+        if (slider) {
+          slider.value = s.distortion;
+          slider.dispatchEvent(new Event('input'));
+        }
         host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
         if (currentSource === 'image') drawOnce();
