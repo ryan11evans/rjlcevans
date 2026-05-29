@@ -252,7 +252,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type   = THREE.PCFSoftShadowMap;
 renderer.toneMapping      = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.38;
+renderer.toneMappingExposure = 0.62;
 renderer.outputColorSpace    = THREE.SRGBColorSpace;
 
 // ── SCENE ────────────────────────────────────────────────────────────────────
@@ -283,9 +283,10 @@ su['sunPosition'].value.copy(SKY_SUN);
 // ── ENVIRONMENT MAP (metallic reflections on gun, helmets, straps) ────────────
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
-scene.environment = pmrem.fromScene(new RoomEnvironment()).texture;
-scene.environmentIntensity = 0.15;
+const rifleEnvMap = pmrem.fromScene(new RoomEnvironment()).texture;
 pmrem.dispose();
+// Do NOT set scene.environment globally — RoomEnvironment emits bright studio
+// white ambient that floods all surfaces and whitewashes the entire scene.
 
 const camera = new THREE.PerspectiveCamera(74, window.innerWidth/window.innerHeight, 0.05, 300);
 camera.rotation.order = 'YXZ';
@@ -293,9 +294,9 @@ camera.position.set(0, 1.6, 0);
 scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xD0E4F0, 0.18));
+scene.add(new THREE.AmbientLight(0xC8D8E8, 0.45));
 
-const dirLight = new THREE.DirectionalLight(0xFFF2CC, 1.2);
+const dirLight = new THREE.DirectionalLight(0xFFEECC, 1.8);
 // Position matches the Sky sun direction so shadows align with the visible sun
 dirLight.position.copy(SKY_SUN).multiplyScalar(60);
 dirLight.castShadow = true;
@@ -307,7 +308,7 @@ dirLight.shadow.camera.right  = dirLight.shadow.camera.top    =  60;
 dirLight.shadow.bias = -0.0008;
 scene.add(dirLight);
 
-const fillLight = new THREE.DirectionalLight(0x5577CC, 0.22);
+const fillLight = new THREE.DirectionalLight(0x5577CC, 0.35);
 fillLight.position.set(-18, 12, -22);
 scene.add(fillLight);
 
@@ -494,6 +495,7 @@ gGeo.computeVertexNormals();
 const envMeshes = [];
 
 const groundMat = new THREE.MeshStandardMaterial({
+  color:        0x3A5220,   // fallback so ground is never white while texture uploads
   map:          groundAlbedo,
   normalMap:    groundNormal,
   normalScale:  new THREE.Vector2(1.2, 1.2),
@@ -1403,6 +1405,14 @@ window.addEventListener('resize', () => {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 const player = new Player();
+// Apply env map reflections to the rifle viewmodel only
+player.rifle.traverse(c => {
+  if (c.isMesh && c.material.metalness > 0.3) {
+    c.material.envMap = rifleEnvMap;
+    c.material.envMapIntensity = 1.2;
+    c.material.needsUpdate = true;
+  }
+});
 updateHealthHUD(); updateAmmoHUD(); updateInfo();
 nextWave();
 
