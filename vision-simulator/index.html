@@ -984,7 +984,7 @@
     },
     glaucoma: {
       title: 'Glaucoma',
-      note: 'Progressive optic neuropathy producing characteristic peripheral field loss. <strong>Important:</strong> patients are often unaware until late stages because the brain fills in the missing field. Stages below approximate Hodapp-Parrish-Anderson severity.',
+      note: 'Progressive optic neuropathy producing characteristic peripheral field loss. <strong>Important:</strong> patients are often unaware until late stages because the brain fills in the missing field.',
       controls: () => [glaucomaStageControl()]
     },
     amd: {
@@ -1077,10 +1077,10 @@
     wrap.className = 'ctrl';
     wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="glaucomaStages"></div>`;
     const stages = [
-      { v: 1, label: 'Early' },
+      { v: 1, label: 'Mild' },
       { v: 2, label: 'Moderate' },
-      { v: 3, label: 'Advanced' },
-      { v: 4, label: 'Tunnel' }
+      { v: 3, label: 'Severe' },
+      { v: 4, label: 'End Stage' }
     ];
     const host = wrap.querySelector('#glaucomaStages');
     stages.forEach(s => {
