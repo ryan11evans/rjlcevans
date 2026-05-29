@@ -252,7 +252,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type   = THREE.PCFSoftShadowMap;
 renderer.toneMapping      = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
+renderer.toneMappingExposure = 0.52;  // Sky outputs true HDR — old 0.9 blows it out
 renderer.outputColorSpace    = THREE.SRGBColorSpace;
 
 // ── SCENE ────────────────────────────────────────────────────────────────────
@@ -274,16 +274,17 @@ SKY_SUN.setFromSphericalCoords(
   THREE.MathUtils.degToRad(SUN_AZIMUTH)
 );
 const su = sky.material.uniforms;
-su['turbidity'].value        = 3.2;
-su['rayleigh'].value         = 1.6;
-su['mieCoefficient'].value   = 0.005;
-su['mieDirectionalG'].value  = 0.83;
+su['turbidity'].value        = 5.0;   // higher = hazier/less glaring sky
+su['rayleigh'].value         = 1.0;
+su['mieCoefficient'].value   = 0.004;
+su['mieDirectionalG'].value  = 0.80;
 su['sunPosition'].value.copy(SKY_SUN);
 
 // ── ENVIRONMENT MAP (metallic reflections on gun, helmets, straps) ────────────
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
 scene.environment = pmrem.fromScene(new RoomEnvironment()).texture;
+scene.environmentIntensity = 0.25;  // keep reflections without flooding ambient
 pmrem.dispose();
 
 const camera = new THREE.PerspectiveCamera(74, window.innerWidth/window.innerHeight, 0.05, 300);
@@ -292,9 +293,9 @@ camera.position.set(0, 1.6, 0);
 scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xD0E4F0, 0.50));
+scene.add(new THREE.AmbientLight(0xD0E4F0, 0.28));
 
-const dirLight = new THREE.DirectionalLight(0xFFF2CC, 2.4);
+const dirLight = new THREE.DirectionalLight(0xFFF2CC, 1.5);
 // Position matches the Sky sun direction so shadows align with the visible sun
 dirLight.position.copy(SKY_SUN).multiplyScalar(60);
 dirLight.castShadow = true;
@@ -306,7 +307,7 @@ dirLight.shadow.camera.right  = dirLight.shadow.camera.top    =  60;
 dirLight.shadow.bias = -0.0008;
 scene.add(dirLight);
 
-const fillLight = new THREE.DirectionalLight(0x5577CC, 0.45);
+const fillLight = new THREE.DirectionalLight(0x5577CC, 0.22);
 fillLight.position.set(-18, 12, -22);
 scene.add(fillLight);
 
@@ -326,7 +327,7 @@ ssaoPass.output       = SSAOPass.OUTPUT.Default;
 composer.addPass(ssaoPass);
 
 composer.addPass(new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.35, 0.78
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.3, 0.94
 ));
 // DoF — subtle background blur gives cinematic depth; focus at ~12 units (enemy range)
 const bokehPass = new BokehPass(scene, camera, { focus: 12, aperture: 0.00012, maxblur: 0.006 });
