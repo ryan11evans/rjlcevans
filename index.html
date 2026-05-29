@@ -84,26 +84,44 @@ header {
   justify-content: space-between;
 }
 .brand {
-  font-weight: 800;
-  font-size: 2.2rem;
-  letter-spacing: 0.04em;
-  color: var(--text);
   display: flex;
-  gap: 0.6rem;
+  gap: 12px;
   align-items: center;
-}
-.brand .logo { font-size: 2.6rem; }
-.contact a {
   text-decoration: none;
   color: var(--text);
-  border: 1px solid rgba(0,0,0,.12);
-  padding: .5rem .9rem;
-  border-radius: 12px;
-  background: #fff;
-  font-size: 1rem;
-  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.contact a:hover { background: var(--text); color: #fff; border-color: var(--text); }
+.brand-badge {
+  width: 48px; height: 48px;
+  background: #f59e0b;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 900; color: #fff;
+  letter-spacing: -0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(245,158,11,.35);
+}
+.brand-text { display: flex; flex-direction: column; gap: 1px; }
+.brand-name {
+  font-size: 1.45rem; font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.1;
+  color: var(--text);
+}
+.brand-sub {
+  font-size: 0.7rem; color: var(--muted);
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
+}
+.contact a {
+  text-decoration: none;
+  color: #fff;
+  border: none;
+  padding: .5rem 1rem;
+  border-radius: 12px;
+  background: #f59e0b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+.contact a:hover { opacity: 0.85; }
 
 main {
   width: 100%;
@@ -428,11 +446,8 @@ body.night {
   --muted: #94a3b8;
   --shadow: 0 6px 20px rgba(0,0,0,.35);
 }
-body.night .contact a {
-  background: var(--card-bg);
-  border-color: rgba(255,255,255,.12);
-}
-body.night .contact a:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+body.night .contact a { background: #d97706; }
+body.night .contact a:hover { opacity: 0.85; }
 body.night .joke-controls button { background: var(--card-bg); border-color: rgba(255,255,255,.12); }
 body.night .joke-controls button:hover { background: var(--text); color: var(--bg); }
 
@@ -442,8 +457,9 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   * { transition: none !important; }
 }
 @media (max-width: 600px) {
-  .brand { font-size: 1.6rem; }
-  .brand .logo { font-size: 2rem; }
+  .brand-badge { width: 40px; height: 40px; font-size: 1.3rem; border-radius: 11px; }
+  .brand-name { font-size: 1.2rem; }
+  .brand-sub { font-size: 0.62rem; }
   .tools-card { padding: 22px 18px; }
 }
 
@@ -452,7 +468,13 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
 </head>
 <body>
   <header>
-    <div class="brand"><span class="logo">🏡</span>EVANS FAMILY</div>
+    <div class="brand">
+      <div class="brand-badge">E</div>
+      <div class="brand-text">
+        <div class="brand-name">Evans Family</div>
+        <div class="brand-sub">Murrieta, California</div>
+      </div>
+    </div>
     <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
   </header>
 
