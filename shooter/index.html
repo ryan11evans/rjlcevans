@@ -252,7 +252,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type   = THREE.PCFSoftShadowMap;
 renderer.toneMapping      = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.52;  // Sky outputs true HDR — old 0.9 blows it out
+renderer.toneMappingExposure = 0.38;
 renderer.outputColorSpace    = THREE.SRGBColorSpace;
 
 // ── SCENE ────────────────────────────────────────────────────────────────────
@@ -274,8 +274,8 @@ SKY_SUN.setFromSphericalCoords(
   THREE.MathUtils.degToRad(SUN_AZIMUTH)
 );
 const su = sky.material.uniforms;
-su['turbidity'].value        = 5.0;   // higher = hazier/less glaring sky
-su['rayleigh'].value         = 1.0;
+su['turbidity'].value        = 7.0;
+su['rayleigh'].value         = 0.8;
 su['mieCoefficient'].value   = 0.004;
 su['mieDirectionalG'].value  = 0.80;
 su['sunPosition'].value.copy(SKY_SUN);
@@ -284,7 +284,7 @@ su['sunPosition'].value.copy(SKY_SUN);
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
 scene.environment = pmrem.fromScene(new RoomEnvironment()).texture;
-scene.environmentIntensity = 0.25;  // keep reflections without flooding ambient
+scene.environmentIntensity = 0.15;
 pmrem.dispose();
 
 const camera = new THREE.PerspectiveCamera(74, window.innerWidth/window.innerHeight, 0.05, 300);
@@ -293,9 +293,9 @@ camera.position.set(0, 1.6, 0);
 scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xD0E4F0, 0.28));
+scene.add(new THREE.AmbientLight(0xD0E4F0, 0.18));
 
-const dirLight = new THREE.DirectionalLight(0xFFF2CC, 1.5);
+const dirLight = new THREE.DirectionalLight(0xFFF2CC, 1.2);
 // Position matches the Sky sun direction so shadows align with the visible sun
 dirLight.position.copy(SKY_SUN).multiplyScalar(60);
 dirLight.castShadow = true;
@@ -327,7 +327,7 @@ ssaoPass.output       = SSAOPass.OUTPUT.Default;
 composer.addPass(ssaoPass);
 
 composer.addPass(new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.3, 0.94
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.18, 0.25, 0.96
 ));
 // DoF — subtle background blur gives cinematic depth; focus at ~12 units (enemy range)
 const bokehPass = new BokehPass(scene, camera, { focus: 12, aperture: 0.00012, maxblur: 0.006 });
