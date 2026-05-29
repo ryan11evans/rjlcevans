@@ -349,7 +349,7 @@
     astigmatism: { astigMag: 6, axis: 90 },
     cataract:    { cataractSev: 0.5 },
     glaucoma:    { glaucomaStage: 2 },
-    amd:         { amdSize: 25, amdDistortion: 0 },
+    amd:         { amdSize: 12, amdDistortion: 0 },
     diabetic:    { drSeverity: 0.5 },
     colorblind:  { cvdType: 'deutan' },
     floaters:    { floaterCount: 6 },
@@ -363,7 +363,7 @@
     axis: 90,
     cataractSev: 0.5,
     glaucomaStage: 2,
-    amdSize: 25,
+    amdSize: 12,
     amdDistortion: 0,
     drSeverity: 0.5,
     cvdType: 'deutan',
@@ -943,7 +943,7 @@
       title: 'Age-Related Macular Degeneration',
       note: 'Damage to the macula produces central field loss while peripheral vision is preserved. Patients often report difficulty recognizing faces, reading, and driving. Enable distortion to demonstrate metamorphopsia (wavy/bent straight lines on the Amsler grid).',
       controls: () => [
-        sliderControl('amdSize', 'Scotoma size', 5, 60, 1, '%'),
+        amdStageControl(),
         sliderControl('amdDistortion', 'Metamorphopsia', 0, 1, 0.05, '×')
       ]
     },
@@ -1042,6 +1042,33 @@
       if (s.v === params.glaucomaStage) b.setAttribute('aria-pressed', 'true');
       b.addEventListener('click', () => {
         params.glaucomaStage = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function amdStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="amdStages"></div>`;
+    const stages = [
+      { v: 12, label: 'Mild' },
+      { v: 28, label: 'Moderate' },
+      { v: 44, label: 'Advanced' },
+      { v: 60, label: 'End Stage' }
+    ];
+    const host = wrap.querySelector('#amdStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = s.label;
+      if (s.v === params.amdSize) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.amdSize = s.v;
         host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
         if (currentSource === 'image') drawOnce();
