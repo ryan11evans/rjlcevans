@@ -223,8 +223,10 @@ import * as THREE from 'three';
 import { EffectComposer }        from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass }            from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass }       from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { SSAOPass }              from 'three/addons/postprocessing/SSAOPass.js';
 import { ShaderPass }            from 'three/addons/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
+import { FXAAShader }            from 'three/addons/shaders/FXAAShader.js';
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const ARENA        = 40;
@@ -310,14 +312,140 @@ scene.add(muzzleLight);
 // ── POST-PROCESSING ──────────────────────────────────────────────────────────
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
+
+// SSAO — darkens corners and tight spaces for physical depth
+const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+ssaoPass.kernelRadius = 10;
+ssaoPass.minDistance  = 0.004;
+ssaoPass.maxDistance  = 0.14;
+ssaoPass.output       = SSAOPass.OUTPUT.Default;
+composer.addPass(ssaoPass);
+
 composer.addPass(new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.38, 0.75
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.35, 0.78
 ));
 composer.addPass(new ShaderPass(GammaCorrectionShader));
+
+// FXAA — cheap anti-aliasing pass, kills jagged edges on diagonals
+const fxaaPass = new ShaderPass(FXAAShader);
+fxaaPass.material.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+composer.addPass(fxaaPass);
 
 // ── MATERIAL FACTORY ─────────────────────────────────────────────────────────
 const pbr = (color, roughness = 0.85, metalness = 0) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness });
+
+// ── PROCEDURAL TEXTURES ───────────────────────────────────────────────────────
+function _hash(x, y) {
+  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+function _vnoise(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const a = _hash(ix,iy), b = _hash(ix+1,iy);
+  const c = _hash(ix,iy+1), d = _hash(ix+1,iy+1);
+  return (a*(1-ux)+b*ux)*(1-uy) + (c*(1-ux)+d*ux)*uy;
+}
+function _fbm(x, y, oct=5) {
+  let v=0, amp=0.5, f=1;
+  for (let i=0; i<oct; i++) { v += _vnoise(x*f,y*f)*amp; f*=2.07; amp*=0.5; }
+  return v;
+}
+
+function makeGroundAlbedo(size=512) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
+  // grass palettes: [dark soil] ... [light grass]
+  const palette = [
+    [28,42,18], [36,54,22], [44,66,28], [52,76,34],
+    [60,84,40], [70,90,46], [80,94,52], [65,78,42],
+    [48,58,30], [88,82,52], [72,66,38],
+  ];
+  for (let y=0; y<size; y++) {
+    for (let x=0; x<size; x++) {
+      const nx=x/size*8, ny=y/size*8;
+      const n  = _fbm(nx, ny, 6);
+      const n2 = _fbm(nx*3+5.1, ny*3+3.7, 3) * 0.18;
+      const v  = Math.max(0, Math.min(1, n + n2));
+      const ci = Math.floor(v * (palette.length-1));
+      const cf = v * (palette.length-1) - ci;
+      const p0 = palette[ci], p1 = palette[Math.min(ci+1, palette.length-1)];
+      const micro = (_hash(x*7.3,y*7.3)-0.5)*10;
+      const i = (y*size+x)*4;
+      d[i]   = Math.max(0,Math.min(255, p0[0]+(p1[0]-p0[0])*cf + micro));
+      d[i+1] = Math.max(0,Math.min(255, p0[1]+(p1[1]-p0[1])*cf + micro));
+      d[i+2] = Math.max(0,Math.min(255, p0[2]+(p1[2]-p0[2])*cf + micro));
+      d[i+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(14, 14);
+  return t;
+}
+
+function makeGroundNormal(size=256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
+  const eps = 1/size;
+  const hfn = (nx,ny) =>
+    _vnoise(nx*6, ny*6)*0.5 + _vnoise(nx*14, ny*14)*0.3 + _vnoise(nx*28, ny*28)*0.2;
+  for (let y=0; y<size; y++) {
+    for (let x=0; x<size; x++) {
+      const nx=x/size, ny=y/size;
+      const dx = hfn(nx+eps, ny) - hfn(nx-eps, ny);
+      const dy = hfn(nx, ny+eps) - hfn(nx, ny-eps);
+      const i = (y*size+x)*4;
+      d[i]   = Math.floor((-dx * 6 * 0.5 + 0.5) * 255);
+      d[i+1] = Math.floor((-dy * 6 * 0.5 + 0.5) * 255);
+      d[i+2] = 255;
+      d[i+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(14, 14);
+  return t;
+}
+
+function makeConcreteAlbedo(size=256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
+  for (let y=0; y<size; y++) {
+    for (let x=0; x<size; x++) {
+      const nx=x/size*4, ny=y/size*4;
+      const n = _fbm(nx, ny, 4);
+      const base = 55 + n*40;
+      const micro = (_hash(x*11.3,y*9.7)-0.5)*14;
+      const v = Math.max(0,Math.min(255, base+micro));
+      const i = (y*size+x)*4;
+      d[i]=v; d[i+1]=v; d[i+2]=v-4; d[i+3]=255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(4, 2);
+  return t;
+}
+
+const groundAlbedo  = makeGroundAlbedo();
+const groundNormal  = makeGroundNormal();
+const concreteAlbedo = makeConcreteAlbedo();
 
 // ── GROUND ───────────────────────────────────────────────────────────────────
 const gGeo = new THREE.PlaneGeometry(ARENA * 2.4, ARENA * 2.4, 64, 64);
@@ -328,10 +456,21 @@ for (let i = 0; i < gGeo.attributes.position.count; i++) {
     gGeo.attributes.position.setY(i, (Math.random() - 0.5) * 0.28);
 }
 gGeo.computeVertexNormals();
-const ground = new THREE.Mesh(gGeo, pbr(0x364E28, 0.96));
+// Meshes raycasted for bullet impact effects (populated as scene is built)
+const envMeshes = [];
+
+const groundMat = new THREE.MeshStandardMaterial({
+  map:          groundAlbedo,
+  normalMap:    groundNormal,
+  normalScale:  new THREE.Vector2(1.2, 1.2),
+  roughness:    0.94,
+  metalness:    0,
+});
+const ground = new THREE.Mesh(gGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
+envMeshes.push(ground);
 
 // ground variety patches
 const patchColors = [0x3E5C2E, 0x4A6435, 0x2E4420, 0x5C5840, 0x4A4A3A];
@@ -348,10 +487,16 @@ for (let i = 0; i < 45; i++) {
 }
 
 // ── WALLS ────────────────────────────────────────────────────────────────────
+const wallMat = new THREE.MeshStandardMaterial({
+  map:       concreteAlbedo,
+  roughness: 0.88,
+  metalness: 0.04,
+});
 function addWall(x, z, w, d) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 3.5, d), pbr(0x4A5040, 0.92));
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 3.5, d), wallMat);
   m.position.set(x, 1.75, z);
   m.castShadow = true; m.receiveShadow = true;
+  envMeshes.push(m);
   scene.add(m);
 }
 addWall(0, -ARENA, ARENA*2, 1);
@@ -371,6 +516,7 @@ function addCrate(x, z) {
   body.rotation.y = rot;
   body.castShadow = true; body.receiveShadow = true;
   scene.add(body);
+  envMeshes.push(body);
   // metal straps
   [0.3,-0.3].forEach(dy => {
     const strap = new THREE.Mesh(new THREE.BoxGeometry(w+0.02, 0.07, d+0.02), pbr(0x3C3C3C, 0.45, 0.85));
@@ -687,11 +833,27 @@ class Player {
       showHitMarker();
     }
 
-    // bullet tracer
+    // bullet tracer + env impact when shot misses enemies
     const from = new THREE.Vector3();
     const muzzlePt2 = this.rifle.getObjectByName('muzzlePoint');
     if (muzzlePt2) muzzlePt2.getWorldPosition(from);
-    const to = hits.length > 0 ? hits[0].point : ray.ray.at(50, new THREE.Vector3());
+
+    let to;
+    if (hits.length > 0) {
+      to = hits[0].point;
+    } else {
+      const envHits = ray.intersectObjects(envMeshes, false);
+      if (envHits.length > 0) {
+        to = envHits[0].point;
+        const n = envHits[0].face ? envHits[0].face.normal.clone()
+                                      .applyMatrix3(new THREE.Matrix3().getNormalMatrix(envHits[0].object.matrixWorld))
+                                      .normalize()
+                                  : new THREE.Vector3(0,1,0);
+        spawnImpact(to, n);
+      } else {
+        to = ray.ray.at(50, new THREE.Vector3());
+      }
+    }
     spawnTracer(from, to);
 
     updateAmmoHUD();
@@ -915,12 +1077,46 @@ function spawnBlood(pos, count = 8) {
     });
   }
 }
+function spawnImpact(pos, normal) {
+  // bright sparks
+  for (let i = 0; i < 7; i++) {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028 + Math.random()*0.022, 3, 2),
+      new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xFFBB22 : 0xFF8800 })
+    );
+    m.position.copy(pos);
+    const vel = new THREE.Vector3(
+      normal.x * (0.5 + Math.random()*1.5) + (Math.random()-0.5)*2.5,
+      normal.y * (0.5 + Math.random()*1.5) + 0.5 + Math.random()*2,
+      normal.z * (0.5 + Math.random()*1.5) + (Math.random()-0.5)*2.5
+    );
+    scene.add(m);
+    particles.push({ mesh:m, vel, life:0.28, max:0.28, smoke:false });
+  }
+  // smoke puff — expands and fades
+  const sm = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 6, 4),
+    new THREE.MeshBasicMaterial({ color:0x999999, transparent:true, opacity:0.55, depthWrite:false })
+  );
+  sm.position.copy(pos).addScaledVector(normal, 0.05);
+  scene.add(sm);
+  particles.push({ mesh:sm, vel: new THREE.Vector3(0,0.4,0).addScaledVector(normal,0.3),
+                   life:0.7, max:0.7, smoke:true, opacity:0.55 });
+}
+
 function tickParticles(dt) {
   for (let i = particles.length-1; i >= 0; i--) {
     const p = particles[i];
-    p.life -= dt; p.vel.y -= 12*dt;
+    p.life -= dt;
+    p.vel.y -= 9 * dt;
     p.mesh.position.addScaledVector(p.vel, dt);
-    p.mesh.scale.setScalar(p.life/p.max);
+    if (p.smoke) {
+      const t = 1 - p.life/p.max;
+      p.mesh.scale.setScalar(1 + t * 4);
+      p.mesh.material.opacity = (p.life/p.max) * p.opacity;
+    } else {
+      p.mesh.scale.setScalar(Math.max(0.01, p.life/p.max));
+    }
     if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
   }
 }
@@ -1160,9 +1356,12 @@ document.addEventListener('touchend', e => {
 
 // ── RESIZE ────────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth/window.innerHeight;
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+  ssaoPass.setSize(w, h);
+  fxaaPass.material.uniforms['resolution'].value.set(1/w, 1/h);
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
 });
 
