@@ -362,10 +362,10 @@ const GodRaysShader = {
         coord -= ray;
         vec3 s   = texture2D(tDiffuse, clamp(coord, 0.001, 0.999)).rgb;
         float lum = dot(s, vec3(0.299, 0.587, 0.114));
-        rays += s * max(0.0, lum - 0.78) * (1.0/0.22) * decay * 0.4;
-        decay *= 0.968;
+        rays += s * max(0.0, lum - 0.88) * (1.0/0.12) * decay * 0.18;
+        decay *= 0.975;
       }
-      gl_FragColor = vec4(base.rgb + rays * 0.14, base.a);
+      gl_FragColor = vec4(base.rgb + rays * 0.055, base.a);
     }`,
 };
 const godRaysPass = new ShaderPass(GodRaysShader);
