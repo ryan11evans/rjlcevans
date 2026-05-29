@@ -539,30 +539,34 @@
     const w = stageCanvas.width, h = stageCanvas.height;
 
     // Base: blur + strong, monotonic darkening and contrast loss.
-    // At s=0 this is a no-op (full clarity); at s=1 it's already dim.
-    ctx.filter = `blur(${s * 10}px) contrast(${1 - s * 0.45}) brightness(${1 - s * 0.55})`;
+    // At s=0 this is a no-op (full clarity); at s=1 it's nearly black.
+    ctx.filter = `blur(${s * 11}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.68})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
     // Brown nuclear tint (multiply) — browns and deepens the midtones.
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(150, 95, 45, ${s * 0.8})`;
+    ctx.fillStyle = `rgba(140, 85, 38, ${s * 0.85})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dense brown veil — ramps to a near-opaque dark brown at max severity,
+    // Dense brown veil — ramps to an almost-opaque dark brown at max severity,
     // so the original scene all but disappears behind the haze.
-    ctx.fillStyle = `rgba(58, 36, 16, ${s * 0.72})`;
+    ctx.fillStyle = `rgba(48, 29, 12, ${s * 0.82})`;
     ctx.fillRect(0, 0, w, h);
 
-    // Veiling glare LAST, in screen blend. The high contrast threshold crushes
-    // everything but the brightest pixels, the blur blooms them wide, and
-    // screen-blending punches halos of light through the dark brown haze —
-    // glare radiates only from genuine bright sources, growing with severity.
+    // Veiling glare LAST, in screen blend — two passes for heavy light scatter.
+    // A lower contrast threshold lets more of the scene's brights bloom, and a
+    // very wide blur spreads them far, so light smears across the whole frame.
     if (s > 0) {
       ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = s * 0.9;
-      ctx.filter = `contrast(${2 + s * 2}) brightness(${1.3 + s}) blur(${15 + s * 45}px)`;
+      // Wide soft scatter — light bleeds far from every bright region
+      ctx.globalAlpha = Math.min(1, s * 1.2);
+      ctx.filter = `contrast(${1.4 + s * 1.2}) brightness(${1.4 + s * 1.4}) blur(${30 + s * 90}px)`;
+      ctx.drawImage(sourceCanvas, 0, 0);
+      // Tighter bright halos right around the sources
+      ctx.globalAlpha = Math.min(1, s);
+      ctx.filter = `contrast(${2.5 + s * 2}) brightness(${1.6 + s * 1.6}) blur(${10 + s * 35}px)`;
       ctx.drawImage(sourceCanvas, 0, 0);
       ctx.filter = 'none';
       ctx.globalAlpha = 1;
