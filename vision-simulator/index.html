@@ -538,27 +538,13 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur + heavy, monotonic darkening and contrast loss.
-    // At s=0 this is a no-op (full clarity); at s=1 it's nearly black.
+    // Base: blur + heavy darkening.
     ctx.filter = `blur(${s * 12}px) contrast(${1 - s * 0.5}) brightness(${1 - s * 0.72})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Brown nuclear tint (multiply) — browns and deepens the midtones.
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(135, 80, 35, ${s * 0.9})`;
-    ctx.fillRect(0, 0, w, h);
-    ctx.globalCompositeOperation = 'source-over';
-
-    // Dark brown veil — reaches FULL opacity at max, so the scene is gone and
-    // the frame is a completely solid dark brown.
-    ctx.fillStyle = `rgba(40, 24, 10, ${Math.min(1, s * 1.08)})`;
-    ctx.fillRect(0, 0, w, h);
-
-    // Heavy light scatter LAST, additive (lighter) blend — three stacked bloom
-    // passes at ever-wider blur. Additive accumulates overlapping light so it
-    // blows out to white far from each source; the harder the severity, the
-    // more the glare floods across the whole dark brown frame.
+    // Additive bloom FIRST — three stacked passes create intense halos from
+    // bright sources before the brown layers are applied on top.
     if (s > 0) {
       ctx.globalCompositeOperation = 'lighter';
       const passes = [
@@ -575,6 +561,17 @@
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
+
+    // Brown multiply tint — warms the blown-out glare to amber and tints the scene.
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `rgba(155, 88, 35, ${0.35 + s * 0.55})`;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Dark brown veil on top of everything — at max severity this is a nearly
+    // solid dark brown. Glare areas are bright enough to still show through.
+    ctx.fillStyle = `rgba(38, 22, 8, ${s * 0.85})`;
+    ctx.fillRect(0, 0, w, h);
   }
 
   function applyGlaucoma(stage) {
