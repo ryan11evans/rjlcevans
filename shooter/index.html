@@ -224,9 +224,12 @@ import { EffectComposer }        from 'three/addons/postprocessing/EffectCompose
 import { RenderPass }            from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass }       from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { SSAOPass }              from 'three/addons/postprocessing/SSAOPass.js';
+import { BokehPass }             from 'three/addons/postprocessing/BokehPass.js';
 import { ShaderPass }            from 'three/addons/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
 import { FXAAShader }            from 'three/addons/shaders/FXAAShader.js';
+import { Sky }                   from 'three/addons/objects/Sky.js';
+import { RoomEnvironment }       from 'three/addons/environments/RoomEnvironment.js';
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const ARENA        = 40;
@@ -252,37 +255,36 @@ renderer.toneMapping      = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.9;
 renderer.outputColorSpace    = THREE.SRGBColorSpace;
 
-// ── SCENE + SKY ──────────────────────────────────────────────────────────────
-const scene  = new THREE.Scene();
-scene.background = new THREE.Color(0x4A6075);
-scene.fog        = new THREE.FogExp2(0x4A6075, 0.013);
+// ── SCENE ────────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+// Horizon haze colour – matched to sky shader below
+scene.fog = new THREE.FogExp2(0x8EB4CC, 0.011);
 
-// gradient sky dome
-const skyMat = new THREE.ShaderMaterial({
-  side: THREE.BackSide,
-  uniforms: {
-    skyTop:    { value: new THREE.Color(0x1A2535) },
-    skyBottom: { value: new THREE.Color(0x4A6075) },
-  },
-  vertexShader: `
-    varying vec3 vWorldPos;
-    void main() {
-      vWorldPos = position;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform vec3 skyTop;
-    uniform vec3 skyBottom;
-    varying vec3 vWorldPos;
-    void main() {
-      float h = normalize(vWorldPos).y * 0.5 + 0.5;
-      gl_FragColor = vec4(mix(skyBottom, skyTop, h), 1.0);
-    }
-  `,
-});
-const skyDome = new THREE.Mesh(new THREE.SphereGeometry(250, 32, 16), skyMat);
-scene.add(skyDome);
+// ── PHYSICAL SKY (Preetham model) ────────────────────────────────────────────
+const sky = new Sky();
+sky.scale.setScalar(4500);
+scene.add(sky);
+
+const SKY_SUN = new THREE.Vector3();
+const SUN_ELEVATION = 32;   // degrees above horizon
+const SUN_AZIMUTH   = 165;  // compass degrees
+SKY_SUN.setFromSphericalCoords(
+  1,
+  THREE.MathUtils.degToRad(90 - SUN_ELEVATION),
+  THREE.MathUtils.degToRad(SUN_AZIMUTH)
+);
+const su = sky.material.uniforms;
+su['turbidity'].value        = 3.2;
+su['rayleigh'].value         = 1.6;
+su['mieCoefficient'].value   = 0.005;
+su['mieDirectionalG'].value  = 0.83;
+su['sunPosition'].value.copy(SKY_SUN);
+
+// ── ENVIRONMENT MAP (metallic reflections on gun, helmets, straps) ────────────
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+scene.environment = pmrem.fromScene(new RoomEnvironment()).texture;
+pmrem.dispose();
 
 const camera = new THREE.PerspectiveCamera(74, window.innerWidth/window.innerHeight, 0.05, 300);
 camera.rotation.order = 'YXZ';
@@ -290,19 +292,21 @@ camera.position.set(0, 1.6, 0);
 scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xC8D8E8, 0.55));
+scene.add(new THREE.AmbientLight(0xD0E4F0, 0.50));
 
-const sun = new THREE.DirectionalLight(0xFFEECC, 2.3);
-sun.position.set(22, 42, 16);
-sun.castShadow = true;
-sun.shadow.mapSize.setScalar(2048);
-sun.shadow.camera.near   = 1;
-sun.shadow.camera.far    = 130;
-sun.shadow.camera.left   = sun.shadow.camera.bottom = -60;
-sun.shadow.camera.right  = sun.shadow.camera.top    =  60;
-sun.shadow.bias = -0.0008;
-scene.add(sun);
-const fillLight = new THREE.DirectionalLight(0x6688BB, 0.4);
+const dirLight = new THREE.DirectionalLight(0xFFF2CC, 2.4);
+// Position matches the Sky sun direction so shadows align with the visible sun
+dirLight.position.copy(SKY_SUN).multiplyScalar(60);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.setScalar(2048);
+dirLight.shadow.camera.near   = 1;
+dirLight.shadow.camera.far    = 130;
+dirLight.shadow.camera.left   = dirLight.shadow.camera.bottom = -60;
+dirLight.shadow.camera.right  = dirLight.shadow.camera.top    =  60;
+dirLight.shadow.bias = -0.0008;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x5577CC, 0.45);
 fillLight.position.set(-18, 12, -22);
 scene.add(fillLight);
 
@@ -324,7 +328,28 @@ composer.addPass(ssaoPass);
 composer.addPass(new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.35, 0.78
 ));
+// DoF — subtle background blur gives cinematic depth; focus at ~12 units (enemy range)
+const bokehPass = new BokehPass(scene, camera, { focus: 12, aperture: 0.00012, maxblur: 0.006 });
+composer.addPass(bokehPass);
+
 composer.addPass(new ShaderPass(GammaCorrectionShader));
+
+// Film grain — subtle per-frame noise makes the image feel like real camera footage
+const FilmGrainShader = {
+  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, intensity: { value: 0.038 } },
+  vertexShader:   'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform float time; uniform float intensity;
+    varying vec2 vUv;
+    float rnd(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453+time); }
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      c.rgb += (rnd(vUv)-0.5)*intensity;
+      gl_FragColor = c;
+    }`,
+};
+const grainPass = new ShaderPass(FilmGrainShader);
+composer.addPass(grainPass);
 
 // FXAA — cheap anti-aliasing pass, kills jagged edges on diagonals
 const fxaaPass = new ShaderPass(FXAAShader);
@@ -343,109 +368,117 @@ function _hash(x, y) {
 function _vnoise(x, y) {
   const ix = Math.floor(x), iy = Math.floor(y);
   const fx = x - ix, fy = y - iy;
-  const ux = fx * fx * (3 - 2 * fx);
-  const uy = fy * fy * (3 - 2 * fy);
-  const a = _hash(ix,iy), b = _hash(ix+1,iy);
-  const c = _hash(ix,iy+1), d = _hash(ix+1,iy+1);
-  return (a*(1-ux)+b*ux)*(1-uy) + (c*(1-ux)+d*ux)*uy;
+  const ux = fx*fx*(3-2*fx), uy = fy*fy*(3-2*fy);
+  return (_hash(ix,iy)*(1-ux)+_hash(ix+1,iy)*ux)*(1-uy)
+       + (_hash(ix,iy+1)*(1-ux)+_hash(ix+1,iy+1)*ux)*uy;
 }
 function _fbm(x, y, oct=5) {
   let v=0, amp=0.5, f=1;
-  for (let i=0; i<oct; i++) { v += _vnoise(x*f,y*f)*amp; f*=2.07; amp*=0.5; }
+  for (let i=0; i<oct; i++) { v+=_vnoise(x*f,y*f)*amp; f*=2.07; amp*=0.5; }
   return v;
 }
-
-function makeGroundAlbedo(size=512) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
+// Domain-warped FBM: warp the lookup coords with another FBM layer → swirling organic look
+function _wfbm(x, y) {
+  const wx = _fbm(x+0.4, y+9.2, 4);
+  const wy = _fbm(x+8.3, y+2.8, 4);
+  return _fbm(x + 2.2*wx, y + 2.2*wy, 6);
+}
+function _tex(size, fn) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  const ctx = cv.getContext('2d');
   const img = ctx.createImageData(size, size);
-  const d = img.data;
-  // grass palettes: [dark soil] ... [light grass]
-  const palette = [
-    [28,42,18], [36,54,22], [44,66,28], [52,76,34],
-    [60,84,40], [70,90,46], [80,94,52], [65,78,42],
-    [48,58,30], [88,82,52], [72,66,38],
+  fn(img.data, size);
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+function _toTex(cv, repeatX=12, repeatY=12) {
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeatX, repeatY);
+  return t;
+}
+
+// GROUND — domain-warped terrain with soil/grass variation
+const groundAlbedo = _toTex(_tex(512, (d, sz) => {
+  const pal = [
+    [25,38,14],[33,50,20],[42,63,26],[52,74,32],[62,83,38],
+    [72,90,44],[80,95,50],[64,76,40],[47,57,28],[86,79,50],[70,64,36],
   ];
-  for (let y=0; y<size; y++) {
-    for (let x=0; x<size; x++) {
-      const nx=x/size*8, ny=y/size*8;
-      const n  = _fbm(nx, ny, 6);
-      const n2 = _fbm(nx*3+5.1, ny*3+3.7, 3) * 0.18;
-      const v  = Math.max(0, Math.min(1, n + n2));
-      const ci = Math.floor(v * (palette.length-1));
-      const cf = v * (palette.length-1) - ci;
-      const p0 = palette[ci], p1 = palette[Math.min(ci+1, palette.length-1)];
-      const micro = (_hash(x*7.3,y*7.3)-0.5)*10;
-      const i = (y*size+x)*4;
-      d[i]   = Math.max(0,Math.min(255, p0[0]+(p1[0]-p0[0])*cf + micro));
-      d[i+1] = Math.max(0,Math.min(255, p0[1]+(p1[1]-p0[1])*cf + micro));
-      d[i+2] = Math.max(0,Math.min(255, p0[2]+(p1[2]-p0[2])*cf + micro));
-      d[i+3] = 255;
-    }
+  for (let y=0; y<sz; y++) for (let x=0; x<sz; x++) {
+    const v = Math.max(0,Math.min(1, _wfbm(x/sz*6, y/sz*6) + _fbm(x/sz*12+3,y/sz*12+7,3)*0.14));
+    const ci = Math.min(Math.floor(v*(pal.length-1)), pal.length-2);
+    const cf = v*(pal.length-1)-ci;
+    const p0=pal[ci], p1=pal[ci+1];
+    const m = (_hash(x*7.3,y*7.3)-0.5)*11;
+    const i=(y*sz+x)*4;
+    d[i]  =Math.max(0,Math.min(255,p0[0]+(p1[0]-p0[0])*cf+m));
+    d[i+1]=Math.max(0,Math.min(255,p0[1]+(p1[1]-p0[1])*cf+m));
+    d[i+2]=Math.max(0,Math.min(255,p0[2]+(p1[2]-p0[2])*cf+m));
+    d[i+3]=255;
   }
-  ctx.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(14, 14);
-  return t;
-}
+}), 14, 14);
 
-function makeGroundNormal(size=256) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
-  const img = ctx.createImageData(size, size);
-  const d = img.data;
-  const eps = 1/size;
-  const hfn = (nx,ny) =>
-    _vnoise(nx*6, ny*6)*0.5 + _vnoise(nx*14, ny*14)*0.3 + _vnoise(nx*28, ny*28)*0.2;
-  for (let y=0; y<size; y++) {
-    for (let x=0; x<size; x++) {
-      const nx=x/size, ny=y/size;
-      const dx = hfn(nx+eps, ny) - hfn(nx-eps, ny);
-      const dy = hfn(nx, ny+eps) - hfn(nx, ny-eps);
-      const i = (y*size+x)*4;
-      d[i]   = Math.floor((-dx * 6 * 0.5 + 0.5) * 255);
-      d[i+1] = Math.floor((-dy * 6 * 0.5 + 0.5) * 255);
-      d[i+2] = 255;
-      d[i+3] = 255;
-    }
+const groundNormal = _toTex(_tex(256, (d, sz) => {
+  const h=(nx,ny)=>_vnoise(nx*6,ny*6)*0.5+_vnoise(nx*14,ny*14)*0.3+_vnoise(nx*28,ny*28)*0.2;
+  const e=1/sz;
+  for (let y=0; y<sz; y++) for (let x=0; x<sz; x++) {
+    const nx=x/sz,ny=y/sz;
+    const i=(y*sz+x)*4;
+    d[i]  =Math.floor(( -(h(nx+e,ny)-h(nx-e,ny))*6 )*0.5*255+128);
+    d[i+1]=Math.floor(( -(h(nx,ny+e)-h(nx,ny-e))*6 )*0.5*255+128);
+    d[i+2]=255; d[i+3]=255;
   }
-  ctx.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(14, 14);
-  return t;
-}
+}), 14, 14);
 
-function makeConcreteAlbedo(size=256) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
-  const img = ctx.createImageData(size, size);
-  const d = img.data;
-  for (let y=0; y<size; y++) {
-    for (let x=0; x<size; x++) {
-      const nx=x/size*4, ny=y/size*4;
-      const n = _fbm(nx, ny, 4);
-      const base = 55 + n*40;
-      const micro = (_hash(x*11.3,y*9.7)-0.5)*14;
-      const v = Math.max(0,Math.min(255, base+micro));
-      const i = (y*size+x)*4;
-      d[i]=v; d[i+1]=v; d[i+2]=v-4; d[i+3]=255;
-    }
+// CONCRETE — cracked stucco for walls
+const concreteAlbedo = _toTex(_tex(256, (d, sz) => {
+  for (let y=0; y<sz; y++) for (let x=0; x<sz; x++) {
+    const n = _fbm(x/sz*5,y/sz*5,5);
+    // crack lines: thin dark veins where domain-warped fbm is near 0.5
+    const crack = Math.abs(_wfbm(x/sz*4,y/sz*4) - 0.5) < 0.018 ? 0.55 : 1;
+    const base = (52 + n*38) * crack;
+    const m=(_hash(x*9.1,y*8.3)-0.5)*12;
+    const v=Math.max(0,Math.min(255,base+m));
+    const i=(y*sz+x)*4;
+    d[i]=v+2; d[i+1]=v+1; d[i+2]=v-3; d[i+3]=255;
   }
-  ctx.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(4, 2);
-  return t;
-}
+}), 4, 2);
 
-const groundAlbedo  = makeGroundAlbedo();
-const groundNormal  = makeGroundNormal();
-const concreteAlbedo = makeConcreteAlbedo();
+// WOOD — plank grain for crates
+const woodAlbedo = _toTex(_tex(256, (d, sz) => {
+  for (let y=0; y<sz; y++) for (let x=0; x<sz; x++) {
+    const nx=x/sz, ny=y/sz*3;
+    const grain = _vnoise(nx*3,ny*22)*0.35+_vnoise(nx*7,ny*48)*0.15;
+    const ring  = Math.sin((ny*4+grain)*Math.PI*10)*0.5+0.5;
+    // plank edge lines
+    const plank = Math.abs(Math.fract !== undefined
+      ? 0 : ((ny*4)%1.0) - 0.5) < 0.04 ? 0.72 : 1;
+    const warp = (_fbm(nx*2,ny*2,3)-0.5)*0.12;
+    const rng  = ring+warp;
+    const m = (_hash(x*5.1,y*5.1)-0.5)*8;
+    const i=(y*sz+x)*4;
+    d[i]  =Math.max(0,Math.min(255,105+rng*62+m));
+    d[i+1]=Math.max(0,Math.min(255, 68+rng*42+m));
+    d[i+2]=Math.max(0,Math.min(255, 32+rng*20+m));
+    d[i+3]=255;
+  }
+}), 3, 3);
+
+// BARK — vertical stripes with rough texture
+const barkAlbedo = _toTex(_tex(256, (d, sz) => {
+  for (let y=0; y<sz; y++) for (let x=0; x<sz; x++) {
+    const nx=x/sz, ny=y/sz*4;
+    const stripe = Math.sin((nx*Math.PI*10)+_vnoise(nx*2,ny)*0.6)*0.5+0.5;
+    const n = _fbm(nx*5,ny*3,4);
+    const v = stripe*0.45+n*0.55;
+    const m = (_hash(x*6.3,y*4.7)-0.5)*10;
+    const i=(y*sz+x)*4;
+    d[i]  =Math.max(0,Math.min(255,38+v*42+m));
+    d[i+1]=Math.max(0,Math.min(255,26+v*28+m));
+    d[i+2]=Math.max(0,Math.min(255,12+v*14+m));
+    d[i+3]=255;
+  }
+}), 2, 4);
 
 // ── GROUND ───────────────────────────────────────────────────────────────────
 const gGeo = new THREE.PlaneGeometry(ARENA * 2.4, ARENA * 2.4, 64, 64);
@@ -511,7 +544,8 @@ function addCrate(x, z) {
   const h = 0.9 + Math.random()*0.5;
   const d = 1.0 + Math.random()*0.6;
   const rot = (Math.random()-0.5)*0.6;
-  const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), pbr(0x7A6040, 0.9, 0.05));
+  const crateMat = new THREE.MeshStandardMaterial({ map: woodAlbedo, roughness: 0.88, metalness: 0.0 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), crateMat);
   body.position.set(x, h/2, z);
   body.rotation.y = rot;
   body.castShadow = true; body.receiveShadow = true;
@@ -538,8 +572,8 @@ function addCrate(x, z) {
 function addTree(x, z) {
   const g = new THREE.Group();
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.36, 2.4, 7),
-    pbr(0x5C4033, 0.92)
+    new THREE.CylinderGeometry(0.2, 0.36, 2.4, 9),
+    new THREE.MeshStandardMaterial({ map: barkAlbedo, roughness: 0.94, metalness: 0 })
   );
   trunk.position.y = 1.2; trunk.castShadow = true; g.add(trunk);
   [[1.5, 3.0, 0, 0, 0], [1.0, 4.2, 0.5, 0, 0.3], [0.85, 4.7, -0.45, 0, -0.2]].forEach(([r, y, ox, oy, oz]) => {
@@ -1360,6 +1394,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(w, h);
   composer.setSize(w, h);
   ssaoPass.setSize(w, h);
+  bokehPass.uniforms['aspect'].value = w / h;
   fxaaPass.material.uniforms['resolution'].value.set(1/w, 1/h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
@@ -1385,6 +1420,7 @@ function loop(now) {
     tickTracers(dt);
   }
 
+  grainPass.material.uniforms.time.value += dt;
   tickCamera(dt);
   composer.render();
 }
