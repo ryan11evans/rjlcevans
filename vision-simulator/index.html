@@ -152,15 +152,15 @@
   .ctrl label { font-size: 12px; color: var(--ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
   .ctrl label .val { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-size: 13px; }
   input[type="range"] {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--line); border-radius: 3px; outline: none;
-    padding: 14px 0; margin: 0; background-clip: content-box; touch-action: pan-y;
+    -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: var(--line); border-radius: 4px; outline: none;
+    padding: 20px 0; margin: 0; background-clip: content-box; touch-action: none;
     cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 4px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(0,0,0,0.4);
+    -webkit-appearance: none; appearance: none; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 5px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 8px rgba(0,0,0,0.45);
   }
   input[type="range"]::-moz-range-thumb {
-    width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 4px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 6px rgba(0,0,0,0.4);
+    width: 36px; height: 36px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 5px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 8px rgba(0,0,0,0.45);
   }
 
   .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
@@ -536,32 +536,33 @@
 
   function applyCataract(severity) {
     const s = severity;
+    const s2 = s * s;   // accelerating ramp — effects pile on toward max
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: foggy blur + contrast reduction
-    ctx.filter = `blur(${2 + s * 7}px) contrast(${1 - s * 0.35}) brightness(${1 + s * 0.05})`;
+    // Base: foggy blur, reduced contrast, and progressive darkening
+    ctx.filter = `blur(${2 + s * 8}px) contrast(${1 - s * 0.35}) brightness(${1 - s2 * 0.5})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Yellow/brown nuclear tint
+    // Nuclear tint — shifts from pale yellow toward deep brown as it worsens
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(${Math.round(255 - s * 10)}, ${Math.round(230 - s * 30)}, ${Math.round(170 - s * 90)}, ${0.25 + s * 0.45})`;
+    ctx.fillStyle = `rgba(${Math.round(255 - s * 120)}, ${Math.round(225 - s * 150)}, ${Math.round(170 - s * 130)}, ${0.3 + s * 0.55})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Veiling glare + light scatter: heavily blurred source in screen mode.
-    // Screen blend spreads bright areas outward while adding a milky wash —
-    // the signature look of cataracts in bright or high-contrast scenes.
+    // Veiling glare: bright areas bloom outward (kept modest so the dark
+    // brown haze dominates at high severity).
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = 0.2 + s * 0.4;
-    ctx.filter = `blur(${20 + s * 40}px) brightness(${1.3 + s * 0.6})`;
+    ctx.globalAlpha = 0.2 + s * 0.3;
+    ctx.filter = `blur(${20 + s * 40}px) brightness(${1.2 + s * 0.4})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
 
-    // Warm finishing overlay
-    ctx.fillStyle = `rgba(240, 220, 180, ${s * 0.1})`;
+    // Dense brown haze, applied last — at high severity it becomes a thick
+    // murky veil you can barely see through.
+    ctx.fillStyle = `rgba(85, 55, 28, ${s2 * 0.5})`;
     ctx.fillRect(0, 0, w, h);
   }
 
