@@ -835,48 +835,165 @@ function buildSoldier(uniformColor, helmetColor) {
 
 function buildZombie() {
   const g = new THREE.Group();
-  const skin  = pbr(0x8CAB78, 0.85);   // pale undead green-gray
-  const cloth = pbr(0x2A1A12, 0.96);   // tattered dark rags
-  const boot  = pbr(0x1A1010, 0.82);
 
-  // legs - slightly bent forward
-  const legGeo = new THREE.CylinderGeometry(0.11, 0.09, 0.62, 7);
-  const lL = new THREE.Mesh(legGeo, cloth); lL.name='lLeg'; lL.position.set(-0.16, 0.18, 0.06); lL.rotation.x=0.14; lL.castShadow=true; g.add(lL);
-  const rL = new THREE.Mesh(legGeo, cloth); rL.name='rLeg'; rL.position.set( 0.16, 0.18, 0.06); rL.rotation.x=0.14; rL.castShadow=true; g.add(rL);
-  [-0.16, 0.16].forEach(bx => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 0.22), boot);
-    b.position.set(bx, -0.10, 0.07); b.castShadow=true; g.add(b);
+  // ── type: 0=rags, 1=office, 2=worker, 3=construction, 4=hospital ──
+  const variant   = Math.floor(Math.random() * 5);
+  // ── decay: 0=fresh pale, 1=grey-green, 2=dark rotted ──
+  const decay     = Math.floor(Math.random() * 3);
+  const skinColor = [0x94B67E, 0x809060, 0x6A7852][decay];
+  const skin      = pbr(skinColor, 0.90);
+
+  const shirtColors = [0x2A1A12, 0xB8B4A4, 0x3A4858, 0xCC5500, 0xD4C8A0];
+  const pantsColors = [0x1E1410, 0x1C1C2A, 0x2A2218, 0x1A1A14, 0x2A2018];
+  const cloth = pbr(shirtColors[variant], 0.94);
+  const pants = pbr(pantsColors[variant], 0.94);
+  const boot  = pbr(0x180E0A, 0.84);
+
+  const hs  = 0.88 + Math.random() * 0.30; // height scale
+  const gut = 0.90 + Math.random() * 0.38; // belly width
+
+  // ── LEGS ──────────────────────────────────────────────────────────────────
+  const legGeo = new THREE.CylinderGeometry(0.11, 0.095, 0.64, 7);
+  const lL = new THREE.Mesh(legGeo, pants); lL.name='lLeg'; lL.position.set(-0.17, 0.19, 0); lL.castShadow=true; g.add(lL);
+  const rL = new THREE.Mesh(legGeo, pants); rL.name='rLeg'; rL.position.set( 0.17, 0.19, 0); rL.castShadow=true; g.add(rL);
+  [-0.17, 0.17].forEach(bx => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.13, 0.24), boot);
+    b.position.set(bx, -0.09, 0.06); b.castShadow=true; g.add(b);
   });
 
-  // torso - hunched forward
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.60, 0.30), cloth);
-  torso.position.set(0, 0.74, 0.05); torso.rotation.x=0.15; torso.castShadow=true; g.add(torso);
-  // gore wound on chest
-  const wound = new THREE.Mesh(new THREE.SphereGeometry(0.10, 5, 4), pbr(0x5A0808, 0.96));
-  wound.position.set(0.08, 0.85, 0.18); wound.scale.set(1.1, 0.4, 0.35); g.add(wound);
+  // ── TORSO ──────────────────────────────────────────────────────────────────
+  const tw = 0.50 * gut, td = 0.31 * gut;
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(tw, 0.62, td), cloth);
+  torso.position.set(0, 0.75, 0.04); torso.rotation.x = 0.14; torso.castShadow=true; g.add(torso);
 
-  // arms outstretched forward (zombie reach) - cylinder along Y, rotated ~75° forward
-  const armGeo = new THREE.CylinderGeometry(0.095, 0.082, 0.64, 7);
-  const lA = new THREE.Mesh(armGeo, skin); lA.name='lArm';
-  lA.position.set(-0.38, 1.05, 0.32); lA.rotation.set(-Math.PI*0.40, 0, 0.20); lA.castShadow=true; g.add(lA);
-  const rA = new THREE.Mesh(armGeo, skin); rA.name='rArm';
-  rA.position.set( 0.38, 1.05, 0.32); rA.rotation.set(-Math.PI*0.40, 0,-0.20); rA.castShadow=true; g.add(rA);
+  // shirt details
+  if (variant === 1) { // tie
+    const tie = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.38, 0.032), pbr(0x7A0808, 0.8));
+    tie.position.set(0, 0.83, 0.17); g.add(tie);
+  }
+  if (variant === 3) { // hi-vis stripe
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(tw+0.02, 0.065, td+0.02), pbr(0xEECC00, 0.45));
+    stripe.position.set(0, 0.76, 0.04); stripe.rotation.x=0.14; g.add(stripe);
+  }
+  if (variant === 4) { // hospital-gown waist tie
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(tw+0.02, 0.055, td+0.02), pbr(0x887A6A, 0.8));
+    belt.position.set(0, 0.51, 0.04); belt.rotation.x=0.14; g.add(belt);
+  }
 
-  // neck + head
+  // ── WOUNDS / GORE ──────────────────────────────────────────────────────────
+  const woundCount = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < woundCount; i++) {
+    const w = new THREE.Mesh(new THREE.SphereGeometry(0.055 + Math.random()*0.09, 5, 4), pbr(0x580404, 0.97));
+    w.position.set((Math.random()-0.5)*0.32, 0.58 + Math.random()*0.38, 0.15 + Math.random()*0.08);
+    w.scale.set(1, 0.28 + Math.random()*0.22, 0.28 + Math.random()*0.22);
+    g.add(w);
+  }
+  if (decay === 2) { // exposed intestine loop for very rotted zombies
+    const guts = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.030, 5, 9), pbr(0x8A2E1C, 0.9));
+    guts.position.set((Math.random()-0.5)*0.08, 0.55, 0.17);
+    guts.rotation.set(Math.PI/2, Math.random()*0.5, Math.random()*0.4);
+    g.add(guts);
+  }
+
+  // ── ARMS ───────────────────────────────────────────────────────────────────
+  const armGeo = new THREE.CylinderGeometry(0.098, 0.082, 0.64, 7);
+  const armMat = decay > 0 ? skin : cloth; // torn sleeves show skin
+
+  const poseType = Math.floor(Math.random() * 3);
+  const lA = new THREE.Mesh(armGeo, armMat); lA.name='lArm';
+  if (poseType === 0)      { lA.position.set(-0.38, 1.06, 0.32); lA.rotation.set(-Math.PI*0.42, 0,  0.20); }
+  else if (poseType === 1) { lA.position.set(-0.34, 1.18, 0.16); lA.rotation.set(-Math.PI*0.62, 0,  0.28); }
+  else                     { lA.position.set(-0.30, 0.74, 0.04); lA.rotation.set( 0.12, 0,  0.24); }
+  lA.castShadow=true; g.add(lA);
+
+  const rA = new THREE.Mesh(armGeo, armMat); rA.name='rArm';
+  rA.position.set(0.38, 1.06, 0.32); rA.rotation.set(-Math.PI*0.42, 0, -0.20);
+  rA.castShadow=true; g.add(rA);
+
+  // claw-hands at tip of each arm (children so they follow arm rotation)
+  [lA, rA].forEach(arm => {
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 5, 4), skin);
+    hand.position.set(0, 0.36, 0); arm.add(hand);
+    for (let f = 0; f < 4; f++) {
+      const fa = (f/3 - 0.5) * 0.65;
+      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.072, 4), pbr(0xC4B888, 0.55));
+      claw.position.set(Math.sin(fa)*0.052, 0.41 + Math.cos(fa)*0.02, 0);
+      claw.rotation.x = 0.4; arm.add(claw);
+    }
+  });
+
+  // ── NECK ───────────────────────────────────────────────────────────────────
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.14, 7), skin);
-  neck.position.set(0, 1.12, 0.05); g.add(neck);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 9, 7), skin);
-  head.position.set(0, 1.39, 0.07); head.scale.y=1.06; head.castShadow=true; g.add(head);
-  // red glowing eyes
-  [-0.08, 0.08].forEach(ex => {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 5, 4),
-      new THREE.MeshStandardMaterial({ color:0xDD1100, emissive:0xAA0000, emissiveIntensity:0.8, roughness:0.2 }));
-    eye.position.set(ex, 1.43, 0.23); g.add(eye);
-  });
-  // dark matted hair
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.235, 7, 5), pbr(0x160C08, 0.98));
-  hair.position.set(0, 1.59, -0.02); hair.scale.set(1.02, 0.48, 1.05); g.add(hair);
+  neck.position.set(0, 1.13, 0.04); g.add(neck);
+  if (Math.random() < 0.55) { // bite wound on neck
+    const bite = new THREE.Mesh(new THREE.SphereGeometry(0.055, 5, 4), pbr(0x620000, 0.96));
+    bite.position.set((Math.random()-0.5)*0.12, 1.13, 0.11);
+    bite.scale.set(1, 0.38, 0.46); g.add(bite);
+  }
 
+  // ── HEAD ───────────────────────────────────────────────────────────────────
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 9, 7), skin);
+  head.position.set(0, 1.40, 0.06); head.scale.y=1.06; head.castShadow=true; g.add(head);
+
+  // eyes
+  const missingEye = Math.random() < 0.28;
+  [-0.085, 0.085].forEach((ex, idx) => {
+    if (missingEye && idx === 0) {
+      const socket = new THREE.Mesh(new THREE.SphereGeometry(0.040, 5, 4), pbr(0x080000, 0.98));
+      socket.position.set(ex, 1.44, 0.22); g.add(socket);
+    } else {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 5, 4),
+        new THREE.MeshStandardMaterial({ color:0xCC1000, emissive:0x990000, emissiveIntensity:0.95, roughness:0.2 }));
+      eye.position.set(ex, 1.44, 0.23); g.add(eye);
+    }
+  });
+
+  // hanging jaw with teeth
+  const jawDrop = 0.28 + Math.random() * 0.36;
+  const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.14), skin);
+  jaw.position.set(0, 1.29, 0.19); jaw.rotation.x = -jawDrop; g.add(jaw);
+  for (let t = -1; t <= 1; t++) { // upper teeth
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.055, 0.034), pbr(0xC4BC9E, 0.65));
+    tooth.position.set(t*0.062, 1.265, 0.25); g.add(tooth);
+  }
+  for (let t = -1; t <= 1; t++) { // lower teeth on jaw
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.030, 0.046, 0.030), pbr(0xBCB494, 0.65));
+    tooth.position.set(t*0.056, 0.022, 0.065); jaw.add(tooth);
+  }
+
+  // ── HAIR ───────────────────────────────────────────────────────────────────
+  const hairType = Math.floor(Math.random() * 4);
+  if (hairType === 1) { // full dark hair
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.235, 7, 5), pbr(0x160C08, 0.98));
+    hair.position.set(0, 1.60, -0.02); hair.scale.set(1.02, 0.47, 1.06); g.add(hair);
+  } else if (hairType === 2) { // patchy clumps
+    [[-0.10,1.62,-0.02],[0.09,1.60,0.04],[-0.04,1.55,-0.09]].forEach(([hx,hy,hz]) => {
+      const patch = new THREE.Mesh(new THREE.SphereGeometry(0.072+Math.random()*0.05, 5, 4), pbr(0x160C08, 0.98));
+      patch.position.set(hx, hy, hz); g.add(patch);
+    });
+  } else if (hairType === 3) { // bloody matted
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.235, 7, 5), pbr(0x3C0A06, 0.95));
+    hair.position.set(0, 1.58, -0.02); hair.scale.set(1.05, 0.44, 1.08); g.add(hair);
+    const drip = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.006, 0.14, 4), pbr(0x660000, 0.9));
+    drip.position.set(0.11, 1.44, 0.15); g.add(drip);
+  }
+  // hairType === 0: bald
+
+  // ── ACCESSORIES ────────────────────────────────────────────────────────────
+  if (variant === 3) { // hard hat (construction)
+    const hatDome = new THREE.Mesh(new THREE.SphereGeometry(0.27, 8, 6), pbr(0xFFAA00, 0.52));
+    hatDome.position.set(0, 1.64, 0.02); hatDome.scale.set(1, 0.54, 1); g.add(hatDome);
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 0.04, 8), pbr(0xFFAA00, 0.52));
+    brim.position.set(0, 1.57, 0); g.add(brim);
+  } else if (Math.random() < 0.30) { // random baseball cap on other types
+    const capCol = [0x1A1A2A, 0x8A1010, 0x0A3A6A, 0x1A3A1A][Math.floor(Math.random()*4)];
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.255, 8, 6), pbr(capCol, 0.82));
+    cap.position.set(0, 1.63, 0.02); cap.scale.set(1.04, 0.51, 1.04); g.add(cap);
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 0.22), pbr(capCol, 0.82));
+    brim.position.set(0, 1.57, 0.21); g.add(brim);
+  }
+
+  g.scale.setScalar(hs);
   return g;
 }
 
