@@ -51,6 +51,24 @@
     box-shadow: 0 0 8px rgba(229,57,53,0.6);
   }
 
+  /* bunker HP */
+  #bunker-wrap {
+    position: absolute; bottom: 36px; left: 240px;
+    transition: opacity 0.6s;
+  }
+  #bunker-label { color: #aaa; font-size: 11px; letter-spacing: 2px; margin-bottom: 5px; }
+  #bunker-track {
+    width: 160px; height: 8px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 1px;
+  }
+  #bunker-fill {
+    height: 100%; width: 100%; background: #4CAF50; border-radius: 1px;
+    transition: width 0.3s;
+    box-shadow: 0 0 8px rgba(76,175,80,0.6);
+  }
+
   /* ammo */
   #ammo-wrap {
     position: absolute; bottom: 28px; right: 32px;
@@ -179,6 +197,11 @@
     <div id="health-track"><div id="health-fill"></div></div>
   </div>
 
+  <div id="bunker-wrap">
+    <div id="bunker-label">BUNKER</div>
+    <div id="bunker-track"><div id="bunker-fill"></div></div>
+  </div>
+
   <div id="ammo-wrap">
     <div id="ammo-label">AMMO</div>
     <div id="ammo-display"><span id="ac">30</span> <span>/ 30</span></div>
@@ -229,7 +252,7 @@ import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShade
 import { FXAAShader }            from 'three/addons/shaders/FXAAShader.js';
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-const ARENA        = 40;
+const ARENA        = 80;
 const PLAYER_SPEED = 6.2;
 const ENEMY_SPEED  = 3.4;
 const ROLL_DUR     = 0.35;
@@ -536,6 +559,16 @@ function addCrate(x, z) {
   [0,-22],[18,18],[-18,18],
 ].forEach(([x,z]) => addCrate(x,z));
 
+// outer crates for doubled arena
+[
+  [40,10],[-40,10],[40,-10],[-40,-10],
+  [55,0], [-55,0], [0,55],  [0,-55],
+  [45,30],[-45,30],[45,-30],[-45,-30],
+  [30,50],[-30,50],[30,-50],[-30,-50],
+  [60,20],[-60,20],[60,-20],[-60,-20],
+  [35,-55],[-35,-55],[55,40],[-55,40],
+].forEach(([x,z]) => addCrate(x,z));
+
 // ── TREES ────────────────────────────────────────────────────────────────────
 function addTree(x, z) {
   const g = new THREE.Group();
@@ -554,19 +587,19 @@ function addTree(x, z) {
   obstacles.push({ x, z, radius: 0.36 * s + 0.2 });
   scene.add(g);
 }
-for (let i = 0; i < 32; i++) {
-  const a = (i/32)*Math.PI*2;
-  const r = ARENA-2-Math.random()*5;
+for (let i = 0; i < 64; i++) {
+  const a = (i/64)*Math.PI*2;
+  const r = ARENA-2-Math.random()*6;
   addTree(Math.cos(a)*r, Math.sin(a)*r);
 }
-for (let i = 0; i < 5; i++) {
-  const a = Math.random()*Math.PI*2, r = 22+Math.random()*10;
+for (let i = 0; i < 20; i++) {
+  const a = Math.random()*Math.PI*2, r = 30+Math.random()*30;
   addTree(Math.cos(a)*r, Math.sin(a)*r);
 }
 
 // ── ROCKS ────────────────────────────────────────────────────────────────────
-for (let i = 0; i < 14; i++) {
-  const a = Math.random()*Math.PI*2, r = 8+Math.random()*(ARENA-10);
+for (let i = 0; i < 32; i++) {
+  const a = Math.random()*Math.PI*2, r = 8+Math.random()*(ARENA-12);
   const x = Math.cos(a)*r, z = Math.sin(a)*r;
   if (Math.sqrt(x*x+z*z) < 5) continue;
   const s = 0.35+Math.random()*0.55;
@@ -579,6 +612,8 @@ for (let i = 0; i < 14; i++) {
 }
 
 // ── COLLISION HELPERS ─────────────────────────────────────────────────────────
+const boxObstacles = []; // {minX,maxX,minZ,maxZ,dead} axis-aligned boxes
+
 function resolveCollisions(pos, entityR) {
   for (const obs of obstacles) {
     const dx = pos.x - obs.x, dz = pos.z - obs.z;
@@ -586,12 +621,103 @@ function resolveCollisions(pos, entityR) {
     const minDist = obs.radius + entityR;
     if (distSq < minDist * minDist && distSq > 0.0001) {
       const dist = Math.sqrt(distSq);
-      const push = minDist - dist;
-      pos.x += (dx / dist) * push;
-      pos.z += (dz / dist) * push;
+      pos.x += (dx / dist) * (minDist - dist);
+      pos.z += (dz / dist) * (minDist - dist);
+    }
+  }
+  for (const box of boxObstacles) {
+    if (box.dead) continue;
+    const cx = Math.max(box.minX, Math.min(box.maxX, pos.x));
+    const cz = Math.max(box.minZ, Math.min(box.maxZ, pos.z));
+    const dx = pos.x - cx, dz = pos.z - cz;
+    const distSq = dx*dx + dz*dz;
+    if (distSq < entityR * entityR) {
+      const dist = Math.sqrt(distSq);
+      if (dist > 0.0001) {
+        pos.x += (dx / dist) * (entityR - dist);
+        pos.z += (dz / dist) * (entityR - dist);
+      } else {
+        const midX = (box.minX + box.maxX) * 0.5;
+        const midZ = (box.minZ + box.maxZ) * 0.5;
+        const toPX = pos.x - midX, toPZ = pos.z - midZ;
+        if (Math.abs(toPX) >= Math.abs(toPZ)) pos.x += toPX >= 0 ? entityR : -entityR;
+        else pos.z += toPZ >= 0 ? entityR : -entityR;
+      }
     }
   }
 }
+
+// ── BUNKER ────────────────────────────────────────────────────────────────────
+const BUNKER_MAX_HP = 500;
+const bunker = { hp: BUNKER_MAX_HP, dead: false, meshes: [], boxes: [] };
+
+(function buildBunker() {
+  const mat = new THREE.MeshStandardMaterial({
+    map: concreteAlbedo, roughness: 0.88, metalness: 0.04,
+  });
+  const H = 2.8, DOOR = 1.25; // DOOR = half-door-width
+
+  // wall pieces: [cx, cy, cz, width, height, depth, boxMinX, boxMaxX, boxMinZ, boxMaxZ]
+  const walls = [
+    // front-left, front-right (z=+5 face, door in centre)
+    [-3.625, H/2, 4.5,  4.75, H, 1,   -6, -DOOR,  4,  5],
+    [ 3.625, H/2, 4.5,  4.75, H, 1,  DOOR,     6,  4,  5],
+    // back-left, back-right
+    [-3.625, H/2,-4.5,  4.75, H, 1,   -6, -DOOR, -5, -4],
+    [ 3.625, H/2,-4.5,  4.75, H, 1,  DOOR,     6, -5, -4],
+    // left & right side walls
+    [-5.5,   H/2, 0,    1,    H, 10,  -6,    -5,  -5,  5],
+    [ 5.5,   H/2, 0,    1,    H, 10,   5,     6,  -5,  5],
+  ];
+
+  walls.forEach(([cx,cy,cz,w,h,d, bx0,bx1,bz0,bz1]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+    m.position.set(cx,cy,cz);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+    envMeshes.push(m);
+    bunker.meshes.push(m);
+    const box = { minX:bx0, maxX:bx1, minZ:bz0, maxZ:bz1, dead:false };
+    boxObstacles.push(box);
+    bunker.boxes.push(box);
+  });
+
+  // roof
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(12, 0.35, 10), mat);
+  roof.position.set(0, H + 0.175, 0);
+  roof.castShadow = true; roof.receiveShadow = true;
+  scene.add(roof);
+  envMeshes.push(roof);
+  bunker.meshes.push(roof);
+
+  // concrete floor inside bunker
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.08, 8), new THREE.MeshStandardMaterial({ color:0x5A5A52, roughness:0.95 }));
+  floor.position.set(0, 0.04, 0);
+  floor.receiveShadow = true;
+  scene.add(floor);
+  bunker.meshes.push(floor);
+})();
+
+bunker.hit = function(dmg) {
+  if (this.dead) return;
+  this.hp = Math.max(0, this.hp - dmg);
+  updateBunkerHUD();
+  if (this.hp <= 0) {
+    this.dead = true;
+    this.boxes.forEach(b => b.dead = true);
+    // crumble: darken and sink meshes
+    this.meshes.forEach(m => {
+      if (m.material && m.material.color) m.material.color.setHex(0x2A2014);
+      m.material = new THREE.MeshStandardMaterial({ color:0x2A2014, roughness:1 });
+      const y0 = m.position.y;
+      let t = 0;
+      const sink = () => { t += 0.04; m.position.y = y0 - t*2; if (t < 1) requestAnimationFrame(sink); else scene.remove(m); };
+      sink();
+    });
+    const bw = document.getElementById('bunker-wrap');
+    if (bw) { bw.style.opacity = '0.35'; document.getElementById('bunker-label').textContent = 'BUNKER DESTROYED'; }
+  }
+};
 
 // ── AUDIO (Web Audio API synthetic sounds) ────────────────────────────────────
 let audioCtx = null;
@@ -703,6 +829,53 @@ function buildSoldier(uniformColor, helmetColor) {
   helm.position.y = 1.49; helm.scale.set(1, 0.76, 1); helm.castShadow=true; g.add(helm);
   const helmBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 9), helMat);
   helmBrim.position.set(0, 1.31, 0); g.add(helmBrim);
+
+  return g;
+}
+
+function buildZombie() {
+  const g = new THREE.Group();
+  const skin  = pbr(0x8CAB78, 0.85);   // pale undead green-gray
+  const cloth = pbr(0x2A1A12, 0.96);   // tattered dark rags
+  const boot  = pbr(0x1A1010, 0.82);
+
+  // legs - slightly bent forward
+  const legGeo = new THREE.CylinderGeometry(0.11, 0.09, 0.62, 7);
+  const lL = new THREE.Mesh(legGeo, cloth); lL.name='lLeg'; lL.position.set(-0.16, 0.18, 0.06); lL.rotation.x=0.14; lL.castShadow=true; g.add(lL);
+  const rL = new THREE.Mesh(legGeo, cloth); rL.name='rLeg'; rL.position.set( 0.16, 0.18, 0.06); rL.rotation.x=0.14; rL.castShadow=true; g.add(rL);
+  [-0.16, 0.16].forEach(bx => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 0.22), boot);
+    b.position.set(bx, -0.10, 0.07); b.castShadow=true; g.add(b);
+  });
+
+  // torso - hunched forward
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.60, 0.30), cloth);
+  torso.position.set(0, 0.74, 0.05); torso.rotation.x=0.15; torso.castShadow=true; g.add(torso);
+  // gore wound on chest
+  const wound = new THREE.Mesh(new THREE.SphereGeometry(0.10, 5, 4), pbr(0x5A0808, 0.96));
+  wound.position.set(0.08, 0.85, 0.18); wound.scale.set(1.1, 0.4, 0.35); g.add(wound);
+
+  // arms outstretched forward (zombie reach) - cylinder along Y, rotated ~75° forward
+  const armGeo = new THREE.CylinderGeometry(0.095, 0.082, 0.64, 7);
+  const lA = new THREE.Mesh(armGeo, skin); lA.name='lArm';
+  lA.position.set(-0.38, 1.05, 0.32); lA.rotation.set(-Math.PI*0.40, 0, 0.20); lA.castShadow=true; g.add(lA);
+  const rA = new THREE.Mesh(armGeo, skin); rA.name='rArm';
+  rA.position.set( 0.38, 1.05, 0.32); rA.rotation.set(-Math.PI*0.40, 0,-0.20); rA.castShadow=true; g.add(rA);
+
+  // neck + head
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.14, 7), skin);
+  neck.position.set(0, 1.12, 0.05); g.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 9, 7), skin);
+  head.position.set(0, 1.39, 0.07); head.scale.y=1.06; head.castShadow=true; g.add(head);
+  // red glowing eyes
+  [-0.08, 0.08].forEach(ex => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 5, 4),
+      new THREE.MeshStandardMaterial({ color:0xDD1100, emissive:0xAA0000, emissiveIntensity:0.8, roughness:0.2 }));
+    eye.position.set(ex, 1.43, 0.23); g.add(eye);
+  });
+  // dark matted hair
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.235, 7, 5), pbr(0x160C08, 0.98));
+  hair.position.set(0, 1.59, -0.02); hair.scale.set(1.02, 0.48, 1.05); g.add(hair);
 
   return g;
 }
@@ -966,7 +1139,7 @@ let wave = 0, kills = 0;
 
 class Enemy {
   constructor(x, z) {
-    this.mesh = buildSoldier(0x5A3A20, 0x6B1A1A); // tan + red helmet
+    this.mesh = buildZombie();
     this.mesh.position.set(x, 0, z);
     scene.add(this.mesh);
 
@@ -976,6 +1149,7 @@ class Enemy {
     this.state  = 'patrol';
     this.patrol = new THREE.Vector3((Math.random()-0.5)*ARENA*1.7, 0, (Math.random()-0.5)*ARENA*1.7);
     this.atkCd  = 1.0 + Math.random();
+    this.bunkCd = 2.0 + Math.random();
     this.wClock = Math.random()*10;
     this.kb     = new THREE.Vector3();
 
@@ -1061,6 +1235,18 @@ class Enemy {
       const d = this.patrol.clone().sub(this.mesh.position);
       if (d.length() < 1.5) this.patrol.set((Math.random()-0.5)*ARENA*1.7, 0, (Math.random()-0.5)*ARENA*1.7);
       else dir.copy(d).normalize();
+    }
+
+    // attack bunker when touching its walls
+    if (!bunker.dead) {
+      const bx = this.mesh.position.x, bz = this.mesh.position.z;
+      if (Math.abs(bx) < 7.5 && Math.abs(bz) < 6.5) {
+        this.bunkCd -= dt;
+        if (this.bunkCd <= 0) {
+          this.bunkCd = 1.5 + Math.random() * 0.8;
+          bunker.hit(6);
+        }
+      }
     }
 
     this.mesh.position.addScaledVector(dir, ENEMY_SPEED * dt);
@@ -1187,6 +1373,12 @@ function updateHealthHUD() {
 }
 function updateAmmoHUD() {
   document.getElementById('ac').textContent = player.ammo;
+}
+function updateBunkerHUD() {
+  const pct = bunker.hp / BUNKER_MAX_HP;
+  document.getElementById('bunker-fill').style.width = (pct * 100) + '%';
+  const fill = document.getElementById('bunker-fill');
+  fill.style.background = pct > 0.5 ? '#4CAF50' : pct > 0.25 ? '#FF9800' : '#F44336';
 }
 function updateInfo() {
   const alive = enemies.filter(e => !e.dead).length;
