@@ -458,6 +458,7 @@ for (let i = 0; i < gGeo.attributes.position.count; i++) {
 gGeo.computeVertexNormals();
 // Meshes raycasted for bullet impact effects (populated as scene is built)
 const envMeshes = [];
+const obstacles = []; // {x, z, radius} circles for player/enemy collision
 
 const groundMat = new THREE.MeshStandardMaterial({
   map:          groundAlbedo,
@@ -511,6 +512,7 @@ function addCrate(x, z) {
   const h = 0.9 + Math.random()*0.5;
   const d = 1.0 + Math.random()*0.6;
   const rot = (Math.random()-0.5)*0.6;
+  obstacles.push({ x, z, radius: Math.sqrt(w*w + d*d) * 0.5 + 0.1 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), pbr(0x7A6040, 0.9, 0.05));
   body.position.set(x, h/2, z);
   body.rotation.y = rot;
@@ -549,6 +551,7 @@ function addTree(x, z) {
   g.position.set(x, 0, z);
   g.rotation.y = Math.random()*Math.PI*2;
   const s = 0.85+Math.random()*0.55; g.scale.setScalar(s);
+  obstacles.push({ x, z, radius: 0.36 * s + 0.2 });
   scene.add(g);
 }
 for (let i = 0; i < 32; i++) {
@@ -571,7 +574,23 @@ for (let i = 0; i < 14; i++) {
   m.position.set(x, s*0.45, z);
   m.rotation.set(Math.random()*2, Math.random()*2, Math.random()*2);
   m.castShadow = true; m.receiveShadow = true;
+  obstacles.push({ x, z, radius: s + 0.1 });
   scene.add(m);
+}
+
+// ── COLLISION HELPERS ─────────────────────────────────────────────────────────
+function resolveCollisions(pos, entityR) {
+  for (const obs of obstacles) {
+    const dx = pos.x - obs.x, dz = pos.z - obs.z;
+    const distSq = dx*dx + dz*dz;
+    const minDist = obs.radius + entityR;
+    if (distSq < minDist * minDist && distSq > 0.0001) {
+      const dist = Math.sqrt(distSq);
+      const push = minDist - dist;
+      pos.x += (dx / dist) * push;
+      pos.z += (dz / dist) * push;
+    }
+  }
 }
 
 // ── AUDIO (Web Audio API synthetic sounds) ────────────────────────────────────
@@ -910,6 +929,7 @@ class Player {
     this.pos.addScaledVector(md, speed * dt);
     this.pos.x = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.pos.x));
     this.pos.z = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.pos.z));
+    resolveCollisions(this.pos, 0.35);
 
     if (md.lengthSq() > 0.01) {
       const ta = Math.atan2(md.x, md.z);
@@ -1046,6 +1066,7 @@ class Enemy {
     this.mesh.position.addScaledVector(dir, ENEMY_SPEED * dt);
     this.mesh.position.x = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.x));
     this.mesh.position.z = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.z));
+    resolveCollisions(this.mesh.position, 0.35);
     if (dir.lengthSq() > 0.01) {
       this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
       this.wClock += dt * 7.5;
