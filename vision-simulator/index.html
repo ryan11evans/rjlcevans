@@ -324,8 +324,8 @@
 
   <footer>
     <span>© Dr. Ryan Evans, OD · For educational demonstration only · Not a diagnostic tool</span>
-    <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
-    <a href="https://rjlcevans.com/privacy" id="privacyLink" style="display:none;">Privacy Policy</a>
+    <a href="https://rjlcevans.com/" id="homeLink" style="display:none;">← Return to Evans Family Home</a>
+    <a href="https://rjlcevans.com/privacy" id="privacyLink">Privacy Policy</a>
   </footer>
 </div>
 
@@ -1535,13 +1535,14 @@
 </script>
 
 <script>
-  // Hide web-only elements when running inside the Capacitor native app wrapper
-  if (window.Capacitor) {
-    document.getElementById('backToSite').style.display   = 'none';
+  // Footer links: privacyLink shown by default (app); web swaps to homeLink
+  if (!window.Capacitor) {
+    document.getElementById('homeLink').style.display    = 'inline';
+    document.getElementById('privacyLink').style.display = 'none';
+  } else {
+    // Native app: hide web-only nav elements and apply Dynamic Island padding
+    document.getElementById('backToSite').style.display    = 'none';
     document.getElementById('appStoreBadge').style.display = 'none';
-    document.getElementById('homeLink').style.display      = 'none';
-    document.getElementById('privacyLink').style.display   = 'inline';
-    // CSS env(safe-area-inset-top) returns 0 in WKWebView — force padding via JS instead
     var wrap = document.querySelector('.wrap');
     if (wrap) { wrap.style.paddingTop = '72px'; }
   }
