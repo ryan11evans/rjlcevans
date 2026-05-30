@@ -6,16 +6,31 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                PriceHeaderView(price: service.currentPrice, isLoading: service.isLoading)
-                BitcoinInfoView(stats: statsService.stats)
-                    .padding(.horizontal)
-                Spacer()
-                RefreshStatusView(price: service.currentPrice, error: service.error)
-                    .padding(.bottom, 12)
+            ZStack {
+                // Premium dark gradient matching app icon
+                LinearGradient(
+                    colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
+                             Color(red: 0.07, green: 0.06, blue: 0.06),
+                             Color(red: 0.02, green: 0.02, blue: 0.02)],
+                    startPoint: .topLeading,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    PriceHeaderView(price: service.currentPrice,
+                                   isLoading: service.isLoading,
+                                   change24h: statsService.stats?.change24h)
+                    BitcoinInfoView(stats: statsService.stats)
+                        .padding(.horizontal)
+                    Spacer()
+                    RefreshStatusView(price: service.currentPrice, error: service.error)
+                        .padding(.bottom, 12)
+                }
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .task { await statsService.fetch() }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -34,28 +49,36 @@ struct ContentView: View {
 struct PriceHeaderView: View {
     let price: BitcoinPrice?
     let isLoading: Bool
+    let change24h: Double?
 
     var body: some View {
         VStack(spacing: 6) {
-            HStack {
+            HStack(spacing: 7) {
                 Image(systemName: "bitcoinsign.circle.fill")
                     .foregroundStyle(.orange)
-                    .font(.title2)
+                    .font(.subheadline)
                 Text("BTC / USD")
-                    .font(.headline)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 20)
 
-            if let price {
-                Text(price.formatted)
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
-            } else {
-                Text("---")
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .lastTextBaseline, spacing: 10) {
+                if let price {
+                    Text(price.formatted)
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                } else {
+                    Text("---")
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                if let change = change24h {
+                    ChangeBadge(change: change)
+                        .padding(.bottom, 6)
+                }
             }
 
             if isLoading {
@@ -65,6 +88,25 @@ struct PriceHeaderView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 16)
+    }
+}
+
+struct ChangeBadge: View {
+    let change: Double
+    private var isUp: Bool { change >= 0 }
+
+    var body: some View {
+        Text(String(format: "%+.1f%%", change))
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .foregroundStyle(isUp ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isUp
+                          ? Color(red: 0.19, green: 0.82, blue: 0.35).opacity(0.15)
+                          : Color(red: 1, green: 0.27, blue: 0.23).opacity(0.15))
+            )
     }
 }
 

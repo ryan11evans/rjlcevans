@@ -15,11 +15,12 @@ class StatsService: ObservableObject {
         let (m, b) = await (market, block)
         guard let m, let b else { return }
         stats = BitcoinStats(high24h: m.high24h, low24h: m.low24h,
-                             ath: m.ath, athDate: m.athDate, blockHeight: b)
+                             ath: m.ath, athDate: m.athDate,
+                             change24h: m.change24h, blockHeight: b)
     }
 
     private struct MarketResult {
-        let high24h, low24h, ath: Double
+        let high24h, low24h, ath, change24h: Double
         let athDate: Date
     }
 
@@ -30,6 +31,7 @@ class StatsService: ObservableObject {
                 struct V: Decodable { let usd: Double }
                 struct D: Decodable { let usd: String }
                 let high_24h: V; let low_24h: V; let ath: V; let ath_date: D
+                let price_change_percentage_24h: Double
             }
             let market_data: MD
         }
@@ -37,10 +39,11 @@ class StatsService: ObservableObject {
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let date = df.date(from: r.market_data.ath_date.usd) ?? Date()
-        return MarketResult(high24h: r.market_data.high_24h.usd,
-                            low24h:  r.market_data.low_24h.usd,
-                            ath:     r.market_data.ath.usd,
-                            athDate: date)
+        return MarketResult(high24h:   r.market_data.high_24h.usd,
+                            low24h:    r.market_data.low_24h.usd,
+                            ath:       r.market_data.ath.usd,
+                            change24h: r.market_data.price_change_percentage_24h,
+                            athDate:   date)
     }
 
     private func fetchBlock() async -> Int? {
@@ -52,9 +55,10 @@ class StatsService: ObservableObject {
 }
 
 struct BitcoinStats {
-    let high24h: Double
-    let low24h:  Double
-    let ath:     Double
-    let athDate: Date
+    let high24h:   Double
+    let low24h:    Double
+    let ath:       Double
+    let athDate:   Date
+    let change24h: Double
     let blockHeight: Int
 }

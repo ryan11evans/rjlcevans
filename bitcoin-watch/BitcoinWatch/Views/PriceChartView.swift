@@ -52,13 +52,26 @@ private struct BTCOrbitLogo: View {
 
     var body: some View {
         ZStack {
+            // Outer glow
             Circle()
-                .fill(.orange.opacity(0.08))
+                .fill(.orange.opacity(0.12))
+                .blur(radius: 18)
+                .scaleEffect(1.3)
+            // Coin
+            Circle()
+                .fill(
+                    LinearGradient(colors: [
+                        Color(red: 0.98, green: 0.70, blue: 0.28),
+                        Color(red: 0.97, green: 0.58, blue: 0.10),
+                        Color(red: 0.89, green: 0.50, blue: 0.04)
+                    ], startPoint: .top, endPoint: .bottom)
+                )
+                .overlay(Circle().strokeBorder(Color(red: 0.79, green: 0.43, blue: 0.02).opacity(0.6), lineWidth: 2))
             Image(systemName: "bitcoinsign.circle.fill")
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(.orange)
-                .padding(32)
+                .foregroundStyle(Color(red: 0.10, green: 0.07, blue: 0.02))
+                .padding(28)
             OrbitArrows()
                 .rotationEffect(.degrees(angle))
                 .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: angle)
@@ -116,26 +129,31 @@ private struct StatTile: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(.caption2)
+                .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.3)
             Text(value)
-                .font(.system(.callout, design: .rounded, weight: .bold))
+                .font(.system(.title3, design: .rounded, weight: .bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
-            if let subtitle {
-                Text(subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            } else {
-                // keep tile height consistent
-                Text(" ").font(.caption2)
-            }
+            Text(subtitle ?? " ")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }

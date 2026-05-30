@@ -107,7 +107,7 @@ struct RectangularView: View {
     let entry: WatchBTCEntry
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 3) {
+            HStack(alignment: .center, spacing: 5) {
                 Image(systemName: "bitcoinsign.circle.fill")
                     .widgetAccentable()
                     .font(.caption2)
@@ -115,16 +115,12 @@ struct RectangularView: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
-                // Subtle tap hint
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 8))
-                    .foregroundStyle(.tertiary)
+                Text(entry.price?.formatted ?? "---")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                    .widgetAccentable()
             }
-            Text(entry.price?.formatted ?? "---")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-                .widgetAccentable()
             if let price = entry.price {
                 Text(price.timestamp, style: .relative)
                     .foregroundStyle(.tertiary)
