@@ -1541,6 +1541,9 @@
     document.getElementById('appStoreBadge').style.display = 'none';
     document.getElementById('homeLink').style.display      = 'none';
     document.getElementById('privacyLink').style.display   = 'inline';
+    // CSS env(safe-area-inset-top) returns 0 in WKWebView — force padding via JS instead
+    var wrap = document.querySelector('.wrap');
+    if (wrap) { wrap.style.paddingTop = '72px'; }
   }
 </script>
 </body>
