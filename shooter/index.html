@@ -1350,7 +1350,7 @@ function tickTracers(dt) {
 // ── WAVE SYSTEM ──────────────────────────────────────────────────────────────
 function nextWave() {
   wave++;
-  const count = 4 + wave * 2;
+  const count = 16 + wave * 8;
   const el = document.getElementById('wave-announce');
   el.textContent = `WAVE ${wave}`; el.style.opacity = '1';
   setTimeout(() => el.style.opacity = '0', 2200);
