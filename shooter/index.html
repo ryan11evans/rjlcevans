@@ -87,6 +87,9 @@
     opacity: 0; transition: opacity 0.15s;
     text-shadow: 0 0 10px rgba(255,215,0,0.6);
   }
+  #weapon-slots { margin-bottom: 5px; text-align: right; }
+  .wslot { color: #555; font-size: 11px; letter-spacing: 1px; margin-left: 10px; transition: color 0.15s; }
+  .wslot.active { color: #FFD700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
 
   /* wave/kill info */
   #info {
@@ -135,6 +138,7 @@
   }
   #fire-btn { bottom: 42px; right: 32px; width: 96px; height: 96px; background: rgba(200,35,15,0.72); }
   #roll-btn { bottom: 48px; right: 148px; width: 66px; height: 66px; background: rgba(25,70,170,0.72); }
+  #swap-btn { bottom: 128px; right: 148px; width: 56px; height: 56px; background: rgba(80,50,15,0.72); font-size: 11px; }
 
   /* game over */
   #gameover {
@@ -203,27 +207,33 @@
   </div>
 
   <div id="ammo-wrap">
+    <div id="weapon-slots">
+      <span class="wslot active" id="ws0">① RIFLE</span>
+      <span class="wslot" id="ws1">② SNIPER</span>
+      <span class="wslot" id="ws2">③ PISTOL</span>
+    </div>
     <div id="ammo-label">AMMO</div>
-    <div id="ammo-display"><span id="ac">30</span> <span>/ 30</span></div>
+    <div id="ammo-display"><span id="ac">30</span><span> / </span><span id="ar">90</span></div>
     <div id="reload-text">RELOADING</div>
   </div>
 
   <div id="info">Wave 0 &nbsp;|&nbsp; Enemies: 0<br>Kills: 0</div>
   <div id="wave-announce"></div>
   <div id="dmg-flash"></div>
-  <div id="controls-hint">WASD — Move &nbsp;·&nbsp; Mouse — Aim &nbsp;·&nbsp; Click/Hold — Fire &nbsp;·&nbsp; R — Reload &nbsp;·&nbsp; Shift — Roll &nbsp;·&nbsp; ESC — Release Mouse</div>
+  <div id="controls-hint">WASD — Move &nbsp;·&nbsp; Mouse — Aim &nbsp;·&nbsp; Click/Hold — Fire &nbsp;·&nbsp; R — Reload &nbsp;·&nbsp; Shift — Roll &nbsp;·&nbsp; Space — Jump &nbsp;·&nbsp; 1/2/3 — Weapons &nbsp;·&nbsp; ESC — Release Mouse</div>
 </div>
 
 <div id="lock-overlay">
   <h2>STRIKER ZERO</h2>
   <p>CLICK TO PLAY</p>
-  <div class="hint">WASD — Move · Mouse — Aim · Click — Fire · R — Reload · Shift — Roll</div>
+  <div class="hint">WASD — Move · Mouse — Aim · Click — Fire · R — Reload · Shift — Roll · Space — Jump · 1/2/3 — Weapons</div>
 </div>
 
 <div id="mob">
   <div id="jzone"><div id="jbase"><div id="jstick"></div></div></div>
   <div class="mbtn" id="fire-btn">FIRE</div>
   <div class="mbtn" id="roll-btn">ROLL</div>
+  <div class="mbtn" id="swap-btn">SWAP</div>
 </div>
 
 <div id="gameover">
@@ -259,11 +269,14 @@ const ROLL_DUR     = 0.35;
 const ROLL_SPEED   = 15;
 const INV_TIME     = 0.9;
 const MAX_HP       = 100;
-const GUN_DAMAGE   = 34;
-const FIRE_RATE    = 0.095; // seconds between shots
-const MAG          = 30;
-const RELOAD_S     = 1.9;
+const WEAPONS = [
+  { name:'RIFLE',  damage:34, fireRate:0.095, mag:30, startAmmo:90,  reload:1.9, kick:0.18, rx:0.32, ry:-0.22, rz:-0.48 },
+  { name:'SNIPER', damage:95, fireRate:1.2,   mag: 5, startAmmo:20,  reload:2.4, kick:0.28, rx:0.28, ry:-0.26, rz:-0.52 },
+  { name:'PISTOL', damage:22, fireRate:0.28,  mag:12, startAmmo:48,  reload:1.1, kick:0.10, rx:0.26, ry:-0.30, rz:-0.40 },
+];
 const TRACER_LIFE  = 0.06;
+const GRAVITY      = 20;
+const JUMP_SPEED   = 9;
 
 // ── RENDERER ─────────────────────────────────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
@@ -482,6 +495,7 @@ gGeo.computeVertexNormals();
 // Meshes raycasted for bullet impact effects (populated as scene is built)
 const envMeshes = [];
 const obstacles = []; // {x, z, radius} circles for player/enemy collision
+const pickups   = [];
 
 const groundMat = new THREE.MeshStandardMaterial({
   map:          groundAlbedo,
@@ -1049,6 +1063,145 @@ function buildRifle() {
   return g;
 }
 
+function buildSniperRifle() {
+  const g = new THREE.Group();
+  const steel   = pbr(0x1C1C1C, 0.35, 0.85);
+  const dksteel = pbr(0x282828, 0.45, 0.75);
+  const wood    = pbr(0x5A3A1A, 0.88);
+
+  // receiver body (longer)
+  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.076, 0.60), steel);
+  receiver.position.set(0, 0, 0.02); g.add(receiver);
+  // wooden stock
+  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.040, 0.055, 0.26), wood);
+  stock.position.set(0, -0.012, -0.38); g.add(stock);
+  // barrel (long)
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.72, 8), steel);
+  barrel.rotation.x = Math.PI/2; barrel.position.set(0, 0.007, 0.62); g.add(barrel);
+  // bipod-style scope (large)
+  const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.28, 10), dksteel);
+  scope.rotation.x = Math.PI/2; scope.position.set(0, 0.072, 0.05); g.add(scope);
+  const lensF = new THREE.Mesh(new THREE.CircleGeometry(0.032, 10),
+    new THREE.MeshStandardMaterial({ color:0x223344, emissive:0x112233, roughness:0.1, metalness:0.3 }));
+  lensF.position.set(0, 0.072, 0.195); g.add(lensF);
+  const lensB = new THREE.Mesh(new THREE.CircleGeometry(0.028, 10),
+    new THREE.MeshStandardMaterial({ color:0x223344, emissive:0x112233, roughness:0.1, metalness:0.3 }));
+  lensB.position.set(0, 0.072, -0.085); lensB.rotation.y = Math.PI; g.add(lensB);
+  // scope mounts
+  [-0.04, 0.10].forEach(oz => {
+    const mount = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.044, 0.022), dksteel);
+    mount.position.set(0, 0.040, oz); g.add(mount);
+  });
+  // bolt handle
+  const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.055, 6), steel);
+  bolt.rotation.z = Math.PI/2; bolt.position.set(0.050, 0.016, -0.08); g.add(bolt);
+  const boltKnob = new THREE.Mesh(new THREE.SphereGeometry(0.016, 6, 4), steel);
+  boltKnob.position.set(0.070, 0.016, -0.08); g.add(boltKnob);
+
+  // muzzle flash
+  const flash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 6, 4),
+    new THREE.MeshBasicMaterial({ color:0xFFDD44, transparent:true, opacity:0 })
+  );
+  flash.name = 'flash'; flash.position.set(0, 0.007, 1.00); g.add(flash);
+  const muzzlePt = new THREE.Object3D();
+  muzzlePt.name = 'muzzlePoint';
+  muzzlePt.position.set(0, 0.007, 1.00);
+  g.add(muzzlePt);
+
+  return g;
+}
+
+function buildHandgun() {
+  const g = new THREE.Group();
+  const steel   = pbr(0x1C1C1C, 0.35, 0.85);
+  const dksteel = pbr(0x282828, 0.45, 0.75);
+  const grip    = pbr(0x2A2A2A, 0.88);
+
+  // frame/slide body
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.100, 0.28), steel);
+  frame.position.set(0, 0, 0); g.add(frame);
+  // slide on top
+  const slide = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.038, 0.22), dksteel);
+  slide.position.set(0, 0.066, -0.005); g.add(slide);
+  // grip below
+  const gripMesh = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.095, 0.14), grip);
+  gripMesh.position.set(0, -0.090, -0.055); gripMesh.rotation.x = 0.12; g.add(gripMesh);
+  // trigger guard (thin U)
+  const tgBot = new THREE.Mesh(new THREE.BoxGeometry(0.040, 0.008, 0.050), dksteel);
+  tgBot.position.set(0, -0.054, 0.060); g.add(tgBot);
+  const tgF = new THREE.Mesh(new THREE.BoxGeometry(0.040, 0.028, 0.008), dksteel);
+  tgF.position.set(0, -0.044, 0.084); g.add(tgF);
+  // short barrel
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.24, 8), steel);
+  barrel.rotation.x = Math.PI/2; barrel.position.set(0, 0.044, 0.19); g.add(barrel);
+  // rear sight
+  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.014, 0.008), dksteel);
+  sight.position.set(0, 0.090, -0.10); g.add(sight);
+
+  // muzzle flash
+  const flash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, 6, 4),
+    new THREE.MeshBasicMaterial({ color:0xFFDD44, transparent:true, opacity:0 })
+  );
+  flash.name = 'flash'; flash.position.set(0, 0.044, 0.315); g.add(flash);
+  const muzzlePt = new THREE.Object3D();
+  muzzlePt.name = 'muzzlePoint';
+  muzzlePt.position.set(0, 0.044, 0.315);
+  g.add(muzzlePt);
+
+  return g;
+}
+
+// ── PICKUP MESHES ─────────────────────────────────────────────────────────────
+function buildAmmoBox(wIdx) {
+  const g = new THREE.Group();
+  const colors = [0x2A7A2A, 0xAA8A00, 0x2A4A7A];
+  const col = colors[wIdx];
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.55, 0.35, 0.38),
+    new THREE.MeshStandardMaterial({ color:col, roughness:0.7, metalness:0.2, emissive:col, emissiveIntensity:0.18 })
+  );
+  g.add(body);
+  // bright stripe across middle
+  const stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(0.57, 0.06, 0.40),
+    new THREE.MeshStandardMaterial({ color:0xFFFFFF, roughness:0.5, metalness:0.3, emissive:0xCCCCCC, emissiveIntensity:0.4 })
+  );
+  g.add(stripe);
+  return g;
+}
+
+function buildHealthBox() {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.5, 0.5),
+    new THREE.MeshStandardMaterial({ color:0xEEFFEE, roughness:0.6, metalness:0.1, emissive:0x224422, emissiveIntensity:0.2 })
+  );
+  g.add(body);
+  const crossMat = new THREE.MeshStandardMaterial({ color:0xFF2020, roughness:0.5, emissive:0xDD0000, emissiveIntensity:0.6 });
+  // cross: horizontal bar
+  const h = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.10, 0.52), crossMat);
+  g.add(h);
+  // cross: vertical bar
+  const v = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.42, 0.52), crossMat);
+  g.add(v);
+  return g;
+}
+
+function addPickup(type, x, z) {
+  let mesh;
+  if (type === 'health') {
+    mesh = buildHealthBox();
+  } else {
+    mesh = buildAmmoBox(type);
+  }
+  const baseY = (type === 'health') ? 0.28 : 0.20;
+  mesh.position.set(x, baseY, z);
+  scene.add(mesh);
+  pickups.push({ type, mesh, x, z, baseY, active:true, respawnTimer:0, phase: Math.random()*Math.PI*2 });
+}
+
 // ── PLAYER CLASS ─────────────────────────────────────────────────────────────
 class Player {
   constructor() {
@@ -1056,17 +1209,36 @@ class Player {
     this.mesh.position.set(0, 0, 0);
     scene.add(this.mesh);
 
-    // viewmodel rifle: attached to camera so it moves/aims with view
-    this.rifle = buildRifle();
-    this.rifle.rotation.y = Math.PI;          // barrel now points -Z (camera forward)
-    this.rifle.position.set(0.32, -0.22, -0.48);
-    camera.add(this.rifle);
+    // viewmodel guns: attached to camera
+    const rifle  = buildRifle();
+    rifle.rotation.y = Math.PI;
+    rifle.position.set(WEAPONS[0].rx, WEAPONS[0].ry, WEAPONS[0].rz);
+    camera.add(rifle);
+
+    const sniper = buildSniperRifle();
+    sniper.rotation.y = Math.PI;
+    sniper.position.set(WEAPONS[1].rx, WEAPONS[1].ry, WEAPONS[1].rz);
+    sniper.visible = false;
+    camera.add(sniper);
+
+    const pistol = buildHandgun();
+    pistol.rotation.y = Math.PI;
+    pistol.position.set(WEAPONS[2].rx, WEAPONS[2].ry, WEAPONS[2].rz);
+    pistol.visible = false;
+    camera.add(pistol);
+
+    this.gunModels = [rifle, sniper, pistol];
+    this.weaponIdx = 0;
+
+    // keep legacy this.rifle reference for backward compat in shoot()
+    this.rifle = rifle;
 
     // hide body — first person, we don't see ourselves
     this.mesh.visible = false;
 
     this.hp          = MAX_HP;
-    this.ammo        = MAG;
+    this.magazines   = WEAPONS.map(w => w.mag);
+    this.reserves    = WEAPONS.map(w => w.startAmmo);
     this.reloading   = false;
     this.reloadTimer = 0;
     this.fireTimer   = 0;
@@ -1079,17 +1251,34 @@ class Player {
     this.facingAngle = 0;
     this.walkClock   = 0;
     this.shootClock  = 0;
+    this.velY        = 0;
+    this.onGround    = true;
   }
 
   get pos() { return this.mesh.position; }
+  get gun()  { return this.gunModels[this.weaponIdx]; }
+
+  switchWeapon(idx) {
+    if (idx === this.weaponIdx || this.dead) return;
+    this.gun.visible = false;
+    this.weaponIdx   = idx;
+    this.gun.visible = true;
+    // cancel any in-progress reload
+    this.reloading = false;
+    document.getElementById('reload-text').style.opacity = '0';
+    updateAmmoHUD();
+  }
 
   startFire() { this.firing = true; }
   stopFire()  { this.firing = false; }
 
   reload() {
-    if (this.reloading || this.ammo === MAG || this.dead) return;
+    const idx = this.weaponIdx;
+    const w   = WEAPONS[idx];
+    if (this.reloading || this.dead) return;
+    if (this.magazines[idx] >= w.mag || this.reserves[idx] <= 0) return;
     this.reloading = true;
-    this.reloadTimer = RELOAD_S;
+    this.reloadTimer = w.reload;
     playReload();
     document.getElementById('reload-text').style.opacity = '1';
   }
