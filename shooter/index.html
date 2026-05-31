@@ -625,6 +625,16 @@ for (let i = 0; i < 32; i++) {
   scene.add(m);
 }
 
+// ── PICKUPS ────────────────────────────────────────────────────────────────────
+// Rifle ammo (type 0)
+[[22,18],[-28,12],[35,-20],[-18,32],[50,5],[-45,25],[15,-50],[-55,-10]].forEach(([x,z])=>addPickup(0,x,z));
+// Sniper ammo (type 1)
+[[42,-15],[-38,38],[55,-35],[-20,-55]].forEach(([x,z])=>addPickup(1,x,z));
+// Pistol ammo (type 2)
+[[12,45],[-48,-18],[30,30],[-35,-40],[58,20],[-25,55]].forEach(([x,z])=>addPickup(2,x,z));
+// Health
+[[20,-25],[-40,10],[0,50],[45,-40],[-55,30],[25,60]].forEach(([x,z])=>addPickup('health',x,z));
+
 // ── COLLISION HELPERS ─────────────────────────────────────────────────────────
 const boxObstacles = []; // {minX,maxX,minZ,maxZ,dead} axis-aligned boxes
 
@@ -1284,24 +1294,26 @@ class Player {
   }
 
   shoot() {
-    if (this.ammo <= 0 || this.reloading || this.dead) {
-      if (this.ammo <= 0 && !this.reloading) this.reload();
+    const idx = this.weaponIdx;
+    const w   = WEAPONS[idx];
+    if (this.magazines[idx] <= 0 || this.reloading || this.dead) {
+      if (this.magazines[idx] <= 0 && !this.reloading) this.reload();
       return;
     }
-    this.ammo--;
-    this.fireTimer = FIRE_RATE;
+    this.magazines[idx]--;
+    this.fireTimer = w.fireRate;
     ensureAudio();
     playShot();
 
     // muzzle flash
-    const flash = this.rifle.getObjectByName('flash');
+    const flash = this.gun.getObjectByName('flash');
     if (flash) {
       flash.material.opacity = 0.95;
       setTimeout(() => { if (flash.material) flash.material.opacity = 0; }, 55);
     }
     muzzleLight.intensity = 6;
     // world position of muzzle
-    const muzzlePt = this.rifle.getObjectByName('muzzlePoint');
+    const muzzlePt = this.gun.getObjectByName('muzzlePoint');
     if (muzzlePt) {
       muzzlePt.getWorldPosition(muzzleLight.position);
     }
@@ -1310,9 +1322,10 @@ class Player {
     // screen shake
     shakeAmt = 0.055;
 
-    // recoil on rifle mesh
-    this.rifle.rotation.x = -0.18;
-    setTimeout(() => { if (this.rifle) this.rifle.rotation.x = 0; }, 80);
+    // recoil on gun mesh
+    const curGun = this.gun;
+    curGun.rotation.x = -w.kick;
+    setTimeout(() => { if (curGun) curGun.rotation.x = 0; }, 80);
 
     // raycast hit
     const ray = new THREE.Raycaster();
@@ -1326,14 +1339,14 @@ class Player {
       for (const e of enemies) {
         let found = false;
         e.mesh.traverse(c => { if (c === hitObj) found = true; });
-        if (found) { e.hit(GUN_DAMAGE, hits[0].point); break; }
+        if (found) { e.hit(w.damage, hits[0].point); break; }
       }
       showHitMarker();
     }
 
     // bullet tracer + env impact when shot misses enemies
     const from = new THREE.Vector3();
-    const muzzlePt2 = this.rifle.getObjectByName('muzzlePoint');
+    const muzzlePt2 = this.gun.getObjectByName('muzzlePoint');
     if (muzzlePt2) muzzlePt2.getWorldPosition(from);
 
     let to;
@@ -1355,6 +1368,7 @@ class Player {
     spawnTracer(from, to);
 
     updateAmmoHUD();
+    if (this.magazines[idx] <= 0) this.reload();
   }
 
   roll(dir) {
@@ -1381,8 +1395,13 @@ class Player {
     if (this.reloading) {
       this.reloadTimer -= dt;
       if (this.reloadTimer <= 0) {
+        const ridx = this.weaponIdx;
+        const rw   = WEAPONS[ridx];
+        const needed  = rw.mag - this.magazines[ridx];
+        const take    = Math.min(needed, this.reserves[ridx]);
+        this.magazines[ridx] += take;
+        this.reserves[ridx]  -= take;
         this.reloading = false;
-        this.ammo = MAG;
         document.getElementById('reload-text').style.opacity = '0';
         updateAmmoHUD();
       }
@@ -1404,6 +1423,15 @@ class Player {
       md = this.rollDir.clone(); speed = ROLL_SPEED;
       if (this.rollTime <= 0) this.rolling = false;
     }
+
+    // jump
+    if (keys['Space'] && this.onGround && !this.dead) {
+      this.velY = JUMP_SPEED;
+      this.onGround = false;
+    }
+    this.velY     -= GRAVITY * dt;
+    this.pos.y    += this.velY * dt;
+    if (this.pos.y <= 0) { this.pos.y = 0; this.velY = 0; this.onGround = true; }
 
     this.pos.addScaledVector(md, speed * dt);
     this.pos.x = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.pos.x));
@@ -1428,13 +1456,15 @@ class Player {
     }
 
     // viewmodel bob while walking
+    const cw = WEAPONS[this.weaponIdx];
+    const g  = this.gun;
     if (md.lengthSq() > 0.01) {
       this.shootClock += dt * 9;
-      this.rifle.position.y = -0.22 + Math.sin(this.shootClock) * 0.012;
-      this.rifle.position.x =  0.32 + Math.sin(this.shootClock * 0.5) * 0.008;
+      g.position.y = cw.ry + Math.sin(this.shootClock) * 0.012;
+      g.position.x = cw.rx + Math.sin(this.shootClock * 0.5) * 0.008;
     } else {
-      this.rifle.position.y += (-0.22 - this.rifle.position.y) * 0.15;
-      this.rifle.position.x += ( 0.32 - this.rifle.position.x) * 0.15;
+      g.position.y += (cw.ry - g.position.y) * 0.15;
+      g.position.x += (cw.rx - g.position.x) * 0.15;
     }
   }
 }
@@ -1653,6 +1683,43 @@ function tickTracers(dt) {
   }
 }
 
+// ── PICKUP TICK ───────────────────────────────────────────────────────────────
+function tickPickups(dt) {
+  const px = player.pos.x, pz = player.pos.z;
+  for (const p of pickups) {
+    if (!p.active) {
+      p.respawnTimer -= dt;
+      if (p.respawnTimer <= 0) {
+        p.active = true;
+        p.mesh.visible = true;
+      }
+      continue;
+    }
+    // bob and spin
+    p.phase += dt;
+    p.mesh.position.y = p.baseY + Math.sin(p.phase) * 0.09;
+    p.mesh.rotation.y += dt * 1.2;
+    // collection check
+    const dx = px - p.x, dz = pz - p.z;
+    if (dx*dx + dz*dz < 1.5*1.5) {
+      if (p.type === 'health') {
+        player.hp = Math.min(MAX_HP, player.hp + 40);
+        updateHealthHUD();
+        p.respawnTimer = 25;
+      } else {
+        const wIdx = p.type;
+        const cap  = WEAPONS[wIdx].startAmmo * 2;
+        const add  = [30, 5, 12][wIdx];
+        player.reserves[wIdx] = Math.min(cap, player.reserves[wIdx] + add);
+        updateAmmoHUD();
+        p.respawnTimer = 20;
+      }
+      p.active = false;
+      p.mesh.visible = false;
+    }
+  }
+}
+
 // ── WAVE SYSTEM ──────────────────────────────────────────────────────────────
 function nextWave() {
   wave++;
@@ -1678,7 +1745,9 @@ function updateHealthHUD() {
     player.hp > 50 ? '#E53935' : player.hp > 25 ? '#FF9800' : '#FF1744';
 }
 function updateAmmoHUD() {
-  document.getElementById('ac').textContent = player.ammo;
+  document.getElementById('ac').textContent = player.magazines[player.weaponIdx];
+  document.getElementById('ar').textContent = player.reserves[player.weaponIdx];
+  document.querySelectorAll('.wslot').forEach((el,i) => el.classList.toggle('active', i===player.weaponIdx));
 }
 function updateBunkerHUD() {
   const pct = bunker.hp / BUNKER_MAX_HP;
@@ -1743,6 +1812,9 @@ document.addEventListener('keydown', e => {
     const d = buildDir(); player.roll(d);
   }
   if (e.code === 'KeyR') player.reload();
+  if (e.code === 'Digit1') player.switchWeapon(0);
+  if (e.code === 'Digit2') player.switchWeapon(1);
+  if (e.code === 'Digit3') player.switchWeapon(2);
 });
 document.addEventListener('keyup', e => keys[e.code] = false);
 
@@ -1779,6 +1851,10 @@ document.addEventListener('mousedown', e => {
 document.addEventListener('mouseup', e => {
   if (e.button === 0) player.stopFire();
 });
+document.addEventListener('wheel', e => {
+  if (document.pointerLockElement !== canvasEl) return;
+  player.switchWeapon((player.weaponIdx + (e.deltaY > 0 ? 1 : -1) + 3) % 3);
+}, { passive: true });
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 const joyDir = new THREE.Vector2();
@@ -1850,11 +1926,16 @@ document.getElementById('roll-btn').addEventListener('touchstart', e => {
   else player.roll(new THREE.Vector3(-Math.sin(camYaw),0,-Math.cos(camYaw)));
 }, {passive:false});
 
+document.getElementById('swap-btn').addEventListener('touchstart', e => {
+  e.preventDefault();
+  player.switchWeapon((player.weaponIdx + 1) % 3);
+}, {passive:false});
+
 document.addEventListener('touchstart', e => {
   for (const t of e.changedTouches) {
     if (t.clientX > window.innerWidth*0.5 && ctid===null) {
       const tgt=t.target;
-      if (tgt.id!=='fire-btn'&&tgt.id!=='roll-btn') {
+      if (tgt.id!=='fire-btn'&&tgt.id!=='roll-btn'&&tgt.id!=='swap-btn') {
         ctid=t.identifier; ctlast={x:t.clientX,y:t.clientY};
       }
     }
@@ -1902,6 +1983,7 @@ function loop(now) {
     enemies.forEach(e => e.update(dt));
     tickParticles(dt);
     tickTracers(dt);
+    tickPickups(dt);
   }
 
   tickCamera(dt);
