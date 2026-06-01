@@ -183,6 +183,59 @@
     #controls-hint { display: none; }
     #lock-overlay { display: none !important; }
   }
+
+  #minimap-wrap {
+    position: absolute; top: 20px; left: 20px;
+  }
+  #minimap-label { color: #666; font-size: 10px; letter-spacing: 2px; margin-bottom: 3px; }
+  #minimap {
+    display: block; width: 160px; height: 160px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.52);
+    border-radius: 2px;
+    image-rendering: pixelated;
+  }
+
+  #killfeed {
+    position: absolute; top: 196px; left: 20px;
+    pointer-events: none; width: 200px;
+  }
+  .kf-entry {
+    font-size: 12px; letter-spacing: 0.5px;
+    padding: 3px 7px; margin-bottom: 3px;
+    background: rgba(0,0,0,0.45);
+    border-left: 3px solid #FF3322;
+    animation: kfIn 4s forwards;
+    white-space: nowrap; overflow: hidden;
+  }
+  @keyframes kfIn {
+    0%   { opacity: 0; transform: translateX(-12px); }
+    10%  { opacity: 1; transform: translateX(0); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  #wave-timer {
+    position: absolute; top: 48%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FFD700; font-size: 26px; font-weight: bold;
+    letter-spacing: 3px;
+    text-shadow: 0 0 18px rgba(255,210,0,0.65), 2px 2px 0 #000;
+    opacity: 0; transition: opacity 0.25s;
+    pointer-events: none;
+  }
+
+  .dmg-num {
+    position: absolute; pointer-events: none;
+    font-weight: bold; font-family: 'Segoe UI', sans-serif;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+    transform: translateX(-50%);
+    animation: dmgFloat 0.85s ease-out forwards;
+  }
+  @keyframes dmgFloat {
+    0%   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-58px); opacity: 0; }
+  }
 </style>
 </head>
 <body>
@@ -191,6 +244,12 @@
 <div id="vignette"></div>
 
 <div id="hud">
+  <div id="minimap-wrap">
+    <div id="minimap-label">MAP</div>
+    <canvas id="minimap" width="160" height="160"></canvas>
+  </div>
+  <div id="killfeed"></div>
+  <div id="wave-timer"></div>
   <div id="xhair">
     <div class="xl" id="xl"></div><div class="xl" id="xr"></div>
     <div class="xl" id="xu"></div><div class="xl" id="xd"></div>
@@ -1533,6 +1592,8 @@ class Player {
 // ── ENEMY CLASS ──────────────────────────────────────────────────────────────
 let enemies = [];
 let wave = 0, kills = 0;
+let waveCountdownVal    = 0;
+let waveCountdownActive = false;
 
 class Enemy {
   constructor(x, z) {
@@ -1576,6 +1637,7 @@ class Enemy {
   hit(dmg, point) {
     if (this.dead) return;
     this.hp -= dmg;
+    spawnDamageNumber(dmg, (point || this.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0))));
     this._drawBar();
     playHit();
     const dir = this.mesh.position.clone().sub(player.pos).normalize();
@@ -1594,6 +1656,7 @@ class Enemy {
   _die() {
     this.dead = true;
     kills++;
+    addKillFeed();
     playDeath();
     spawnBlood(this.mesh.position.clone().add(new THREE.Vector3(0, 1, 0)), 16);
     let t = 0;
@@ -1781,6 +1844,96 @@ function tickPickups(dt) {
   }
 }
 
+// ── MINIMAP ───────────────────────────────────────────────────────────────────
+const mmCanvas = document.getElementById('minimap');
+const mmCtx    = mmCanvas.getContext('2d');
+const MM       = 160;
+
+function updateMinimap() {
+  mmCtx.clearRect(0, 0, MM, MM);
+  // map arena coords: world(-ARENA..ARENA) -> canvas(0..MM)
+  const wx = x  => (x  + ARENA) * (MM / (ARENA * 2));
+  const wz = z  => (z  + ARENA) * (MM / (ARENA * 2));
+
+  // arena border
+  mmCtx.strokeStyle = 'rgba(255,255,255,0.20)';
+  mmCtx.lineWidth = 1;
+  mmCtx.strokeRect(0.5, 0.5, MM-1, MM-1);
+
+  // bunker outline
+  if (!bunker.dead) {
+    mmCtx.fillStyle = 'rgba(140,130,110,0.45)';
+    mmCtx.fillRect(wx(-6), wz(-5), 12*(MM/(ARENA*2)), 10*(MM/(ARENA*2)));
+  }
+
+  // pickups
+  pickups.forEach(p => {
+    if (!p.active) return;
+    const col = p.type === 'health' ? '#FF4455'
+              : p.type === 0 ? '#44DD44'
+              : p.type === 1 ? '#FFCC00'
+              : '#4499FF';
+    mmCtx.fillStyle = col;
+    mmCtx.beginPath();
+    mmCtx.arc(wx(p.x), wz(p.z), 2.2, 0, Math.PI*2);
+    mmCtx.fill();
+  });
+
+  // enemies
+  mmCtx.fillStyle = '#FF2222';
+  enemies.forEach(e => {
+    if (e.dead) return;
+    mmCtx.beginPath();
+    mmCtx.arc(wx(e.mesh.position.x), wz(e.mesh.position.z), 2.8, 0, Math.PI*2);
+    mmCtx.fill();
+  });
+
+  // player triangle (white, rotated by camYaw)
+  const px = wx(player.pos.x), pz = wz(player.pos.z);
+  mmCtx.save();
+  mmCtx.translate(px, pz);
+  mmCtx.rotate(camYaw + Math.PI);
+  mmCtx.fillStyle = '#FFFFFF';
+  mmCtx.beginPath();
+  mmCtx.moveTo(0, -5.5);
+  mmCtx.lineTo(-3.5, 4);
+  mmCtx.lineTo(3.5, 4);
+  mmCtx.closePath();
+  mmCtx.fill();
+  mmCtx.restore();
+}
+
+// ── KILL FEED ─────────────────────────────────────────────────────────────────
+function addKillFeed() {
+  const feed = document.getElementById('killfeed');
+  const w    = WEAPONS[player.weaponIdx];
+  const cols = { RIFLE:'#44CC44', SNIPER:'#FFCC00', PISTOL:'#88AADD' };
+  const col  = cols[w.name] || '#FF4444';
+  const el   = document.createElement('div');
+  el.className = 'kf-entry';
+  el.innerHTML = `<span style="color:${col}">${w.name}</span> · ZOMBIE DOWN`;
+  feed.appendChild(el);
+  while (feed.children.length > 5) feed.removeChild(feed.firstChild);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 4000);
+}
+
+// ── FLOATING DAMAGE NUMBERS ───────────────────────────────────────────────────
+function spawnDamageNumber(dmg, worldPos) {
+  const ndc = worldPos.clone().project(camera);
+  if (ndc.z > 1) return; // behind camera
+  const x = ( ndc.x * 0.5 + 0.5) * window.innerWidth;
+  const y = (-ndc.y * 0.5 + 0.5) * window.innerHeight;
+  const el = document.createElement('div');
+  el.className  = 'dmg-num';
+  el.textContent = dmg;
+  el.style.left     = x + 'px';
+  el.style.top      = y + 'px';
+  el.style.color    = dmg >= 60 ? '#FFD700' : '#FF6644';
+  el.style.fontSize = dmg >= 60 ? '24px'    : '17px';
+  document.getElementById('hud').appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 860);
+}
+
 // ── WAVE SYSTEM ──────────────────────────────────────────────────────────────
 function nextWave() {
   wave++;
@@ -1795,7 +1948,13 @@ function nextWave() {
   updateInfo();
 }
 function checkWaveEnd() {
-  if (enemies.every(e => e.dead)) setTimeout(nextWave, 3000);
+  if (enemies.every(e => e.dead) && !waveCountdownActive && wave > 0) {
+    waveCountdownActive = true;
+    waveCountdownVal    = 3;
+    const el = document.getElementById('wave-timer');
+    el.textContent = 'NEXT WAVE IN 3';
+    el.style.opacity = '1';
+  }
 }
 
 // ── HUD ───────────────────────────────────────────────────────────────────────
@@ -2047,6 +2206,17 @@ function loop(now) {
     tickParticles(dt);
     tickTracers(dt);
     tickPickups(dt);
+    updateMinimap();
+    if (waveCountdownActive) {
+      waveCountdownVal -= dt;
+      const el = document.getElementById('wave-timer');
+      el.textContent = `NEXT WAVE IN ${Math.ceil(Math.max(waveCountdownVal, 0))}`;
+      if (waveCountdownVal <= 0) {
+        waveCountdownActive = false;
+        el.style.opacity = '0';
+        nextWave();
+      }
+    }
   }
 
   // decay chromatic aberration toward resting value each frame
