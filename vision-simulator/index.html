@@ -213,6 +213,22 @@
   }
   #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
   .sample-thumb { width: 26px; height: 20px; border-radius: 4px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
+
+  /* ===== Onboarding overlay ===== */
+  .onboard-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(10,15,22,0.97); display: flex; align-items: center; justify-content: center; padding: 28px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: opacity 0.4s; }
+  .onboard-overlay.hidden { opacity: 0; pointer-events: none; }
+  .onboard-card { max-width: 340px; width: 100%; text-align: center; }
+  .onboard-icon { width: 64px; height: 64px; margin: 0 auto 16px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+  .onboard-card h2 { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; margin: 0 0 4px; color: var(--ink); }
+  .onboard-byline { color: var(--accent); font-size: 13px; margin: 0 0 28px; }
+  .onboard-steps { text-align: left; display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+  .onboard-step { display: flex; align-items: flex-start; gap: 14px; }
+  .onboard-step-num { background: var(--accent); color: #1a1208; font-weight: 700; font-size: 12px; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .onboard-step-text { font-size: 14px; color: var(--ink-dim); line-height: 1.45; }
+  .onboard-step-text strong { color: var(--ink); font-weight: 600; }
+  .onboard-disclaimer { font-size: 11px; color: var(--ink-mute); margin: 0 0 22px; }
+  .onboard-btn { background: var(--accent); color: #1a1208; border: none; border-radius: 999px; padding: 15px 0; font-size: 16px; font-weight: 700; font-family: 'Inter Tight', sans-serif; cursor: pointer; width: 100%; letter-spacing: 0.01em; -webkit-tap-highlight-color: transparent; }
+  .onboard-btn:active { opacity: 0.85; }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -225,6 +241,22 @@
   <meta name="twitter:image" content="https://rjlcevans.com/family.jpg">
 </head>
 <body>
+<div id="onboarding" class="onboard-overlay">
+  <div class="onboard-card">
+    <div class="onboard-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+    </div>
+    <h2>Vision Simulator</h2>
+    <p class="onboard-byline">by Dr. Ryan Evans, OD</p>
+    <div class="onboard-steps">
+      <div class="onboard-step"><span class="onboard-step-num">1</span><span class="onboard-step-text"><strong>Choose a condition</strong> — cataracts, glaucoma, AMD, color blindness, and more</span></div>
+      <div class="onboard-step"><span class="onboard-step-num">2</span><span class="onboard-step-text"><strong>Adjust severity</strong> using the stage buttons that appear below</span></div>
+      <div class="onboard-step"><span class="onboard-step-num">3</span><span class="onboard-step-text"><strong>Use the camera or a sample image</strong> to see the simulation in real time</span></div>
+    </div>
+    <p class="onboard-disclaimer">For educational use only · Not a diagnostic tool</p>
+    <button class="onboard-btn" id="onboardDismiss">Get Started</button>
+  </div>
+</div>
 <a href="/" id="backToSite" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
 <div class="wrap">
 
@@ -269,8 +301,8 @@
       <span id="compareLabel">Compare: Off</span>
     </button>
     <button class="btn ghost tool" id="snapshot">
-      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
-      Snapshot
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Share
     </button>
   </div>
 
@@ -368,6 +400,14 @@
   let condition = 'none';
   let compareMode = false;
   let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
+
+  function haptic(style) {
+    try {
+      const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+      if (H) { H.impact({ style: style || 'LIGHT' }); return; }
+      if (navigator.vibrate) navigator.vibrate(style === 'MEDIUM' ? 15 : 8);
+    } catch(e) {}
+  }
 
   const defaults = {
     myopia:      { blurSigma: 8 },
@@ -1242,6 +1282,7 @@
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
+    haptic('MEDIUM');
     const wasSelected = btn.getAttribute('aria-pressed') === 'true';
     const isCollapsed = conditionsEl.classList.contains('has-selection');
     conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
@@ -1465,6 +1506,10 @@
     img.src = c.toDataURL('image/png');
   }
 
+  document.getElementById('controlsPanel').addEventListener('click', e => {
+    if (e.target.closest('.preset')) haptic('LIGHT');
+  });
+
   document.getElementById('startCam').addEventListener('click', startCamera);
   document.getElementById('stopCam').addEventListener('click', stopCamera);
   document.getElementById('flipCam').addEventListener('click', flipCamera);
@@ -1532,6 +1577,20 @@
 
   window.addEventListener('beforeunload', stopCamera);
 })();
+</script>
+
+<script>
+  // Onboarding: show once per install, then dismiss to localStorage
+  (function() {
+    var el = document.getElementById('onboarding');
+    if (!el) return;
+    if (localStorage.getItem('vs_welcomed_v2')) { el.style.display = 'none'; return; }
+    document.getElementById('onboardDismiss').addEventListener('click', function() {
+      el.classList.add('hidden');
+      localStorage.setItem('vs_welcomed_v2', '1');
+      setTimeout(function() { el.style.display = 'none'; }, 420);
+    });
+  })();
 </script>
 
 <script>
