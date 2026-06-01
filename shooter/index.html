@@ -323,7 +323,7 @@ import { GLTFLoader }            from 'three/addons/loaders/GLTFLoader.js';
 import { SkeletonUtils }         from 'three/addons/utils/SkeletonUtils.js';
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
-const ARENA        = 80;
+const ARENA        = 40;
 const PLAYER_SPEED = 6.2;
 const ENEMY_SPEED  = 3.4;
 const ROLL_DUR     = 0.35;
@@ -375,8 +375,8 @@ sun.castShadow = true;
 sun.shadow.mapSize.setScalar(2048);
 sun.shadow.camera.near   = 1;
 sun.shadow.camera.far    = 130;
-sun.shadow.camera.left   = sun.shadow.camera.bottom = -60;
-sun.shadow.camera.right  = sun.shadow.camera.top    =  60;
+sun.shadow.camera.left   = sun.shadow.camera.bottom = -45;
+sun.shadow.camera.right  = sun.shadow.camera.top    =  45;
 sun.shadow.bias = -0.0008;
 scene.add(sun);
 const fillLight = new THREE.DirectionalLight(0x6688BB, 0.4);
@@ -602,14 +602,11 @@ function addCrate(x, z) {
   [0,-22],[18,18],[-18,18],
 ].forEach(([x,z]) => addCrate(x,z));
 
-// outer crates for doubled arena
+// perimeter cover for the smaller arena
 [
-  [40,10],[-40,10],[40,-10],[-40,-10],
-  [55,0], [-55,0], [0,55],  [0,-55],
-  [45,30],[-45,30],[45,-30],[-45,-30],
-  [30,50],[-30,50],[30,-50],[-30,-50],
-  [60,20],[-60,20],[60,-20],[-60,-20],
-  [35,-55],[-35,-55],[55,40],[-55,40],
+  [32,8],[-32,8],[32,-8],[-32,-8],
+  [28,22],[-28,22],[28,-22],[-28,-22],
+  [10,-32],[-10,-32],[10,32],[-10,32],
 ].forEach(([x,z]) => addCrate(x,z));
 
 // ── TREES ────────────────────────────────────────────────────────────────────
@@ -656,13 +653,13 @@ for (let i = 0; i < 32; i++) {
 
 // ── PICKUPS ────────────────────────────────────────────────────────────────────
 // Rifle ammo (type 0)
-[[22,18],[-28,12],[35,-20],[-18,32],[50,5],[-45,25],[15,-50],[-55,-10]].forEach(([x,z])=>addPickup(0,x,z));
+[[22,18],[-28,12],[35,-20],[-18,28],[8,-30],[-30,-15]].forEach(([x,z])=>addPickup(0,x,z));
 // Sniper ammo (type 1)
-[[42,-15],[-38,38],[55,-35],[-20,-55]].forEach(([x,z])=>addPickup(1,x,z));
+[[-34,10],[28,-28]].forEach(([x,z])=>addPickup(1,x,z));
 // Pistol ammo (type 2)
-[[12,45],[-48,-18],[30,30],[-35,-40],[58,20],[-25,55]].forEach(([x,z])=>addPickup(2,x,z));
+[[25,28],[-25,18],[15,-34],[-32,20],[28,-10]].forEach(([x,z])=>addPickup(2,x,z));
 // Health
-[[20,-25],[-40,10],[0,50],[45,-40],[-55,30],[25,60]].forEach(([x,z])=>addPickup('health',x,z));
+[[20,-24],[-24,28],[32,5],[-15,-28]].forEach(([x,z])=>addPickup('health',x,z));
 
 // ── COLLISION HELPERS ─────────────────────────────────────────────────────────
 const boxObstacles = []; // {minX,maxX,minZ,maxZ,dead} axis-aligned boxes
@@ -1859,7 +1856,7 @@ function spawnDamageNumber(dmg, worldPos) {
 // ── WAVE SYSTEM ──────────────────────────────────────────────────────────────
 function nextWave() {
   wave++;
-  const count = 16 + wave * 8;
+  const count = 8 + wave * 4;
   const el = document.getElementById('wave-announce');
   el.textContent = `WAVE ${wave}`; el.style.opacity = '1';
   setTimeout(() => el.style.opacity = '0', 2200);
