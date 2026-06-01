@@ -1892,7 +1892,7 @@ function updateMinimap() {
   const px = wx(player.pos.x), pz = wz(player.pos.z);
   mmCtx.save();
   mmCtx.translate(px, pz);
-  mmCtx.rotate(camYaw + Math.PI);
+  mmCtx.rotate(-camYaw);
   mmCtx.fillStyle = '#FFFFFF';
   mmCtx.beginPath();
   mmCtx.moveTo(0, -5.5);
