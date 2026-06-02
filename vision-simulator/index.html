@@ -124,7 +124,13 @@
   .empty-state svg { animation: eyePulse 2.8s ease-in-out infinite; }
   #fadeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: 0; }
 
-  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; align-items: center; }
+  .cam-row { flex-wrap: nowrap; }
+  .btn.icon-btn { padding: 10px 13px; justify-content: center; }
+  .btn.icon-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+  #sampleRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+  #sampleRow::-webkit-scrollbar { display: none; }
+  #sampleRow .btn[data-sample] { flex-shrink: 0; }
   .btn {
     appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
     padding: 11px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
@@ -316,11 +322,20 @@
     </div>
   </div>
 
+  <div class="source-row cam-row">
+    <button class="btn primary" id="startCam" style="flex:1;">Start Camera</button>
+    <button class="btn ghost icon-btn" id="stopCam" title="Stop camera">
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+    </button>
+    <button class="btn ghost icon-btn" id="flipCam" title="Flip camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15a9 9 0 0 0 14.85 3.36L23 14"/></svg>
+    </button>
+  </div>
+
   <div class="source-row">
-    <button class="btn primary" id="startCam">Start Camera</button>
-    <button class="btn ghost" id="stopCam">Stop</button>
-    <button class="btn ghost" id="flipCam">Flip Camera</button>
-    <label class="btn btn-file">Upload Image
+    <label class="btn btn-file ghost" style="flex:1;">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
     <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
@@ -334,7 +349,6 @@
   </div>
 
   <div class="source-row" id="sampleRow">
-    <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
     <button class="btn ghost" data-sample="chart">
       <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
       Eye Chart
