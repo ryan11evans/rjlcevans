@@ -669,48 +669,20 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur scales aggressively so text is unreadable at max severity.
-    const baseBlur = s * 70;
-    ctx.filter = `blur(${baseBlur}px) contrast(${1 - s * 0.72}) brightness(${1 - s * 0.5})`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
+    // Blur using the same quality down-scale approach as myopia
+    applyBlur(s * 22);
 
-    // Additive bloom — bright sources blow into halos; intensity grows with s.
-    if (s > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      const passes = [
-        { con: 1.8 + s * 2,   bri: 1.5 + s * 2,   blur: 4  + s * 28,  a: Math.min(1, 0.7  * s) },
-        { con: 1.5 + s * 1.5, bri: 1.3 + s * 2.5,  blur: 18 + s * 80,  a: Math.min(1, 0.85 * s) },
-        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 180, a: Math.min(1, 0.9  * s) },
-        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 280, a: Math.min(1, 0.75 * s) },
-      ];
-      for (const p of passes) {
-        ctx.globalAlpha = p.a;
-        ctx.filter = `contrast(${p.con}) brightness(${p.bri}) blur(${p.blur}px)`;
-        ctx.drawImage(sourceCanvas, 0, 0);
-      }
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-    }
-
-    // Amber-brown multiply tint — warms the scene (nuclear sclerosis).
+    // Amber-brown multiply tint — nuclear sclerosis progression
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(155, 88, 35, ${0.2 + s * 0.5})`;
+    ctx.fillStyle = `rgba(155, 88, 35, ${0.15 + s * 0.55})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Blue-grey haze that rises with severity — represents scatter and the
-    // perceived cool shift as the brunescent lens blocks warm wavelengths.
-    if (s > 0.2) {
-      const blueAlpha = Math.pow(Math.max(0, s - 0.2) / 0.8, 1.5) * 0.55;
-      ctx.fillStyle = `rgba(60, 80, 140, ${blueAlpha})`;
+    // Dark veil kicks in past halfway — makes severe end truly unreadable
+    if (s > 0.4) {
+      ctx.fillStyle = `rgba(30, 15, 5, ${Math.pow((s - 0.4) / 0.6, 2) * 0.7})`;
       ctx.fillRect(0, 0, w, h);
     }
-
-    // Dense dark veil — quadratic ramp makes final 20% essentially opaque.
-    ctx.fillStyle = `rgba(20, 12, 5, ${s * s * 0.92})`;
-    ctx.fillRect(0, 0, w, h);
   }
 
   function applyGlaucoma(stage) {
