@@ -103,7 +103,23 @@
     border-radius: 999px; pointer-events: none; display: none;
   }
   .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
-  .empty-state svg { opacity: 0.3; }
+  .empty-state-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; }
+  .empty-state-icon::before, .empty-state-icon::after {
+    content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    border: 1.5px solid var(--ink-mute); opacity: 0;
+    animation: eyeRipple 2.8s ease-out infinite;
+  }
+  .empty-state-icon::after { animation-delay: 1.4s; }
+  @keyframes eyeRipple {
+    0% { transform: scale(0.75); opacity: 0.5; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+  @keyframes eyePulse {
+    0%, 100% { opacity: 0.28; }
+    50% { opacity: 0.55; }
+  }
+  .empty-state svg { animation: eyePulse 2.8s ease-in-out infinite; }
+  #fadeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: 0; }
 
   .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
   .btn {
@@ -277,13 +293,16 @@
       <video id="video" autoplay playsinline muted></video>
       <canvas id="sourceCanvas"></canvas>
       <canvas id="stageCanvas"></canvas>
+      <canvas id="fadeCanvas"></canvas>
       <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
       <div class="compare-line" id="compareLine"></div>
       <div class="compare-tag left" id="compareTagL">Normal</div>
       <div class="compare-tag right" id="compareTagR">Impaired</div>
       <div class="active-badge" id="activeBadge"></div>
       <div class="empty-state" id="emptyState">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        <div class="empty-state-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        </div>
         <div>Start the camera or upload an image to begin.</div>
       </div>
     </div>
@@ -382,6 +401,8 @@
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
   const stageCanvas = document.getElementById('stageCanvas');
+  const fadeCanvas = document.getElementById('fadeCanvas');
+  const fadeCtx = fadeCanvas.getContext('2d');
   const overlay = document.getElementById('overlay');
   const emptyState = document.getElementById('emptyState');
   const ctrlGrid = document.getElementById('ctrlGrid');
@@ -400,6 +421,19 @@
   let condition = 'none';
   let compareMode = false;
   let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
+
+  function crossFade() {
+    if (!currentSource) return;
+    fadeCanvas.width = stageCanvas.width;
+    fadeCanvas.height = stageCanvas.height;
+    fadeCtx.drawImage(stageCanvas, 0, 0);
+    fadeCanvas.style.transition = 'none';
+    fadeCanvas.style.opacity = '1';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      fadeCanvas.style.transition = 'opacity 0.45s ease';
+      fadeCanvas.style.opacity = '0';
+    }));
+  }
 
   function haptic(style) {
     try {
@@ -506,6 +540,7 @@
     stopCamera();
     const img = new Image();
     img.onload = () => {
+      crossFade();
       uploadedImage = img;
       currentSource = 'image';
       emptyState.style.display = 'none';
@@ -1299,7 +1334,7 @@
     } else {
       conditionsEl.classList.add('has-selection');
     }
-    if (currentSource === 'image') drawOnce();
+    if (currentSource === 'image') { crossFade(); drawOnce(); }
   });
 
   // ===== Built-in sample images (drawn procedurally — no external/copyright assets) =====
@@ -1494,6 +1529,7 @@
     if (photoPath) {
       const img = new Image();
       img.onload = () => {
+        crossFade();
         uploadedImage = img;
         currentSource = 'image';
         emptyState.style.display = 'none';
@@ -1511,6 +1547,7 @@
     const c = makeSample(kind);
     const img = new Image();
     img.onload = () => {
+      crossFade();
       uploadedImage = img;
       currentSource = 'image';
       emptyState.style.display = 'none';
