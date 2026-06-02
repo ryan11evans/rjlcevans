@@ -141,6 +141,13 @@
   #swap-btn { bottom: 128px; right: 148px; width: 56px; height: 56px; background: rgba(80,50,15,0.72); font-size: 11px; }
 
   /* loading screen */
+  @keyframes fakeprogress {
+    0%   { width:  0%; }
+    25%  { width: 50%; }
+    55%  { width: 70%; }
+    80%  { width: 82%; }
+    100% { width: 89%; }
+  }
   #loading-screen {
     position: fixed; inset: 0; z-index: 200;
     background: #000;
@@ -152,7 +159,7 @@
   #loading-title {
     font-size: 44px; letter-spacing: 8px; font-weight: bold;
     margin-bottom: 52px; text-align: center;
-    padding-left: 8px; /* compensate letter-spacing trailing gap */
+    padding-left: 8px;
     text-shadow: 0 0 30px rgba(255,255,255,0.2);
   }
   #loading-track {
@@ -161,9 +168,8 @@
     border-radius: 2px; overflow: hidden; margin-bottom: 14px;
   }
   #loading-bar {
-    height: 100%; width: 0%;
-    background: #fff; border-radius: 2px;
-    transition: width 0.25s ease;
+    height: 100%; width: 0%; background: #fff; border-radius: 2px;
+    animation: fakeprogress 14s cubic-bezier(0.1, 0.4, 0.6, 1) forwards;
   }
   #loading-pct {
     font-size: 11px; color: #555; letter-spacing: 3px;
@@ -387,28 +393,21 @@ const scene  = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x9AB8A8, 0.007);
 
 // ── LOADING SCREEN ────────────────────────────────────────────────────────────
+// Bar is driven by a pure CSS animation (starts before Three.js loads).
+// JS just stops the animation and snaps to 100% when assets are ready.
 const _loadBar = document.getElementById('loading-bar');
 const _loadPct = document.getElementById('loading-pct');
 const _loadScr = document.getElementById('loading-screen');
 
-// Fake-progress: ease toward 90% while downloading, snap to 100% on done.
-// Necessary because GitHub Pages gzip-encodes the GLB so Content-Length
-// is absent and xhr.lengthComputable is always false.
-let _fakePct = 0;
-const _fakeTimer = setInterval(() => {
-  _fakePct += (90 - _fakePct) * 0.028; // asymptotically approaches 90
-  _loadBar.style.width  = Math.round(_fakePct) + '%';
-  _loadPct.textContent  = Math.round(_fakePct) + '%';
-}, 60);
-
 function _onGameReady() {
-  clearInterval(_fakeTimer);
+  _loadBar.style.animation = 'none';
+  _loadBar.style.transition = 'width 0.4s ease';
   _loadBar.style.width = '100%';
   _loadPct.textContent = '100%';
   setTimeout(() => {
     _loadScr.style.opacity = '0';
     setTimeout(() => _loadScr.remove(), 650);
-  }, 300);
+  }, 400);
   nextWave();
 }
 
