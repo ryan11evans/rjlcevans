@@ -476,7 +476,7 @@
 
   const defaults = {
     myopia:      { blurSigma: 8 },
-    astigmatism: { astigMag: 6, axis: 90 },
+    astigmatism: { astigMag: 3, axis: 90 },
     cataract:    { cataractSev: 0.5 },
     glaucoma:    { glaucomaStage: 2 },
     amd:         { amdSize: 12, amdDistortion: 0 },
@@ -489,7 +489,7 @@
 
   const params = {
     blurSigma: 8,
-    astigMag: 6,
+    astigMag: 3,
     axis: 90,
     cataractSev: 0.5,
     glaucomaStage: 2,
@@ -648,15 +648,20 @@
   }
 
   function applyAstigmatism(magnitude, axisDeg) {
-    ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
+    // Isotropic blur kicks in hard from 4D — below that, smear dominates
+    const baseSigma = Math.max(0, (magnitude - 4) * 1.6);
+    if (baseSigma > 0) {
+      applyBlur(baseSigma);
+    } else {
+      ctx.drawImage(sourceCanvas, 0, 0);
+    }
 
+    // Directional smear along the astigmatic axis, proportional across range
     const rad = (axisDeg * Math.PI) / 180;
     const dx = Math.cos(rad);
     const dy = Math.sin(rad);
-    const steps = Math.max(4, Math.round(magnitude));
-    const span = magnitude * 1.2;
+    const steps = Math.max(4, Math.round(magnitude * 2));
+    const span = magnitude * 3.2;
     ctx.globalAlpha = 1 / (steps * 2 + 1);
     for (let i = -steps; i <= steps; i++) {
       const t = (i / steps) * span;
@@ -1066,7 +1071,7 @@
       title: 'Astigmatism',
       note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Adjust the axis to demonstrate against-the-rule, with-the-rule, and oblique presentations.',
       controls: () => [
-        sliderControl('astigMag', 'Severity', 2, 20, 1, 'D-equivalent'),
+        sliderControl('astigMag', 'Severity', 1, 8, 0.5, 'D'),
         sliderControl('axis', 'Axis', 0, 180, 1, '°')
       ]
     },
