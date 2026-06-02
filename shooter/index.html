@@ -401,7 +401,7 @@ function _onGameReady() {
   if (_loadScr) setTimeout(() => { _loadScr.style.opacity = '0'; setTimeout(() => _loadScr.remove(), 650); }, 400);
   nextWave();
 }
-setTimeout(_onGameReady, 6000);
+setTimeout(() => { _spawnWorld(); _onGameReady(); }, 6000);
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const ARENA        = 40;
@@ -550,10 +550,16 @@ const brickRoughTex = loadTex('./assets/brick_roughness.jpg', 8,  2, false);
 const woodTex       = loadTex('./assets/hardwood2_diffuse.jpg', 2, 2);
 const woodBumpTex   = loadTex('./assets/hardwood2_bump.jpg',    2, 2, false);
 
-// ── GLTF / SOLDIER MODEL ─────────────────────────────────────────────────────
-let soldierGLTF = null;
+// ── GLTF / ASSET LOADING ─────────────────────────────────────────────────────
+let soldierGLTF = null, treeGLTF = null, rockGLTF = null;
 const animMixers = [];
 const gltfLoader = new GLTFLoader();
+
+let _pendingAssets = 3;
+function _assetDone() {
+  if (--_pendingAssets <= 0) { _spawnWorld(); _onGameReady(); }
+}
+
 gltfLoader.load(
   './assets/Soldier.glb',
   gltf => {
@@ -574,10 +580,37 @@ gltfLoader.load(
       });
     } catch(_) {}
     soldierGLTF = gltf;
-    _onGameReady();
+    _assetDone();
   },
   null,
-  () => _onGameReady() // error fallback — start without the model
+  () => _assetDone()
+);
+
+gltfLoader.load(
+  './assets/tree_cc0.glb',
+  gltf => {
+    gltf.scene.traverse(node => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = false;
+        if (node.material) {
+          if (Array.isArray(node.material)) node.material.forEach(m => { m.roughness = Math.max(m.roughness ?? 0.8, 0.75); });
+          else node.material.roughness = Math.max(node.material.roughness ?? 0.8, 0.75);
+        }
+      }
+    });
+    treeGLTF = gltf;
+    _assetDone();
+  },
+  null,
+  () => _assetDone()
+);
+
+gltfLoader.load(
+  './assets/boulder.glb',
+  gltf => { rockGLTF = gltf; _assetDone(); },
+  null,
+  () => _assetDone()
 );
 
 function buildZombieFromGLTF() {
@@ -740,6 +773,17 @@ function _dispGeo(geo, freq, amp, ox, oy, oz) {
 }
 
 function addTree(x, z) {
+  if (treeGLTF) {
+    const clone = treeGLTF.scene.clone(true);
+    clone.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = false; } });
+    clone.position.set(x, 0, z);
+    clone.rotation.y = Math.random() * Math.PI * 2;
+    const s = 0.55 + Math.random() * 0.35;
+    clone.scale.setScalar(s);
+    obstacles.push({ x, z, radius: 0.55 * s + 0.15 });
+    scene.add(clone);
+    return;
+  }
   const g = new THREE.Group();
   const isPine = Math.random() < 0.60;
   const sd = x * 73.1 + z * 31.7;  // per-tree seed for the noise offset
@@ -801,40 +845,83 @@ function addTree(x, z) {
   obstacles.push({ x, z, radius: 0.35 * s + 0.14 });
   scene.add(g);
 }
-for (let i = 0; i < 64; i++) {
-  const a = (i/64)*Math.PI*2;
-  const r = ARENA-2-Math.random()*6;
-  addTree(Math.cos(a)*r, Math.sin(a)*r);
+let _worldSpawned = false;
+function _spawnWorld() {
+  if (_worldSpawned) return;
+  _worldSpawned = true;
+  _spawnTrees();
+  _spawnRocks();
 }
-for (let i = 0; i < 20; i++) {
-  const a = Math.random()*Math.PI*2, r = 30+Math.random()*30;
-  addTree(Math.cos(a)*r, Math.sin(a)*r);
+
+function _spawnTrees() {
+  for (let i = 0; i < 64; i++) {
+    const a = (i/64)*Math.PI*2;
+    const r = ARENA-2-Math.random()*6;
+    addTree(Math.cos(a)*r, Math.sin(a)*r);
+  }
+  for (let i = 0; i < 20; i++) {
+    const a = Math.random()*Math.PI*2, r = 30+Math.random()*30;
+    addTree(Math.cos(a)*r, Math.sin(a)*r);
+  }
 }
 
 // ── ROCKS ────────────────────────────────────────────────────────────────────
-for (let i = 0; i < 34; i++) {
-  const a = Math.random()*Math.PI*2, r = 8+Math.random()*(ARENA-12);
-  const x = Math.cos(a)*r, z = Math.sin(a)*r;
-  if (Math.sqrt(x*x+z*z) < 5) continue;
+function _spawnRocks() {
+  for (let i = 0; i < 34; i++) {
+    const a = Math.random()*Math.PI*2, r = 8+Math.random()*(ARENA-12);
+    const x = Math.cos(a)*r, z = Math.sin(a)*r;
+    if (Math.sqrt(x*x+z*z) < 5) continue;
+    if (rockGLTF) {
+      _placeRockGLB(x, z);
+    } else {
+      _placeRockProc(x, z);
+    }
+  }
+}
 
+function _placeRockGLB(x, z) {
+  const count = 1 + Math.floor(Math.random() * 2);
+  const grp = new THREE.Group();
+  const baseCol = 0x707068 + Math.floor(Math.random() * 0x181810);
+  for (let j = 0; j < count; j++) {
+    const clone = rockGLTF.scene.clone(true);
+    const s = 0.55 + Math.random() * 1.0;
+    clone.scale.setScalar(s);
+    clone.traverse(node => {
+      if (!node.isMesh) return;
+      node.material = pbr(baseCol + Math.floor(Math.random() * 0x080806), 0.88, 0.06);
+      node.castShadow = true; node.receiveShadow = true;
+    });
+    if (j === 0) {
+      clone.position.set(0, 0, 0);
+    } else {
+      const ang = Math.random() * Math.PI * 2;
+      const d = 0.3 + Math.random() * 0.6;
+      clone.position.set(Math.cos(ang)*d, 0, Math.sin(ang)*d);
+      clone.scale.setScalar(s * (0.55 + Math.random() * 0.45));
+    }
+    clone.rotation.y = Math.random() * Math.PI * 2;
+    grp.add(clone);
+  }
+  grp.position.set(x, 0, z);
+  grp.rotation.y = Math.random() * Math.PI * 2;
+  obstacles.push({ x, z, radius: 0.28 + Math.random() * 0.40 });
+  scene.add(grp);
+}
+
+function _placeRockProc(x, z) {
   const g = new THREE.Group();
   const count = 1 + Math.floor(Math.random() * 3);
-  // Granite gray → warm sandstone → dark basalt, randomised per cluster
   const baseHex = 0x606058 + Math.floor(Math.random() * 0x242418);
-
   for (let j = 0; j < count; j++) {
     const s   = 0.24 + Math.random() * 0.48;
-    const det = s > 0.48 ? 2 : 1;           // more faces for bigger rocks
+    const det = s > 0.48 ? 2 : 1;
     const geo = new THREE.IcosahedronGeometry(s, det);
-    // Strong noise displacement gives genuinely craggy, non-spherical boulders
     _dispGeo(geo, 1.6, s * 0.42, x * 0.18 + j * 7.3, j * 5.1, z * 0.18 + j * 3.8);
-    // Flatten on Y so they look settled rather than floating
     geo.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.50 + Math.random() * 0.24, 1));
     geo.computeVertexNormals();
-
     const col = baseHex + Math.floor(Math.random() * 0x0E0E0C);
     const rock = new THREE.Mesh(geo, pbr(col, 0.89, 0.06));
-
     if (j === 0) {
       rock.position.set(0, s * 0.28, 0);
     } else {
@@ -846,7 +933,6 @@ for (let i = 0; i < 34; i++) {
     rock.castShadow = true; rock.receiveShadow = true;
     g.add(rock);
   }
-
   g.position.set(x, 0, z);
   g.rotation.y = Math.random() * Math.PI * 2;
   obstacles.push({ x, z, radius: 0.26 + Math.random() * 0.34 });
