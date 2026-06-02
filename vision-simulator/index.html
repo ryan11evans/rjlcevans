@@ -1594,6 +1594,12 @@
 </script>
 
 <script>
+  // Hide header in Capacitor app or when ?app=1 preview param is set
+  if (window.Capacitor || new URLSearchParams(location.search).get('app') === '1') {
+    var hero = document.querySelector('header.hero');
+    if (hero) hero.style.display = 'none';
+  }
+
   // Footer links: privacyLink shown by default (app); web swaps to homeLink
   if (!window.Capacitor) {
     document.getElementById('homeLink').style.display    = 'inline';
