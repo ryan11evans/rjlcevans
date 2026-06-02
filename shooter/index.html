@@ -140,6 +140,34 @@
   #roll-btn { bottom: 48px; right: 148px; width: 66px; height: 66px; background: rgba(25,70,170,0.72); }
   #swap-btn { bottom: 128px; right: 148px; width: 56px; height: 56px; background: rgba(80,50,15,0.72); font-size: 11px; }
 
+  /* loading screen */
+  #loading-screen {
+    position: fixed; inset: 0; z-index: 200;
+    background: #000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #fff; font-family: 'Segoe UI', sans-serif;
+    transition: opacity 0.6s;
+  }
+  #loading-title {
+    font-size: 44px; letter-spacing: 8px; font-weight: bold;
+    margin-bottom: 52px;
+    text-shadow: 0 0 30px rgba(255,255,255,0.2);
+  }
+  #loading-track {
+    width: 280px; height: 3px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 2px; overflow: hidden; margin-bottom: 14px;
+  }
+  #loading-bar {
+    height: 100%; width: 0%;
+    background: #fff; border-radius: 2px;
+    transition: width 0.25s ease;
+  }
+  #loading-pct {
+    font-size: 11px; color: #555; letter-spacing: 3px;
+  }
+
   /* game over */
   #gameover {
     display: none; position: fixed; inset: 0;
@@ -293,6 +321,12 @@
   <div class="mbtn" id="swap-btn">SWAP</div>
 </div>
 
+<div id="loading-screen">
+  <div id="loading-title">STRIKER ZERO</div>
+  <div id="loading-track"><div id="loading-bar"></div></div>
+  <div id="loading-pct">0%</div>
+</div>
+
 <div id="gameover">
   <h1>GAME OVER</h1>
   <p id="go-score"></p>
@@ -352,7 +386,29 @@ const scene  = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x9AB8A8, 0.007);
 
 // Real cube-map skybox (Park3Med outdoor scene)
-const cubeLoader = new THREE.CubeTextureLoader();
+// ── LOADING MANAGER ───────────────────────────────────────────────────────────
+const _loadBar = document.getElementById('loading-bar');
+const _loadPct = document.getElementById('loading-pct');
+const _loadScr = document.getElementById('loading-screen');
+const _loadMgr = new THREE.LoadingManager();
+_loadMgr.onProgress = (url, loaded, total) => {
+  const pct = Math.round(loaded / total * 100);
+  _loadBar.style.width = pct + '%';
+  _loadPct.textContent = pct + '%';
+};
+_loadMgr.onLoad = () => {
+  _loadBar.style.width = '100%';
+  _loadPct.textContent = '100%';
+  setTimeout(() => {
+    _loadScr.style.opacity = '0';
+    setTimeout(() => _loadScr.remove(), 650);
+  }, 300);
+  nextWave();
+};
+// Silent error handler — onLoad still fires via itemEnd
+_loadMgr.onError = () => { _loadPct.textContent = 'loading…'; };
+
+const cubeLoader = new THREE.CubeTextureLoader(_loadMgr);
 cubeLoader.setPath('./assets/skybox/');
 const skyboxTex = cubeLoader.load(['px.jpg','nx.jpg','py.jpg','ny.jpg','pz.jpg','nz.jpg']);
 skyboxTex.colorSpace = THREE.SRGBColorSpace;
@@ -451,7 +507,7 @@ const pbr = (color, roughness = 0.85, metalness = 0) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness });
 
 // ── REAL TEXTURES ─────────────────────────────────────────────────────────────
-const texLoader = new THREE.TextureLoader();
+const texLoader = new THREE.TextureLoader(_loadMgr);
 
 function loadTex(path, repeatX, repeatY, isSRGB = true) {
   const t = texLoader.load(path);
@@ -470,7 +526,7 @@ const woodBumpTex   = loadTex('./assets/hardwood2_bump.jpg',    2, 2, false);
 // ── GLTF / SOLDIER MODEL ─────────────────────────────────────────────────────
 let soldierGLTF = null;
 const animMixers = [];
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(_loadMgr);
 gltfLoader.load('./assets/Soldier.glb', gltf => {
   // Pre-tint all materials with zombie green-grey look
   gltf.scene.traverse(node => {
@@ -2127,7 +2183,7 @@ window.addEventListener('resize', () => {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 const player = new Player();
 updateHealthHUD(); updateAmmoHUD(); updateInfo();
-nextWave();
+// nextWave() is called by _loadMgr.onLoad once all assets finish downloading
 
 let last = performance.now();
 function loop(now) {
