@@ -1281,43 +1281,43 @@ function buildSniperRifle() {
 
 function buildZombieKnife() {
   const g = new THREE.Group();
-  // Bright silver blade — easily visible
-  const bladeMat  = new THREE.MeshStandardMaterial({ color: 0xDDDDDD, roughness: 0.08, metalness: 1.0,
-                                                      emissive: 0x444444, emissiveIntensity: 0.4 });
-  const darkMat   = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.4, metalness: 0.7 });
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1A0800, roughness: 0.9, metalness: 0.0 });
+  // Bright chrome blade with emissive so it reads clearly at any distance
+  const bladeMat  = new THREE.MeshStandardMaterial({ color: 0xE8E8E8, roughness: 0.05, metalness: 1.0,
+                                                      emissive: 0x666666, emissiveIntensity: 0.5 });
+  const darkMat   = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.45, metalness: 0.8 });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x120600, roughness: 0.92, metalness: 0.0 });
 
-  // All parts built with blade along +Y so the group can be reoriented as a unit.
-  // In buildZombieFromGLTF we apply rotation.z = -Math.PI/2 to make +Y → local-X of hand (fingertip axis).
+  // Blade along +Y — parent group is rotated in buildZombieFromGLTF to align with hand bone.
+  // Machete / short-sword proportions.
 
-  // Blade — large and obvious (0.42 m long)
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.42, 0.007), bladeMat);
-  blade.position.y = 0.24;
+  // Main blade body (0.58 m long)
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.58, 0.009), bladeMat);
+  blade.position.y = 0.34;
   g.add(blade);
 
   // Tip taper
-  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.10, 0.006), bladeMat);
-  tip.position.set(-0.009, 0.47, 0);
+  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.14, 0.008), bladeMat);
+  tip.position.set(-0.013, 0.67, 0);
   g.add(tip);
 
-  // Fuller
-  const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.30, 0.008), darkMat);
-  fuller.position.y = 0.23;
+  // Fuller (blood groove)
+  const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.010, 0.44, 0.010), darkMat);
+  fuller.position.y = 0.33;
   g.add(fuller);
 
-  // Cross-guard
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.018, 0.016), darkMat);
-  guard.position.y = 0.03;
+  // Cross-guard — wide and menacing
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.022, 0.020), darkMat);
+  guard.position.y = 0.038;
   g.add(guard);
 
   // Handle grip
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.15, 0.022), handleMat);
-  grip.position.y = -0.065;
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.17, 0.026), handleMat);
+  grip.position.y = -0.075;
   g.add(grip);
 
   // Pommel
-  const pommel = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.025, 0.030), darkMat);
-  pommel.position.y = -0.148;
+  const pommel = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.030, 0.034), darkMat);
+  pommel.position.y = -0.168;
   g.add(pommel);
 
   g.visible = false;
@@ -1858,19 +1858,21 @@ class Enemy {
       // during attack so there is no accumulation or compound-rotation spin.
       this.mesh.rotation.x = 0;
       if (this.atkPhase === 1) {
-        // Wind-up: right arm sweeps back and up over 0.28 s
+        // Wind-up: right arm raises straight overhead (rotation.z lifts in the vertical plane)
         const t = this.atkTime / 0.28;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 * t, 0, 0));
-        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(-0.3 * t, 0, 0));
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, -(Math.PI * 0.55) * t));
+        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       } else if (this.atkPhase === 2) {
-        // Slash: arm drives from raised (-1.1) to extended-forward (+0.8) over 0.22 s
+        // Slash: arm drives down hard from overhead; z recedes, x adds forward follow-through
         const t = this.atkTime / 0.22;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 + 1.9 * t, 0, 0));
-        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(-0.3 + 0.3 * t, 0, 0));
+        const zVal = -(Math.PI * 0.55) * (1 - t);
+        const xVal = -1.1 * t;
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(xVal, 0, zVal));
+        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       } else if (this.atkPhase === 3) {
-        // Recover: arm returns from +0.8 to 0 over 0.28 s
+        // Recover: arm eases from extended-forward back to neutral
         const t = this.atkTime / 0.28;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0.8 * (1 - t), 0, 0));
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 * (1 - t), 0, 0));
         if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       }
     } else if (ud.mixer) {
