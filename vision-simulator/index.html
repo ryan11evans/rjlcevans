@@ -128,7 +128,13 @@
   .cam-row { flex-wrap: nowrap; }
   .btn.icon-btn { padding: 10px 13px; justify-content: center; }
   .btn.icon-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
-  #sampleRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+  .sample-scroll-wrap { position: relative; }
+  .sample-scroll-wrap::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 4px; width: 64px;
+    background: linear-gradient(to right, transparent, var(--bg) 80%);
+    pointer-events: none; z-index: 2;
+  }
+  #sampleRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; padding-right: 24px; margin: 8px 0 4px; }
   #sampleRow::-webkit-scrollbar { display: none; }
   #sampleRow .btn[data-sample] { flex-shrink: 0; }
   .btn {
@@ -348,6 +354,7 @@
     </button>
   </div>
 
+  <div class="sample-scroll-wrap">
   <div class="source-row" id="sampleRow">
     <button class="btn ghost" data-sample="chart">
       <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
@@ -373,6 +380,7 @@
       <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
       Reading
     </button>
+  </div>
   </div>
 
   <h2 class="section-title">Select Condition</h2>
