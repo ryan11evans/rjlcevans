@@ -341,7 +341,7 @@
   <div id="loading-title">STRIKER ZERO</div>
   <div id="loading-track"><div id="loading-bar"></div></div>
   <div id="loading-pct">LOADING</div>
-  <div id="loading-slow">SLOW CONNECTION — STARTING ANYWAY…</div>
+  <div id="loading-slow">SLOW CONNECTION — PLEASE WAIT…</div>
 </div>
 
 <div id="gameover">
@@ -353,10 +353,24 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
   }
 }
+</script>
+
+<script>
+// Plain (non-module) rescue: if Three.js never loads from CDN, show a reload button.
+// Runs independently of the module — works even if imports completely fail.
+setTimeout(function() {
+  var scr = document.getElementById('loading-screen');
+  if (!scr) return;
+  var btn = document.createElement('button');
+  btn.textContent = 'TAP TO RETRY';
+  btn.style.cssText = 'margin-top:24px;padding:12px 36px;background:#fff;color:#000;border:none;border-radius:4px;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;display:block;';
+  btn.onclick = function() { location.reload(); };
+  scr.appendChild(btn);
+}, 20000);
 </script>
 
 <script type="module">
