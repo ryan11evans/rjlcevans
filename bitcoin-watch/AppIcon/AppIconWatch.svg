@@ -10,59 +10,23 @@
     <stop offset="48%" stop-color="#F7931A"/>
     <stop offset="100%" stop-color="#E37F0A"/>
   </linearGradient>
-  <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%"  stop-color="#FFB23E"/>
-    <stop offset="100%" stop-color="#F7931A"/>
-  </linearGradient>
-  <!-- Clip to circle so nothing bleeds outside watchOS mask -->
-  <clipPath id="circ">
-    <circle cx="512" cy="512" r="512"/>
-  </clipPath>
 </defs>
 
-<g>
-
-<!-- Background -->
 <rect width="1024" height="1024" fill="url(#bg)"/>
 
-<!--
-  Watch-optimised layout vs iPhone icon:
-    • Orbit arrows radius 390 (up from 360) — fills the circle better
-    • Coin radius 300 (up from 250) — more dominant at small sizes
-    • All elements stay within r=512 so nothing is clipped by watchOS
+<!-- Coin — large, centered, fills most of the square so it reads well as a circle -->
+<circle cx="512" cy="512" r="420" fill="url(#coin)"/>
+<circle cx="512" cy="512" r="420" fill="none" stroke="#C96E06" stroke-width="5" opacity="0.5"/>
 
-  Arc endpoints at r=390:
-    22°  → (512 + 390·sin22°,  512 − 390·cos22°) = (657.9, 150.0)
-   166°  → (512 + 390·sin166°, 512 − 390·cos166°) = (606.4, 890.8)
-   202°  → (512 + 390·sin202°, 512 − 390·cos202°) = (365.6, 873.9)
-   346°  → (512 + 390·sin346°, 512 − 390·cos346°) = (417.6, 133.1)
-
-  Arrowheads scaled proportionally from iPhone version.
--->
-
-<!-- Orbit arrows -->
-<path d="M 657.9 150.0 A 390 390 0 0 1 606.4 890.8"
-      stroke="url(#arrow)" stroke-width="50" fill="none" stroke-linecap="round"/>
-<polygon points="548.5,925.4 668,918.2 626,845.2" fill="#F7931A"/>
-
-<path d="M 365.6 873.9 A 390 390 0 0 1 417.6 133.1"
-      stroke="url(#arrow)" stroke-width="50" fill="none" stroke-linecap="round"/>
-<polygon points="475.5,98.6 356,105.8 398,178.8" fill="#F7931A"/>
-
-<!-- Coin (larger than iPhone icon) -->
-<circle cx="512" cy="512" r="300" fill="url(#coin)"/>
-<circle cx="512" cy="512" r="300" fill="none" stroke="#C96E06" stroke-width="4" opacity="0.6"/>
-
-<!-- ₿ glyph — Liberation Sans Bold -->
+<!-- ₿ symbol -->
 <text
   x="518"
   y="518"
   font-family="Liberation Sans, Arial, sans-serif"
-  font-size="370"
+  font-size="520"
   font-weight="bold"
   text-anchor="middle"
   dominant-baseline="central"
   fill="#1A1206">&#x20BF;</text>
 
-</g>
 </svg>
