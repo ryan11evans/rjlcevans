@@ -1076,10 +1076,11 @@
     myopia: {
       title: 'Myopia (Nearsightedness)',
       note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
-      controls: () => [
-        snellenPresetControl(),
-        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5)
-      ]
+      controls: () => {
+        const snellenCtrl = snellenPresetControl();
+        const sliderCtrl = sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5, '', () => syncSnellenToSigma(snellenCtrl));
+        return [snellenCtrl, sliderCtrl];
+      }
     },
     astigmatism: {
       title: 'Astigmatism',
@@ -1160,6 +1161,16 @@
     input.addEventListener('input', update);
     update();
     return wrap;
+  }
+
+  function syncSnellenToSigma(snellenCtrl) {
+    const sigma = params.blurSigma;
+    const entries = Object.entries(snellenBlur);
+    let best = entries[0], bestDiff = Infinity;
+    entries.forEach(([, s]) => { const d = Math.abs(s - sigma); if (d < bestDiff) { bestDiff = d; best = [, s]; best = entries.find(e => e[1] === s); } });
+    snellenCtrl.querySelectorAll('.preset').forEach(p => {
+      p.setAttribute('aria-pressed', parseFloat(p.dataset.sigma) === best[1] ? 'true' : 'false');
+    });
   }
 
   function snellenPresetControl() {
