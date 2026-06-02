@@ -1761,7 +1761,7 @@ class Enemy {
     if (ud.isGLTF && ud.mixer) {
       const desired = (this.state === 'chase')
         ? (ud.runAction  || ud.walkAction)
-        : (ud.idleAction || ud.walkAction);
+        : (ud.walkAction || ud.idleAction);
       if (desired && desired !== ud.activeAction && ud.activeAction) {
         ud.activeAction.crossFadeTo(desired, 0.3, true);
         desired.play();
