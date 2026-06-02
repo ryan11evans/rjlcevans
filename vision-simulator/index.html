@@ -1400,11 +1400,11 @@
         { t: 'D E F P O T E C',   s: 18  },
         { t: 'L E F O D P C T H', s: 13  },
       ];
-      let y = 75;
+      let y = 100;
       rows.forEach(r => {
         g.font = `700 ${r.s}px Arial, sans-serif`;
         g.fillText(r.t, c.width / 2, y);
-        y += r.s * 0.84 + 8;
+        y += r.s * 0.82 + 6;
       });
     } else if (kind === 'grid') {
       // Amsler grid with central dot
