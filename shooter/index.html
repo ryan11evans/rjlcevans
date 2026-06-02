@@ -391,12 +391,20 @@ const _loadBar = document.getElementById('loading-bar');
 const _loadPct = document.getElementById('loading-pct');
 const _loadScr = document.getElementById('loading-screen');
 
-function _setLoadPct(pct) {
-  _loadBar.style.width = pct + '%';
-  _loadPct.textContent = pct + '%';
-}
+// Fake-progress: ease toward 90% while downloading, snap to 100% on done.
+// Necessary because GitHub Pages gzip-encodes the GLB so Content-Length
+// is absent and xhr.lengthComputable is always false.
+let _fakePct = 0;
+const _fakeTimer = setInterval(() => {
+  _fakePct += (90 - _fakePct) * 0.028; // asymptotically approaches 90
+  _loadBar.style.width  = Math.round(_fakePct) + '%';
+  _loadPct.textContent  = Math.round(_fakePct) + '%';
+}, 60);
+
 function _onGameReady() {
-  _setLoadPct(100);
+  clearInterval(_fakeTimer);
+  _loadBar.style.width = '100%';
+  _loadPct.textContent = '100%';
   setTimeout(() => {
     _loadScr.style.opacity = '0';
     setTimeout(() => _loadScr.remove(), 650);
@@ -544,10 +552,7 @@ gltfLoader.load(
     soldierGLTF = gltf;
     _onGameReady();
   },
-  xhr => {
-    if (xhr.lengthComputable)
-      _setLoadPct(Math.round(xhr.loaded / xhr.total * 100));
-  },
+  null,
   () => _onGameReady() // error fallback — start without the model
 );
 
