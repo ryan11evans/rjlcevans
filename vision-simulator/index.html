@@ -1385,26 +1385,26 @@
     const g = c.getContext('2d');
 
     if (kind === 'chart') {
-      // Snellen-style eye chart
-      c.width = 900; c.height = 1200;
+      // Snellen-style eye chart — landscape to match stage aspect ratio
+      c.width = 1200; c.height = 900;
       g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const rows = [
-        { t: 'E',               s: 175 },
-        { t: 'F  P',            s: 128 },
-        { t: 'T  O  Z',         s: 92  },
-        { t: 'L  P  E  D',      s: 67  },
-        { t: 'P  E  C  F  D',   s: 48  },
-        { t: 'E D F C Z P',     s: 35  },
-        { t: 'F E L O P Z D',   s: 25  },
-        { t: 'D E F P O T E C', s: 19  },
-        { t: 'L E F O D P C T H', s: 14 },
+        { t: 'E',                 s: 170 },
+        { t: 'F  P',              s: 122 },
+        { t: 'T  O  Z',           s: 88  },
+        { t: 'L  P  E  D',        s: 63  },
+        { t: 'P  E  C  F  D',     s: 46  },
+        { t: 'E D F C Z P',       s: 33  },
+        { t: 'F E L O P Z D',     s: 24  },
+        { t: 'D E F P O T E C',   s: 18  },
+        { t: 'L E F O D P C T H', s: 13  },
       ];
-      let y = 145;
+      let y = 75;
       rows.forEach(r => {
         g.font = `700 ${r.s}px Arial, sans-serif`;
         g.fillText(r.t, c.width / 2, y);
-        y += r.s * 0.95 + 22;
+        y += r.s * 0.84 + 8;
       });
     } else if (kind === 'grid') {
       // Amsler grid with central dot
