@@ -446,6 +446,7 @@
   let stream = null;
   let rafId = null;
   let currentSource = null;
+  let currentCropYFrac = 0.5;
   let uploadedImage = null;
   let facingMode = 'environment';
   let condition = 'none';
@@ -597,7 +598,7 @@
     if (srcRatio > stageRatio) {
       cropH = sh; cropW = sh * stageRatio; cropX = (sw - cropW) / 2; cropY = 0;
     } else {
-      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) / 2;
+      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) * currentCropYFrac;
     }
     const src = currentSource === 'camera' ? video : uploadedImage;
     sCtx.save();
@@ -668,20 +669,20 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur + darkening. Blur is strong enough to visibly impair text.
-    ctx.filter = `blur(${s * 35}px) contrast(${1 - s * 0.62}) brightness(${1 - s * 0.55})`;
+    // Base: blur scales aggressively so text is unreadable at max severity.
+    const baseBlur = s * 70;
+    ctx.filter = `blur(${baseBlur}px) contrast(${1 - s * 0.72}) brightness(${1 - s * 0.5})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Additive bloom FIRST — four stacked passes, heavy alpha/brightness so
-    // bright sources blow out into massive halos before the brown sits on top.
+    // Additive bloom — bright sources blow into halos; intensity grows with s.
     if (s > 0) {
       ctx.globalCompositeOperation = 'lighter';
       const passes = [
         { con: 1.8 + s * 2,   bri: 1.5 + s * 2,   blur: 4  + s * 28,  a: Math.min(1, 0.7  * s) },
         { con: 1.5 + s * 1.5, bri: 1.3 + s * 2.5,  blur: 18 + s * 80,  a: Math.min(1, 0.85 * s) },
-        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 150, a: Math.min(1, 0.9  * s) },
-        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 220, a: Math.min(1, 0.75 * s) },
+        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 180, a: Math.min(1, 0.9  * s) },
+        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 280, a: Math.min(1, 0.75 * s) },
       ];
       for (const p of passes) {
         ctx.globalAlpha = p.a;
@@ -693,15 +694,22 @@
       ctx.globalCompositeOperation = 'source-over';
     }
 
-    // Brown multiply tint — warms the glare to amber and tints the scene.
+    // Amber-brown multiply tint — warms the scene (nuclear sclerosis).
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillStyle = `rgba(155, 88, 35, ${0.2 + s * 0.5})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dark brown veil — quadratic ramp so it stays lighter in the mid-range
-    // and only gets very dark near the top of the slider.
-    ctx.fillStyle = `rgba(38, 22, 8, ${s * s * 0.82})`;
+    // Blue-grey haze that rises with severity — represents scatter and the
+    // perceived cool shift as the brunescent lens blocks warm wavelengths.
+    if (s > 0.2) {
+      const blueAlpha = Math.pow(Math.max(0, s - 0.2) / 0.8, 1.5) * 0.55;
+      ctx.fillStyle = `rgba(60, 80, 140, ${blueAlpha})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // Dense dark veil — quadratic ramp makes final 20% essentially opaque.
+    ctx.fillStyle = `rgba(20, 12, 5, ${s * s * 0.92})`;
     ctx.fillRect(0, 0, w, h);
   }
 
@@ -1573,8 +1581,12 @@
     face:   'samples/portrait.jpg'
   };
 
+  // Per-sample vertical crop fraction (0 = top, 0.5 = center, 1 = bottom)
+  const SAMPLE_CROP_Y = { chart: 0.80 };
+
   function loadSample(kind) {
     stopCamera();
+    currentCropYFrac = SAMPLE_CROP_Y[kind] !== undefined ? SAMPLE_CROP_Y[kind] : 0.5;
     const photoPath = PHOTO_SAMPLES[kind];
     if (photoPath) {
       const img = new Image();
@@ -1594,6 +1606,7 @@
   }
 
   function _loadSampleProcedural(kind) {
+    currentCropYFrac = 0.5;
     const c = makeSample(kind);
     const img = new Image();
     img.onload = () => {
