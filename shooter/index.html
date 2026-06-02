@@ -603,9 +603,9 @@ function buildZombieFromGLTF() {
 const gGeo = new THREE.PlaneGeometry(ARENA * 2.4, ARENA * 2.4, 64, 64);
 for (let i = 0; i < gGeo.attributes.position.count; i++) {
   const x = gGeo.attributes.position.getX(i);
-  const z = gGeo.attributes.position.getZ(i);
-  if (Math.abs(x) < ARENA - 1 && Math.abs(z) < ARENA - 1)
-    gGeo.attributes.position.setY(i, (Math.random() - 0.5) * 0.28);
+  const y = gGeo.attributes.position.getY(i);
+  if (Math.abs(x) < ARENA - 1 && Math.abs(y) < ARENA - 1)
+    gGeo.attributes.position.setZ(i, (Math.random() - 0.5) * 0.28);
 }
 gGeo.computeVertexNormals();
 // Meshes raycasted for bullet impact effects (populated as scene is built)
@@ -1718,7 +1718,7 @@ class Enemy {
     this.mesh.position.z = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.z));
     resolveCollisions(this.mesh.position, 0.35);
     if (dir.lengthSq() > 0.01) {
-      this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+      this.mesh.rotation.y = Math.atan2(dir.x, dir.z) + (this.mesh.userData.isGLTF ? Math.PI : 0);
       if (!this.mesh.userData.isGLTF) {
         this.wClock += dt * 7.5;
         const lL = this.mesh.getObjectByName('lLeg');
