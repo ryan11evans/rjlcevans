@@ -616,12 +616,12 @@ function buildZombieFromGLTF() {
   // Attach knife to right hand bone — visible only during attack phases
   const knife = buildZombieKnife();
   if (rightHand) {
-    // Mixamo RightHand: local +Y points toward finger-tips; rotate knife so blade extends along that axis
-    knife.rotation.set(0, 0, 0);
-    knife.position.set(0.01, 0.04, 0);   // slight palm-centre offset
+    // Mixamo RightHand: local +X runs toward fingertips.
+    // Knife blade is along local +Y, so rotate -90° around Z to align blade with +X.
+    knife.rotation.set(0, 0, -Math.PI / 2);
+    knife.position.set(0.08, 0.01, 0);  // 8 cm along finger axis, centered in palm
     rightHand.add(knife);
   } else {
-    // Fallback: float near the clone root if hand bone wasn't found
     knife.position.set(0.25, 1.2, 0.1);
     clone.add(knife);
   }
@@ -1281,38 +1281,43 @@ function buildSniperRifle() {
 
 function buildZombieKnife() {
   const g = new THREE.Group();
-  const bladeMat  = new THREE.MeshStandardMaterial({ color: 0xBBBBBB, roughness: 0.15, metalness: 0.95 });
-  const darkMat   = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.3,  metalness: 0.8  });
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x150900, roughness: 0.95, metalness: 0.0  });
+  // Bright silver blade — easily visible
+  const bladeMat  = new THREE.MeshStandardMaterial({ color: 0xDDDDDD, roughness: 0.08, metalness: 1.0,
+                                                      emissive: 0x444444, emissiveIntensity: 0.4 });
+  const darkMat   = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.4, metalness: 0.7 });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1A0800, roughness: 0.9, metalness: 0.0 });
 
-  // Blade — long, thin, extends along +Y
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.30, 0.006), bladeMat);
-  blade.position.y = 0.18;
+  // All parts built with blade along +Y so the group can be reoriented as a unit.
+  // In buildZombieFromGLTF we apply rotation.z = -Math.PI/2 to make +Y → local-X of hand (fingertip axis).
+
+  // Blade — large and obvious (0.42 m long)
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.42, 0.007), bladeMat);
+  blade.position.y = 0.24;
   g.add(blade);
 
-  // Blade tip taper (narrower box overlapping top of blade)
-  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.08, 0.005), bladeMat);
-  tip.position.set(-0.007, 0.35, 0);
+  // Tip taper
+  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.10, 0.006), bladeMat);
+  tip.position.set(-0.009, 0.47, 0);
   g.add(tip);
 
-  // Fuller (blood groove) — thin dark stripe down blade centre
-  const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.22, 0.007), darkMat);
-  fuller.position.y = 0.17;
+  // Fuller
+  const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.30, 0.008), darkMat);
+  fuller.position.y = 0.23;
   g.add(fuller);
 
   // Cross-guard
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.016, 0.014), darkMat);
-  guard.position.y = 0.025;
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.018, 0.016), darkMat);
+  guard.position.y = 0.03;
   g.add(guard);
 
   // Handle grip
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.030, 0.13, 0.020), handleMat);
-  grip.position.y = -0.055;
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.15, 0.022), handleMat);
+  grip.position.y = -0.065;
   g.add(grip);
 
   // Pommel
-  const pommel = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.022, 0.028), darkMat);
-  pommel.position.y = -0.126;
+  const pommel = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.025, 0.030), darkMat);
+  pommel.position.y = -0.148;
   g.add(pommel);
 
   g.visible = false;
@@ -1849,28 +1854,24 @@ class Enemy {
       // Show knife only during attack phases
       if (ud.knife) ud.knife.visible = (this.atkPhase > 0);
 
-      // Bone overlay applied AFTER mixer — stacks on top of current pose
+      // Direct quaternion assignment AFTER mixer — completely replaces mixer for these bones
+      // during attack so there is no accumulation or compound-rotation spin.
       this.mesh.rotation.x = 0;
       if (this.atkPhase === 1) {
-        // Wind-up: arms rise, body tilts back slightly
+        // Wind-up: right arm sweeps back and up over 0.28 s
         const t = this.atkTime / 0.28;
-        if (ud.rightArm) { ud.rightArm.rotateX(-t * 1.8); ud.rightArm.rotateZ(-t * 0.6); }
-        if (ud.leftArm)  ud.leftArm.rotateX(-t * 0.9);
-        this.mesh.rotation.x = t * 0.25;
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 * t, 0, 0));
+        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(-0.3 * t, 0, 0));
       } else if (this.atkPhase === 2) {
-        // Slash: arms swing down hard, body lurches forward
+        // Slash: arm drives from raised (-1.1) to extended-forward (+0.8) over 0.22 s
         const t = this.atkTime / 0.22;
-        const swing = Math.sin(t * Math.PI * 0.8);
-        if (ud.rightArm) { ud.rightArm.rotateX(swing * 2.4 - 1.8); ud.rightArm.rotateZ(-0.6 + swing * 0.6); }
-        if (ud.leftArm)  ud.leftArm.rotateX(swing * 1.2 - 0.9);
-        this.mesh.rotation.x = 0.25 - t * 0.7;
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 + 1.9 * t, 0, 0));
+        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(-0.3 + 0.3 * t, 0, 0));
       } else if (this.atkPhase === 3) {
-        // Recover: smoothly return arms to neutral
-        const t = 1 - this.atkTime / 0.28;
-        const lean = (Math.sin((1 - t) * Math.PI * 0.5)) * -0.45;
-        if (ud.rightArm) ud.rightArm.rotateX(-t * 0.6);
-        if (ud.leftArm)  ud.leftArm.rotateX(-t * 0.3);
-        this.mesh.rotation.x = lean * (1 - (1 - t));
+        // Recover: arm returns from +0.8 to 0 over 0.28 s
+        const t = this.atkTime / 0.28;
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0.8 * (1 - t), 0, 0));
+        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       }
     } else if (ud.mixer) {
       ud.mixer.update(dt);
