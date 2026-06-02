@@ -2054,7 +2054,10 @@
   stage.addEventListener('pointercancel', onRelease);
   stage.addEventListener('pointerleave', onRelease);
   // Prevent iOS long-press from showing the drag-source bubble or callout popup.
-  stage.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  stage.addEventListener('touchstart', e => {
+    if (e.target.closest('.btn') || e.target.closest('.overlay') || e.target.closest('button') || e.target.closest('a') || e.target.closest('.home-link') || e.target.closest('.music-btn') || e.target.closest('.pause-btn')) return;
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
   stage.addEventListener('contextmenu', e => e.preventDefault());
 
   document.addEventListener('keydown', e => {
