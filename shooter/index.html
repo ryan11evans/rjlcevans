@@ -581,7 +581,6 @@ gltfLoader.load(
 
 function buildZombieFromGLTF() {
   const clone = cloneSkeleton(soldierGLTF.scene);
-  // Clone materials per-instance so hit-flash is independent
   clone.traverse(node => {
     if (!node.isMesh) return;
     node.material = Array.isArray(node.material)
@@ -589,12 +588,25 @@ function buildZombieFromGLTF() {
       : node.material.clone();
     node.castShadow = true;
   });
-  const mixer = new THREE.AnimationMixer(clone);
-  const walkClip = THREE.AnimationClip.findByName(soldierGLTF.animations, 'Walk');
-  const idleClip = THREE.AnimationClip.findByName(soldierGLTF.animations, 'Idle');
-  if (walkClip || idleClip) mixer.clipAction(walkClip || idleClip).play();
-  clone.userData.mixer  = mixer;
-  clone.userData.isGLTF = true;
+  const mixer    = new THREE.AnimationMixer(clone);
+  const clips    = soldierGLTF.animations;
+  const walkClip = THREE.AnimationClip.findByName(clips, 'Walk');
+  const runClip  = THREE.AnimationClip.findByName(clips, 'Run');
+  const idleClip = THREE.AnimationClip.findByName(clips, 'Idle');
+
+  const walkAction = walkClip ? mixer.clipAction(walkClip) : null;
+  const runAction  = runClip  ? mixer.clipAction(runClip)  : null;
+  const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
+
+  const startAction = walkAction || idleAction;
+  if (startAction) startAction.play();
+
+  clone.userData.mixer        = mixer;
+  clone.userData.walkAction   = walkAction;
+  clone.userData.runAction    = runAction;
+  clone.userData.idleAction   = idleAction;
+  clone.userData.activeAction = startAction;
+  clone.userData.isGLTF       = true;
   animMixers.push(mixer);
   return clone;
 }
@@ -1605,10 +1617,11 @@ class Enemy {
     this.dead   = false;
     this.state  = 'patrol';
     this.patrol = new THREE.Vector3((Math.random()-0.5)*ARENA*1.7, 0, (Math.random()-0.5)*ARENA*1.7);
-    this.atkCd  = 1.0 + Math.random();
-    this.bunkCd = 2.0 + Math.random();
-    this.wClock = Math.random()*10;
-    this.kb     = new THREE.Vector3();
+    this.atkCd       = 1.0 + Math.random();
+    this.bunkCd      = 2.0 + Math.random();
+    this.wClock      = Math.random()*10;
+    this.kb          = new THREE.Vector3();
+    this.strikeTimer = 0;
 
     // HP bar
     this._cvs = document.createElement('canvas');
@@ -1694,6 +1707,7 @@ class Enemy {
       if (this.atkCd <= 0 && dist < 2.1) {
         this.atkCd = 1.3 + Math.random() * 0.5;
         player.takeDamage(12);
+        this.strikeTimer = 0.35; // trigger lunge animation
       }
     } else {
       const d = this.patrol.clone().sub(this.mesh.position);
@@ -1717,6 +1731,7 @@ class Enemy {
     this.mesh.position.x = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.x));
     this.mesh.position.z = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.z));
     resolveCollisions(this.mesh.position, 0.35);
+
     if (dir.lengthSq() > 0.01) {
       this.mesh.rotation.y = Math.atan2(dir.x, dir.z) + (this.mesh.userData.isGLTF ? Math.PI : 0);
       if (!this.mesh.userData.isGLTF) {
@@ -1727,7 +1742,34 @@ class Enemy {
         if (rL) rL.rotation.x = -Math.sin(this.wClock) * 0.44;
       }
     }
-    if (this.mesh.userData.mixer) this.mesh.userData.mixer.update(dt);
+
+    // GLTF animation cross-fade based on proximity
+    const ud = this.mesh.userData;
+    if (ud.isGLTF && ud.mixer) {
+      const inRange = dist < 4;
+      const desired = inRange
+        ? (ud.runAction  || ud.walkAction)
+        : (this.state === 'chase' ? ud.walkAction : ud.idleAction) || ud.walkAction;
+      if (desired && desired !== ud.activeAction && ud.activeAction) {
+        ud.activeAction.crossFadeTo(desired, 0.25, true);
+        desired.play();
+        ud.activeAction = desired;
+      }
+
+      // Strike lunge: lean mesh forward briefly on attack
+      if (this.strikeTimer > 0) {
+        this.strikeTimer -= dt;
+        const t = 1 - this.strikeTimer / 0.35;
+        this.mesh.rotation.x = Math.sin(t * Math.PI) * -0.55; // dip forward then back
+      } else {
+        this.mesh.rotation.x = 0;
+      }
+
+      ud.mixer.update(dt);
+    } else if (ud.mixer) {
+      ud.mixer.update(dt);
+    }
+
     const bar = this.mesh.getObjectByName('hpbar');
     if (bar) bar.lookAt(camera.position.clone().sub(this.mesh.position).add(this.mesh.position));
   }
