@@ -351,8 +351,19 @@
 </div>
 
 <script>
-// Plain (non-module) rescue: if Three.js never loads from CDN, show a reload button.
-// Runs independently of the module — works even if imports completely fail.
+// Show any JS error directly on the loading screen for diagnosis
+function _showErr(msg) {
+  var scr = document.getElementById('loading-screen');
+  if (!scr) return;
+  var d = document.createElement('div');
+  d.textContent = String(msg).slice(0, 120);
+  d.style.cssText = 'color:#f66;font-size:10px;margin-top:10px;letter-spacing:1px;text-align:center;max-width:300px;word-break:break-all;';
+  scr.appendChild(d);
+}
+window.addEventListener('error', function(e) { _showErr(e.message || e); });
+window.addEventListener('unhandledrejection', function(e) { _showErr(e.reason || 'Promise rejected'); });
+
+// Rescue button if module never runs
 setTimeout(function() {
   var scr = document.getElementById('loading-screen');
   if (!scr) return;
@@ -375,6 +386,21 @@ import { GammaCorrectionShader } from './vendor/three/addons/shaders/GammaCorrec
 import { FXAAShader }            from './vendor/three/addons/shaders/FXAAShader.js';
 import { GLTFLoader }            from './vendor/three/addons/loaders/GLTFLoader.js';
 import { SkeletonUtils }         from './vendor/three/addons/utils/SkeletonUtils.js';
+
+// ── LOADING SCREEN — set up first so timeout always fires even if init throws ─
+const _loadBar = document.getElementById('loading-bar');
+const _loadPct = document.getElementById('loading-pct');
+const _loadScr = document.getElementById('loading-screen');
+let _gameStarted = false;
+function _onGameReady() {
+  if (_gameStarted) return;
+  _gameStarted = true;
+  if (_loadBar) { _loadBar.style.animation = 'none'; _loadBar.style.transition = 'width 0.4s ease'; _loadBar.style.width = '100%'; }
+  if (_loadPct) _loadPct.textContent = '100%';
+  if (_loadScr) setTimeout(() => { _loadScr.style.opacity = '0'; setTimeout(() => _loadScr.remove(), 650); }, 400);
+  nextWave();
+}
+setTimeout(_onGameReady, 6000);
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const ARENA        = 40;
@@ -406,32 +432,6 @@ renderer.outputColorSpace    = THREE.SRGBColorSpace;
 // ── SCENE + SKY ──────────────────────────────────────────────────────────────
 const scene  = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x9AB8A8, 0.007);
-
-// ── LOADING SCREEN ────────────────────────────────────────────────────────────
-// Bar driven by CSS animation so it moves before Three.js finishes loading.
-// JS stops the animation and snaps to 100% when the GLB is ready.
-// A 12-second hard timeout ensures the game always starts on slow connections.
-const _loadBar = document.getElementById('loading-bar');
-const _loadPct = document.getElementById('loading-pct');
-const _loadScr = document.getElementById('loading-screen');
-let _gameStarted = false;
-
-function _onGameReady() {
-  if (_gameStarted) return;
-  _gameStarted = true;
-  _loadBar.style.animation = 'none';
-  _loadBar.style.transition = 'width 0.4s ease';
-  _loadBar.style.width = '100%';
-  _loadPct.textContent = '100%';
-  setTimeout(() => {
-    _loadScr.style.opacity = '0';
-    setTimeout(() => _loadScr.remove(), 650);
-  }, 400);
-  nextWave();
-}
-
-// Hard timeout: start the game after 6 s no matter what
-setTimeout(_onGameReady, 6000);
 
 // Real cube-map skybox (Park3Med outdoor scene)
 const cubeLoader = new THREE.CubeTextureLoader();
