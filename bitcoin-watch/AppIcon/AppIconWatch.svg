@@ -12,11 +12,8 @@
   </linearGradient>
 </defs>
 
-<rect width="1024" height="1024" fill="url(#bg)"/>
-
-<!-- Coin — large, centered, fills most of the square so it reads well as a circle -->
-<circle cx="512" cy="512" r="420" fill="url(#coin)"/>
-<circle cx="512" cy="512" r="420" fill="none" stroke="#C96E06" stroke-width="5" opacity="0.5"/>
+<!-- Full orange background — watchOS crops to circle so corners never show -->
+<rect width="1024" height="1024" fill="url(#coin)"/>
 
 <!-- ₿ symbol -->
 <text
