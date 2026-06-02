@@ -1386,17 +1386,25 @@
 
     if (kind === 'chart') {
       // Snellen-style eye chart
+      c.width = 900; c.height = 1200;
       g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const rows = [
-        { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
-        { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
+        { t: 'E',               s: 175 },
+        { t: 'F  P',            s: 128 },
+        { t: 'T  O  Z',         s: 92  },
+        { t: 'L  P  E  D',      s: 67  },
+        { t: 'P  E  C  F  D',   s: 48  },
+        { t: 'E D F C Z P',     s: 35  },
+        { t: 'F E L O P Z D',   s: 25  },
+        { t: 'D E F P O T E C', s: 19  },
+        { t: 'L E F O D P C T H', s: 14 },
       ];
-      let y = 130;
+      let y = 145;
       rows.forEach(r => {
         g.font = `700 ${r.s}px Arial, sans-serif`;
         g.fillText(r.t, c.width / 2, y);
-        y += r.s * 0.95 + 24;
+        y += r.s * 0.95 + 22;
       });
     } else if (kind === 'grid') {
       // Amsler grid with central dot
