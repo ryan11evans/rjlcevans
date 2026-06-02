@@ -1858,23 +1858,21 @@ class Enemy {
       // during attack so there is no accumulation or compound-rotation spin.
       this.mesh.rotation.x = 0;
       if (this.atkPhase === 1) {
-        // Wind-up: right arm raises straight overhead (rotation.z lifts in the vertical plane)
+        // Wind-up: right arm rises overhead — pure Z rotation, no mixing
         const t = this.atkTime / 0.28;
         if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, -(Math.PI * 0.55) * t));
-        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       } else if (this.atkPhase === 2) {
-        // Slash: arm drives down hard from overhead; z recedes, x adds forward follow-through
+        // Slash: arm drives from overhead all the way down past horizontal (follow-through)
+        // Still pure Z so the arc is clean — no gimbal weirdness
         const t = this.atkTime / 0.22;
-        const zVal = -(Math.PI * 0.55) * (1 - t);
-        const xVal = -1.1 * t;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(xVal, 0, zVal));
-        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+        const z = -(Math.PI * 0.55) * (1 - t) + (Math.PI * 0.2) * t;
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, z));
       } else if (this.atkPhase === 3) {
-        // Recover: arm eases from extended-forward back to neutral
+        // Recover: ease the slight follow-through back to neutral
         const t = this.atkTime / 0.28;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(-1.1 * (1 - t), 0, 0));
-        if (ud.leftArm)  ud.leftArm.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, (Math.PI * 0.2) * (1 - t)));
       }
+      // Left arm is NOT overridden — the mixer keeps it looking natural throughout
     } else if (ud.mixer) {
       ud.mixer.update(dt);
     }
