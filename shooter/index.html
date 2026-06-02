@@ -1634,7 +1634,8 @@ class Enemy {
     this.bunkCd      = 2.0 + Math.random();
     this.wClock      = Math.random()*10;
     this.kb          = new THREE.Vector3();
-    this.strikeTimer = 0;
+    this.atkPhase = 0;   // 0=none 1=windup 2=slash 3=recover
+    this.atkTime  = 0;
 
     // HP bar
     this._cvs = document.createElement('canvas');
@@ -1715,12 +1716,23 @@ class Enemy {
 
     let dir = new THREE.Vector3();
     if (this.state === 'chase') {
-      if (dist > 1.65) dir.copy(toP).normalize();
-      this.atkCd -= dt;
-      if (this.atkCd <= 0 && dist < 2.1) {
-        this.atkCd = 1.3 + Math.random() * 0.5;
-        player.takeDamage(12);
-        this.strikeTimer = 0.5; // trigger arm-slash overlay
+      if (this.atkPhase === 0 && dist > 1.65) dir.copy(toP).normalize();
+      if (this.atkPhase > 0) {
+        this.atkTime += dt;
+        if (this.atkPhase === 1 && this.atkTime >= 0.28) {
+          this.atkPhase = 2; this.atkTime = 0;
+          if (dist < 2.8) player.takeDamage(12);
+        } else if (this.atkPhase === 2 && this.atkTime >= 0.22) {
+          this.atkPhase = 3; this.atkTime = 0;
+        } else if (this.atkPhase === 3 && this.atkTime >= 0.28) {
+          this.atkPhase = 0; this.atkTime = 0;
+          this.atkCd = 0.7 + Math.random() * 0.5;
+        }
+      } else {
+        this.atkCd -= dt;
+        if (this.atkCd <= 0 && dist < 2.5) {
+          this.atkPhase = 1; this.atkTime = 0;
+        }
       }
     } else {
       const d = this.patrol.clone().sub(this.mesh.position);
@@ -1745,6 +1757,9 @@ class Enemy {
     this.mesh.position.z = Math.max(-ARENA+0.6, Math.min(ARENA-0.6, this.mesh.position.z));
     resolveCollisions(this.mesh.position, 0.35);
 
+    if (this.atkPhase > 0 && toP.lengthSq() > 0.01) {
+      this.mesh.rotation.y = Math.atan2(toP.x, toP.z) + (this.mesh.userData.isGLTF ? Math.PI : 0);
+    }
     if (dir.lengthSq() > 0.01) {
       this.mesh.rotation.y = Math.atan2(dir.x, dir.z) + (this.mesh.userData.isGLTF ? Math.PI : 0);
       if (!this.mesh.userData.isGLTF) {
@@ -1756,33 +1771,48 @@ class Enemy {
       }
     }
 
-    // GLTF animation: Run while chasing, Idle/Walk while patrolling
+    // GLTF animation: Idle during attack phases, Run when chasing, Walk when patrolling
     const ud = this.mesh.userData;
     if (ud.isGLTF && ud.mixer) {
-      const desired = (this.state === 'chase')
-        ? (ud.runAction  || ud.walkAction)
-        : (ud.walkAction || ud.idleAction);
+      let desired;
+      if (this.atkPhase > 0) {
+        desired = ud.idleAction || ud.walkAction;
+      } else if (this.state === 'chase') {
+        desired = ud.runAction || ud.walkAction;
+      } else {
+        desired = ud.walkAction || ud.idleAction;
+      }
+      const fadeTime = this.atkPhase > 0 ? 0.1 : 0.3;
       if (desired && desired !== ud.activeAction && ud.activeAction) {
-        ud.activeAction.crossFadeTo(desired, 0.3, true);
+        ud.activeAction.crossFadeTo(desired, fadeTime, true);
         desired.play();
         ud.activeAction = desired;
       }
 
       ud.mixer.update(dt);
 
-      // Slash overlay — applied AFTER mixer so it adds on top of run pose
-      if (this.strikeTimer > 0) {
-        const progress = 1 - this.strikeTimer / 0.5;
-        const swing = Math.sin(progress * Math.PI); // 0 → peak → 0
-        if (ud.rightArm) {
-          ud.rightArm.rotateX(-swing * 1.6); // arm swings forward and up
-          ud.rightArm.rotateZ(-swing * 0.5);
-        }
-        if (ud.leftArm) ud.leftArm.rotateX(-swing * 0.7);
-        this.mesh.rotation.x = swing * -0.45;
-        this.strikeTimer -= dt;
-      } else {
-        this.mesh.rotation.x = 0;
+      // Bone overlay applied AFTER mixer — stacks on top of current pose
+      this.mesh.rotation.x = 0;
+      if (this.atkPhase === 1) {
+        // Wind-up: arms rise, body tilts back slightly
+        const t = this.atkTime / 0.28;
+        if (ud.rightArm) { ud.rightArm.rotateX(-t * 1.8); ud.rightArm.rotateZ(-t * 0.6); }
+        if (ud.leftArm)  ud.leftArm.rotateX(-t * 0.9);
+        this.mesh.rotation.x = t * 0.25;
+      } else if (this.atkPhase === 2) {
+        // Slash: arms swing down hard, body lurches forward
+        const t = this.atkTime / 0.22;
+        const swing = Math.sin(t * Math.PI * 0.8);
+        if (ud.rightArm) { ud.rightArm.rotateX(swing * 2.4 - 1.8); ud.rightArm.rotateZ(-0.6 + swing * 0.6); }
+        if (ud.leftArm)  ud.leftArm.rotateX(swing * 1.2 - 0.9);
+        this.mesh.rotation.x = 0.25 - t * 0.7;
+      } else if (this.atkPhase === 3) {
+        // Recover: smoothly return arms to neutral
+        const t = 1 - this.atkTime / 0.28;
+        const lean = (Math.sin((1 - t) * Math.PI * 0.5)) * -0.45;
+        if (ud.rightArm) ud.rightArm.rotateX(-t * 0.6);
+        if (ud.leftArm)  ud.leftArm.rotateX(-t * 0.3);
+        this.mesh.rotation.x = lean * (1 - (1 - t));
       }
     } else if (ud.mixer) {
       ud.mixer.update(dt);
