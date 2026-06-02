@@ -190,9 +190,7 @@
   #minimap-label { color: #666; font-size: 10px; letter-spacing: 2px; margin-bottom: 3px; }
   #minimap {
     display: block; width: 160px; height: 160px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(0,0,0,0.52);
-    border-radius: 2px;
+    border-radius: 50%;
     image-rendering: pixelated;
   }
 
@@ -1768,49 +1766,63 @@ const mmCanvas = document.getElementById('minimap');
 const mmCtx    = mmCanvas.getContext('2d');
 const MM       = 160;
 
+const MM_VIEW_R = 20; // world units visible in each direction from player
+
 function updateMinimap() {
   mmCtx.clearRect(0, 0, MM, MM);
-  // map arena coords: world(-ARENA..ARENA) -> canvas(0..MM)
-  const wx = x  => (x  + ARENA) * (MM / (ARENA * 2));
-  const wz = z  => (z  + ARENA) * (MM / (ARENA * 2));
+  const cx = MM / 2, cy = MM / 2;
+  const scale = MM / (MM_VIEW_R * 2); // px per world unit
 
-  // arena border
-  mmCtx.strokeStyle = 'rgba(255,255,255,0.20)';
-  mmCtx.lineWidth = 1;
-  mmCtx.strokeRect(0.5, 0.5, MM-1, MM-1);
+  // Player-centred coordinate mapping
+  const wx = x => (x - player.pos.x) * scale + cx;
+  const wz = z => (z - player.pos.z) * scale + cy;
 
-  // bunker outline
+  // Circular clip so it looks like a radar
+  mmCtx.save();
+  mmCtx.beginPath();
+  mmCtx.arc(cx, cy, MM / 2 - 1, 0, Math.PI * 2);
+  mmCtx.clip();
+
+  // Background
+  mmCtx.fillStyle = 'rgba(0,0,0,0.55)';
+  mmCtx.fillRect(0, 0, MM, MM);
+
+  // Arena walls (scroll with player)
+  mmCtx.strokeStyle = 'rgba(255,255,255,0.35)';
+  mmCtx.lineWidth = 1.5;
+  mmCtx.strokeRect(wx(-ARENA), wz(-ARENA), ARENA * 2 * scale, ARENA * 2 * scale);
+
+  // Bunker footprint
   if (!bunker.dead) {
-    mmCtx.fillStyle = 'rgba(140,130,110,0.45)';
-    mmCtx.fillRect(wx(-6), wz(-5), 12*(MM/(ARENA*2)), 10*(MM/(ARENA*2)));
+    mmCtx.fillStyle = 'rgba(160,145,115,0.55)';
+    mmCtx.fillRect(wx(-6), wz(-5), 12 * scale, 10 * scale);
   }
 
-  // pickups
+  // Pickups
   pickups.forEach(p => {
     if (!p.active) return;
-    const col = p.type === 'health' ? '#FF4455'
-              : p.type === 0 ? '#44DD44'
-              : p.type === 1 ? '#FFCC00'
-              : '#4499FF';
-    mmCtx.fillStyle = col;
+    mmCtx.fillStyle = p.type === 'health' ? '#FF4455'
+                    : p.type === 0 ? '#44DD44'
+                    : p.type === 1 ? '#FFCC00' : '#4499FF';
     mmCtx.beginPath();
-    mmCtx.arc(wx(p.x), wz(p.z), 2.2, 0, Math.PI*2);
+    mmCtx.arc(wx(p.x), wz(p.z), 2.5, 0, Math.PI * 2);
     mmCtx.fill();
   });
 
-  // enemies
-  mmCtx.fillStyle = '#FF2222';
+  // Enemies
+  mmCtx.fillStyle = '#FF3333';
   enemies.forEach(e => {
     if (e.dead) return;
     mmCtx.beginPath();
-    mmCtx.arc(wx(e.mesh.position.x), wz(e.mesh.position.z), 2.8, 0, Math.PI*2);
+    mmCtx.arc(wx(e.mesh.position.x), wz(e.mesh.position.z), 3, 0, Math.PI * 2);
     mmCtx.fill();
   });
 
-  // player triangle (white, rotated by camYaw)
-  const px = wx(player.pos.x), pz = wz(player.pos.z);
+  mmCtx.restore(); // end clip
+
+  // Player triangle — always dead-centre, rotates with camera
   mmCtx.save();
-  mmCtx.translate(px, pz);
+  mmCtx.translate(cx, cy);
   mmCtx.rotate(-camYaw);
   mmCtx.fillStyle = '#FFFFFF';
   mmCtx.beginPath();
@@ -1820,6 +1832,13 @@ function updateMinimap() {
   mmCtx.closePath();
   mmCtx.fill();
   mmCtx.restore();
+
+  // Circular border ring
+  mmCtx.strokeStyle = 'rgba(255,255,255,0.22)';
+  mmCtx.lineWidth = 1;
+  mmCtx.beginPath();
+  mmCtx.arc(cx, cy, MM / 2 - 0.5, 0, Math.PI * 2);
+  mmCtx.stroke();
 }
 
 // ── KILL FEED ─────────────────────────────────────────────────────────────────
