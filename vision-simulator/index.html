@@ -36,6 +36,9 @@
   .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
 
   header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .app-title-bar { display: none; padding: 6px 4px 14px; border-bottom: 1px solid var(--line); margin-bottom: 18px; text-align: center; }
+  .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
+  .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
   .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; }
   h1 {
     font-family: 'Fraunces', serif; font-weight: 500;
@@ -287,6 +290,11 @@
       </a>
     </div>
   </header>
+
+  <div class="app-title-bar" id="appTitleBar">
+    <h2>Vision Simulator</h2>
+    <p>by Dr. Ryan Evans, OD</p>
+  </div>
 
   <div class="stage-wrap">
     <div class="stage">
@@ -1645,10 +1653,12 @@
 </script>
 
 <script>
-  // Hide header in Capacitor app or when ?app=1 preview param is set
+  // Swap full hero for compact title bar in Capacitor app or ?app=1 preview
   if (window.Capacitor || new URLSearchParams(location.search).get('app') === '1') {
     var hero = document.querySelector('header.hero');
     if (hero) hero.style.display = 'none';
+    var titleBar = document.getElementById('appTitleBar');
+    if (titleBar) titleBar.style.display = 'block';
   }
 
   // Footer links: privacyLink shown by default (app); web swaps to homeLink
