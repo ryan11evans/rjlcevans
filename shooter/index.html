@@ -385,7 +385,7 @@ import { ShaderPass }            from './vendor/three/addons/postprocessing/Shad
 import { GammaCorrectionShader } from './vendor/three/addons/shaders/GammaCorrectionShader.js';
 import { FXAAShader }            from './vendor/three/addons/shaders/FXAAShader.js';
 import { GLTFLoader }            from './vendor/three/addons/loaders/GLTFLoader.js';
-import { SkeletonUtils }         from './vendor/three/addons/utils/SkeletonUtils.js';
+import { clone as cloneSkeleton } from './vendor/three/addons/utils/SkeletonUtils.js';
 
 // ── LOADING SCREEN — set up first so timeout always fires even if init throws ─
 const _loadBar = document.getElementById('loading-bar');
@@ -580,7 +580,7 @@ gltfLoader.load(
 );
 
 function buildZombieFromGLTF() {
-  const clone = SkeletonUtils.clone(soldierGLTF.scene);
+  const clone = cloneSkeleton(soldierGLTF.scene);
   // Clone materials per-instance so hit-flash is independent
   clone.traverse(node => {
     if (!node.isMesh) return;
