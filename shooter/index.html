@@ -151,7 +151,8 @@
   }
   #loading-title {
     font-size: 44px; letter-spacing: 8px; font-weight: bold;
-    margin-bottom: 52px;
+    margin-bottom: 52px; text-align: center;
+    padding-left: 8px; /* compensate letter-spacing trailing gap */
     text-shadow: 0 0 30px rgba(255,255,255,0.2);
   }
   #loading-track {
@@ -385,30 +386,26 @@ renderer.outputColorSpace    = THREE.SRGBColorSpace;
 const scene  = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x9AB8A8, 0.007);
 
-// Real cube-map skybox (Park3Med outdoor scene)
-// ── LOADING MANAGER ───────────────────────────────────────────────────────────
+// ── LOADING SCREEN ────────────────────────────────────────────────────────────
 const _loadBar = document.getElementById('loading-bar');
 const _loadPct = document.getElementById('loading-pct');
 const _loadScr = document.getElementById('loading-screen');
-const _loadMgr = new THREE.LoadingManager();
-_loadMgr.onProgress = (url, loaded, total) => {
-  const pct = Math.round(loaded / total * 100);
+
+function _setLoadPct(pct) {
   _loadBar.style.width = pct + '%';
   _loadPct.textContent = pct + '%';
-};
-_loadMgr.onLoad = () => {
-  _loadBar.style.width = '100%';
-  _loadPct.textContent = '100%';
+}
+function _onGameReady() {
+  _setLoadPct(100);
   setTimeout(() => {
     _loadScr.style.opacity = '0';
     setTimeout(() => _loadScr.remove(), 650);
   }, 300);
   nextWave();
-};
-// Silent error handler — onLoad still fires via itemEnd
-_loadMgr.onError = () => { _loadPct.textContent = 'loading…'; };
+}
 
-const cubeLoader = new THREE.CubeTextureLoader(_loadMgr);
+// Real cube-map skybox (Park3Med outdoor scene)
+const cubeLoader = new THREE.CubeTextureLoader();
 cubeLoader.setPath('./assets/skybox/');
 const skyboxTex = cubeLoader.load(['px.jpg','nx.jpg','py.jpg','ny.jpg','pz.jpg','nz.jpg']);
 skyboxTex.colorSpace = THREE.SRGBColorSpace;
@@ -507,7 +504,7 @@ const pbr = (color, roughness = 0.85, metalness = 0) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness });
 
 // ── REAL TEXTURES ─────────────────────────────────────────────────────────────
-const texLoader = new THREE.TextureLoader(_loadMgr);
+const texLoader = new THREE.TextureLoader();
 
 function loadTex(path, repeatX, repeatY, isSRGB = true) {
   const t = texLoader.load(path);
@@ -526,24 +523,33 @@ const woodBumpTex   = loadTex('./assets/hardwood2_bump.jpg',    2, 2, false);
 // ── GLTF / SOLDIER MODEL ─────────────────────────────────────────────────────
 let soldierGLTF = null;
 const animMixers = [];
-const gltfLoader = new GLTFLoader(_loadMgr);
-gltfLoader.load('./assets/Soldier.glb', gltf => {
-  // Pre-tint all materials with zombie green-grey look
-  gltf.scene.traverse(node => {
-    if (!node.isMesh) return;
-    const mats = Array.isArray(node.material) ? node.material : [node.material];
-    mats.forEach(mat => {
-      const c = mat.color;
-      const gray = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-      c.setRGB(gray * 0.80 + 0.04, gray * 0.92 + 0.07, gray * 0.65 + 0.02);
-      mat.roughness  = Math.max(mat.roughness ?? 0.5, 0.82);
-      mat.metalness  = Math.min(mat.metalness ?? 0,   0.05);
-      mat.envMapIntensity = 0.2;
+const gltfLoader = new GLTFLoader();
+gltfLoader.load(
+  './assets/Soldier.glb',
+  gltf => {
+    // Pre-tint all materials with zombie green-grey look
+    gltf.scene.traverse(node => {
+      if (!node.isMesh) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach(mat => {
+        const c = mat.color;
+        const gray = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+        c.setRGB(gray * 0.80 + 0.04, gray * 0.92 + 0.07, gray * 0.65 + 0.02);
+        mat.roughness  = Math.max(mat.roughness ?? 0.5, 0.82);
+        mat.metalness  = Math.min(mat.metalness ?? 0,   0.05);
+        mat.envMapIntensity = 0.2;
+      });
+      node.castShadow = true;
     });
-    node.castShadow = true;
-  });
-  soldierGLTF = gltf;
-});
+    soldierGLTF = gltf;
+    _onGameReady();
+  },
+  xhr => {
+    if (xhr.lengthComputable)
+      _setLoadPct(Math.round(xhr.loaded / xhr.total * 100));
+  },
+  () => _onGameReady() // error fallback — start without the model
+);
 
 function buildZombieFromGLTF() {
   const clone = SkeletonUtils.clone(soldierGLTF.scene);
