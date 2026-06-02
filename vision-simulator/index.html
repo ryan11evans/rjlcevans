@@ -36,6 +36,9 @@
   .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
 
   header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .app-title-bar { display: none; padding: 6px 4px 14px; border-bottom: 1px solid var(--line); margin-bottom: 18px; text-align: center; }
+  .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
+  .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
   .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; }
   h1 {
     font-family: 'Fraunces', serif; font-weight: 500;
@@ -103,9 +106,37 @@
     border-radius: 999px; pointer-events: none; display: none;
   }
   .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
-  .empty-state svg { opacity: 0.3; }
+  .empty-state-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; }
+  .empty-state-icon::before, .empty-state-icon::after {
+    content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    border: 1.5px solid var(--ink-mute); opacity: 0;
+    animation: eyeRipple 2.8s ease-out infinite;
+  }
+  .empty-state-icon::after { animation-delay: 1.4s; }
+  @keyframes eyeRipple {
+    0% { transform: scale(0.75); opacity: 0.5; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+  @keyframes eyePulse {
+    0%, 100% { opacity: 0.28; }
+    50% { opacity: 0.55; }
+  }
+  .empty-state svg { animation: eyePulse 2.8s ease-in-out infinite; }
+  #fadeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: 0; }
 
-  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; align-items: center; }
+  .cam-row { flex-wrap: nowrap; }
+  .btn.icon-btn { padding: 10px 13px; justify-content: center; }
+  .btn.icon-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+  .sample-scroll-wrap { position: relative; }
+  .sample-scroll-wrap::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 4px; width: 64px;
+    background: linear-gradient(to right, transparent, var(--bg) 80%);
+    pointer-events: none; z-index: 2;
+  }
+  #sampleRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; padding-right: 24px; margin: 8px 0 4px; }
+  #sampleRow::-webkit-scrollbar { display: none; }
+  #sampleRow .btn[data-sample] { flex-shrink: 0; }
   .btn {
     appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
     padding: 11px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
@@ -213,6 +244,22 @@
   }
   #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
   .sample-thumb { width: 26px; height: 20px; border-radius: 4px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
+
+  /* ===== Onboarding overlay ===== */
+  .onboard-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(10,15,22,0.97); display: flex; align-items: center; justify-content: center; padding: 28px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: opacity 0.4s; }
+  .onboard-overlay.hidden { opacity: 0; pointer-events: none; }
+  .onboard-card { max-width: 340px; width: 100%; text-align: center; }
+  .onboard-icon { width: 64px; height: 64px; margin: 0 auto 16px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+  .onboard-card h2 { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; margin: 0 0 4px; color: var(--ink); }
+  .onboard-byline { color: var(--accent); font-size: 13px; margin: 0 0 28px; }
+  .onboard-steps { text-align: left; display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+  .onboard-step { display: flex; align-items: flex-start; gap: 14px; }
+  .onboard-step-num { background: var(--accent); color: #1a1208; font-weight: 700; font-size: 12px; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .onboard-step-text { font-size: 14px; color: var(--ink-dim); line-height: 1.45; }
+  .onboard-step-text strong { color: var(--ink); font-weight: 600; }
+  .onboard-disclaimer { font-size: 11px; color: var(--ink-mute); margin: 0 0 22px; }
+  .onboard-btn { background: var(--accent); color: #1a1208; border: none; border-radius: 999px; padding: 15px 0; font-size: 16px; font-weight: 700; font-family: 'Inter Tight', sans-serif; cursor: pointer; width: 100%; letter-spacing: 0.01em; -webkit-tap-highlight-color: transparent; }
+  .onboard-btn:active { opacity: 0.85; }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -225,6 +272,22 @@
   <meta name="twitter:image" content="https://rjlcevans.com/family.jpg">
 </head>
 <body>
+<div id="onboarding" class="onboard-overlay">
+  <div class="onboard-card">
+    <div class="onboard-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+    </div>
+    <h2>Vision Simulator</h2>
+    <p class="onboard-byline">by Dr. Ryan Evans, OD</p>
+    <div class="onboard-steps">
+      <div class="onboard-step"><span class="onboard-step-num">1</span><span class="onboard-step-text"><strong>Choose a condition</strong> — cataracts, glaucoma, AMD, color blindness, and more</span></div>
+      <div class="onboard-step"><span class="onboard-step-num">2</span><span class="onboard-step-text"><strong>Adjust severity</strong> using the stage buttons that appear below</span></div>
+      <div class="onboard-step"><span class="onboard-step-num">3</span><span class="onboard-step-text"><strong>Use the camera or a sample image</strong> to see the simulation in real time</span></div>
+    </div>
+    <p class="onboard-disclaimer">For educational use only · Not a diagnostic tool</p>
+    <button class="onboard-btn" id="onboardDismiss">Get Started</button>
+  </div>
+</div>
 <a href="/" id="backToSite" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
 <div class="wrap">
 
@@ -240,28 +303,45 @@
     </div>
   </header>
 
+  <div class="app-title-bar" id="appTitleBar">
+    <h2>Vision Simulator</h2>
+    <p>by Dr. Ryan Evans, OD</p>
+  </div>
+
   <div class="stage-wrap">
     <div class="stage">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="sourceCanvas"></canvas>
       <canvas id="stageCanvas"></canvas>
+      <canvas id="fadeCanvas"></canvas>
       <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
       <div class="compare-line" id="compareLine"></div>
       <div class="compare-tag left" id="compareTagL">Normal</div>
       <div class="compare-tag right" id="compareTagR">Impaired</div>
       <div class="active-badge" id="activeBadge"></div>
       <div class="empty-state" id="emptyState">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        <div class="empty-state-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        </div>
         <div>Start the camera or upload an image to begin.</div>
       </div>
     </div>
   </div>
 
+  <div class="source-row cam-row">
+    <button class="btn primary" id="startCam" style="flex:1;">Start Camera</button>
+    <button class="btn ghost icon-btn" id="stopCam" title="Stop camera">
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+    </button>
+    <button class="btn ghost icon-btn" id="flipCam" title="Flip camera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15a9 9 0 0 0 14.85 3.36L23 14"/></svg>
+    </button>
+  </div>
+
   <div class="source-row">
-    <button class="btn primary" id="startCam">Start Camera</button>
-    <button class="btn ghost" id="stopCam">Stop</button>
-    <button class="btn ghost" id="flipCam">Flip Camera</button>
-    <label class="btn btn-file">Upload Image
+    <label class="btn btn-file ghost" style="flex:1;">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
     <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
@@ -269,13 +349,13 @@
       <span id="compareLabel">Compare: Off</span>
     </button>
     <button class="btn ghost tool" id="snapshot">
-      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
-      Snapshot
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Share
     </button>
   </div>
 
+  <div class="sample-scroll-wrap">
   <div class="source-row" id="sampleRow">
-    <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
     <button class="btn ghost" data-sample="chart">
       <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
       Eye Chart
@@ -301,6 +381,7 @@
       Reading
     </button>
   </div>
+  </div>
 
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions" id="conditions">
@@ -324,8 +405,8 @@
 
   <footer>
     <span>© Dr. Ryan Evans, OD · For educational demonstration only · Not a diagnostic tool</span>
-    <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
-    <a href="https://rjlcevans.com/privacy" id="privacyLink" style="display:none;">Privacy Policy</a>
+    <a href="https://rjlcevans.com/" id="homeLink" style="display:none;">← Return to Evans Family Home</a>
+    <a href="https://rjlcevans.com/privacy" id="privacyLink">Privacy Policy</a>
   </footer>
 </div>
 
@@ -350,6 +431,8 @@
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
   const stageCanvas = document.getElementById('stageCanvas');
+  const fadeCanvas = document.getElementById('fadeCanvas');
+  const fadeCtx = fadeCanvas.getContext('2d');
   const overlay = document.getElementById('overlay');
   const emptyState = document.getElementById('emptyState');
   const ctrlGrid = document.getElementById('ctrlGrid');
@@ -368,6 +451,27 @@
   let condition = 'none';
   let compareMode = false;
   let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
+
+  function crossFade() {
+    if (!currentSource) return;
+    fadeCanvas.width = stageCanvas.width;
+    fadeCanvas.height = stageCanvas.height;
+    fadeCtx.drawImage(stageCanvas, 0, 0);
+    fadeCanvas.style.transition = 'none';
+    fadeCanvas.style.opacity = '1';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      fadeCanvas.style.transition = 'opacity 0.45s ease';
+      fadeCanvas.style.opacity = '0';
+    }));
+  }
+
+  function haptic(style) {
+    try {
+      const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+      if (H) { H.impact({ style: style || 'LIGHT' }); return; }
+      if (navigator.vibrate) navigator.vibrate(style === 'MEDIUM' ? 15 : 8);
+    } catch(e) {}
+  }
 
   const defaults = {
     myopia:      { blurSigma: 8 },
@@ -466,6 +570,7 @@
     stopCamera();
     const img = new Image();
     img.onload = () => {
+      crossFade();
       uploadedImage = img;
       currentSource = 'image';
       emptyState.style.display = 'none';
@@ -1242,6 +1347,7 @@
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
+    haptic('MEDIUM');
     const wasSelected = btn.getAttribute('aria-pressed') === 'true';
     const isCollapsed = conditionsEl.classList.contains('has-selection');
     conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
@@ -1258,7 +1364,7 @@
     } else {
       conditionsEl.classList.add('has-selection');
     }
-    if (currentSource === 'image') drawOnce();
+    if (currentSource === 'image') { crossFade(); drawOnce(); }
   });
 
   // ===== Built-in sample images (drawn procedurally — no external/copyright assets) =====
@@ -1378,37 +1484,51 @@
       g.strokeStyle = '#e8e2d4'; g.lineWidth = 1;
       g.strokeRect(48, 48, c.width-96, c.height-96);
       g.textAlign = 'left'; g.textBaseline = 'top';
-      g.fillStyle = '#14142a';
-      g.font = '700 48px Georgia, serif'; g.fillText('Physician Referral Note', 70, 72);
-      g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
-      let ry = 152;
-      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
-        g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
-        g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
-        ry += 38;
-      });
-      ry += 10;
-      g.strokeStyle = '#d8d0c0'; g.lineWidth = 1; g.beginPath(); g.moveTo(70,ry); g.lineTo(c.width-70,ry); g.stroke(); ry += 20;
-      const paras = [
-        { text: 'Rx: Progressive addition lenses. Distance: +0.25 −0.50 × 095 / +0.50 −0.25 × 085. Add: +2.25 OU. PD: 63/61.', size: 23 },
-        { text: 'Instructions: Wear full time. Avoid progressives while driving until adapted (allow 2–3 weeks). Return visit in 6 weeks.', size: 19 },
-        { text: 'The patient reports increasing difficulty reading small print and near tasks over the past 18 months. Best corrected visual acuity is 20/20 OD and 20/20 OS at distance. Near acuity without correction is J5 at 40 cm bilaterally.', size: 15 },
-        { text: 'Side effects may include: dizziness, peripheral distortion, and difficulty with stairs during adaptation. If symptoms persist beyond two weeks, contact our office at (555) 867-5309. Do not adjust the frame yourself.', size: 12 },
-        { text: 'This prescription is valid for 24 months from the date of examination. Frame selection, lens material, coatings, and fitting are the responsibility of the dispensing optician. Insurance benefits apply subject to plan limitations and co-pay is due at time of dispensing. Lens prescription is not transferable.', size: 9 },
-        { text: 'Fine print: Warranty covers manufacturing defects only and does not include scratches, breakage, or loss. Anti-reflective coating void if cleaned with abrasive materials. Progressive lens designs may vary by manufacturer. All measurements are in millimetres unless otherwise stated. Patient acknowledges receipt of this prescription.', size: 7 },
-      ];
-      paras.forEach(p => {
-        g.font = `400 ${p.size}px Georgia, serif`; g.fillStyle = '#1a1a2a';
-        const maxW = c.width - 140; let line = '';
-        p.text.split(' ').forEach(word => {
+      const maxW = c.width - 140;
+      function drawWrapped(text, x, y, size, weight, color) {
+        g.font = `${weight} ${size}px Georgia, serif`;
+        g.fillStyle = color || '#14142a';
+        const words = text.split(' '); let line = '';
+        for (const word of words) {
           const test = line + (line ? ' ' : '') + word;
-          if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += p.size*1.65; line = word; }
-          else line = test;
-        });
-        if (line) { g.fillText(line, 70, ry); ry += p.size*1.65; }
-        ry += p.size * 1.2;
-      });
+          if (g.measureText(test).width > maxW && line) {
+            g.fillText(line, x, y); y += size * 1.55; line = word;
+          } else line = test;
+        }
+        if (line) { g.fillText(line, x, y); y += size * 1.55; }
+        return y;
+      }
+      let y = 72;
+      // Big headline
+      g.font = '700 62px Georgia, serif'; g.fillStyle = '#0f0f24';
+      const title = 'Understanding Your Vision: A Patient Guide';
+      const words = title.split(' '); let line = '';
+      for (const word of words) {
+        const test = line + (line ? ' ' : '') + word;
+        if (g.measureText(test).width > maxW && line) {
+          g.fillText(line, 70, y); y += 72; line = word;
+        } else line = test;
+      }
+      if (line) { g.fillText(line, 70, y); y += 72; }
+      // Rule
+      g.strokeStyle = '#b8aa90'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(70, y); g.lineTo(c.width-70, y); g.stroke(); y += 18;
+      // Byline
+      g.font = '400 20px Georgia, serif'; g.fillStyle = '#6a6a8a';
+      g.fillText('Dr. Ryan Evans, OD  ·  Patient Education Series', 70, y); y += 44;
+      // Body paragraphs — full width, progressively smaller
+      const paras = [
+        { text: 'Many common vision conditions develop gradually over years, making early detection and understanding essential for protecting your long-term eye health. Regular comprehensive eye exams allow your doctor to monitor changes before they significantly impact daily activities such as driving, reading, or recognizing faces.', size: 26, weight: '400' },
+        { text: 'Refractive errors including myopia, hyperopia, and astigmatism affect the way light focuses on the retina. These conditions are easily corrected with glasses, contact lenses, or refractive surgery. Presbyopia, the age-related loss of near focusing ability, typically becomes noticeable in the early to mid forties and is corrected with reading glasses or progressive lenses.', size: 21, weight: '400' },
+        { text: 'Age-related macular degeneration affects the central retina and can cause difficulty reading and recognizing faces. Glaucoma damages the optic nerve, typically causing peripheral vision loss that progresses inward if untreated. Diabetic retinopathy is a complication of diabetes that damages the tiny blood vessels in the retina, potentially causing vision loss at any age.', size: 17, weight: '400' },
+        { text: 'Cataracts involve clouding of the natural lens inside the eye, causing blurred vision, glare, and reduced contrast sensitivity. Surgical removal with intraocular lens implantation is highly effective. Floaters are shadows cast by vitreous debris and are usually benign, though a sudden increase warrants prompt evaluation to rule out retinal detachment.', size: 13, weight: '400' },
+        { text: 'This simulator demonstrates how these conditions affect real-world vision using your own camera or uploaded images. Select any condition and adjust the severity to understand what a patient with that diagnosis experiences. For educational use only. Not a substitute for a comprehensive eye examination by a licensed eye care professional.', size: 10, weight: '400' },
+        { text: 'Recommended examination intervals: ages 6–17 annually, adults 18–64 every two years or as recommended, adults 65 and older annually. Patients with diabetes, family history of glaucoma, or previous eye disease should follow individualized schedules as directed by their eye care provider. Rx valid 24 months. All measurements in metric units. © Dr. Ryan Evans, OD.', size: 8, weight: '400' },
+      ];
+      for (const p of paras) {
+        y = drawWrapped(p.text, 70, y, p.size, p.weight);
+        y += p.size * 1.0;
+      }
     } else if (kind === 'garden') {
       // Colorful flowers (great for color blindness + general)
       g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
@@ -1439,6 +1559,7 @@
     if (photoPath) {
       const img = new Image();
       img.onload = () => {
+        crossFade();
         uploadedImage = img;
         currentSource = 'image';
         emptyState.style.display = 'none';
@@ -1456,6 +1577,7 @@
     const c = makeSample(kind);
     const img = new Image();
     img.onload = () => {
+      crossFade();
       uploadedImage = img;
       currentSource = 'image';
       emptyState.style.display = 'none';
@@ -1464,6 +1586,10 @@
     };
     img.src = c.toDataURL('image/png');
   }
+
+  document.getElementById('controlsPanel').addEventListener('click', e => {
+    if (e.target.closest('.preset')) haptic('LIGHT');
+  });
 
   document.getElementById('startCam').addEventListener('click', startCamera);
   document.getElementById('stopCam').addEventListener('click', stopCamera);
@@ -1535,12 +1661,38 @@
 </script>
 
 <script>
-  // Hide web-only elements when running inside the Capacitor native app wrapper
-  if (window.Capacitor) {
-    document.getElementById('backToSite').style.display   = 'none';
+  // Onboarding: show once per install, then dismiss to localStorage
+  (function() {
+    var el = document.getElementById('onboarding');
+    if (!el) return;
+    if (localStorage.getItem('vs_welcomed_v2')) { el.style.display = 'none'; return; }
+    document.getElementById('onboardDismiss').addEventListener('click', function() {
+      el.classList.add('hidden');
+      localStorage.setItem('vs_welcomed_v2', '1');
+      setTimeout(function() { el.style.display = 'none'; }, 420);
+    });
+  })();
+</script>
+
+<script>
+  // Swap full hero for compact title bar in Capacitor app or ?app=1 preview
+  if (window.Capacitor || new URLSearchParams(location.search).get('app') === '1') {
+    var hero = document.querySelector('header.hero');
+    if (hero) hero.style.display = 'none';
+    var titleBar = document.getElementById('appTitleBar');
+    if (titleBar) titleBar.style.display = 'block';
+  }
+
+  // Footer links: privacyLink shown by default (app); web swaps to homeLink
+  if (!window.Capacitor) {
+    document.getElementById('homeLink').style.display    = 'inline';
+    document.getElementById('privacyLink').style.display = 'none';
+  } else {
+    // Native app: hide web-only nav elements and apply Dynamic Island padding
+    document.getElementById('backToSite').style.display    = 'none';
     document.getElementById('appStoreBadge').style.display = 'none';
-    document.getElementById('homeLink').style.display      = 'none';
-    document.getElementById('privacyLink').style.display   = 'inline';
+    var wrap = document.querySelector('.wrap');
+    if (wrap) { wrap.style.paddingTop = '72px'; }
   }
 </script>
 </body>

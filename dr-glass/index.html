@@ -48,8 +48,9 @@
     position: relative; flex: 1;
     overflow: hidden;
     cursor: pointer;
+    touch-action: none;
   }
-  #gameCanvas { display: block; width: 100%; height: 100%; outline: none; }
+  #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
   #gameCanvas:focus, #gameCanvas:focus-visible,
   .stage:focus, .stage:focus-visible { outline: none !important; }
 
@@ -2052,6 +2053,9 @@
   stage.addEventListener('pointerup', onRelease);
   stage.addEventListener('pointercancel', onRelease);
   stage.addEventListener('pointerleave', onRelease);
+  // Prevent iOS long-press from showing the drag-source bubble or callout popup.
+  stage.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  stage.addEventListener('contextmenu', e => e.preventDefault());
 
   document.addEventListener('keydown', e => {
     if (e.repeat) return;
@@ -4896,20 +4900,44 @@
   }
 
   function loadProgress() {
-    // Try the primary key, then fall back to the backup if it's missing/corrupt.
+    // In native app: Swift injects window.__icloudSaveData (a JS object) before page loads.
+    let icloudProgress = null;
+    if (window.__icloudSaveData) {
+      try {
+        const raw = window.__icloudSaveData;
+        const d = defaultProgress();
+        icloudProgress = Object.assign(d, raw, {
+          bestScores: raw.bestScores || {},
+          stars: raw.stars || {},
+          bestTimes: raw.bestTimes || {},
+          ownedGlasses: raw.ownedGlasses || d.ownedGlasses,
+        });
+      } catch (e) {}
+    }
+
+    // Try localStorage primary, then backup.
+    let localProgress = null;
     try {
       const primary = parseProgress(localStorage.getItem(PROGRESS_KEY));
-      if (primary) return primary;
-    } catch (e) { /* corrupt primary — try backup */ }
-    try {
-      const backup = parseProgress(localStorage.getItem(PROGRESS_BACKUP_KEY));
-      if (backup) {
-        // Restore the primary from the backup
-        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(backup)); } catch (e) {}
-        return backup;
-      }
-    } catch (e) { /* both gone */ }
-    return defaultProgress();
+      if (primary) localProgress = primary;
+    } catch (e) {}
+    if (!localProgress) {
+      try {
+        const backup = parseProgress(localStorage.getItem(PROGRESS_BACKUP_KEY));
+        if (backup) {
+          localProgress = backup;
+          try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(backup)); } catch (e) {}
+        }
+      } catch (e) {}
+    }
+
+    // Pick whichever save is more advanced (levels unlocked × 1000 + coins as tiebreaker).
+    if (icloudProgress && localProgress) {
+      const iScore = (icloudProgress.highestUnlocked || 0) * 1000 + (icloudProgress.coinBank || 0);
+      const lScore = (localProgress.highestUnlocked || 0) * 1000 + (localProgress.coinBank || 0);
+      return iScore >= lScore ? icloudProgress : localProgress;
+    }
+    return icloudProgress || localProgress || defaultProgress();
   }
 
   function defaultProgress() {
@@ -4992,12 +5020,41 @@
       const check = localStorage.getItem(PROGRESS_KEY);
       const ok = check === json;
       showSaveIndicator(ok);
+      // Mirror to iCloud when running inside the native app.
+      try {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.icloudSave) {
+          window.webkit.messageHandlers.icloudSave.postMessage(json);
+        }
+      } catch (e) {}
       return ok;
     } catch (e) {
       showSaveIndicator(false);
       return false;
     }
   }
+
+  // Called by Swift when iCloud data changes on another device while the app is open.
+  window.onICloudUpdate = function(incoming) {
+    try {
+      if (!incoming) return;
+      const d = defaultProgress();
+      const icloudProgress = Object.assign(d, incoming, {
+        bestScores: incoming.bestScores || {},
+        stars: incoming.stars || {},
+        bestTimes: incoming.bestTimes || {},
+        ownedGlasses: incoming.ownedGlasses || d.ownedGlasses,
+      });
+      const local = loadProgress();
+      const iScore = (icloudProgress.highestUnlocked || 0) * 1000 + (icloudProgress.coinBank || 0);
+      const lScore = (local.highestUnlocked || 0) * 1000 + (local.coinBank || 0);
+      if (iScore > lScore) {
+        // iCloud has more progress — silently update localStorage so next loadProgress picks it up.
+        const j = JSON.stringify(icloudProgress);
+        try { localStorage.setItem(PROGRESS_KEY, j); localStorage.setItem(PROGRESS_BACKUP_KEY, j); } catch (e) {}
+        window.__icloudSaveData = icloudProgress;
+      }
+    } catch (e) {}
+  };
 
   // Flash a small "Progress saved" badge
   let _saveIndicatorTimer = null;
