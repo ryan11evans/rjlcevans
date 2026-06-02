@@ -587,16 +587,22 @@ gltfLoader.load(
 );
 
 gltfLoader.load(
-  './assets/tree_cc0.glb',
+  './assets/tree_gdi.glb',
   gltf => {
+    // Measure natural height so addTree() can auto-scale to a target size
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const sz = new THREE.Vector3(); box.getSize(sz);
+    gltf.userData.naturalHeight = sz.y || 10;
     gltf.scene.traverse(node => {
-      if (node.isMesh) {
-        node.castShadow = true;
-        node.receiveShadow = false;
-        if (node.material) {
-          if (Array.isArray(node.material)) node.material.forEach(m => { m.roughness = Math.max(m.roughness ?? 0.8, 0.75); });
-          else node.material.roughness = Math.max(node.material.roughness ?? 0.8, 0.75);
-        }
+      if (!node.isMesh) return;
+      node.castShadow = true;
+      node.receiveShadow = false;
+      // Detect bark vs foliage by mesh/material name and apply realistic PBR
+      const tag = (node.name + ' ' + (node.material?.name || '')).toLowerCase();
+      if (tag.includes('bark') || tag.includes('wood') || tag.includes('trunk') || tag.includes('stem')) {
+        node.material = pbr(0x1E0B03, 0.97);
+      } else {
+        node.material = pbr(0x0B2205 + Math.floor(Math.random() * 0x080E04), 0.99);
       }
     });
     treeGLTF = gltf;
@@ -608,7 +614,13 @@ gltfLoader.load(
 
 gltfLoader.load(
   './assets/boulder.glb',
-  gltf => { rockGLTF = gltf; _assetDone(); },
+  gltf => {
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const sz = new THREE.Vector3(); box.getSize(sz);
+    gltf.userData.naturalHeight = sz.y || 1;
+    rockGLTF = gltf;
+    _assetDone();
+  },
   null,
   () => _assetDone()
 );
@@ -775,12 +787,14 @@ function _dispGeo(geo, freq, amp, ox, oy, oz) {
 function addTree(x, z) {
   if (treeGLTF) {
     const clone = treeGLTF.scene.clone(true);
-    clone.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = false; } });
+    clone.traverse(node => { if (node.isMesh) node.castShadow = true; });
+    // Scale so the tree is always 3.5–6 m tall regardless of native model units
+    const targetH = 3.5 + Math.random() * 2.5;
+    const s = targetH / treeGLTF.userData.naturalHeight;
+    clone.scale.setScalar(s);
     clone.position.set(x, 0, z);
     clone.rotation.y = Math.random() * Math.PI * 2;
-    const s = 0.55 + Math.random() * 0.35;
-    clone.scale.setScalar(s);
-    obstacles.push({ x, z, radius: 0.55 * s + 0.15 });
+    obstacles.push({ x, z, radius: s * 1.0 + 0.15 });
     scene.add(clone);
     return;
   }
@@ -883,9 +897,12 @@ function _placeRockGLB(x, z) {
   const count = 1 + Math.floor(Math.random() * 2);
   const grp = new THREE.Group();
   const baseCol = 0x707068 + Math.floor(Math.random() * 0x181810);
+  const naturalH = rockGLTF.userData.naturalHeight || 1;
   for (let j = 0; j < count; j++) {
     const clone = rockGLTF.scene.clone(true);
-    const s = 0.55 + Math.random() * 1.0;
+    // Scale to target height 0.4–0.9 m regardless of native model units
+    const targetH = 0.4 + Math.random() * 0.5;
+    const s = targetH / naturalH;
     clone.scale.setScalar(s);
     clone.traverse(node => {
       if (!node.isMesh) return;
@@ -898,7 +915,6 @@ function _placeRockGLB(x, z) {
       const ang = Math.random() * Math.PI * 2;
       const d = 0.3 + Math.random() * 0.6;
       clone.position.set(Math.cos(ang)*d, 0, Math.sin(ang)*d);
-      clone.scale.setScalar(s * (0.55 + Math.random() * 0.45));
     }
     clone.rotation.y = Math.random() * Math.PI * 2;
     grp.add(clone);
