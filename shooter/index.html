@@ -439,8 +439,8 @@ function _onGameReady() {
   nextWave();
 }
 
-// Hard timeout: start the game after 12 s no matter what
-setTimeout(_onGameReady, 12000);
+// Hard timeout: start the game after 6 s no matter what
+setTimeout(_onGameReady, 6000);
 
 // Real cube-map skybox (Park3Med outdoor scene)
 const cubeLoader = new THREE.CubeTextureLoader();
@@ -565,20 +565,22 @@ const gltfLoader = new GLTFLoader();
 gltfLoader.load(
   './assets/Soldier.glb',
   gltf => {
-    // Pre-tint all materials with zombie green-grey look
-    gltf.scene.traverse(node => {
-      if (!node.isMesh) return;
-      const mats = Array.isArray(node.material) ? node.material : [node.material];
-      mats.forEach(mat => {
-        const c = mat.color;
-        const gray = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-        c.setRGB(gray * 0.80 + 0.04, gray * 0.92 + 0.07, gray * 0.65 + 0.02);
-        mat.roughness  = Math.max(mat.roughness ?? 0.5, 0.82);
-        mat.metalness  = Math.min(mat.metalness ?? 0,   0.05);
-        mat.envMapIntensity = 0.2;
+    try {
+      gltf.scene.traverse(node => {
+        if (!node.isMesh) return;
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        mats.forEach(mat => {
+          if (!mat.color) return;
+          const c = mat.color;
+          const gray = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+          c.setRGB(gray * 0.80 + 0.04, gray * 0.92 + 0.07, gray * 0.65 + 0.02);
+          mat.roughness  = Math.max(mat.roughness ?? 0.5, 0.82);
+          mat.metalness  = Math.min(mat.metalness ?? 0,   0.05);
+          mat.envMapIntensity = 0.2;
+        });
+        node.castShadow = true;
       });
-      node.castShadow = true;
-    });
+    } catch(_) {}
     soldierGLTF = gltf;
     _onGameReady();
   },
