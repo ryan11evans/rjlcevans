@@ -2108,23 +2108,7 @@ window.addEventListener('resize', () => {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 const player = new Player();
 updateHealthHUD(); updateAmmoHUD(); updateInfo();
-
-// Wait for Soldier.glb before wave 1 so enemies use the GLTF model
-{
-  const loadEl = document.createElement('div');
-  loadEl.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);color:#aaa;font-size:12px;letter-spacing:2px';
-  loadEl.textContent = 'LOADING ASSETS…';
-  document.getElementById('lock-overlay').appendChild(loadEl);
-  const _loadStart = performance.now();
-  (function waitForAssets() {
-    if (soldierGLTF || performance.now() - _loadStart > 9000) {
-      loadEl.remove();
-      nextWave();
-    } else {
-      setTimeout(waitForAssets, 80);
-    }
-  })();
-}
+nextWave();
 
 let last = performance.now();
 function loop(now) {
