@@ -1419,37 +1419,51 @@
       g.strokeStyle = '#e8e2d4'; g.lineWidth = 1;
       g.strokeRect(48, 48, c.width-96, c.height-96);
       g.textAlign = 'left'; g.textBaseline = 'top';
-      g.fillStyle = '#14142a';
-      g.font = '700 48px Georgia, serif'; g.fillText('Physician Referral Note', 70, 72);
-      g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
-      let ry = 152;
-      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
-        g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
-        g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
-        ry += 38;
-      });
-      ry += 10;
-      g.strokeStyle = '#d8d0c0'; g.lineWidth = 1; g.beginPath(); g.moveTo(70,ry); g.lineTo(c.width-70,ry); g.stroke(); ry += 20;
-      const paras = [
-        { text: 'Rx: Progressive addition lenses. Distance: +0.25 −0.50 × 095 / +0.50 −0.25 × 085. Add: +2.25 OU. PD: 63/61.', size: 23 },
-        { text: 'Instructions: Wear full time. Avoid progressives while driving until adapted (allow 2–3 weeks). Return visit in 6 weeks.', size: 19 },
-        { text: 'The patient reports increasing difficulty reading small print and near tasks over the past 18 months. Best corrected visual acuity is 20/20 OD and 20/20 OS at distance. Near acuity without correction is J5 at 40 cm bilaterally.', size: 15 },
-        { text: 'Side effects may include: dizziness, peripheral distortion, and difficulty with stairs during adaptation. If symptoms persist beyond two weeks, contact our office at (555) 867-5309. Do not adjust the frame yourself.', size: 12 },
-        { text: 'This prescription is valid for 24 months from the date of examination. Frame selection, lens material, coatings, and fitting are the responsibility of the dispensing optician. Insurance benefits apply subject to plan limitations and co-pay is due at time of dispensing. Lens prescription is not transferable.', size: 9 },
-        { text: 'Fine print: Warranty covers manufacturing defects only and does not include scratches, breakage, or loss. Anti-reflective coating void if cleaned with abrasive materials. Progressive lens designs may vary by manufacturer. All measurements are in millimetres unless otherwise stated. Patient acknowledges receipt of this prescription.', size: 7 },
-      ];
-      paras.forEach(p => {
-        g.font = `400 ${p.size}px Georgia, serif`; g.fillStyle = '#1a1a2a';
-        const maxW = c.width - 140; let line = '';
-        p.text.split(' ').forEach(word => {
+      const maxW = c.width - 140;
+      function drawWrapped(text, x, y, size, weight, color) {
+        g.font = `${weight} ${size}px Georgia, serif`;
+        g.fillStyle = color || '#14142a';
+        const words = text.split(' '); let line = '';
+        for (const word of words) {
           const test = line + (line ? ' ' : '') + word;
-          if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += p.size*1.65; line = word; }
-          else line = test;
-        });
-        if (line) { g.fillText(line, 70, ry); ry += p.size*1.65; }
-        ry += p.size * 1.2;
-      });
+          if (g.measureText(test).width > maxW && line) {
+            g.fillText(line, x, y); y += size * 1.55; line = word;
+          } else line = test;
+        }
+        if (line) { g.fillText(line, x, y); y += size * 1.55; }
+        return y;
+      }
+      let y = 72;
+      // Big headline
+      g.font = '700 62px Georgia, serif'; g.fillStyle = '#0f0f24';
+      const title = 'Understanding Your Vision: A Patient Guide';
+      const words = title.split(' '); let line = '';
+      for (const word of words) {
+        const test = line + (line ? ' ' : '') + word;
+        if (g.measureText(test).width > maxW && line) {
+          g.fillText(line, 70, y); y += 72; line = word;
+        } else line = test;
+      }
+      if (line) { g.fillText(line, 70, y); y += 72; }
+      // Rule
+      g.strokeStyle = '#b8aa90'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(70, y); g.lineTo(c.width-70, y); g.stroke(); y += 18;
+      // Byline
+      g.font = '400 20px Georgia, serif'; g.fillStyle = '#6a6a8a';
+      g.fillText('Dr. Ryan Evans, OD  ·  Patient Education Series', 70, y); y += 44;
+      // Body paragraphs — full width, progressively smaller
+      const paras = [
+        { text: 'Many common vision conditions develop gradually over years, making early detection and understanding essential for protecting your long-term eye health. Regular comprehensive eye exams allow your doctor to monitor changes before they significantly impact daily activities such as driving, reading, or recognizing faces.', size: 26, weight: '400' },
+        { text: 'Refractive errors including myopia, hyperopia, and astigmatism affect the way light focuses on the retina. These conditions are easily corrected with glasses, contact lenses, or refractive surgery. Presbyopia, the age-related loss of near focusing ability, typically becomes noticeable in the early to mid forties and is corrected with reading glasses or progressive lenses.', size: 21, weight: '400' },
+        { text: 'Age-related macular degeneration affects the central retina and can cause difficulty reading and recognizing faces. Glaucoma damages the optic nerve, typically causing peripheral vision loss that progresses inward if untreated. Diabetic retinopathy is a complication of diabetes that damages the tiny blood vessels in the retina, potentially causing vision loss at any age.', size: 17, weight: '400' },
+        { text: 'Cataracts involve clouding of the natural lens inside the eye, causing blurred vision, glare, and reduced contrast sensitivity. Surgical removal with intraocular lens implantation is highly effective. Floaters are shadows cast by vitreous debris and are usually benign, though a sudden increase warrants prompt evaluation to rule out retinal detachment.', size: 13, weight: '400' },
+        { text: 'This simulator demonstrates how these conditions affect real-world vision using your own camera or uploaded images. Select any condition and adjust the severity to understand what a patient with that diagnosis experiences. For educational use only. Not a substitute for a comprehensive eye examination by a licensed eye care professional.', size: 10, weight: '400' },
+        { text: 'Recommended examination intervals: ages 6–17 annually, adults 18–64 every two years or as recommended, adults 65 and older annually. Patients with diabetes, family history of glaucoma, or previous eye disease should follow individualized schedules as directed by their eye care provider. Rx valid 24 months. All measurements in metric units. © Dr. Ryan Evans, OD.', size: 8, weight: '400' },
+      ];
+      for (const p of paras) {
+        y = drawWrapped(p.text, 70, y, p.size, p.weight);
+        y += p.size * 1.0;
+      }
     } else if (kind === 'garden') {
       // Colorful flowers (great for color blindness + general)
       g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
