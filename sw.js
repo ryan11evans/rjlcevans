@@ -1,5 +1,5 @@
-const CACHE = 'evans-v1';
-const PRECACHE = ['/', '/index.html', '/family.webp', '/family2.webp', '/family3.webp', '/icon-192.png', '/icon-512.png'];
+const CACHE = 'evans-v2';
+const PRECACHE = ['/', '/index.html', '/family.webp', '/family3.webp', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)));
