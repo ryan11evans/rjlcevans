@@ -603,28 +603,14 @@ function buildZombieFromGLTF() {
   const startAction = walkAction || idleAction;
   if (startAction) startAction.play();
 
-  // Find arm and hand bones for procedural slash overlay
-  let rightArm = null, leftArm = null, rightHand = null;
+  // Find arm bones for procedural slash overlay
+  let rightArm = null, leftArm = null;
   clone.traverse(node => {
     if (!node.isBone) return;
     const n = node.name.replace(/mixamorig[: ]?/i, '');
     if (/^RightArm$/i.test(n) || /^RightUpperArm$/i.test(n)) rightArm = node;
     if (/^LeftArm$/i.test(n)  || /^LeftUpperArm$/i.test(n))  leftArm  = node;
-    if (/^RightHand$/i.test(n))                               rightHand = node;
   });
-
-  // Attach knife to right hand bone — visible only during attack phases
-  const knife = buildZombieKnife();
-  if (rightHand) {
-    // Mixamo RightHand: local +X runs toward fingertips.
-    // Knife blade is along local +Y, so rotate -90° around Z to align blade with +X.
-    knife.rotation.set(0, 0, -Math.PI / 2);
-    knife.position.set(0.08, 0.01, 0);  // 8 cm along finger axis, centered in palm
-    rightHand.add(knife);
-  } else {
-    knife.position.set(0.25, 1.2, 0.1);
-    clone.add(knife);
-  }
 
   clone.userData.mixer        = mixer;
   clone.userData.walkAction   = walkAction;
@@ -633,7 +619,6 @@ function buildZombieFromGLTF() {
   clone.userData.activeAction = startAction;
   clone.userData.rightArm     = rightArm;
   clone.userData.leftArm      = leftArm;
-  clone.userData.knife        = knife;
   clone.userData.isGLTF       = true;
   animMixers.push(mixer);
   return clone;
@@ -1685,6 +1670,10 @@ class Enemy {
     this.mesh.position.set(x, 0, z);
     scene.add(this.mesh);
 
+    // Weapon lives in world space so it's guaranteed visible — positioned each frame
+    this.knife = buildZombieKnife();
+    scene.add(this.knife);
+
     this.maxHp  = 60 + wave * 15;
     this.hp     = this.maxHp;
     this.dead   = false;
@@ -1744,6 +1733,7 @@ class Enemy {
     kills++;
     addKillFeed();
     playDeath();
+    if (this.knife) { scene.remove(this.knife); this.knife = null; }
     if (this.mesh.userData.mixer) {
       const i = animMixers.indexOf(this.mesh.userData.mixer);
       if (i > -1) animMixers.splice(i, 1);
@@ -1831,48 +1821,48 @@ class Enemy {
       }
     }
 
-    // GLTF animation: Idle during attack phases, Run when chasing, Walk when patrolling
+    // GLTF animation: Run/Walk during everything — avoids Idle's spread arm pose
     const ud = this.mesh.userData;
     if (ud.isGLTF && ud.mixer) {
-      let desired;
-      if (this.atkPhase > 0) {
-        desired = ud.idleAction || ud.walkAction;
-      } else if (this.state === 'chase') {
-        desired = ud.runAction || ud.walkAction;
-      } else {
-        desired = ud.walkAction || ud.idleAction;
-      }
-      const fadeTime = this.atkPhase > 0 ? 0.1 : 0.3;
+      const desired = (this.state === 'chase')
+        ? (ud.runAction  || ud.walkAction)
+        : (ud.walkAction || ud.idleAction);
       if (desired && desired !== ud.activeAction && ud.activeAction) {
-        ud.activeAction.crossFadeTo(desired, fadeTime, true);
+        ud.activeAction.crossFadeTo(desired, 0.3, true);
         desired.play();
         ud.activeAction = desired;
       }
-
       ud.mixer.update(dt);
 
-      // Show knife only during attack phases
-      if (ud.knife) ud.knife.visible = (this.atkPhase > 0);
-
-      // Direct quaternion assignment AFTER mixer — completely replaces mixer for these bones
-      // during attack so there is no accumulation or compound-rotation spin.
+      // Right arm override — pure single-axis Z so the arc is clean
       this.mesh.rotation.x = 0;
       if (this.atkPhase === 1) {
-        // Wind-up: right arm rises overhead — pure Z rotation, no mixing
+        // Wind-up: arm rises to overhead
         const t = this.atkTime / 0.28;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, -(Math.PI * 0.55) * t));
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, -(Math.PI * 0.6) * t));
       } else if (this.atkPhase === 2) {
-        // Slash: arm drives from overhead all the way down past horizontal (follow-through)
-        // Still pure Z so the arc is clean — no gimbal weirdness
+        // Slash: arm swings back down from overhead to horizontal
         const t = this.atkTime / 0.22;
-        const z = -(Math.PI * 0.55) * (1 - t) + (Math.PI * 0.2) * t;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, z));
-      } else if (this.atkPhase === 3) {
-        // Recover: ease the slight follow-through back to neutral
-        const t = this.atkTime / 0.28;
-        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, (Math.PI * 0.2) * (1 - t)));
+        if (ud.rightArm) ud.rightArm.quaternion.setFromEuler(new THREE.Euler(0, 0, -(Math.PI * 0.6) * (1 - t)));
       }
-      // Left arm is NOT overridden — the mixer keeps it looking natural throughout
+      // Phase 3: no override — mixer takes the arm back naturally
+
+      // Knife: positioned in world space at the right arm bone — guaranteed visible
+      if (this.knife && ud.rightArm) {
+        this.knife.visible = (this.atkPhase > 0);
+        if (this.atkPhase > 0) {
+          ud.rightArm.updateWorldMatrix(true, false);
+          const _wp = new THREE.Vector3();
+          const _wq = new THREE.Quaternion();
+          ud.rightArm.matrixWorld.decompose(_wp, _wq, new THREE.Vector3());
+          // Extend 0.45 m along the arm's local -Y (shoulder → hand direction)
+          _wp.addScaledVector(new THREE.Vector3(0, -0.45, 0).applyQuaternion(_wq), 1);
+          this.knife.position.copy(_wp);
+          this.knife.quaternion.copy(_wq);
+        }
+      } else if (this.knife) {
+        this.knife.visible = false;
+      }
     } else if (ud.mixer) {
       ud.mixer.update(dt);
     }
