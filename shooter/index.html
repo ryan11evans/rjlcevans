@@ -267,6 +267,38 @@
     pointer-events: none;
   }
 
+  /* ── Cinematic letterbox ── */
+  #lb-top, #lb-bottom {
+    position: fixed; left: 0; right: 0; height: 0; background: #000;
+    z-index: 49; pointer-events: none;
+    transition: height 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #lb-top { top: 0; }
+  #lb-bottom { bottom: 0; }
+
+  #cin-wrap {
+    position: fixed; inset: 0; z-index: 50; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #cin-title {
+    color: #FFD700; font-size: 58px; font-weight: bold; letter-spacing: 8px;
+    text-shadow: 0 0 30px rgba(255,200,0,0.85), 0 0 60px rgba(255,140,0,0.4), 2px 2px 0 #000;
+    opacity: 0; transition: opacity 0.4s ease; margin-bottom: 10px;
+    text-align: center;
+  }
+  #cin-sub {
+    color: rgba(255,220,175,0.88); font-size: 20px; letter-spacing: 5px;
+    text-shadow: 1px 1px 0 #000, 0 0 20px rgba(255,150,50,0.5);
+    opacity: 0; transition: opacity 0.4s ease;
+    text-align: center;
+  }
+  #cin-fight {
+    color: #FF3322; font-size: 66px; font-weight: bold; letter-spacing: 10px;
+    text-shadow: 0 0 30px rgba(255,50,20,0.9), 2px 2px 0 #000;
+    opacity: 0; transition: opacity 0.12s ease;
+    position: absolute;
+  }
+
   .dmg-num {
     position: absolute; pointer-events: none;
     font-weight: bold; font-family: 'Segoe UI', sans-serif;
@@ -284,6 +316,13 @@
 
 <canvas id="canvas"></canvas>
 <div id="vignette"></div>
+<div id="lb-top"></div>
+<div id="lb-bottom"></div>
+<div id="cin-wrap">
+  <div id="cin-title"></div>
+  <div id="cin-sub"></div>
+  <div id="cin-fight">FIGHT!</div>
+</div>
 
 <div id="hud">
   <div id="minimap-wrap">
@@ -448,7 +487,8 @@ camera.position.set(0, 1.6, 0);
 scene.add(camera); // children (rifle viewmodel) must be in scene graph
 
 // ── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xC8D8E8, 0.55));
+const ambientLight = new THREE.AmbientLight(0xC8D8E8, 0.55);
+scene.add(ambientLight);
 
 const sun = new THREE.DirectionalLight(0xFFEECC, 2.3);
 sun.position.set(22, 42, 16);
@@ -2292,26 +2332,179 @@ function spawnDamageNumber(dmg, worldPos) {
   setTimeout(() => { if (el.parentNode) el.remove(); }, 860);
 }
 
+// ── DAY / NIGHT CYCLE ────────────────────────────────────────────────────────
+// Each entry is a lighting "stage". Interpolated smoothly between waves.
+const _dnStages = [
+  // Stage 0: bright midday
+  { fogC:0x9AB8A8, fogD:0.007, sunC:0xFFEECC, sunI:2.3, sunP:[22,42,16],  ambC:0xC8D8E8, ambI:0.55, filC:0x6688BB, filI:0.40, exp:0.75 },
+  // Stage 1: golden hour
+  { fogC:0xC49870, fogD:0.010, sunC:0xFFBB66, sunI:1.80, sunP:[48,22, 4],  ambC:0xC09060, ambI:0.42, filC:0x886644, filI:0.30, exp:0.80 },
+  // Stage 2: dusk / sunset
+  { fogC:0x7F3A42, fogD:0.016, sunC:0xFF6622, sunI:0.90, sunP:[60, 5,-2],  ambC:0x7A4060, ambI:0.28, filC:0x442288, filI:0.50, exp:0.62 },
+  // Stage 3: deep night
+  { fogC:0x060A14, fogD:0.024, sunC:0x6688FF, sunI:0.45, sunP:[-20,30,-8], ambC:0x182438, ambI:0.15, filC:0x0A1230, filI:0.10, exp:0.38 },
+];
+const _dn = { t: 0, tTarget: 0 };
+
+function _lerpHex(a, b, t) {
+  const ar=(a>>16)&0xFF, ag=(a>>8)&0xFF, ab=a&0xFF;
+  const br=(b>>16)&0xFF, bg=(b>>8)&0xFF, bb=b&0xFF;
+  return (Math.round(ar+(br-ar)*t)<<16)|(Math.round(ag+(bg-ag)*t)<<8)|Math.round(ab+(bb-ab)*t);
+}
+function tickDayNight(dt) {
+  _dn.t += (_dn.tTarget - _dn.t) * Math.min(dt * 1.1, 1);
+  const S = _dnStages, n = S.length - 1;
+  const f = Math.min(_dn.t, 1) * n;
+  const i = Math.floor(Math.min(f, n - 1));
+  const x = f - i;
+  const a = S[i], b = S[i+1];
+  const L = (p, q) => p + (q - p) * x;
+  scene.fog.color.setHex(_lerpHex(a.fogC, b.fogC, x));
+  (scene.fog).density = L(a.fogD, b.fogD, x);
+  sun.color.setHex(_lerpHex(a.sunC, b.sunC, x));
+  sun.intensity = L(a.sunI, b.sunI, x);
+  sun.position.set(L(a.sunP[0],b.sunP[0],x), L(a.sunP[1],b.sunP[1],x), L(a.sunP[2],b.sunP[2],x));
+  ambientLight.color.setHex(_lerpHex(a.ambC, b.ambC, x));
+  ambientLight.intensity = L(a.ambI, b.ambI, x);
+  fillLight.color.setHex(_lerpHex(a.filC, b.filC, x));
+  fillLight.intensity = L(a.filI, b.filI, x);
+  renderer.toneMappingExposure = L(a.exp, b.exp, x);
+}
+
+// ── WAVE CINEMATIC ────────────────────────────────────────────────────────────
+const CIN_DUR = 4.0; // seconds total
+let _cinActive = false;
+let _cinT = 0;
+let _cinEnemiesSpawned = false;
+let _cinTextShown = false;
+let _cinFightShown = false;
+// World-space position the camera pulls up to
+const _cinHigh = new THREE.Vector3();
+const _cinFpsPos = new THREE.Vector3();
+
+function startCinematic(waveNum, enemyCount) {
+  _cinActive = true;
+  _cinT = 0;
+  _cinEnemiesSpawned = false;
+  _cinTextShown = false;
+  _cinFightShown = false;
+
+  // Snapshot current FPS position
+  _cinFpsPos.set(player.pos.x, player.pos.y + EYE_HEIGHT, player.pos.z);
+  // Elevated orbit target: ~26 units above arena center, slightly offset
+  _cinHigh.set(player.pos.x * 0.2, 26, player.pos.z * 0.2 + 10);
+
+  // Letterbox in
+  document.getElementById('lb-top').style.height    = '8.5vh';
+  document.getElementById('lb-bottom').style.height = '8.5vh';
+
+  // Populate text (revealed later in tick)
+  document.getElementById('cin-title').textContent = `WAVE ${waveNum}`;
+  document.getElementById('cin-sub').textContent   = `${enemyCount} ENEMIES INCOMING`;
+  document.getElementById('cin-fight').style.opacity = '0';
+}
+
+function endCinematic() {
+  _cinActive = false;
+  document.getElementById('lb-top').style.height    = '0';
+  document.getElementById('lb-bottom').style.height = '0';
+  document.getElementById('cin-title').style.opacity = '0';
+  document.getElementById('cin-sub').style.opacity   = '0';
+  // Restore exact FPS orientation so there's no pop
+  camera.rotation.y = camYaw;
+  camera.rotation.x = camPitch;
+}
+
+function _smoothstep(t) { return t * t * (3 - 2 * t); }
+
+function tickCinematic(dt) {
+  if (!_cinActive) return;
+  _cinT += dt;
+  const prog = Math.min(_cinT / CIN_DUR, 1);
+
+  const PULL_OUT_END  = 0.38;
+  const HOLD_END      = 0.72;
+  const PULL_IN_END   = 0.92;
+  const TEXT_SHOW_AT  = 0.46; // fraction to show title/sub
+  const ENEMY_AT      = 0.50; // fraction to spawn enemies
+  const TEXT_HIDE_AT  = 0.82;
+  const FIGHT_AT      = 0.88;
+
+  // ── Pull camera out ──────────────────────────
+  if (prog < PULL_OUT_END) {
+    const t = _smoothstep(prog / PULL_OUT_END);
+    camera.position.lerpVectors(_cinFpsPos, _cinHigh, t);
+    camera.lookAt(0, 1, 0);
+  }
+  // ── Hold + slow orbit ────────────────────────
+  else if (prog < HOLD_END) {
+    const angle = (_cinT - CIN_DUR * PULL_OUT_END) * 0.28;
+    camera.position.set(
+      _cinHigh.x + Math.sin(angle) * 4,
+      _cinHigh.y,
+      _cinHigh.z + Math.cos(angle) * 4
+    );
+    camera.lookAt(0, 1, 0);
+  }
+  // ── Pull camera back in ──────────────────────
+  else if (prog < PULL_IN_END) {
+    const t = _smoothstep((prog - HOLD_END) / (PULL_IN_END - HOLD_END));
+    // Update FPS target in case player moved (they can't, but good habit)
+    _cinFpsPos.set(player.pos.x, player.pos.y + EYE_HEIGHT, player.pos.z);
+    camera.position.lerpVectors(_cinHigh, _cinFpsPos, t);
+    camera.lookAt(
+      player.pos.x + Math.sin(camYaw),
+      player.pos.y + EYE_HEIGHT + camPitch * -2,
+      player.pos.z + Math.cos(camYaw)
+    );
+  }
+  // ── Snap & end ───────────────────────────────
+  else if (prog >= 1) {
+    endCinematic();
+    waveCountdownActive = false;
+  }
+
+  // ── Text visibility ─────────────────────────
+  if (!_cinTextShown && prog >= TEXT_SHOW_AT) {
+    _cinTextShown = true;
+    document.getElementById('cin-title').style.opacity = '1';
+    document.getElementById('cin-sub').style.opacity   = '1';
+  }
+  if (_cinTextShown && prog >= TEXT_HIDE_AT) {
+    document.getElementById('cin-title').style.opacity = '0';
+    document.getElementById('cin-sub').style.opacity   = '0';
+  }
+  if (!_cinFightShown && prog >= FIGHT_AT) {
+    _cinFightShown = true;
+    const fe = document.getElementById('cin-fight');
+    fe.style.opacity = '1';
+    setTimeout(() => { fe.style.opacity = '0'; }, 500);
+  }
+
+  // ── Spawn enemies mid-cinematic ─────────────
+  if (!_cinEnemiesSpawned && prog >= ENEMY_AT) {
+    _cinEnemiesSpawned = true;
+    nextWave();
+  }
+}
+
 // ── WAVE SYSTEM ──────────────────────────────────────────────────────────────
 function nextWave() {
   wave++;
   const count = 8 + wave * 4;
-  const el = document.getElementById('wave-announce');
-  el.textContent = `WAVE ${wave}`; el.style.opacity = '1';
-  setTimeout(() => el.style.opacity = '0', 2200);
   for (let i = 0; i < count; i++) {
     const a = Math.random()*Math.PI*2, r = ARENA-4-Math.random()*7;
     enemies.push(new Enemy(Math.cos(a)*r, Math.sin(a)*r));
   }
+  // Advance day/night: waves 1-2=day, 3-4=golden, 5-6=dusk, 7+=night
+  _dn.tTarget = Math.min((wave - 1) / 6, 1);
   updateInfo();
 }
 function checkWaveEnd() {
   if (enemies.every(e => e.dead) && !waveCountdownActive && wave > 0) {
     waveCountdownActive = true;
-    waveCountdownVal    = 3;
-    const el = document.getElementById('wave-timer');
-    el.textContent = 'NEXT WAVE IN 3';
-    el.style.opacity = '1';
+    const nextCount = 8 + (wave + 1) * 4;
+    startCinematic(wave + 1, nextCount);
   }
 }
 
@@ -2556,32 +2749,27 @@ function loop(now) {
   last = now;
 
   if (!player.dead) {
-    const dir = buildDir();
-    updateCrosshair(dir.lengthSq() > 0.01);
-    player.update(dt, dir);
+    if (!_cinActive) {
+      const dir = buildDir();
+      updateCrosshair(dir.lengthSq() > 0.01);
+      player.update(dt, dir);
+    }
     enemies.forEach(e => e.update(dt));
     tickParticles(dt);
     tickTracers(dt);
     tickPickups(dt);
     updateMinimap();
-    if (waveCountdownActive) {
-      waveCountdownVal -= dt;
-      const el = document.getElementById('wave-timer');
-      el.textContent = `NEXT WAVE IN ${Math.ceil(Math.max(waveCountdownVal, 0))}`;
-      if (waveCountdownVal <= 0) {
-        waveCountdownActive = false;
-        el.style.opacity = '0';
-        nextWave();
-      }
-    }
+    tickCinematic(dt);
   }
+
+  tickDayNight(dt);
 
   // decay chromatic aberration toward resting value each frame
   caAmt += (0.002 - caAmt) * Math.min(dt * 9, 1);
   gradePass.material.uniforms.uCA.value   = caAmt;
   gradePass.material.uniforms.uTime.value += dt;
 
-  tickCamera(dt);
+  if (!_cinActive) tickCamera(dt);
   composer.render();
 }
 requestAnimationFrame(loop);
