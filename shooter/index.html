@@ -2516,7 +2516,7 @@ function updateMinimap() {
   const cx = MM / 2, cy = MM / 2;
   const scale = MM / (MM_VIEW_R * 2); // px per world unit
 
-  // Player-centred coordinate mapping
+  // Player-centred coordinate mapping (world-space, before rotation)
   const wx = x => (x - player.pos.x) * scale + cx;
   const wz = z => (z - player.pos.z) * scale + cy;
 
@@ -2525,6 +2525,12 @@ function updateMinimap() {
   mmCtx.beginPath();
   mmCtx.arc(cx, cy, MM / 2 - 1, 0, Math.PI * 2);
   mmCtx.clip();
+
+  // Rotate the whole world so camera-forward = up on the map.
+  // The player arrow stays fixed; everything else spins around it.
+  mmCtx.translate(cx, cy);
+  mmCtx.rotate(-camYaw);
+  mmCtx.translate(-cx, -cy);
 
   // Background
   mmCtx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -2552,21 +2558,22 @@ function updateMinimap() {
     mmCtx.fill();
   });
 
-  // Enemies
-  mmCtx.fillStyle = '#FF3333';
+  // Enemies — bosses get a bigger dot
   enemies.forEach(e => {
     if (e.dead) return;
+    mmCtx.fillStyle = e.type === 'boss' ? '#FF6600'
+                    : e.type === 'heavy' ? '#FF5555'
+                    : e.type === 'screamer' ? '#CC44FF' : '#FF3333';
     mmCtx.beginPath();
-    mmCtx.arc(wx(e.mesh.position.x), wz(e.mesh.position.z), 3, 0, Math.PI * 2);
+    mmCtx.arc(wx(e.mesh.position.x), wz(e.mesh.position.z), e.type === 'boss' ? 5 : 3, 0, Math.PI * 2);
     mmCtx.fill();
   });
 
-  mmCtx.restore(); // end clip
+  mmCtx.restore(); // end clip + world rotation
 
-  // Player triangle — always dead-centre, rotates with camera
+  // Player triangle — always dead-centre, always pointing up
   mmCtx.save();
   mmCtx.translate(cx, cy);
-  mmCtx.rotate(-camYaw);
   mmCtx.fillStyle = '#FFFFFF';
   mmCtx.beginPath();
   mmCtx.moveTo(0, -5.5);
