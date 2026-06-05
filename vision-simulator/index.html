@@ -446,6 +446,7 @@
   let stream = null;
   let rafId = null;
   let currentSource = null;
+  let currentCropYFrac = 0.5;
   let uploadedImage = null;
   let facingMode = 'environment';
   let condition = 'none';
@@ -475,7 +476,7 @@
 
   const defaults = {
     myopia:      { blurSigma: 8 },
-    astigmatism: { astigMag: 6, axis: 90 },
+    astigmatism: { astigMag: 3, axis: 90 },
     cataract:    { cataractSev: 0.5 },
     glaucoma:    { glaucomaStage: 2 },
     amd:         { amdSize: 12, amdDistortion: 0 },
@@ -488,7 +489,7 @@
 
   const params = {
     blurSigma: 8,
-    astigMag: 6,
+    astigMag: 3,
     axis: 90,
     cataractSev: 0.5,
     glaucomaStage: 2,
@@ -597,7 +598,7 @@
     if (srcRatio > stageRatio) {
       cropH = sh; cropW = sh * stageRatio; cropX = (sw - cropW) / 2; cropY = 0;
     } else {
-      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) / 2;
+      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) * currentCropYFrac;
     }
     const src = currentSource === 'camera' ? video : uploadedImage;
     sCtx.save();
@@ -647,15 +648,20 @@
   }
 
   function applyAstigmatism(magnitude, axisDeg) {
-    ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
+    // Isotropic blur kicks in hard from 4D — below that, smear dominates
+    const baseSigma = Math.max(0, (magnitude - 4) * 1.6);
+    if (baseSigma > 0) {
+      applyBlur(baseSigma);
+    } else {
+      ctx.drawImage(sourceCanvas, 0, 0);
+    }
 
+    // Directional smear along the astigmatic axis, proportional across range
     const rad = (axisDeg * Math.PI) / 180;
     const dx = Math.cos(rad);
     const dy = Math.sin(rad);
-    const steps = Math.max(4, Math.round(magnitude));
-    const span = magnitude * 1.2;
+    const steps = Math.max(4, Math.round(magnitude * 2));
+    const span = magnitude * 3.2;
     ctx.globalAlpha = 1 / (steps * 2 + 1);
     for (let i = -steps; i <= steps; i++) {
       const t = (i / steps) * span;
@@ -668,41 +674,20 @@
     const s = severity;
     const w = stageCanvas.width, h = stageCanvas.height;
 
-    // Base: blur + darkening. Blur is strong enough to visibly impair text.
-    ctx.filter = `blur(${s * 35}px) contrast(${1 - s * 0.62}) brightness(${1 - s * 0.55})`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
+    // Blur using the same quality down-scale approach as myopia
+    applyBlur(s * 22);
 
-    // Additive bloom FIRST — four stacked passes, heavy alpha/brightness so
-    // bright sources blow out into massive halos before the brown sits on top.
-    if (s > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      const passes = [
-        { con: 1.8 + s * 2,   bri: 1.5 + s * 2,   blur: 4  + s * 28,  a: Math.min(1, 0.7  * s) },
-        { con: 1.5 + s * 1.5, bri: 1.3 + s * 2.5,  blur: 18 + s * 80,  a: Math.min(1, 0.85 * s) },
-        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 150, a: Math.min(1, 0.9  * s) },
-        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 220, a: Math.min(1, 0.75 * s) },
-      ];
-      for (const p of passes) {
-        ctx.globalAlpha = p.a;
-        ctx.filter = `contrast(${p.con}) brightness(${p.bri}) blur(${p.blur}px)`;
-        ctx.drawImage(sourceCanvas, 0, 0);
-      }
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-    }
-
-    // Brown multiply tint — warms the glare to amber and tints the scene.
+    // Amber-brown multiply tint — nuclear sclerosis progression
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(155, 88, 35, ${0.2 + s * 0.5})`;
+    ctx.fillStyle = `rgba(155, 88, 35, ${0.15 + s * 0.55})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dark brown veil — quadratic ramp so it stays lighter in the mid-range
-    // and only gets very dark near the top of the slider.
-    ctx.fillStyle = `rgba(38, 22, 8, ${s * s * 0.82})`;
-    ctx.fillRect(0, 0, w, h);
+    // Dark veil kicks in past halfway — makes severe end truly unreadable
+    if (s > 0.4) {
+      ctx.fillStyle = `rgba(30, 15, 5, ${Math.pow((s - 0.4) / 0.6, 2) * 0.7})`;
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   function applyGlaucoma(stage) {
@@ -1076,16 +1061,17 @@
     myopia: {
       title: 'Myopia (Nearsightedness)',
       note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
-      controls: () => [
-        snellenPresetControl(),
-        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5)
-      ]
+      controls: () => {
+        const snellenCtrl = snellenPresetControl();
+        const sliderCtrl = sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5, '', () => syncSnellenToSigma(snellenCtrl));
+        return [snellenCtrl, sliderCtrl];
+      }
     },
     astigmatism: {
       title: 'Astigmatism',
       note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Adjust the axis to demonstrate against-the-rule, with-the-rule, and oblique presentations.',
       controls: () => [
-        sliderControl('astigMag', 'Severity', 2, 20, 1, 'D-equivalent'),
+        sliderControl('astigMag', 'Severity', 1, 8, 0.5, 'D'),
         sliderControl('axis', 'Axis', 0, 180, 1, '°')
       ]
     },
@@ -1160,6 +1146,16 @@
     input.addEventListener('input', update);
     update();
     return wrap;
+  }
+
+  function syncSnellenToSigma(snellenCtrl) {
+    const sigma = params.blurSigma;
+    const entries = Object.entries(snellenBlur);
+    let best = entries[0], bestDiff = Infinity;
+    entries.forEach(([, s]) => { const d = Math.abs(s - sigma); if (d < bestDiff) { bestDiff = d; best = [, s]; best = entries.find(e => e[1] === s); } });
+    snellenCtrl.querySelectorAll('.preset').forEach(p => {
+      p.setAttribute('aria-pressed', parseFloat(p.dataset.sigma) === best[1] ? 'true' : 'false');
+    });
   }
 
   function snellenPresetControl() {
@@ -1374,18 +1370,26 @@
     const g = c.getContext('2d');
 
     if (kind === 'chart') {
-      // Snellen-style eye chart
+      // Snellen-style eye chart — landscape to match stage aspect ratio
+      c.width = 1200; c.height = 900;
       g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const rows = [
-        { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
-        { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
+        { t: 'E',                 s: 170 },
+        { t: 'F  P',              s: 122 },
+        { t: 'T  O  Z',           s: 88  },
+        { t: 'L  P  E  D',        s: 63  },
+        { t: 'P  E  C  F  D',     s: 46  },
+        { t: 'E D F C Z P',       s: 33  },
+        { t: 'F E L O P Z D',     s: 24  },
+        { t: 'D E F P O T E C',   s: 18  },
+        { t: 'L E F O D P C T H', s: 13  },
       ];
-      let y = 130;
+      let y = 100;
       rows.forEach(r => {
         g.font = `700 ${r.s}px Arial, sans-serif`;
         g.fillText(r.t, c.width / 2, y);
-        y += r.s * 0.95 + 24;
+        y += r.s * 0.82 + 6;
       });
     } else if (kind === 'grid') {
       // Amsler grid with central dot
@@ -1548,13 +1552,18 @@
   // Real photos drop-in: place files in vision-simulator/samples/ and they
   // override the procedural fallback automatically.
   const PHOTO_SAMPLES = {
+    chart:  'samples/eye-chart.PNG',
     street: 'samples/night-street.jpg',
     garden: 'samples/garden.jpg',
     face:   'samples/portrait.jpg'
   };
 
+  // Per-sample vertical crop fraction (0 = top, 0.5 = center, 1 = bottom)
+  const SAMPLE_CROP_Y = { chart: 0.88 };
+
   function loadSample(kind) {
     stopCamera();
+    currentCropYFrac = SAMPLE_CROP_Y[kind] !== undefined ? SAMPLE_CROP_Y[kind] : 0.5;
     const photoPath = PHOTO_SAMPLES[kind];
     if (photoPath) {
       const img = new Image();
@@ -1574,6 +1583,7 @@
   }
 
   function _loadSampleProcedural(kind) {
+    currentCropYFrac = 0.5;
     const c = makeSample(kind);
     const img = new Image();
     img.onload = () => {
@@ -1693,6 +1703,8 @@
     document.getElementById('appStoreBadge').style.display = 'none';
     var wrap = document.querySelector('.wrap');
     if (wrap) { wrap.style.paddingTop = '72px'; }
+    var stageWrap = document.querySelector('.stage-wrap');
+    if (stageWrap) { stageWrap.style.top = '62px'; }
   }
 </script>
 </body>
