@@ -75,7 +75,7 @@ struct SmallWidgetView: View {
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
-            Text(entry.date, style: .time)
+            Text(entry.price.timestamp, style: .relative)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -100,7 +100,7 @@ struct MediumWidgetView: View {
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                Text(entry.date, format: .dateTime.hour().minute().second())
+                Text(entry.price.timestamp, style: .relative)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -140,7 +140,7 @@ struct AccessoryWidgetView: View {
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
-                    Text(entry.date, style: .time)
+                    Text(entry.price.timestamp, style: .relative)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

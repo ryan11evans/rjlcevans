@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WidgetKit
 
 @MainActor
 class PriceService: ObservableObject {
@@ -60,6 +61,9 @@ class PriceService: ObservableObject {
 
             // Persist for widget + Watch
             UserDefaults.shared.savePrice(price)
+
+            // Tell WidgetKit to reload so the lock screen / home screen widget shows fresh data
+            WidgetCenter.shared.reloadAllTimelines()
 
             // Push to Watch if paired
             ConnectivityManager.shared.send(price: price)
