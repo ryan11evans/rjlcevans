@@ -298,6 +298,60 @@ body.night .joke-card    { background: linear-gradient(145deg, #251e0a, #1e2533)
 body.night .joke-card h3 { color: #fbbf24; }
 body.night .weather-card    { background: linear-gradient(145deg, #0a1e2e, #1e2533); border-top-color: #0ea5e9; }
 body.night .weather-card h3 { color: #38bdf8; }
+.fact-card {
+  background: linear-gradient(145deg, #eef2ff, #f7f7f7);
+  border-top: 3px solid #6366f1;
+}
+.fact-card h3 { color: #4338ca; }
+.fact-text { font-size: 1rem; line-height: 1.65; color: var(--text); padding: 0 4px; }
+body.night .fact-card    { background: linear-gradient(145deg, #14122e, #1e2533); border-top-color: #818cf8; }
+body.night .fact-card h3 { color: #a5b4fc; }
+
+/* ===== Our Apps Showcase ===== */
+.apps-section {
+  width: 100%; max-width: var(--maxw);
+  padding: 0 18px; margin: 8px 0 20px;
+}
+.apps-header { text-align: center; margin-bottom: 18px; }
+.apps-eyebrow {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #6366f1; margin: 0 0 6px; font-weight: 700;
+}
+.apps-header h2 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 800; }
+.apps-header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.app-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 20px 24px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+.app-card-icon {
+  width: 88px; height: 88px; border-radius: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}
+.app-card-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em; }
+.app-card-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; margin-bottom: 18px; flex: 1; }
+.app-card-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.app-browser-link {
+  font-size: 0.83rem; color: var(--muted); text-decoration: none;
+  border: 1px solid rgba(0,0,0,.1); border-radius: 8px;
+  padding: 5px 14px; transition: background 0.15s, color 0.15s;
+}
+.app-browser-link:hover { background: var(--text); color: #fff; border-color: var(--text); }
+body.night .app-card { border-color: rgba(255,255,255,.06); }
+body.night .app-browser-link { border-color: rgba(255,255,255,.12); }
+body.night .app-browser-link:hover { background: var(--text); color: var(--bg); }
 .joke-text {
   font-size: 1.1rem;
   min-height: 80px;
@@ -546,7 +600,7 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<!-- Widgets: dad joke + weather -->
+<!-- Widgets: dad joke + weather + eye fact -->
 <section class="widgets reveal">
   <div class="widget-grid">
     <div class="card widget-card joke-card">
@@ -562,6 +616,43 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
       <div id="weather-temp" style="font-size:2.2rem;font-weight:700;letter-spacing:1px;color:var(--text)">—</div>
       <p id="weather-desc" style="margin:6px 0 2px;font-size:.95rem;color:var(--muted)">—</p>
       <p id="weather-feels" style="margin:0;font-size:.85rem;color:var(--muted)">—</p>
+    </div>
+    <div class="card widget-card fact-card">
+      <h3>👁️ Eye Fact of the Day</h3>
+      <div id="eye-fact" class="fact-text">Loading today's fact...</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OUR APPS SHOWCASE ===== -->
+<section class="apps-section reveal">
+  <div class="apps-header">
+    <p class="apps-eyebrow">Available on the App Store</p>
+    <h2>Our Apps</h2>
+    <p>Patient education tools designed by Dr. Ryan Evans, OD — free to try in your browser.</p>
+  </div>
+  <div class="apps-grid">
+    <div class="app-card">
+      <img class="app-card-icon" src="vision-simulator/visionsim-icon-1024.PNG" alt="Vision Simulator icon">
+      <div class="app-card-name">Vision Simulator</div>
+      <div class="app-card-desc">See the world through eyes affected by cataracts, glaucoma, AMD, refractive error, diabetic retinopathy, and floaters.</div>
+      <div class="app-card-actions">
+        <a href="https://apps.apple.com/app/vision-simulator-by-dr-evans/id6772865195" target="_blank" rel="noopener noreferrer">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:36px;display:block;">
+        </a>
+        <a href="vision-simulator/" class="app-browser-link">Try in browser →</a>
+      </div>
+    </div>
+    <div class="app-card">
+      <img class="app-card-icon" src="dr-glass/drglass-current-icon-1024.png" alt="Dr. Glass icon">
+      <div class="app-card-name">Dr. Glass</div>
+      <div class="app-card-desc">Run, jump, and stomp through eight levels of an optometry office in this Mario-style platformer — office to optic nerve and beyond.</div>
+      <div class="app-card-actions">
+        <a href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:36px;display:block;">
+        </a>
+        <a href="dr-glass/" class="app-browser-link">Play in browser →</a>
+      </div>
     </div>
   </div>
 </section>
@@ -595,12 +686,6 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
           </a>
         </div>
       </div>
-      <a class="tool-link" href="vision-assist/">
-        <span class="tl-arrow">→</span>
-        <span class="tl-icon">🔍</span>
-        <div class="tl-title">Vision Assist <span style="font-size:0.75em; opacity:0.7; font-weight:400; font-style:italic;">— beta</span></div>
-        <div class="tl-desc">OCR text reader, text-to-speech, and a saved library — tools to help low-vision patients read the world around them.</div>
-      </a>
       <a class="tool-link" href="visual-acuity/">
         <span class="tl-arrow">→</span>
         <span class="tl-icon">📏</span>
@@ -845,6 +930,47 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     const line  = document.getElementById('week-line');
     if (label) label.textContent = days[day];
     if (line)  line.textContent  = messages[season][day];
+  })();
+
+  // ===== Eye Fact of the Day =====
+  (function () {
+    const facts = [
+      "The human eye can distinguish about 10 million different colors.",
+      "Your cornea is the only tissue in the body with no blood supply — it gets oxygen directly from the air.",
+      "Blinking keeps your eyes lubricated — most people blink 15–20 times per minute.",
+      "The retina contains about 120 million rod cells for dim light and 6 million cone cells for color.",
+      "Cataracts are the leading cause of blindness worldwide — and one of the most treatable.",
+      "The 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.",
+      "Glaucoma is often called the 'silent thief of sight' — it causes no pain and no early symptoms.",
+      "About 8% of men and 0.5% of women have some form of color vision deficiency.",
+      "Your eyes have a natural blind spot where the optic nerve exits — your brain fills it in.",
+      "Myopia (nearsightedness) now affects nearly 30% of the world's population.",
+      "Newborns see mostly in shades of gray; full color vision develops in the first few months.",
+      "In complete darkness, the human eye can detect a single photon of light.",
+      "The lens of the eye is the only transparent organ in the human body.",
+      "Dry eye affects an estimated 16 million Americans and is one of the most common reasons for an eye exam.",
+      "Reading in dim light doesn't damage your eyes — it just tires them faster.",
+      "Eye color is determined by the amount and distribution of melanin in the iris.",
+      "Tears have three layers: oil, water, and mucin — you need all three for healthy, comfortable vision.",
+      "The average person spends 7+ hours per day looking at screens.",
+      "The optic nerve is made up of about 1.2 million individual nerve fibers.",
+      "Wearing UV-blocking sunglasses year-round lowers your risk of cataracts and macular degeneration.",
+      "AMD (age-related macular degeneration) is the leading cause of vision loss in adults over 50.",
+      "Amblyopia (lazy eye) affects 2–3% of children and is most successfully treated before age 7.",
+      "Your eyes grow rapidly in the first two years of life, then slowly until about age 20.",
+      "High blood pressure, diabetes, and even brain tumors can first be detected during an eye exam.",
+      "The average blink lasts only about 400 milliseconds.",
+      "Blue light from screens doesn't damage your retina, but it can suppress melatonin and disrupt sleep.",
+      "The fovea — a tiny 1.5mm pit in your retina — is responsible for all your sharp, detailed vision.",
+      "Your eyes use about 65% of your brain's processing power when they are open.",
+      "Omega-3 fatty acids found in fish may help reduce the risk of dry eye and macular degeneration.",
+      "20/20 vision means you can see at 20 feet what a 'normal' eye sees at 20 feet — it's not perfect vision.",
+      "The pupil dilates up to 45% larger when you look at something you find attractive or interesting.",
+      "Comprehensive eye exams are recommended every 1–2 years, even if your vision feels fine."
+    ];
+    const doy = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const el = document.getElementById('eye-fact');
+    if (el) el.textContent = facts[doy % facts.length];
   })();
 
   // ===== Service Worker =====
