@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Evans Family — rjlcevans.com</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23f59e0b'/><text x='50' y='74' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='900' font-size='70' fill='white'>E</text></svg>">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1f1f1f">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -485,6 +485,34 @@ body.night .sp-jadyn .sp-name  { color: #c4b5fd; }
 body.night .sp-landon .sp-name { color: #fbbf24; }
 body.night .sp-cody .sp-name   { color: #6ee7b7; }
 
+/* ===== Back to top ===== */
+#back-to-top {
+  position: fixed; bottom: 24px; right: 20px; z-index: 999;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: #f59e0b; color: #fff; border: none;
+  font-size: 1.3rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(245,158,11,.4);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#back-to-top.visible { opacity: 1; pointer-events: auto; }
+#back-to-top:hover { transform: translateY(-2px); }
+
+/* ===== Welcome back toast ===== */
+.welcome-toast {
+  position: fixed; top: 20px; left: 50%; z-index: 1000;
+  transform: translateX(-50%) translateY(-80px);
+  background: #1f1f1f; color: #fff;
+  padding: 10px 22px; border-radius: 30px;
+  font-size: 0.9rem; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  opacity: 0; white-space: nowrap;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  pointer-events: none;
+}
+.welcome-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+body.night .welcome-toast { background: #f59e0b; color: #1f1f1f; }
+
 /* ===== Scroll fade-in ===== */
 @media (prefers-reduced-motion: no-preference) {
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
@@ -521,6 +549,8 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </style>
 </head>
 <body>
+<button id="back-to-top" aria-label="Back to top">↑</button>
+<div id="welcome-back" class="welcome-toast">Welcome back! 👋</div>
   <header>
     <div class="brand">
       <div class="brand-badge">E</div>
@@ -949,6 +979,28 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     const doy = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const el = document.getElementById('eye-fact');
     if (el) el.textContent = facts[doy % facts.length];
+  })();
+
+  // ===== Back to top =====
+  (function () {
+    const btn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+      btn.classList.toggle('visible', window.scrollY > 320);
+    }, { passive: true });
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  })();
+
+  // ===== Returning visitor greeting =====
+  (function () {
+    const el = document.getElementById('welcome-back');
+    if (!el) return;
+    if (localStorage.getItem('evans-visited')) {
+      el.classList.add('show');
+      setTimeout(() => {
+        el.classList.remove('show');
+      }, 3500);
+    }
+    localStorage.setItem('evans-visited', '1');
   })();
 
   // ===== Service Worker =====
