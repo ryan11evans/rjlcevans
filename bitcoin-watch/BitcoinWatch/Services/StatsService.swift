@@ -14,13 +14,24 @@ class StatsService: ObservableObject {
         async let block  = fetchBlock()
         let (m, b) = await (market, block)
         guard let m, let b else { return }
-        stats = BitcoinStats(high24h: m.high24h, low24h: m.low24h,
+
+        // Keep current price and 24h band consistent by clamping the band to include it
+        let current = m.currentPrice
+        let low  = min(m.low24h,  current)
+        let high = max(m.high24h, current)
+
+        // Also update the shared price so PriceService shows the same number
+        let price = BitcoinPrice(usd: current, timestamp: Date())
+        UserDefaults.shared.savePrice(price)
+
+        stats = BitcoinStats(currentPrice: current,
+                             high24h: high, low24h: low,
                              ath: m.ath, athDate: m.athDate,
                              change24h: m.change24h, blockHeight: b)
     }
 
     private struct MarketResult {
-        let high24h, low24h, ath, change24h: Double
+        let currentPrice, high24h, low24h, ath, change24h: Double
         let athDate: Date
     }
 
@@ -30,6 +41,7 @@ class StatsService: ObservableObject {
             struct MD: Decodable {
                 struct V: Decodable { let usd: Double }
                 struct D: Decodable { let usd: String }
+                let current_price: V
                 let high_24h: V; let low_24h: V; let ath: V; let ath_date: D
                 let price_change_percentage_24h: Double
             }
@@ -39,11 +51,12 @@ class StatsService: ObservableObject {
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let date = df.date(from: r.market_data.ath_date.usd) ?? Date()
-        return MarketResult(high24h:   r.market_data.high_24h.usd,
-                            low24h:    r.market_data.low_24h.usd,
-                            ath:       r.market_data.ath.usd,
-                            change24h: r.market_data.price_change_percentage_24h,
-                            athDate:   date)
+        return MarketResult(currentPrice: r.market_data.current_price.usd,
+                            high24h:      r.market_data.high_24h.usd,
+                            low24h:       r.market_data.low_24h.usd,
+                            ath:          r.market_data.ath.usd,
+                            change24h:    r.market_data.price_change_percentage_24h,
+                            athDate:      date)
     }
 
     private func fetchBlock() async -> Int? {
@@ -55,10 +68,11 @@ class StatsService: ObservableObject {
 }
 
 struct BitcoinStats {
-    let high24h:   Double
-    let low24h:    Double
-    let ath:       Double
-    let athDate:   Date
-    let change24h: Double
-    let blockHeight: Int
+    let currentPrice: Double
+    let high24h:      Double
+    let low24h:       Double
+    let ath:          Double
+    let athDate:      Date
+    let change24h:    Double
+    let blockHeight:  Int
 }
