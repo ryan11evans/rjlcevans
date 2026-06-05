@@ -23,9 +23,9 @@ struct ContentView: View {
                                    change24h: statsService.stats?.change24h)
                     BitcoinInfoView(stats: statsService.stats)
                         .padding(.horizontal)
-                    Spacer()
                     RefreshStatusView(price: service.currentPrice, error: service.error)
-                        .padding(.bottom, 12)
+                        .padding(.top, 16)
+                    Spacer()
                 }
             }
             .navigationTitle("Bitcoin")

@@ -54,10 +54,10 @@ private struct BTCOrbitLogo: View {
         ZStack {
             // Outer glow
             Circle()
-                .fill(.orange.opacity(0.12))
-                .blur(radius: 18)
+                .fill(.orange.opacity(0.15))
+                .blur(radius: 20)
                 .scaleEffect(1.3)
-            // Coin
+            // Orange coin background
             Circle()
                 .fill(
                     LinearGradient(colors: [
@@ -67,11 +67,11 @@ private struct BTCOrbitLogo: View {
                     ], startPoint: .top, endPoint: .bottom)
                 )
                 .overlay(Circle().strokeBorder(Color(red: 0.79, green: 0.43, blue: 0.02).opacity(0.6), lineWidth: 2))
-            Image(systemName: "bitcoinsign.circle.fill")
-                .resizable()
-                .scaledToFit()
+            // ₿ as text so it sits cleanly on top of the orange coin
+            Text("₿")
+                .font(.system(size: 72, weight: .bold))
                 .foregroundStyle(Color(red: 0.10, green: 0.07, blue: 0.02))
-                .padding(28)
+            // Orbit arrows rotate around the outside
             OrbitArrows()
                 .rotationEffect(.degrees(angle))
                 .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: angle)
