@@ -65,6 +65,9 @@ class PriceService: ObservableObject {
             // Tell WidgetKit to reload so the lock screen / home screen widget shows fresh data
             WidgetCenter.shared.reloadAllTimelines()
 
+            // Fire price alert if threshold crossed
+            AlertService.shared.checkAndFire(currentPrice: price.usd)
+
             // Push to Watch if paired
             ConnectivityManager.shared.send(price: price)
 

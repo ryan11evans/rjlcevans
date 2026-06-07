@@ -5,6 +5,23 @@ class StatsService: ObservableObject {
     static let shared = StatsService()
 
     @Published var stats: BitcoinStats?
+    @Published var chartData: [ChartPoint] = []
+    @Published var chartRange: ChartRange = .day
+
+    struct ChartPoint: Identifiable {
+        let id = UUID()
+        let date: Date
+        let price: Double
+    }
+
+    enum ChartRange: String, CaseIterable {
+        case day = "1D"
+        case week = "7D"
+        case month = "30D"
+        var days: Int {
+            switch self { case .day: return 1; case .week: return 7; case .month: return 30 }
+        }
+    }
 
     private let geckoURL = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
     private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
@@ -28,6 +45,21 @@ class StatsService: ObservableObject {
                              high24h: high, low24h: low,
                              ath: m.ath, athDate: m.athDate,
                              change24h: m.change24h, blockHeight: b)
+
+        if chartData.isEmpty {
+            await fetchChart(range: chartRange)
+        }
+    }
+
+    func fetchChart(range: ChartRange) async {
+        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=\(range.days)")!
+        guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+        struct R: Decodable { let prices: [[Double]] }
+        guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
+        chartData = r.prices.map { pair in
+            ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
+        }
+        chartRange = range
     }
 
     private struct MarketResult {

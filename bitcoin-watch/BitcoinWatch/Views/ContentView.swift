@@ -3,11 +3,12 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
     @StateObject private var statsService = StatsService.shared
+    @State private var showAlertSheet = false
+    @State private var hasActiveAlert = AlertService.shared.alertEnabled
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Premium dark gradient matching app icon
                 LinearGradient(
                     colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
                              Color(red: 0.07, green: 0.06, blue: 0.06),
@@ -17,22 +18,40 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    PriceHeaderView(price: service.currentPrice,
-                                   isLoading: service.isLoading,
-                                   change24h: statsService.stats?.change24h)
-                    BitcoinInfoView(stats: statsService.stats)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        PriceHeaderView(price: service.currentPrice,
+                                       isLoading: service.isLoading,
+                                       change24h: statsService.stats?.change24h)
+
+                        VStack(spacing: 12) {
+                            BTCChartView(statsService: statsService)
+                            BitcoinInfoView(stats: statsService.stats)
+                        }
                         .padding(.horizontal)
-                    RefreshStatusView(price: service.currentPrice, error: service.error)
-                        .padding(.top, 16)
-                    Spacer()
+
+                        RefreshStatusView(price: service.currentPrice, error: service.error)
+                            .padding(.top, 16)
+
+                        Spacer(minLength: 32)
+                    }
                 }
+                .scrollIndicators(.hidden)
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .task { await statsService.fetch() }
+            .sheet(isPresented: $showAlertSheet) {
+                PriceAlertView(hasActiveAlert: $hasActiveAlert)
+            }
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { showAlertSheet = true } label: {
+                        Image(systemName: hasActiveAlert ? "bell.fill" : "bell")
+                            .foregroundStyle(hasActiveAlert ? .orange : .secondary)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Task { await service.fetchPrice() }
