@@ -36,11 +36,11 @@
   body { background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(168,90,77,0.04) 28px, rgba(168,90,77,0.04) 29px), var(--paper); min-height: 100vh; }
   .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 80px; }
 
-  header.hero { padding: 8px 4px 22px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  header.hero { padding: 4px 4px 18px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
   .eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; }
-  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(30px, 5vw, 48px); line-height: 1.02; letter-spacing: -0.015em; margin: 0 0 8px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(24px, 4vw, 36px); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 4px; }
   h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
-  .sub { color: var(--ink-soft); font-size: 14px; max-width: 60ch; line-height: 1.55; }
+  .sub { color: var(--ink-soft); font-size: 13px; max-width: 60ch; line-height: 1.55; margin: 0; }
   .credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--ink-mute); padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,0.4); }
 
   .stepper { display: flex; margin: 0 0 24px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: rgba(255,255,255,0.5); }
@@ -465,10 +465,8 @@
   </div>
 
   <header class="hero">
-    <p class="eyebrow">Patient self-screening · Educational use only</p>
-    <h1>A Calibrated Test of <em>Visual Acuity</em></h1>
-    <p class="sub">Sloan-letter acuity screening, properly sized to your screen and viewing distance. The same logMAR progression used in the clinic — adapted for home.</p>
-    <span class="credit">Built by Dr. Ryan Evans, OD</span>
+    <h1>Eye Chart Test</h1>
+    <p class="sub">by Dr. Ryan Evans, OD</p>
   </header>
 
   <div class="stepper" id="stepper">
@@ -481,7 +479,6 @@
   <!-- STEP 1: CALIBRATE -->
   <section class="card" id="step1">
     <h2>Calibrate the screen</h2>
-    <p class="lede">We need to know your screen's physical pixel density to size the letters correctly. Choose a method:</p>
     <div class="methods" id="methodTiles">
       <button class="method-tile" data-method="iphone" aria-pressed="true">
         <div class="mt-name">📱 iPhone / iPad</div>
@@ -559,7 +556,7 @@
   <!-- STEP 2: SETUP -->
   <section class="card" id="step2" hidden>
     <h2>Test setup</h2>
-    <p class="lede">Choose what you'd like to test.</p>
+    <p class="lede">Read each line of letters aloud — letters get smaller until you can't read them. Each eye is tested separately.</p>
 
     <div style="margin-bottom:18px;">
       <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mute);margin-bottom:10px;">Test type</div>
