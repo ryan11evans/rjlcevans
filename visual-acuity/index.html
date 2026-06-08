@@ -199,6 +199,100 @@
   body.app-mode .cv-result-block { background: rgba(255,255,255,0.05); }
   body.app-mode footer { display: none; }
 
+  /* ── App mode: layout & structure ── */
+  body.app-mode .wrap { max-width: 100%; padding: max(72px, calc(50px + env(safe-area-inset-top))) 0 0; }
+  body.app-mode .stepper { display: none; }
+  body.app-mode .card {
+    border: none; border-radius: 0; margin-bottom: 0;
+    padding: 20px 20px 12px; backdrop-filter: none; background: transparent;
+  }
+  body.app-mode .card h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 6px; }
+  body.app-mode .card .lede { max-width: none; margin-bottom: 16px; }
+  body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 6px 20px 14px; }
+
+  /* ── Grouped list containers (method + test-type tiles) ── */
+  body.app-mode .methods,
+  body.app-mode .test-type-row {
+    display: flex; flex-direction: column; gap: 0; margin-top: 10px;
+    background: var(--paper-2); border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+  }
+  body.app-mode .method-tile,
+  body.app-mode .tt-tile {
+    background: transparent !important; border: none !important;
+    border-bottom: 1px solid var(--line) !important; border-radius: 0 !important;
+    padding: 15px 16px; transform: none !important;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+  }
+  body.app-mode .method-tile:last-child,
+  body.app-mode .tt-tile:last-child { border-bottom: none !important; }
+  body.app-mode .method-tile[aria-pressed="true"],
+  body.app-mode .tt-tile[aria-pressed="true"] {
+    background: rgba(200,129,74,0.1) !important; color: var(--ink) !important;
+  }
+  body.app-mode .method-tile[aria-pressed="true"] .mt-name,
+  body.app-mode .tt-tile[aria-pressed="true"] .tt-name { color: var(--accent); }
+  body.app-mode .method-tile[aria-pressed="true"] .mt-desc,
+  body.app-mode .tt-tile .tt-desc { color: var(--ink-mute); }
+  body.app-mode .tt-tile .tt-icon { font-size: 24px; flex-shrink: 0; }
+  body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 15px; }
+
+  /* ── iPhone picker as native list ── */
+  body.app-mode .iphone-search {
+    background: var(--paper-2); border-color: var(--line); color: var(--ink); border-radius: 12px;
+  }
+  body.app-mode .iphone-grid {
+    display: flex; flex-direction: column; gap: 0;
+    background: var(--paper-2); border-radius: 14px; overflow-y: auto;
+    border: 1px solid var(--line); margin-top: 6px; max-height: 260px;
+  }
+  body.app-mode .iphone-btn {
+    background: transparent !important; border: none !important;
+    border-bottom: 1px solid var(--line) !important; border-radius: 0 !important;
+    padding: 13px 16px; font-size: 14px;
+  }
+  body.app-mode .iphone-btn:last-child { border-bottom: none !important; }
+  body.app-mode .iphone-btn.active {
+    background: rgba(200,129,74,0.1) !important; color: var(--accent) !important; font-weight: 600;
+  }
+  body.app-mode .iphone-group-label {
+    background: var(--paper); padding: 8px 16px 4px;
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1;
+    font-size: 11px;
+  }
+
+  /* ── Navigation buttons: full-width stacked (steps 1/2/occluder) ── */
+  body.app-mode #step1 > .btn-row,
+  body.app-mode #step2 > .btn-row,
+  body.app-mode .occluder-card .btn-row {
+    flex-direction: column; gap: 4px; align-items: stretch; margin-top: 20px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+  body.app-mode #step1 > .btn-row .btn,
+  body.app-mode #step2 > .btn-row .btn,
+  body.app-mode .occluder-card .btn-row .btn {
+    width: 100%; justify-content: center; padding: 15px; border-radius: 14px; font-size: 16px;
+  }
+  body.app-mode #step1 > .btn-row .btn.primary,
+  body.app-mode #step2 > .btn-row .btn.primary,
+  body.app-mode .occluder-card .btn-row .btn.primary { font-weight: 600; }
+  body.app-mode #step1 > .btn-row .btn.ghost,
+  body.app-mode #step2 > .btn-row .btn.ghost,
+  body.app-mode .occluder-card .btn-row .btn.ghost {
+    background: transparent; border: none; color: var(--ink-mute); padding: 10px; font-size: 15px;
+  }
+
+  /* ── Step 3: test stage & occluder ── */
+  body.app-mode .test-stage { border-radius: 14px; }
+  body.app-mode .occluder-card {
+    background: var(--paper-2); border-radius: 14px; border: 1px solid var(--line); padding: 32px 24px;
+  }
+
+  /* ── Step 4: results ── */
+  body.app-mode .result-hero { border: none; background: transparent; padding: 12px 0 16px; }
+  body.app-mode .result-snellen { font-size: 80px; }
+  body.app-mode #step4 > .btn-row .btn { padding: 13px 18px; border-radius: 14px; font-size: 15px; }
+  body.app-mode #step4 > .btn-row .btn.ghost { border: none; background: transparent; color: var(--accent); }
+
   .app-title-bar { display: none; padding: 6px 16px 14px; border-bottom: 1px solid var(--line); margin-bottom: 20px; text-align: center; }
   .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
   .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
@@ -1249,17 +1343,25 @@
 
 // App mode: dark native feel when running inside Capacitor or ?app=1
 (function () {
-  if (window.Capacitor || new URLSearchParams(location.search).get('app') === '1') {
-    document.body.classList.add('app-mode');
-    var hero = document.querySelector('header.hero');
-    if (hero) hero.style.display = 'none';
-    var titleBar = document.getElementById('appTitleBar');
-    if (titleBar) titleBar.style.display = 'block';
-    var backBtn = document.querySelector('a[href="/"]');
-    if (backBtn) backBtn.style.display = 'none';
-    var wrap = document.querySelector('.wrap');
-    if (wrap) wrap.style.paddingTop = '72px';
+  if (!window.Capacitor && new URLSearchParams(location.search).get('app') !== '1') return;
+
+  document.body.classList.add('app-mode');
+  var hero = document.querySelector('header.hero');
+  if (hero) hero.style.display = 'none';
+  var titleBar = document.getElementById('appTitleBar');
+  if (titleBar) titleBar.style.display = 'block';
+  var backBtn = document.querySelector('a[href="/"]');
+  if (backBtn) backBtn.style.display = 'none';
+
+  // Step name shown as subtitle in title bar
+  var stepNames = { '1': 'Calibrate', '2': 'Test Setup', '3': 'Vision Test', '4': 'Results' };
+  var titleSub = titleBar && titleBar.querySelector('p');
+  function updateStepLabel() {
+    var s = document.body.dataset.step;
+    if (titleSub && s) titleSub.textContent = stepNames[s] || 'by Dr. Ryan Evans, OD';
   }
+  new MutationObserver(updateStepLabel).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
+  updateStepLabel();
 })();
 </script>
 </body>
