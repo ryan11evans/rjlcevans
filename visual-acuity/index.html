@@ -489,58 +489,55 @@
         <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>2 m (6 ft)</strong> from a large mirror, facing it, phone wall behind you.</span></div>
         <div class="mirror-step"><span class="ms-num">3</span><span>Read the letters in the mirror reflection. Keep your head still.</span></div>
         <div class="mirror-note">Effective optical distance: ~4 m (13 ft) &nbsp;·&nbsp; True distance vision test</div>
-        <svg class="mirror-diagram" viewBox="0 0 296 86" xmlns="http://www.w3.org/2000/svg">
+        <svg class="mirror-diagram" viewBox="0 0 296 88" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <marker id="md-tip" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto">
               <path d="M0,0.5 L5,2.5 L0,4.5 Z" fill="#2563EB" opacity="0.8"/>
             </marker>
           </defs>
           <!-- left wall -->
-          <rect x="0" y="5" width="5" height="52" rx="1" fill="#9CA3AF" opacity="0.45"/>
+          <rect x="0" y="5" width="5" height="54" rx="1" fill="#9CA3AF" opacity="0.45"/>
           <line x1="0" y1="10" x2="5" y2="5"  stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="0" y1="20" x2="5" y2="15" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="0" y1="30" x2="5" y2="25" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="0" y1="40" x2="5" y2="35" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="0" y1="50" x2="5" y2="45" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
-          <!-- phone -->
-          <rect x="6" y="17" width="14" height="23" rx="2.5" fill="#1F2937"/>
-          <rect x="8" y="19" width="10" height="18" rx="1.5" fill="#BFDBFE"/>
-          <line x1="9.5" y1="22"   x2="17.5" y2="22"   stroke="white" stroke-width="1.2" opacity="0.8"/>
-          <line x1="10"  y1="25.5" x2="17"   y2="25.5" stroke="white" stroke-width="1"   opacity="0.45"/>
-          <line x1="11"  y1="29"   x2="16"   y2="29"   stroke="white" stroke-width="0.8" opacity="0.25"/>
-          <!-- person silhouette (x=148) -->
-          <circle cx="148" cy="19" r="7" stroke="#9CA3AF" stroke-width="1.5" fill="none"/>
-          <line x1="148" y1="26" x2="148" y2="44" stroke="#9CA3AF" stroke-width="1.5"/>
-          <line x1="137" y1="33" x2="159" y2="33" stroke="#9CA3AF" stroke-width="1.5"/>
-          <line x1="148" y1="44" x2="140" y2="57" stroke="#9CA3AF" stroke-width="1.5"/>
-          <line x1="148" y1="44" x2="156" y2="57" stroke="#9CA3AF" stroke-width="1.5"/>
-          <!-- mirror surface (x=280) -->
-          <line x1="280" y1="5" x2="280" y2="57" stroke="#93C5FD" stroke-width="4" opacity="0.9"/>
+          <!-- phone (on left wall) -->
+          <rect x="6" y="17" width="13" height="22" rx="2" fill="#1F2937"/>
+          <rect x="8" y="19" width="9" height="17" rx="1.5" fill="#BFDBFE"/>
+          <line x1="9.5" y1="22"   x2="16.5" y2="22"   stroke="white" stroke-width="1.2" opacity="0.8"/>
+          <line x1="10"  y1="25.5" x2="16"   y2="25.5" stroke="white" stroke-width="1"   opacity="0.45"/>
+          <line x1="11"  y1="29"   x2="15"   y2="29"   stroke="white" stroke-width="0.8" opacity="0.25"/>
+          <!-- person silhouette (standing right next to phone, x=38) -->
+          <circle cx="38" cy="17" r="7" stroke="#9CA3AF" stroke-width="1.5" fill="none"/>
+          <line x1="38" y1="24" x2="38" y2="42" stroke="#9CA3AF" stroke-width="1.5"/>
+          <line x1="27" y1="31" x2="49" y2="31" stroke="#9CA3AF" stroke-width="1.5"/>
+          <line x1="38" y1="42" x2="30" y2="56" stroke="#9CA3AF" stroke-width="1.5"/>
+          <line x1="38" y1="42" x2="46" y2="56" stroke="#9CA3AF" stroke-width="1.5"/>
+          <!-- "you + phone" label -->
+          <text x="26" y="67" text-anchor="middle" font-size="8" fill="#6B7280">you +</text>
+          <text x="26" y="76" text-anchor="middle" font-size="8" fill="#6B7280">phone</text>
           <!-- right wall -->
-          <rect x="281" y="5" width="5" height="52" rx="1" fill="#9CA3AF" opacity="0.45"/>
+          <rect x="281" y="5" width="5" height="54" rx="1" fill="#9CA3AF" opacity="0.45"/>
           <line x1="281" y1="10" x2="286" y2="5"  stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="281" y1="20" x2="286" y2="15" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="281" y1="30" x2="286" y2="25" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="281" y1="40" x2="286" y2="35" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
           <line x1="281" y1="50" x2="286" y2="45" stroke="#6B7280" stroke-width="0.7" opacity="0.35"/>
-          <!-- mirror label -->
-          <text x="280" y="66" text-anchor="middle" font-size="8.5" fill="#60A5FA">mirror</text>
-          <!-- light: phone → mirror (dashed) -->
-          <line x1="20" y1="28" x2="277" y2="28" stroke="#2563EB" stroke-width="1" stroke-dasharray="5,3" opacity="0.4" marker-end="url(#md-tip)"/>
-          <!-- light: mirror → eye (solid) -->
-          <line x1="278" y1="27" x2="156" y2="20" stroke="#2563EB" stroke-width="1.6" opacity="0.85" marker-end="url(#md-tip)"/>
-          <!-- distance bracket: phone wall → person -->
-          <line x1="4" y1="64" x2="141" y2="64" stroke="#9CA3AF" stroke-width="0.8"/>
-          <line x1="4"   y1="61" x2="4"   y2="67" stroke="#9CA3AF" stroke-width="0.8"/>
-          <line x1="141" y1="61" x2="141" y2="67" stroke="#9CA3AF" stroke-width="0.8"/>
-          <text x="72" y="74" text-anchor="middle" font-size="9.5" fill="#6B7280">~2 m · 6 ft</text>
-          <!-- distance bracket: person → mirror -->
-          <line x1="155" y1="64" x2="279" y2="64" stroke="#9CA3AF" stroke-width="0.8"/>
-          <line x1="155" y1="61" x2="155" y2="67" stroke="#9CA3AF" stroke-width="0.8"/>
-          <line x1="279" y1="61" x2="279" y2="67" stroke="#9CA3AF" stroke-width="0.8"/>
-          <text x="217" y="74" text-anchor="middle" font-size="9.5" fill="#6B7280">2 m · 6 ft</text>
-          <!-- total label -->
-          <text x="148" y="84" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2563EB">optical path ≈ 4 m · 13 ft total</text>
+          <!-- mirror surface -->
+          <line x1="280" y1="5" x2="280" y2="59" stroke="#93C5FD" stroke-width="4" opacity="0.9"/>
+          <text x="280" y="69" text-anchor="middle" font-size="8" fill="#60A5FA">mirror</text>
+          <!-- forward ray: person+phone → mirror (dashed) -->
+          <line x1="52" y1="24" x2="277" y2="24" stroke="#2563EB" stroke-width="1" stroke-dasharray="5,3" opacity="0.4" marker-end="url(#md-tip)"/>
+          <!-- return ray: mirror → person's eye (solid) -->
+          <line x1="277" y1="30" x2="52" y2="30" stroke="#2563EB" stroke-width="1.6" opacity="0.85" marker-end="url(#md-tip)"/>
+          <!-- single distance bracket -->
+          <line x1="51" y1="63" x2="279" y2="63" stroke="#9CA3AF" stroke-width="0.8"/>
+          <line x1="51"  y1="60" x2="51"  y2="66" stroke="#9CA3AF" stroke-width="0.8"/>
+          <line x1="279" y1="60" x2="279" y2="66" stroke="#9CA3AF" stroke-width="0.8"/>
+          <text x="165" y="73" text-anchor="middle" font-size="9.5" fill="#6B7280">2 m · 6 ft</text>
+          <!-- total path label -->
+          <text x="165" y="85" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2563EB">optical path: 2 m out + 2 m back = ~4 m (13 ft)</text>
         </svg>
       </div>
     </div>
