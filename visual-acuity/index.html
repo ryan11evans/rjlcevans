@@ -234,27 +234,63 @@
 
   /* ── App mode (Capacitor / ?app=1) ── */
   body.app-mode {
-    --paper: #151820; --paper-2: #1e2230; --ink: #e8e4dc; --ink-soft: #a8a49c;
-    --ink-mute: #6a6660; --line: #2e3244; --accent: #c8814a; --accent-soft: #b87040;
-    --good: #7aaa5a; --radius: 14px; --radius-sm: 8px;
+    --paper: #000000; --paper-2: #1c1c1e; --paper-3: #2c2c2e;
+    --ink: #f2f2f7; --ink-soft: rgba(242,242,247,0.65);
+    --ink-mute: rgba(242,242,247,0.35); --line: rgba(255,255,255,0.10);
+    --accent: #2dd4bf; --accent-soft: #14b8a6;
+    --good: #30d158; --radius: 16px; --radius-sm: 10px;
   }
   body.app-mode { background: var(--paper); }
   body.app-mode .wrap { padding-top: 0; }
-  body.app-mode .card { background: rgba(255,255,255,0.05); }
-  body.app-mode .method-tile, body.app-mode .tt-tile { background: rgba(255,255,255,0.06); }
-  body.app-mode .method-tile[aria-pressed="true"], body.app-mode .tt-tile[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  body.app-mode .iphone-btn { background: rgba(255,255,255,0.06); }
-  body.app-mode .iphone-btn.active { background: var(--ink); color: var(--paper); }
-  body.app-mode .test-stage { background: #0e1016; }
+  body.app-mode .card { background: var(--paper-2); }
+  body.app-mode .method-tile, body.app-mode .tt-tile { background: transparent; }
+  body.app-mode .method-tile[aria-pressed="true"], body.app-mode .tt-tile[aria-pressed="true"] { background: rgba(45,212,191,0.10); }
+  body.app-mode .iphone-btn { background: transparent; }
+  body.app-mode .iphone-btn.active { background: rgba(45,212,191,0.10); color: var(--accent) !important; font-weight: 600; }
+  body.app-mode .test-stage { background: #000; }
   body.app-mode .optotypes { color: #fff; }
-  body.app-mode .answer-row input { background: var(--paper-2); border-color: var(--line); color: var(--ink); }
-  body.app-mode .keypad button { background: rgba(255,255,255,0.07); }
+  body.app-mode .answer-row input { background: var(--paper-3); border-color: var(--line); color: var(--ink); }
+  body.app-mode .keypad button { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
   body.app-mode .cc-stage { background: var(--paper-2); }
-  body.app-mode .field input, body.app-mode .field select { background: var(--paper-2); color: var(--ink); border-color: var(--line); }
-  body.app-mode .glasses-toggle { background: rgba(255,255,255,0.05); }
-  body.app-mode .ec { background: rgba(255,255,255,0.05); }
-  body.app-mode .cv-result-block { background: rgba(255,255,255,0.05); }
+  body.app-mode .field input, body.app-mode .field select { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
+  body.app-mode .glasses-toggle { background: var(--paper-3); border-color: var(--line); }
+  body.app-mode .ec { background: var(--paper-3); }
+  body.app-mode .cv-result-block { background: var(--paper-3); }
   body.app-mode footer { display: none; }
+  /* Step 1 is auto-skipped in app mode; hide the Back button that returns to it */
+  body.app-mode #backTo1 { display: none !important; }
+
+  /* ── App mode: visibility helpers ── */
+  .app-only { display: none; }
+  body.app-mode .app-only { display: revert; }
+  body.app-mode .web-only { display: none !important; }
+
+  /* ── App mode: "Most Accurate" badge ── */
+  .app-badge {
+    display: none;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 99px;
+    background: rgba(45,212,191,0.18); color: var(--accent);
+    margin-left: 7px; vertical-align: middle;
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+  }
+  body.app-mode .app-badge { display: inline; }
+
+  /* ── App mode: test-type tile icon bubbles ── */
+  body.app-mode .tt-icon {
+    width: 42px; height: 42px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0; line-height: 1;
+  }
+  body.app-mode [data-type="mirror"] .tt-icon { background: var(--accent); }
+  body.app-mode [data-type="distance"] .tt-icon { background: #0A84FF; }
+  body.app-mode [data-type="near"] .tt-icon { background: #FF9F0A; }
+
+  /* ── App mode: tile ordering — mirror first, distance second, near hidden ── */
+  body.app-mode .test-type-row { display: flex; flex-direction: column; }
+  body.app-mode [data-type="mirror"] { order: 1; }
+  body.app-mode [data-type="distance"] { order: 2; }
+  body.app-mode [data-type="near"] { display: none !important; }
 
   /* ── App mode: layout & structure ── */
   body.app-mode .wrap { max-width: 100%; padding: max(72px, calc(50px + env(safe-area-inset-top))) 0 0; }
@@ -263,7 +299,15 @@
     border: none; border-radius: 0; margin-bottom: 0;
     padding: 20px 20px 12px; backdrop-filter: none; background: transparent;
   }
-  body.app-mode .card h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 6px; }
+  body.app-mode .card h2 {
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.035em; margin-bottom: 6px;
+  }
+  body.app-mode .app-title-bar h2 {
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  body.app-mode .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
   body.app-mode .card .lede { max-width: none; margin-bottom: 16px; }
   body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 6px 20px 14px; }
 
@@ -284,14 +328,13 @@
   body.app-mode .tt-tile:last-child { border-bottom: none !important; }
   body.app-mode .method-tile[aria-pressed="true"],
   body.app-mode .tt-tile[aria-pressed="true"] {
-    background: rgba(200,129,74,0.1) !important; color: var(--ink) !important;
+    background: rgba(45,212,191,0.10) !important; color: var(--ink) !important;
   }
   body.app-mode .method-tile[aria-pressed="true"] .mt-name,
   body.app-mode .tt-tile[aria-pressed="true"] .tt-name { color: var(--accent); }
   body.app-mode .method-tile[aria-pressed="true"] .mt-desc,
-  body.app-mode .tt-tile .tt-desc { color: var(--ink-mute); }
-  body.app-mode .tt-tile .tt-icon { font-size: 24px; flex-shrink: 0; }
-  body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 15px; }
+  body.app-mode .tt-tile .tt-desc { color: var(--ink-mute); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+  body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 16px; line-height: 1.2; }
 
   /* ── Device type choice (app-mode) ── */
   body.app-mode .device-type-grid {
@@ -324,7 +367,7 @@
   }
   body.app-mode .iphone-btn:last-child { border-bottom: none !important; }
   body.app-mode .iphone-btn.active {
-    background: rgba(200,129,74,0.1) !important; color: var(--accent) !important; font-weight: 600;
+    background: rgba(45,212,191,0.10) !important; color: var(--accent) !important; font-weight: 600;
   }
   body.app-mode .iphone-group-label {
     background: var(--paper); padding: 8px 16px 4px;
@@ -410,7 +453,7 @@
 <div class="wrap">
 
   <div class="app-title-bar" id="appTitleBar">
-    <h2>Acuity Test</h2>
+    <h2>Vision Check</h2>
     <p>by Dr. Ryan Evans, OD</p>
   </div>
 
@@ -515,19 +558,28 @@
       <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mute);margin-bottom:10px;">Test type</div>
       <div class="test-type-row">
         <button class="tt-tile" data-type="distance" aria-pressed="true">
-          <div class="tt-icon">🔭</div>
-          <div class="tt-name">Distance vision</div>
-          <div class="tt-desc">How clearly you see far away. Measured at 10–20 feet.</div>
+          <div class="tt-icon">⚡</div>
+          <div>
+            <div class="tt-name web-only">Distance vision</div>
+            <div class="tt-name app-only">Quick Test</div>
+            <div class="tt-desc web-only">How clearly you see far away. Measured at 10–20 feet.</div>
+            <div class="tt-desc app-only">Hold the phone at arm's length and read the chart. Fast setup, no mirror needed.</div>
+          </div>
         </button>
         <button class="tt-tile" data-type="near" aria-pressed="false">
           <div class="tt-icon">📖</div>
-          <div class="tt-name">Near vision</div>
-          <div class="tt-desc">Reading distance (~40 cm). Important for presbyopia.</div>
+          <div>
+            <div class="tt-name">Near vision</div>
+            <div class="tt-desc">Reading distance (~40 cm). Important for presbyopia.</div>
+          </div>
         </button>
         <button class="tt-tile" data-type="mirror" aria-pressed="false">
           <div class="tt-icon">🪞</div>
-          <div class="tt-name">Mirror test</div>
-          <div class="tt-desc">True distance vision — prop phone against wall, read via mirror.</div>
+          <div>
+            <div class="tt-name">Mirror test <span class="app-badge">Most Accurate</span></div>
+            <div class="tt-desc web-only">True distance vision — prop phone against wall, read via mirror.</div>
+            <div class="tt-desc app-only">Use your bathroom mirror. Say the letters aloud — hands-free &amp; voice-enabled.</div>
+          </div>
         </button>
       </div>
     </div>
@@ -1857,6 +1909,26 @@
   window.addEventListener('beforeunload', () => {
     if (ipdStream) ipdStream.getTracks().forEach(t => t.stop());
   });
+
+  // App mode (Capacitor or ?app=1): auto-detect device and jump to step 2
+  (function () {
+    if (!window.Capacitor && new URLSearchParams(location.search).get('app') !== '1') return;
+    // Default to mirror test (most accurate) in app mode
+    const mirrorTile = document.querySelector('[data-type="mirror"]');
+    if (mirrorTile) mirrorTile.click();
+    const detected = autoDetectDevice();
+    if (!detected) return; // unknown device — let user pick from list in step 1
+    state.pxPerMm = iphonePpmm(detected);
+    state._selectedDevice = detected;
+    state._selectedDeviceType = detected.type;
+    const confirm = document.getElementById('iphoneConfirm');
+    if (confirm) {
+      confirm.hidden = false;
+      confirm.textContent = '✓ ' + detected.name;
+    }
+    document.getElementById('changeDevice').hidden = false;
+    goStep(2);
+  })();
 })();
 
 // App mode: dark native feel when running inside Capacitor or ?app=1
