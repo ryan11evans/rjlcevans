@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BitcoinInfoView: View {
     let stats: BitcoinStats?
+    let currentPrice: Double?
 
     var body: some View {
         VStack(spacing: 24) {
@@ -11,11 +12,11 @@ struct BitcoinInfoView: View {
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     StatTile(label: "24h High",
-                             value: stats.map { shortPrice($0.high24h) } ?? "—",
+                             value: stats.map { shortPrice(high24h($0)) } ?? "—",
                              subtitle: nil,
                              color: .green)
                     StatTile(label: "24h Low",
-                             value: stats.map { shortPrice($0.low24h) } ?? "—",
+                             value: stats.map { shortPrice(low24h($0)) } ?? "—",
                              subtitle: nil,
                              color: .red)
                 }
@@ -34,6 +35,10 @@ struct BitcoinInfoView: View {
         }
         .padding(.top, 8)
     }
+
+    // Clamp against the live Coinbase price so the band always contains the current reading
+    private func high24h(_ s: BitcoinStats) -> Double { max(s.high24h, currentPrice ?? s.high24h) }
+    private func low24h(_ s: BitcoinStats) -> Double  { min(s.low24h,  currentPrice ?? s.low24h) }
 
     private func shortPrice(_ v: Double) -> String {
         "$\(Int(v).formatted())"
