@@ -120,6 +120,20 @@
   .keypad button { padding: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm); font-family: 'Fraunces', serif; font-size: 20px; cursor: pointer; transition: all 0.12s ease; color: var(--ink); }
   .keypad button:hover { background: var(--ink); color: var(--paper); }
   .keypad button:active { transform: scale(0.93); }
+  /* ── Voice input mode ── */
+  .vm-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; width: 100%; }
+  .vm-progress { display: flex; gap: 8px; min-height: 12px; }
+  .vm-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); transition: background 0.2s; flex-shrink: 0; }
+  .vm-dot.done  { background: var(--good); }
+  .vm-dot.active { background: var(--accent); transform: scale(1.2); }
+  .vm-heard { font-family: 'Courier New', monospace; font-weight: 700; font-size: 80px; min-height: 90px; line-height: 1; display: flex; align-items: center; justify-content: center; color: var(--accent); letter-spacing: 0; }
+  .vm-mic { width: 62px; height: 62px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; font-size: 28px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; flex-shrink: 0; }
+  .vm-mic:active { transform: scale(0.9); }
+  .vm-mic.listening { animation: vm-pulse 1.1s ease-in-out infinite; }
+  @keyframes vm-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(200,129,74,0.5); } 55% { box-shadow: 0 0 0 18px rgba(200,129,74,0); } }
+  .vm-status { font-size: 13px; color: var(--ink-mute); min-height: 20px; text-align: center; }
+  .vm-btns { display: flex; gap: 10px; }
+  .vm-type-link { font-size: 11px; color: var(--ink-mute); text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; margin-top: 2px; }
 
   .occluder-card { text-align: center; padding: 24px 20px; }
   .occluder-card .eye-icon { font-size: 52px; margin-bottom: 8px; }
@@ -552,6 +566,17 @@
       <div class="optotypes" id="optotypes"></div>
       <div class="answer-row" id="answerRow"></div>
       <div class="keypad" id="keypad"></div>
+      <div id="voicePanel" class="vm-panel" hidden>
+        <div class="vm-progress" id="vmProgress"></div>
+        <div class="vm-heard" id="vmHeard"></div>
+        <button class="vm-mic" id="vmMic" aria-label="Tap to listen again">🎤</button>
+        <div class="vm-status" id="vmStatus">Say the letter…</div>
+        <div class="vm-btns">
+          <button class="btn ghost" id="vmRetry">Retry</button>
+          <button class="btn ghost" id="vmSkip">Skip letter</button>
+        </div>
+        <button class="vm-type-link" id="vmTypeLink">Switch to typing mode</button>
+      </div>
       <div class="btn-row" style="justify-content:center;margin-top:18px;">
         <button class="btn ghost" id="cantSee">Can't see this line</button>
         <button class="btn" id="submitLine">Submit line →</button>
@@ -1136,6 +1161,7 @@
       });
       keypad.appendChild(b);
     });
+    if (state.testType === 'mirror') activateVoiceMode();
   }
 
   document.getElementById('submitLine').addEventListener('click', () => {
@@ -1187,7 +1213,204 @@
     document.getElementById('submitLine').click();
   });
 
+  // ===== VOICE INPUT (mirror mode) =====
+  const SLOAN_SET = new Set(SLOAN);
+  let voiceRec = null;
+  let voiceSlot = 0;
+  let voiceActive = false;
+
+  function speechToLetter(text) {
+    if (!text) return null;
+    const t = text.toLowerCase().trim();
+    // Single character in transcript
+    for (const ch of t) {
+      const up = ch.toUpperCase();
+      if (SLOAN_SET.has(up)) return up;
+    }
+    // Phonetic word → letter map
+    const map = {
+      see:'C', sea:'C', si:'C',
+      dee:'D',
+      ee:'E',
+      ef:'F', eff:'F',
+      aitch:'H', haitch:'H', ache:'H',
+      kay:'K',
+      en:'N',
+      oh:'O',
+      pee:'P',
+      are:'R', arr:'R', our:'R',
+      es:'S', ess:'S',
+      vee:'V',
+      zee:'Z', zed:'Z',
+    };
+    const words = t.split(/[\s,.'!?]+/);
+    for (const w of words) {
+      if (map[w] && SLOAN_SET.has(map[w])) return map[w];
+    }
+    return null;
+  }
+
+  (function initVoiceRec() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    voiceRec = new SR();
+    voiceRec.continuous = false;
+    voiceRec.interimResults = true;
+    voiceRec.lang = 'en-US';
+    voiceRec.maxAlternatives = 5;
+
+    voiceRec.onresult = (event) => {
+      // Collect final transcript; show interim as hint
+      let finalText = '', interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
+        else interimText += event.results[i][0].transcript;
+      }
+      if (!finalText && interimText) {
+        document.getElementById('vmStatus').textContent = `Hearing: "${interimText}"…`;
+        return;
+      }
+      if (!finalText) return;
+
+      // Try all alternatives for best Sloan match
+      let letter = null;
+      const resultSet = event.results[event.resultIndex];
+      if (resultSet) {
+        for (let i = 0; i < resultSet.length; i++) {
+          letter = speechToLetter(resultSet[i].transcript);
+          if (letter) break;
+        }
+      }
+      if (!letter) letter = speechToLetter(finalText);
+
+      if (letter) {
+        voiceAccept(letter);
+      } else {
+        document.getElementById('vmStatus').textContent = `"${finalText}" — not recognised, try again`;
+        document.getElementById('vmHeard').textContent = '?';
+        setTimeout(() => voiceListen(voiceSlot), 1100);
+      }
+    };
+
+    voiceRec.onerror = (e) => {
+      document.getElementById('vmMic').classList.remove('listening');
+      if (e.error === 'no-speech' && voiceActive) {
+        setTimeout(() => voiceListen(voiceSlot), 200);
+      } else if (e.error !== 'aborted') {
+        document.getElementById('vmStatus').textContent = 'Mic error — tap retry or switch to typing';
+      }
+    };
+
+    voiceRec.onend = () => {
+      document.getElementById('vmMic').classList.remove('listening');
+    };
+  })();
+
+  function voiceListen(slot) {
+    if (!voiceRec || !voiceActive) return;
+    voiceSlot = slot;
+    const count = state.currentLetters.length;
+
+    // Rebuild progress dots
+    const prog = document.getElementById('vmProgress');
+    prog.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('div');
+      d.className = 'vm-dot' + (i < slot ? ' done' : i === slot ? ' active' : '');
+      prog.appendChild(d);
+    }
+
+    document.getElementById('vmStatus').textContent = 'Say the letter…';
+    document.getElementById('vmHeard').textContent = '';
+    document.getElementById('vmMic').classList.add('listening');
+
+    try { voiceRec.abort(); } catch(e) {}
+    setTimeout(() => {
+      if (voiceActive) try { voiceRec.start(); } catch(e) {}
+    }, 150);
+  }
+
+  function voiceAccept(letter) {
+    haptic('Light');
+    document.getElementById('vmHeard').textContent = letter;
+    document.getElementById('vmStatus').textContent = `Heard: ${letter}`;
+    document.getElementById('vmMic').classList.remove('listening');
+
+    // Fill state and the readonly display input
+    state.currentAnswers[voiceSlot] = letter;
+    const inputs = answerRow.querySelectorAll('input');
+    if (inputs[voiceSlot]) inputs[voiceSlot].value = letter;
+
+    // Mark dot done
+    const dots = document.getElementById('vmProgress').children;
+    if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
+
+    const next = voiceSlot + 1;
+    if (next >= state.currentLetters.length) {
+      document.getElementById('vmStatus').textContent = 'All done — submitting…';
+      setTimeout(() => document.getElementById('submitLine').click(), 700);
+    } else {
+      setTimeout(() => voiceListen(next), 500);
+    }
+  }
+
+  function activateVoiceMode() {
+    if (!voiceRec) return; // no Speech API — stay in normal mode
+    voiceActive = true;
+    // Make existing answer inputs display-only
+    answerRow.querySelectorAll('input').forEach(inp => {
+      inp.readOnly = true;
+      inp.style.pointerEvents = 'none';
+      inp.style.opacity = '0.6';
+    });
+    keypad.style.display = 'none';
+    document.getElementById('voicePanel').hidden = false;
+    voiceListen(0);
+  }
+
+  function deactivateVoiceMode() {
+    if (!voiceActive) return;
+    voiceActive = false;
+    try { voiceRec && voiceRec.abort(); } catch(e) {}
+    document.getElementById('voicePanel').hidden = true;
+    document.getElementById('vmMic').classList.remove('listening');
+  }
+
+  document.getElementById('vmMic').addEventListener('click', () => {
+    haptic('Light');
+    voiceListen(voiceSlot);
+  });
+  document.getElementById('vmRetry').addEventListener('click', () => {
+    haptic('Light');
+    state.currentAnswers[voiceSlot] = '';
+    const inputs = answerRow.querySelectorAll('input');
+    if (inputs[voiceSlot]) inputs[voiceSlot].value = '';
+    voiceListen(voiceSlot);
+  });
+  document.getElementById('vmSkip').addEventListener('click', () => {
+    haptic('Light');
+    state.currentAnswers[voiceSlot] = '';
+    const next = voiceSlot + 1;
+    if (next >= state.currentLetters.length) {
+      setTimeout(() => document.getElementById('submitLine').click(), 300);
+    } else {
+      voiceListen(next);
+    }
+  });
+  document.getElementById('vmTypeLink').addEventListener('click', () => {
+    deactivateVoiceMode();
+    answerRow.querySelectorAll('input').forEach(inp => {
+      inp.readOnly = false;
+      inp.style.pointerEvents = '';
+      inp.style.opacity = '';
+    });
+    keypad.style.display = '';
+    answerRow.children[0]?.focus();
+    state.activeInput = 0;
+  });
+
   function finishEye() {
+    deactivateVoiceMode();
     hapticNotify('Success');
     let finalLogmar, finalSnellen;
     if (state.lastValidLine === null) {
