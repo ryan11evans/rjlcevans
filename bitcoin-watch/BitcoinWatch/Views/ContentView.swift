@@ -58,14 +58,6 @@ struct ContentView: View {
                             .foregroundStyle(hasActiveAlert ? .orange : .secondary)
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        Task { await service.fetchPrice() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .disabled(service.isLoading)
-                }
             }
         }
     }
