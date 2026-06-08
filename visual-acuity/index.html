@@ -65,7 +65,7 @@
   .method-tile[aria-pressed="true"] .mt-desc { color: rgba(246,241,234,0.7); }
 
   .iphone-search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.8); color: var(--ink); margin-top: 14px; margin-bottom: 10px; }
-  .iphone-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; max-height: 320px; overflow-y: auto; }
+  .iphone-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 320px; overflow-y: auto; }
   .iphone-group-label { grid-column: 1/-1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); padding: 6px 2px 2px; border-top: 1px solid var(--line); margin-top: 4px; }
   .iphone-group-label:first-child { border-top: none; margin-top: 0; }
   .iphone-btn { padding: 9px 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; cursor: pointer; text-align: left; color: var(--ink); transition: all 0.12s ease; }
@@ -565,43 +565,22 @@
   window.addEventListener('resize', checkLandscape);
 
   // ===== STEP 1: Calibration =====
-  // iPhone model database: ppi = native pixels per inch, nW/nH = native resolution portrait
+  // iPhone model database — models with identical screen dimensions are grouped into one entry.
+  // ppi = native pixels per inch, nW/nH = native resolution portrait, dpr = device pixel ratio.
   const IPHONE_MODELS = [
-    { name: 'iPhone 16 Pro Max', ppi: 460, nW: 1320, nH: 2868, dpr: 3, year: 2024 },
-    { name: 'iPhone 16 Pro',     ppi: 460, nW: 1206, nH: 2622, dpr: 3, year: 2024 },
-    { name: 'iPhone 16 Plus',    ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2024 },
-    { name: 'iPhone 16',         ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2024 },
-    { name: 'iPhone 15 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2023 },
-    { name: 'iPhone 15 Pro',     ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2023 },
-    { name: 'iPhone 15 Plus',    ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2023 },
-    { name: 'iPhone 15',         ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2023 },
-    { name: 'iPhone 14 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2022 },
-    { name: 'iPhone 14 Pro',     ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2022 },
-    { name: 'iPhone 14 Plus',    ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2022 },
-    { name: 'iPhone 14',         ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2022 },
-    { name: 'iPhone SE (3rd gen)', ppi: 326, nW: 750,  nH: 1334, dpr: 2, year: 2022 },
-    { name: 'iPhone 13 Pro Max', ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2021 },
-    { name: 'iPhone 13 Pro',     ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2021 },
-    { name: 'iPhone 13',         ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2021 },
-    { name: 'iPhone 13 mini',    ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2021 },
-    { name: 'iPhone 12 Pro Max', ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2020 },
-    { name: 'iPhone 12 Pro',     ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2020 },
-    { name: 'iPhone 12',         ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2020 },
-    { name: 'iPhone 12 mini',    ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2020 },
-    { name: 'iPhone SE (2nd gen)', ppi: 326, nW: 750, nH: 1334, dpr: 2, year: 2020 },
-    { name: 'iPhone 11 Pro Max', ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019 },
-    { name: 'iPhone 11 Pro',     ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019 },
-    { name: 'iPhone 11',         ppi: 326, nW: 828,  nH: 1792, dpr: 2, year: 2019 },
-    { name: 'iPhone XS Max',     ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2018 },
-    { name: 'iPhone XS',         ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2018 },
-    { name: 'iPhone XR',         ppi: 326, nW: 828,  nH: 1792, dpr: 2, year: 2018 },
-    { name: 'iPhone X',          ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2017 },
-    { name: 'iPhone 8 Plus',     ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2017 },
-    { name: 'iPhone 8',          ppi: 326, nW: 750,  nH: 1334, dpr: 2, year: 2017 },
-    { name: 'iPhone 7 Plus',     ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2016 },
-    { name: 'iPhone 7',          ppi: 326, nW: 750,  nH: 1334, dpr: 2, year: 2016 },
-    { name: 'iPhone 6s Plus',    ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2015 },
-    { name: 'iPhone 6s',         ppi: 326, nW: 750,  nH: 1334, dpr: 2, year: 2015 },
+    { name: 'iPhone 17e / 16e / 14 / 13 / 12 series',          ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2026 },
+    { name: 'iPhone 17 Pro Max / 16 Pro Max',                   ppi: 460, nW: 1320, nH: 2868, dpr: 3, year: 2025 },
+    { name: 'iPhone 17 Air',                                    ppi: 460, nW: 1260, nH: 2736, dpr: 3, year: 2025 },
+    { name: 'iPhone 17 / 17 Pro / 16 Pro',                      ppi: 460, nW: 1206, nH: 2622, dpr: 3, year: 2025 },
+    { name: 'iPhone 16 Plus / 15 Plus / 15 Pro Max / 14 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2024 },
+    { name: 'iPhone 16 / 15 / 15 Pro / 14 Pro',                 ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2024 },
+    { name: 'iPhone 14 Plus / 13 Pro Max / 12 Pro Max',         ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2022 },
+    { name: 'iPhone SE (2nd–3rd gen) / 8 / 7 / 6s',            ppi: 326, nW:  750, nH: 1334, dpr: 2, year: 2022 },
+    { name: 'iPhone 13 mini / 12 mini',                         ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2021 },
+    { name: 'iPhone 11 Pro Max / XS Max',                       ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019 },
+    { name: 'iPhone 11 Pro / XS / X',                           ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019 },
+    { name: 'iPhone 11 / XR',                                   ppi: 326, nW:  828, nH: 1792, dpr: 2, year: 2019 },
+    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2017 },
   ];
 
   // Try to auto-detect the iPhone model from logical screen size + DPR
