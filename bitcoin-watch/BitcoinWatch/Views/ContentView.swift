@@ -30,13 +30,19 @@ struct ContentView: View {
                         }
                         .padding(.horizontal)
 
-                        RefreshStatusView(price: service.currentPrice, error: service.error)
-                            .padding(.top, 16)
+                        TimelineView(.periodic(from: .now, by: 1)) { _ in
+                            RefreshStatusView(price: service.currentPrice, error: service.error)
+                        }
+                        .padding(.top, 16)
 
                         Spacer(minLength: 32)
                     }
                 }
                 .scrollIndicators(.hidden)
+                .refreshable {
+                    await service.fetchPrice()
+                    await statsService.fetch()
+                }
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
@@ -136,10 +142,9 @@ struct RefreshStatusView: View {
     private var statusText: String {
         if let error { return "Error: \(error)" }
         guard let price else { return "Fetching..." }
-        let ago = Int(-price.timestamp.timeIntervalSinceNow)
-        if ago < 5 { return "Just updated" }
+        let ago = max(0, Int(-price.timestamp.timeIntervalSinceNow))
         if ago < 60 { return "Updated \(ago)s ago" }
-        return "Updated \(ago / 60)m ago"
+        return "Updated \(ago / 60)m \(ago % 60)s ago"
     }
 
     var body: some View {
