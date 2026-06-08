@@ -73,7 +73,7 @@
   .iphone-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .iphone-confirm { margin-top: 12px; padding: 10px 14px; background: rgba(90,122,74,0.1); border: 1px solid var(--good); border-radius: var(--radius-sm); font-size: 13px; color: var(--good); }
 
-  .test-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .test-type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
   .tt-tile { padding: 20px 16px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); text-align: center; cursor: pointer; font-family: inherit; transition: all 0.15s ease; color: var(--ink); }
   .tt-tile:hover { border-color: var(--accent); transform: translateY(-1px); }
   .tt-tile[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -297,6 +297,25 @@
   .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
   .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
 
+  .mirror-setup { background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--radius-sm); padding: 16px 18px; margin-top: 12px; }
+  .mirror-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+  .mirror-step:last-of-type { margin-bottom: 0; }
+  .ms-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(37,99,235,0.15); color: #1d4ed8; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .mirror-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .myopia-note { padding: 12px 14px; background: rgba(202,138,4,0.08); border: 1px solid rgba(202,138,4,0.3); border-radius: var(--radius-sm); font-size: 13px; color: #92400e; line-height: 1.55; margin-top: 12px; }
+  body.app-mode .mirror-setup { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.25); }
+  body.app-mode .ms-num { background: rgba(37,99,235,0.2); color: #93c5fd; }
+  body.app-mode .myopia-note { color: #fbbf24; background: rgba(202,138,4,0.1); border-color: rgba(202,138,4,0.35); }
+  .compare-header { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); margin-bottom: 10px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .cg-cell { padding: 10px 12px; background: rgba(255,255,255,0.4); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 13px; text-align: center; }
+  .cg-cell .cg-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .cg-cell .cg-val { font-family: 'Fraunces', serif; font-size: 20px; color: var(--ink); }
+  .cg-cell.cg-gap .cg-val { color: var(--accent); }
+  .compare-rx { font-size: 13px; color: var(--ink-soft); padding: 10px 12px; background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15); border-radius: var(--radius-sm); line-height: 1.55; }
+  body.app-mode .cg-cell { background: rgba(255,255,255,0.04); }
+  body.app-mode .compare-rx { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); }
+
   @media (max-width: 600px) {
     .row-2 { grid-template-columns: 1fr; }
     .step { font-size: 10px; padding: 8px 4px; }
@@ -413,6 +432,20 @@
           <div class="tt-name">Near vision</div>
           <div class="tt-desc">Reading distance (~40 cm). Important for presbyopia.</div>
         </button>
+        <button class="tt-tile" data-type="mirror" aria-pressed="false">
+          <div class="tt-icon">🪞</div>
+          <div class="tt-name">Mirror test</div>
+          <div class="tt-desc">True distance vision — prop phone against wall, read via mirror.</div>
+        </button>
+      </div>
+    </div>
+
+    <div id="mirrorWrap" hidden>
+      <div class="mirror-setup">
+        <div class="mirror-step"><span class="ms-num">1</span><span>Prop your phone upright against a wall, screen facing out.</span></div>
+        <div class="mirror-step"><span class="ms-num">2</span><span>Stand 1 m (3 ft) from a large mirror facing the phone.</span></div>
+        <div class="mirror-step"><span class="ms-num">3</span><span>Read the letters in the mirror reflection. Keep your head still.</span></div>
+        <div class="mirror-note">Effective optical distance: ~2 m &nbsp;·&nbsp; True distance vision test</div>
       </div>
     </div>
 
@@ -438,6 +471,10 @@
       <div class="disclaimer">
         <strong>Near vision test.</strong> Hold your device at comfortable reading distance — about 40 cm (16 inches). When the test begins, keep it at that distance and cover one eye at a time.
       </div>
+    </div>
+
+    <div id="myopiaNote" hidden class="myopia-note">
+      ⚠️ <strong>Nearsighted without glasses?</strong> Testing at arm's length won't detect myopia — your near focus compensates. Use <strong>Mirror Mode</strong> for a true distance check, or test corrected vs. uncorrected to estimate your prescription.
     </div>
 
     <div class="btn-row">
@@ -503,6 +540,16 @@
 
     <div id="referralFlag" hidden></div>
     <div id="rxEstimate" hidden></div>
+
+    <div id="compareBlock" hidden>
+      <div class="compare-header">Corrected vs. uncorrected comparison</div>
+      <div class="compare-grid" id="compareGrid"></div>
+      <div class="compare-rx" id="compareRx"></div>
+    </div>
+
+    <div class="btn-row" id="compareBtn" hidden style="margin-top:12px;">
+      <button class="btn" id="retestWithGlasses">Compare with glasses →</button>
+    </div>
 
     <div class="cv-result-block" id="cvResultBlock" hidden>
       <div class="lbl">Color vision screening</div>
@@ -620,6 +667,8 @@
     cvIndex: 0,
     cvAnswers: [],
     cvSelected: null,
+    resultsUncorrected: { OD: null, OS: null },
+    comparingWithGlasses: false,
   };
 
   function haptic(style) {
@@ -822,10 +871,19 @@
       ttTiles.forEach(x => x.setAttribute('aria-pressed', 'false'));
       t.setAttribute('aria-pressed', 'true');
       state.testType = t.dataset.type;
-      document.getElementById('distanceWrap').hidden = state.testType === 'near';
-      document.getElementById('nearWrap').hidden = state.testType === 'distance';
+      document.getElementById('distanceWrap').hidden = state.testType !== 'distance';
+      document.getElementById('nearWrap').hidden = state.testType !== 'near';
+      document.getElementById('mirrorWrap').hidden = state.testType !== 'mirror';
+      if (state.testType === 'mirror') state.distanceMm = 2000;
+      updateMyopiaNote();
     });
   });
+
+  function updateMyopiaNote() {
+    const note = document.getElementById('myopiaNote');
+    if (!note) return;
+    note.hidden = state.testType !== 'distance';
+  }
 
   const distancePreset = document.getElementById('distancePreset');
   const customDistanceWrap = document.getElementById('customDistanceWrap');
@@ -841,6 +899,8 @@
   document.getElementById('toStep3').addEventListener('click', () => {
     if (state.testType === 'near') {
       state.distanceMm = 400;
+    } else if (state.testType === 'mirror') {
+      state.distanceMm = 2000;
     } else {
       if (distancePreset.value === 'custom') {
         state.distanceMm = parseFloat(document.getElementById('customDistance').value) || 3000;
@@ -852,6 +912,9 @@
     showOccluder();
     goStep(3);
   });
+
+  // Call updateMyopiaNote once on init (distance is default, so note should show)
+  updateMyopiaNote();
 
   // ===== STEP 3: Test =====
   const testStage = document.getElementById('testStage');
@@ -1052,6 +1115,10 @@
       state.currentEye = 'OS';
       showOccluder();
     } else {
+      if (state.comparingWithGlasses) {
+        const gt = document.getElementById('glassesOn');
+        if (gt) gt.disabled = false;
+      }
       showResults();
     }
   }
@@ -1066,6 +1133,45 @@
   }
 
   // ===== STEP 4: Results =====
+  function renderComparison() {
+    const uc = state.resultsUncorrected;
+    const c  = state.results;
+    const grid = document.getElementById('compareGrid');
+    const rxEl = document.getElementById('compareRx');
+    if (!grid) return;
+
+    function gapToSphere(gapLogmar) {
+      // gap_logmar = uncorrected - corrected (positive = uncorrected worse)
+      if (gapLogmar <= 0.05) return null;
+      return Math.round(gapLogmar * 3.0 * 4) / 4; // rough sphere magnitude
+    }
+
+    const rows = ['OD', 'OS'].map(eye => {
+      const u = uc[eye], cc = c[eye];
+      if (!u || !cc) return '';
+      const gap = parseFloat((u.logmar - cc.logmar).toFixed(2));
+      const sphere = gapToSphere(gap);
+      const sphereStr = sphere ? `~−${sphere.toFixed(2)}D` : '—';
+      return `
+        <div class="cg-cell"><div class="cg-lbl">${eye} uncorrected</div><div class="cg-val">${u.snellen}</div></div>
+        <div class="cg-cell"><div class="cg-lbl">${eye} corrected</div><div class="cg-val">${cc.snellen}</div></div>
+        <div class="cg-cell cg-gap"><div class="cg-lbl">Est. sphere</div><div class="cg-val">${sphereStr}</div></div>
+      `;
+    }).join('');
+
+    grid.innerHTML = rows;
+
+    const odGap = (uc.OD && c.OD) ? uc.OD.logmar - c.OD.logmar : 0;
+    const osGap = (uc.OS && c.OS) ? uc.OS.logmar - c.OS.logmar : 0;
+    const avgGap = (odGap + osGap) / 2;
+    const sphere = gapToSphere(avgGap);
+    if (sphere) {
+      rxEl.innerHTML = `<strong>Estimated sphere:</strong> approximately −${sphere.toFixed(2)} D &nbsp;<span style="color:var(--ink-mute);font-size:11px;">(rough guide from VA gap — not a prescription; see your optometrist for an exact Rx)</span>`;
+    } else {
+      rxEl.innerHTML = `<strong>No significant VA gap detected.</strong> Your corrected and uncorrected acuity are similar at this test distance.`;
+    }
+  }
+
   function showResults() {
     const od = state.results.OD;
     const os = state.results.OS;
@@ -1116,6 +1222,23 @@
       rxEl.innerHTML = `<strong>Rough sphere estimate:</strong> ~${sphere.toFixed(2)}D &nbsp;<span style="color:var(--ink-mute);font-size:11px;">(uncorrected distance — rough guide only, not a prescription)</span>`;
     }
 
+    // Show compare-with-glasses button if first uncorrected pass
+    const compareBtnEl = document.getElementById('compareBtn');
+    const compareBlock = document.getElementById('compareBlock');
+    compareBtnEl.hidden = true;
+    compareBlock.hidden = true;
+
+    if (state.comparingWithGlasses) {
+      // Second pass: show comparison
+      compareBlock.hidden = false;
+      compareBtnEl.hidden = true;
+      renderComparison();
+    } else {
+      // First pass: offer comparison if at least one eye uncorrected
+      const anyUncorrected = (!state.glassesOD && od) || (!state.glassesOS && os);
+      compareBtnEl.hidden = !anyUncorrected;
+    }
+
     saveToHistory({
       date: new Date().toISOString(),
       OD: od ? { logmar: od.logmar, snellen: od.snellen } : null,
@@ -1158,10 +1281,30 @@
 
   document.getElementById('restart').addEventListener('click', () => {
     state.results = { OD: null, OS: null };
+    state.resultsUncorrected = { OD: null, OS: null };
+    state.comparingWithGlasses = false;
+    const glassesToggle = document.getElementById('glassesOn');
+    if (glassesToggle) glassesToggle.disabled = false;
     state.cvPlates = []; state.cvIndex = 0; state.cvAnswers = [];
     document.getElementById('cvResultBlock').hidden = true;
     document.getElementById('colorVisionSection').hidden = true;
     goStep(2);
+  });
+
+  document.getElementById('retestWithGlasses').addEventListener('click', () => {
+    // Save current uncorrected results
+    state.resultsUncorrected = {
+      OD: state.results.OD ? { ...state.results.OD } : null,
+      OS: state.results.OS ? { ...state.results.OS } : null,
+    };
+    state.comparingWithGlasses = true;
+    state.results = { OD: null, OS: null };
+    state.currentEye = 'OD';
+    // Pre-check the glasses toggle and lock it
+    const glassesToggle = document.getElementById('glassesOn');
+    if (glassesToggle) { glassesToggle.checked = true; glassesToggle.disabled = true; }
+    showOccluder();
+    goStep(3);
   });
 
   document.getElementById('shareResults').addEventListener('click', async () => {
