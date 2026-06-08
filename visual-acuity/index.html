@@ -146,8 +146,9 @@
     justify-content: flex-start !important;
   }
   body.testing .optotypes {
-    letter-spacing: 0.2em !important; white-space: nowrap !important;
-    margin-bottom: 10px !important; overflow: hidden !important;
+    letter-spacing: 0.2em !important; white-space: normal !important;
+    word-break: break-all !important; text-align: center !important;
+    margin-bottom: 10px !important; overflow: visible !important;
   }
   body.testing .answer-row { gap: 7px !important; margin-top: 6px !important; }
   body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
@@ -1202,15 +1203,12 @@
 
     const px = letterHeightPx(line.logmar);
     // In fullscreen testing mode cap size so all letters fit on one row within the viewport.
-    // No spaces between letters (letter-spacing provides the visual gap).
-    // Each char ≈ 0.6em wide + 0.2em spacing = 0.8em total per character.
     let displayPx = px;
     if (document.body.classList.contains('testing')) {
-      const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      const maxByWidth = vpW / (line.count * 0.8);
-      const maxByHeight = vpH * 0.28;
-      displayPx = Math.min(px, maxByWidth, maxByHeight);
+      // Cap by height only — letters wrap to a second line if needed.
+      const maxByHeight = vpH * 0.38;
+      displayPx = Math.min(px, maxByHeight);
     }
     optotypes.style.fontSize = displayPx + 'px';
     optotypes.textContent = state.currentLetters.join('');
