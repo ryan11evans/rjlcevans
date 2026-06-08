@@ -72,6 +72,15 @@
   .iphone-btn:hover { border-color: var(--accent); }
   .iphone-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .iphone-confirm { margin-top: 12px; padding: 10px 14px; background: rgba(90,122,74,0.1); border: 1px solid var(--good); border-radius: var(--radius-sm); font-size: 13px; color: var(--good); }
+  .device-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .device-type-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; color: var(--ink); transition: all 0.15s ease; }
+  .device-type-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .device-type-btn .dt-icon { font-size: 36px; line-height: 1; }
+  .device-type-btn .dt-name { font-weight: 600; font-size: 16px; }
+  .device-type-btn .dt-sub { font-size: 11px; color: var(--ink-mute); text-align: center; }
+  .back-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--ink-soft); background: none; border: none; cursor: pointer; font-family: inherit; padding: 6px 2px; margin-top: 10px; }
+  .back-link:hover { color: var(--accent); }
+  .change-device-link { display: inline-block; font-size: 12px; color: var(--accent); background: none; border: none; cursor: pointer; font-family: inherit; margin-top: 8px; text-decoration: underline; padding: 0; }
 
   .test-type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
   .tt-tile { padding: 20px 16px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); text-align: center; cursor: pointer; font-family: inherit; transition: all 0.15s ease; color: var(--ink); }
@@ -236,6 +245,21 @@
   body.app-mode .tt-tile .tt-icon { font-size: 24px; flex-shrink: 0; }
   body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 15px; }
 
+  /* ── Device type choice (app-mode) ── */
+  body.app-mode .device-type-grid {
+    display: flex; flex-direction: column; gap: 0; margin-top: 10px;
+    background: var(--paper-2); border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+  }
+  body.app-mode .device-type-btn {
+    background: transparent; border: none; border-bottom: 1px solid var(--line);
+    border-radius: 0 !important; padding: 15px 16px; transform: none;
+    flex-direction: row; justify-content: flex-start; text-align: left; gap: 14px;
+  }
+  body.app-mode .device-type-btn:last-child { border-bottom: none; }
+  body.app-mode .device-type-btn .dt-icon { font-size: 26px; flex-shrink: 0; }
+  body.app-mode .device-type-btn .dt-name { font-size: 16px; }
+  body.app-mode .device-type-btn .dt-sub { text-align: left; }
+
   /* ── iPhone picker as native list ── */
   body.app-mode .iphone-search {
     background: var(--paper-2); border-color: var(--line); color: var(--ink); border-radius: 12px;
@@ -360,8 +384,8 @@
     <p class="lede">We need to know your screen's physical pixel density to size the letters correctly. Choose a method:</p>
     <div class="methods" id="methodTiles">
       <button class="method-tile" data-method="iphone" aria-pressed="true">
-        <div class="mt-name">📱 iPhone model</div>
-        <div class="mt-desc">Pick your iPhone for exact calibration.</div>
+        <div class="mt-name">📱 iPhone / iPad</div>
+        <div class="mt-desc">Pick your Apple device for exact calibration.</div>
       </button>
       <button class="method-tile" data-method="card">
         <div class="mt-name">Credit card</div>
@@ -402,11 +426,29 @@
       </div>
     </div>
 
-    <!-- iPhone model method -->
+    <!-- iPhone / iPad model method -->
     <div id="methodIphone">
-      <input class="iphone-search" id="iphoneSearch" type="text" placeholder="Search model…" autocomplete="off">
-      <div class="iphone-grid" id="iphoneGrid"></div>
+      <div id="deviceTypeChoice">
+        <div class="device-type-grid">
+          <button class="device-type-btn" id="chooseIphone">
+            <span class="dt-icon">📱</span>
+            <span class="dt-name">iPhone</span>
+            <span class="dt-sub">All models from 6s onward</span>
+          </button>
+          <button class="device-type-btn" id="chooseIpad">
+            <span class="dt-icon">📋</span>
+            <span class="dt-name">iPad</span>
+            <span class="dt-sub">All iPad models</span>
+          </button>
+        </div>
+      </div>
+      <div id="deviceModelPicker" hidden>
+        <button class="back-link" id="backToDeviceType">← Back</button>
+        <input class="iphone-search" id="iphoneSearch" type="text" placeholder="Search model…" autocomplete="off">
+        <div class="iphone-grid" id="iphoneGrid"></div>
+      </div>
       <div class="iphone-confirm" id="iphoneConfirm" hidden></div>
+      <button class="change-device-link" id="changeDevice" hidden>Change device</button>
     </div>
 
     <div class="btn-row">
@@ -649,6 +691,8 @@
   const state = {
     method: 'iphone',
     pxPerMm: null,
+    _selectedDevice: null,
+    _selectedDeviceType: null,
     distanceMm: 3000,
     testType: 'distance',
     currentEye: 'OD',
@@ -708,30 +752,45 @@
   window.addEventListener('resize', checkLandscape);
 
   // ===== STEP 1: Calibration =====
-  // iPhone model database — models with identical screen dimensions are grouped into one entry.
+  // Device model databases — models with identical screen dimensions are grouped.
   // ppi = native pixels per inch, nW/nH = native resolution portrait, dpr = device pixel ratio.
   const IPHONE_MODELS = [
-    { name: 'iPhone 17e / 16e / 14 / 13 / 12 series',          ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2026 },
-    { name: 'iPhone 17 Pro Max / 16 Pro Max',                   ppi: 460, nW: 1320, nH: 2868, dpr: 3, year: 2025 },
-    { name: 'iPhone 17 Air',                                    ppi: 460, nW: 1260, nH: 2736, dpr: 3, year: 2025 },
-    { name: 'iPhone 17 / 17 Pro / 16 Pro',                      ppi: 460, nW: 1206, nH: 2622, dpr: 3, year: 2025 },
-    { name: 'iPhone 16 Plus / 15 Plus / 15 Pro Max / 14 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2024 },
-    { name: 'iPhone 16 / 15 / 15 Pro / 14 Pro',                 ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2024 },
-    { name: 'iPhone 14 Plus / 13 Pro Max / 12 Pro Max',         ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2022 },
-    { name: 'iPhone SE (2nd–3rd gen) / 8 / 7 / 6s',            ppi: 326, nW:  750, nH: 1334, dpr: 2, year: 2022 },
-    { name: 'iPhone 13 mini / 12 mini',                         ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2021 },
-    { name: 'iPhone 11 Pro Max / XS Max',                       ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019 },
-    { name: 'iPhone 11 Pro / XS / X',                           ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019 },
-    { name: 'iPhone 11 / XR',                                   ppi: 326, nW:  828, nH: 1792, dpr: 2, year: 2019 },
-    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2017 },
+    { name: 'iPhone 17e / 16e / 14 / 13 / 12 series',          ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2026, type: 'iPhone' },
+    { name: 'iPhone 17 Pro Max / 16 Pro Max',                   ppi: 460, nW: 1320, nH: 2868, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 17 Air',                                    ppi: 460, nW: 1260, nH: 2736, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 17 / 17 Pro / 16 Pro',                      ppi: 460, nW: 1206, nH: 2622, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 16 Plus / 15 Plus / 15 Pro Max / 14 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2024, type: 'iPhone' },
+    { name: 'iPhone 16 / 15 / 15 Pro / 14 Pro',                 ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2024, type: 'iPhone' },
+    { name: 'iPhone 14 Plus / 13 Pro Max / 12 Pro Max',         ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2022, type: 'iPhone' },
+    { name: 'iPhone SE (2nd–3rd gen) / 8 / 7 / 6s',            ppi: 326, nW:  750, nH: 1334, dpr: 2, year: 2022, type: 'iPhone' },
+    { name: 'iPhone 13 mini / 12 mini',                         ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2021, type: 'iPhone' },
+    { name: 'iPhone 11 Pro Max / XS Max',                       ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 11 Pro / XS / X',                           ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 11 / XR',                                   ppi: 326, nW:  828, nH: 1792, dpr: 2, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2017, type: 'iPhone' },
   ];
 
-  // Try to auto-detect the iPhone model from logical screen size + DPR
-  function autoDetectIphone() {
+  const IPAD_MODELS = [
+    { name: 'iPad Pro 13" (M4) / iPad Air 13" (M2)',            ppi: 264, nW: 2064, nH: 2752, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Pro 11" (M4)',                                 ppi: 264, nW: 1668, nH: 2420, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Air 11" (M2) / iPad 10 / Air 5 / Air 4',      ppi: 264, nW: 1640, nH: 2360, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad mini 7 / mini 6',                              ppi: 326, nW: 1488, nH: 2266, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Pro 12.9" (all gens, 2015–2022)',              ppi: 264, nW: 2048, nH: 2732, dpr: 2, year: 2022, type: 'iPad' },
+    { name: 'iPad Pro 11" (M1/M2 / 1st–3rd gen)',               ppi: 264, nW: 1668, nH: 2388, dpr: 2, year: 2022, type: 'iPad' },
+    { name: 'iPad 9th / 8th / 7th gen',                         ppi: 264, nW: 1620, nH: 2160, dpr: 2, year: 2021, type: 'iPad' },
+    { name: 'iPad mini 5',                                       ppi: 326, nW: 1536, nH: 2048, dpr: 2, year: 2019, type: 'iPad' },
+    { name: 'iPad Air 3 / iPad Pro 10.5"',                       ppi: 264, nW: 1668, nH: 2224, dpr: 2, year: 2019, type: 'iPad' },
+    { name: 'iPad 6th gen / iPad Pro 9.7" / iPad Air 2',         ppi: 264, nW: 1536, nH: 2048, dpr: 2, year: 2018, type: 'iPad' },
+  ];
+
+  const ALL_DEVICES = [...IPAD_MODELS, ...IPHONE_MODELS];
+
+  // Try to auto-detect device from logical screen size + DPR across all Apple devices
+  function autoDetectDevice() {
     const sw = Math.min(screen.width, screen.height);
     const sh = Math.max(screen.width, screen.height);
     const dpr = window.devicePixelRatio || 1;
-    return IPHONE_MODELS.find(m => {
+    return ALL_DEVICES.find(m => {
       const logW = Math.round(m.nW / m.dpr);
       const logH = Math.round(m.nH / m.dpr);
       return Math.min(logW, logH) === sw && Math.max(logW, logH) === sh && m.dpr === dpr;
@@ -746,9 +805,10 @@
     const grid = document.getElementById('iphoneGrid');
     grid.innerHTML = '';
     const lower = (filter || '').toLowerCase();
-    const years = [...new Set(IPHONE_MODELS.map(m => m.year))].sort((a, b) => b - a);
+    const source = ALL_DEVICES.filter(m => m.type === state._selectedDeviceType);
+    const years = [...new Set(source.map(m => m.year))].sort((a, b) => b - a);
     years.forEach(year => {
-      const group = IPHONE_MODELS.filter(m => m.year === year && (!lower || m.name.toLowerCase().includes(lower)));
+      const group = source.filter(m => m.year === year && (!lower || m.name.toLowerCase().includes(lower)));
       if (!group.length) return;
       const lbl = document.createElement('div');
       lbl.className = 'iphone-group-label';
@@ -758,11 +818,11 @@
         const btn = document.createElement('button');
         btn.className = 'iphone-btn';
         btn.textContent = model.name;
-        if (state._selectedIphone && state._selectedIphone.name === model.name) btn.classList.add('active');
+        if (state._selectedDevice && state._selectedDevice.name === model.name) btn.classList.add('active');
         btn.addEventListener('click', () => {
           grid.querySelectorAll('.iphone-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          state._selectedIphone = model;
+          state._selectedDevice = model;
           const ppmm = iphonePpmm(model);
           state.pxPerMm = ppmm;
           const confirm = document.getElementById('iphoneConfirm');
@@ -785,21 +845,50 @@
     iphone: document.getElementById('methodIphone'),
   };
 
-  function initIphonePanel() {
-    const detected = autoDetectIphone();
-    if (detected) { state._selectedIphone = detected; }
+  function showDeviceTypeChoice() {
+    document.getElementById('deviceTypeChoice').hidden = false;
+    document.getElementById('deviceModelPicker').hidden = true;
+    document.getElementById('iphoneConfirm').hidden = true;
+    document.getElementById('changeDevice').hidden = true;
+  }
+
+  function showDeviceModelPicker(type) {
+    state._selectedDeviceType = type;
+    document.getElementById('deviceTypeChoice').hidden = true;
+    document.getElementById('deviceModelPicker').hidden = false;
+    document.getElementById('iphoneSearch').value = '';
     buildIphoneGrid('');
-    if (detected) {
-      state.pxPerMm = iphonePpmm(detected);
-      const confirm = document.getElementById('iphoneConfirm');
-      confirm.hidden = false;
-      confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
-    }
     setTimeout(() => {
       const activeBtn = document.querySelector('#iphoneGrid .iphone-btn.active');
       if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 50);
   }
+
+  function initIphonePanel() {
+    const detected = autoDetectDevice();
+    if (detected) {
+      state._selectedDevice = detected;
+      state._selectedDeviceType = detected.type;
+      state.pxPerMm = iphonePpmm(detected);
+      document.getElementById('deviceTypeChoice').hidden = true;
+      document.getElementById('deviceModelPicker').hidden = true;
+      const confirm = document.getElementById('iphoneConfirm');
+      confirm.hidden = false;
+      confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
+      document.getElementById('changeDevice').hidden = false;
+    } else {
+      showDeviceTypeChoice();
+    }
+  }
+
+  document.getElementById('chooseIphone').addEventListener('click', () => showDeviceModelPicker('iPhone'));
+  document.getElementById('chooseIpad').addEventListener('click', () => showDeviceModelPicker('iPad'));
+  document.getElementById('backToDeviceType').addEventListener('click', showDeviceTypeChoice);
+  document.getElementById('changeDevice').addEventListener('click', () => {
+    state._selectedDevice = null;
+    state.pxPerMm = null;
+    showDeviceTypeChoice();
+  });
 
   methodTiles.forEach(t => {
     t.addEventListener('click', () => {
