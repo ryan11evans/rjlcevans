@@ -117,12 +117,15 @@
   .answer-row input { width: 56px; height: 56px; text-align: center; font-size: 24px; font-family: inherit; font-weight: 600; text-transform: uppercase; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); transition: border-color 0.15s, background 0.15s; }
   .answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   /* ── Full-screen test mode ── */
-  /* Apply to #step3 directly so backdrop-filter stacking context can't trap z-index */
+  /* Target #step3 directly — child of .wrap, no stacking context above it */
   body.testing { overflow: hidden; }
   body.testing #step3 {
-    position: fixed !important; inset: 0 !important; z-index: 9999 !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important;
+    height: 100vh !important; height: 100dvh !important; /* dvh excludes Safari URL bar */
+    z-index: 9999 !important;
     border-radius: 0 !important; margin: 0 !important;
-    padding: max(24px, env(safe-area-inset-top)) 28px max(24px, env(safe-area-inset-bottom)) !important;
+    padding: max(20px, env(safe-area-inset-top)) 24px max(16px, env(safe-area-inset-bottom)) !important;
     backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
     background: var(--paper) !important; overflow: hidden !important;
     display: flex !important; flex-direction: column !important;
@@ -131,13 +134,22 @@
   body.testing #step3 > .lede { display: none !important; }
   body.testing .test-stage {
     flex: 1 !important; border: none !important; border-radius: 0 !important;
-    padding: 0 !important; margin: 0 !important; background: transparent !important;
-    min-height: 0 !important;
+    padding: 8px 0 0 !important; margin: 0 !important; background: transparent !important;
+    min-height: 0 !important; overflow: hidden !important;
+    justify-content: flex-start !important;
   }
+  body.testing .optotypes {
+    letter-spacing: 0.2em !important; white-space: nowrap !important;
+    margin-bottom: 10px !important; overflow: hidden !important;
+  }
+  body.testing .answer-row { gap: 7px !important; margin-top: 6px !important; }
+  body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
   body.testing .line-progress { top: max(16px, env(safe-area-inset-top)); }
-  body.testing .vm-heard { font-size: 100px; min-height: 112px; }
-  body.testing .vm-panel { gap: 14px; }
-  body.testing .keypad { max-width: 420px; }
+  body.testing .vm-panel { gap: 8px !important; padding: 4px 0 0 !important; }
+  body.testing .vm-heard { font-size: 80px !important; min-height: 0 !important; height: auto !important; }
+  body.testing .vm-mic { width: 54px !important; height: 54px !important; font-size: 24px !important; }
+  body.testing .keypad { max-width: 420px; margin-top: 10px !important; }
+  body.testing .keypad button { padding: 13px 0 !important; }
   .keypad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 18px auto 0; max-width: 400px; width: 100%; }
   .keypad button { padding: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm); font-family: 'Fraunces', serif; font-size: 20px; cursor: pointer; transition: all 0.12s ease; color: var(--ink); }
   .keypad button:hover { background: var(--ink); color: var(--paper); }
@@ -1128,8 +1140,19 @@
     state.currentAnswers = new Array(line.count).fill('');
 
     const px = letterHeightPx(line.logmar);
-    optotypes.style.fontSize = px + 'px';
-    optotypes.textContent = state.currentLetters.join(' ');
+    // In fullscreen testing mode cap size so all letters fit on one row within the viewport.
+    // No spaces between letters (letter-spacing provides the visual gap).
+    // Each char ≈ 0.6em wide + 0.2em spacing = 0.8em total per character.
+    let displayPx = px;
+    if (document.body.classList.contains('testing')) {
+      const vpW = Math.max(260, (window.innerWidth || 390) - 48);
+      const vpH = Math.max(400, window.innerHeight || 844);
+      const maxByWidth = vpW / (line.count * 0.8);
+      const maxByHeight = vpH * 0.28;
+      displayPx = Math.min(px, maxByWidth, maxByHeight);
+    }
+    optotypes.style.fontSize = displayPx + 'px';
+    optotypes.textContent = state.currentLetters.join('');
 
     // Show relative progress without revealing the acuity level
     const totalLines = LINES.length;
