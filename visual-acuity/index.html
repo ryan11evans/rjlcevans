@@ -146,7 +146,7 @@
     justify-content: flex-start !important;
   }
   body.testing .optotypes {
-    letter-spacing: 0.2em !important; white-space: normal !important;
+    letter-spacing: 0.4em !important; white-space: normal !important;
     word-break: break-all !important; text-align: center !important;
     margin-bottom: 10px !important; overflow: visible !important;
   }
@@ -1211,6 +1211,7 @@
       displayPx = Math.min(px, maxByHeight);
     }
     optotypes.style.fontSize = displayPx + 'px';
+    optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
     optotypes.textContent = state.currentLetters.join('');
 
     // Show relative progress without revealing the acuity level
