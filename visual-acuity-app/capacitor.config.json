@@ -1,6 +1,6 @@
 {
   "appId": "com.rjlcevans.visioncheck",
-  "appName": "Vision Check",
+  "appName": "Eye Chart Test",
   "webDir": "../visual-acuity",
   "plugins": {
     "StatusBar": {
