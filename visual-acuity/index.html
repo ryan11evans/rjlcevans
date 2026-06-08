@@ -116,6 +116,17 @@
   .answer-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
   .answer-row input { width: 56px; height: 56px; text-align: center; font-size: 24px; font-family: inherit; font-weight: 600; text-transform: uppercase; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); transition: border-color 0.15s, background 0.15s; }
   .answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* ── Full-screen test mode ── */
+  .test-stage.fullscreen {
+    position: fixed; inset: 0; z-index: 100;
+    border-radius: 0; border: none; margin: 0;
+    padding: max(24px, env(safe-area-inset-top)) 28px max(24px, env(safe-area-inset-bottom));
+    background: var(--paper); min-height: unset; overflow: hidden;
+  }
+  .test-stage.fullscreen .line-progress { top: max(16px, env(safe-area-inset-top)); }
+  .test-stage.fullscreen .vm-heard { font-size: 100px; min-height: 112px; }
+  .test-stage.fullscreen .vm-panel { gap: 14px; }
+  .test-stage.fullscreen .keypad { max-width: 420px; }
   .keypad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 18px auto 0; max-width: 400px; width: 100%; }
   .keypad button { padding: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm); font-family: 'Fraunces', serif; font-size: 20px; cursor: pointer; transition: all 0.12s ease; color: var(--ink); }
   .keypad button:hover { background: var(--ink); color: var(--paper); }
@@ -570,7 +581,7 @@
         <div class="vm-progress" id="vmProgress"></div>
         <div class="vm-heard" id="vmHeard"></div>
         <button class="vm-mic" id="vmMic" aria-label="Tap to listen again">🎤</button>
-        <div class="vm-status" id="vmStatus">Say the letter…</div>
+        <div class="vm-status" id="vmStatus">Say the letter — or "can't see" to skip line</div>
         <div class="vm-btns">
           <button class="btn ghost" id="vmRetry">Retry</button>
           <button class="btn ghost" id="vmSkip">Skip letter</button>
@@ -759,6 +770,9 @@
     4: document.getElementById('step4'),
   };
   function goStep(n) {
+    testStage.classList.remove('fullscreen');
+    document.body.style.overflow = '';
+    deactivateVoiceMode();
     Object.values(sections).forEach(s => s.hidden = true);
     sections[n].hidden = false;
     stepEls.forEach(e => {
@@ -1064,6 +1078,8 @@
     else state.glassesOS = glasses;
     occluderPrompt.hidden = true;
     testStage.hidden = false;
+    document.body.style.overflow = 'hidden';
+    testStage.classList.add('fullscreen');
     state.testIndex = START_LINE_INDEX;
     state.lastValidLine = null;
     state.correctSoFar = {};
@@ -1272,6 +1288,15 @@
       }
       if (!finalText) return;
 
+      // Check for "can't see" skip command
+      if (/can'?t see|cannot see|can not see|skip|blank|nothing/.test(finalText.toLowerCase())) {
+        document.getElementById('vmStatus').textContent = '"Can\'t see" — skipping line…';
+        document.getElementById('vmMic').classList.remove('listening');
+        try { voiceRec.abort(); } catch(e) {}
+        setTimeout(() => document.getElementById('cantSee').click(), 350);
+        return;
+      }
+
       // Try all alternatives for best Sloan match
       let letter = null;
       const resultSet = event.results[event.resultIndex];
@@ -1320,7 +1345,7 @@
       prog.appendChild(d);
     }
 
-    document.getElementById('vmStatus').textContent = 'Say the letter…';
+    document.getElementById('vmStatus').textContent = 'Say the letter — or "can\'t see" to skip';
     document.getElementById('vmHeard').textContent = '';
     document.getElementById('vmMic').classList.add('listening');
 
@@ -1411,6 +1436,8 @@
 
   function finishEye() {
     deactivateVoiceMode();
+    testStage.classList.remove('fullscreen');
+    document.body.style.overflow = '';
     hapticNotify('Success');
     let finalLogmar, finalSnellen;
     if (state.lastValidLine === null) {
