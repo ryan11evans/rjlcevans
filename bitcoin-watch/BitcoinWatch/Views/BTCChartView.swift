@@ -3,6 +3,7 @@ import Charts
 
 struct BTCChartView: View {
     @ObservedObject var statsService: StatsService
+    @State private var selectedDate: Date? = nil
 
     private var data: [StatsService.ChartPoint] { statsService.chartData }
 
@@ -18,15 +19,37 @@ struct BTCChartView: View {
     private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.9995 }
     private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.0005 }
 
+    private var selectedPoint: StatsService.ChartPoint? {
+        guard let selectedDate else { return nil }
+        return data.min(by: {
+            abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate))
+        })
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Price History")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .tracking(0.3)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Price History")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                        .tracking(0.3)
+                    if let point = selectedPoint {
+                        Text(BitcoinPrice(usd: point.price, timestamp: point.date).formatted)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        Text(point.date, style: .time)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.15), value: selectedPoint?.id)
+
                 Spacer()
+
                 HStack(spacing: 2) {
                     ForEach(StatsService.ChartRange.allCases, id: \.self) { range in
                         Button(range.rawValue) {
@@ -47,35 +70,51 @@ struct BTCChartView: View {
             if data.isEmpty {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.white.opacity(0.04))
-                    .frame(height: 130)
+                    .frame(height: 140)
                     .overlay(ProgressView().tint(.orange))
             } else {
-                Chart(data) { point in
-                    LineMark(
-                        x: .value("Time", point.date),
-                        y: .value("Price", point.price)
-                    )
-                    .foregroundStyle(lineColor)
-                    .interpolationMethod(.catmullRom)
-
-                    AreaMark(
-                        x: .value("Time", point.date),
-                        yStart: .value("Base", minPrice),
-                        yEnd: .value("Price", point.price)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [lineColor.opacity(0.25), lineColor.opacity(0.0)],
-                            startPoint: .top,
-                            endPoint: .bottom
+                Chart {
+                    ForEach(data) { point in
+                        LineMark(
+                            x: .value("Time", point.date),
+                            y: .value("Price", point.price)
                         )
-                    )
-                    .interpolationMethod(.catmullRom)
+                        .foregroundStyle(lineColor)
+                        .interpolationMethod(.catmullRom)
+
+                        AreaMark(
+                            x: .value("Time", point.date),
+                            yStart: .value("Base", minPrice),
+                            yEnd: .value("Price", point.price)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [lineColor.opacity(0.25), lineColor.opacity(0.0)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .interpolationMethod(.catmullRom)
+                    }
+
+                    if let selected = selectedPoint {
+                        RuleMark(x: .value("Selected", selected.date))
+                            .foregroundStyle(.white.opacity(0.4))
+                            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+
+                        PointMark(
+                            x: .value("Time", selected.date),
+                            y: .value("Price", selected.price)
+                        )
+                        .foregroundStyle(lineColor)
+                        .symbolSize(55)
+                    }
                 }
                 .chartYScale(domain: minPrice...maxPrice)
                 .chartXAxis(.hidden)
                 .chartYAxis(.hidden)
-                .frame(height: 130)
+                .chartXSelection(value: $selectedDate)
+                .frame(height: 140)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
         }
