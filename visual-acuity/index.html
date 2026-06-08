@@ -1347,7 +1347,12 @@
       const up = w.toUpperCase();
       if (SLOAN_SET.has(up)) { out.push(up); continue; }
       const m = map[w];
-      if (m) out.push(m);
+      if (m) { out.push(m); continue; }
+      // ASR sometimes merges spoken letters into one token (e.g. "zdroh" for "Z D R O H")
+      const chars = [...up];
+      if (chars.length > 1 && chars.every(c => SLOAN_SET.has(c))) {
+        out.push(...chars);
+      }
     }
     return out;
   }
