@@ -1268,35 +1268,29 @@
   let voiceSlot = 0;
   let voiceActive = false;
 
-  function speechToLetter(text) {
-    if (!text) return null;
-    const t = text.toLowerCase().trim();
-    // Single character in transcript
-    for (const ch of t) {
-      const up = ch.toUpperCase();
-      if (SLOAN_SET.has(up)) return up;
-    }
-    // Phonetic word → letter map
+  function speechToLetters(text) {
+    if (!text) return [];
     const map = {
       see:'C', sea:'C', si:'C',
       dee:'D',
-      ee:'E',
-      ef:'F', eff:'F',
       aitch:'H', haitch:'H', ache:'H',
       kay:'K',
       en:'N',
       oh:'O',
-      pee:'P',
       are:'R', arr:'R', our:'R',
       es:'S', ess:'S',
       vee:'V',
       zee:'Z', zed:'Z',
     };
-    const words = t.split(/[\s,.'!?]+/);
-    for (const w of words) {
-      if (map[w] && SLOAN_SET.has(map[w])) return map[w];
+    const out = [];
+    for (const w of text.toLowerCase().trim().split(/[\s,.'!?]+/)) {
+      if (!w) continue;
+      const up = w.toUpperCase();
+      if (SLOAN_SET.has(up)) { out.push(up); continue; }
+      const m = map[w];
+      if (m) out.push(m);
     }
-    return null;
+    return out;
   }
 
   function makeVoiceRec() {
@@ -1310,9 +1304,11 @@
     rec.onresult = (event) => {
       let finalText = '', interimText = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalText += event.results[i][0].transcript + ' ';
         else interimText += event.results[i][0].transcript;
       }
+      finalText = finalText.trim();
+
       if (!finalText && interimText) {
         document.getElementById('vmStatus').textContent = `Hearing: "${interimText}"…`;
         return;
@@ -1327,23 +1323,47 @@
         return;
       }
 
-      let letter = null;
+      // Try all alternatives, keep the one with the most recognised letters
       const resultSet = event.results[event.resultIndex];
+      let bestLetters = speechToLetters(finalText);
       if (resultSet) {
-        for (let i = 0; i < resultSet.length; i++) {
-          letter = speechToLetter(resultSet[i].transcript);
-          if (letter) break;
+        for (let alt = 0; alt < resultSet.length; alt++) {
+          const letters = speechToLetters(resultSet[alt].transcript);
+          if (letters.length > bestLetters.length) bestLetters = letters;
         }
       }
-      if (!letter) letter = speechToLetter(finalText);
 
-      if (letter) {
-        voiceAccept(letter);
-      } else {
+      if (bestLetters.length === 0) {
         document.getElementById('vmStatus').textContent = `"${finalText}" — not recognised, try again`;
         document.getElementById('vmHeard').textContent = '?';
         voiceRec = null;
         setTimeout(() => voiceListen(voiceSlot), 1100);
+        return;
+      }
+
+      // Accept as many letters as were heard (up to remaining slots)
+      document.getElementById('vmMic').classList.remove('listening');
+      const inputs = answerRow.querySelectorAll('input');
+      const dots = document.getElementById('vmProgress').children;
+      const toAccept = bestLetters.slice(0, state.currentLetters.length - voiceSlot);
+
+      for (const letter of toAccept) {
+        haptic('Light');
+        state.currentAnswers[voiceSlot] = letter;
+        if (inputs[voiceSlot]) inputs[voiceSlot].value = letter;
+        if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
+        document.getElementById('vmHeard').textContent = letter;
+        voiceSlot++;
+      }
+
+      if (voiceSlot >= state.currentLetters.length) {
+        document.getElementById('vmStatus').textContent = 'All done — submitting…';
+        setTimeout(() => document.getElementById('submitLine').click(), 700);
+      } else {
+        // Heard some but not all — restart for the remaining letters
+        document.getElementById('vmStatus').textContent = `"${toAccept.join(' ')}" heard — say the rest`;
+        voiceRec = null;
+        setTimeout(() => voiceListen(voiceSlot), 400);
       }
     };
 
@@ -1377,7 +1397,7 @@
       prog.appendChild(d);
     }
 
-    document.getElementById('vmStatus').textContent = 'Say the letter — or "can\'t see" to skip';
+    document.getElementById('vmStatus').textContent = 'Say all letters at once — or "can\'t see" to skip';
     document.getElementById('vmHeard').textContent = '';
     document.getElementById('vmMic').classList.add('listening');
 
@@ -1388,30 +1408,6 @@
       voiceRec = makeVoiceRec();
       if (voiceRec) try { voiceRec.start(); } catch(e) {}
     }, 150);
-  }
-
-  function voiceAccept(letter) {
-    haptic('Light');
-    document.getElementById('vmHeard').textContent = letter;
-    document.getElementById('vmStatus').textContent = `Heard: ${letter}`;
-    document.getElementById('vmMic').classList.remove('listening');
-
-    // Fill state and the readonly display input
-    state.currentAnswers[voiceSlot] = letter;
-    const inputs = answerRow.querySelectorAll('input');
-    if (inputs[voiceSlot]) inputs[voiceSlot].value = letter;
-
-    // Mark dot done
-    const dots = document.getElementById('vmProgress').children;
-    if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
-
-    const next = voiceSlot + 1;
-    if (next >= state.currentLetters.length) {
-      document.getElementById('vmStatus').textContent = 'All done — submitting…';
-      setTimeout(() => document.getElementById('submitLine').click(), 700);
-    } else {
-      setTimeout(() => voiceListen(next), 500);
-    }
   }
 
   function activateVoiceMode() {
