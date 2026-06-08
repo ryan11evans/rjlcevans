@@ -117,16 +117,27 @@
   .answer-row input { width: 56px; height: 56px; text-align: center; font-size: 24px; font-family: inherit; font-weight: 600; text-transform: uppercase; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); transition: border-color 0.15s, background 0.15s; }
   .answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   /* ── Full-screen test mode ── */
-  .test-stage.fullscreen {
-    position: fixed; inset: 0; z-index: 100;
-    border-radius: 0; border: none; margin: 0;
-    padding: max(24px, env(safe-area-inset-top)) 28px max(24px, env(safe-area-inset-bottom));
-    background: var(--paper); min-height: unset; overflow: hidden;
+  /* Apply to #step3 directly so backdrop-filter stacking context can't trap z-index */
+  body.testing { overflow: hidden; }
+  body.testing #step3 {
+    position: fixed !important; inset: 0 !important; z-index: 9999 !important;
+    border-radius: 0 !important; margin: 0 !important;
+    padding: max(24px, env(safe-area-inset-top)) 28px max(24px, env(safe-area-inset-bottom)) !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    background: var(--paper) !important; overflow: hidden !important;
+    display: flex !important; flex-direction: column !important;
   }
-  .test-stage.fullscreen .line-progress { top: max(16px, env(safe-area-inset-top)); }
-  .test-stage.fullscreen .vm-heard { font-size: 100px; min-height: 112px; }
-  .test-stage.fullscreen .vm-panel { gap: 14px; }
-  .test-stage.fullscreen .keypad { max-width: 420px; }
+  body.testing #step3 > h2,
+  body.testing #step3 > .lede { display: none !important; }
+  body.testing .test-stage {
+    flex: 1 !important; border: none !important; border-radius: 0 !important;
+    padding: 0 !important; margin: 0 !important; background: transparent !important;
+    min-height: 0 !important;
+  }
+  body.testing .line-progress { top: max(16px, env(safe-area-inset-top)); }
+  body.testing .vm-heard { font-size: 100px; min-height: 112px; }
+  body.testing .vm-panel { gap: 14px; }
+  body.testing .keypad { max-width: 420px; }
   .keypad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 18px auto 0; max-width: 400px; width: 100%; }
   .keypad button { padding: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm); font-family: 'Fraunces', serif; font-size: 20px; cursor: pointer; transition: all 0.12s ease; color: var(--ink); }
   .keypad button:hover { background: var(--ink); color: var(--paper); }
@@ -770,8 +781,7 @@
     4: document.getElementById('step4'),
   };
   function goStep(n) {
-    testStage.classList.remove('fullscreen');
-    document.body.style.overflow = '';
+    document.body.classList.remove('testing');
     deactivateVoiceMode();
     Object.values(sections).forEach(s => s.hidden = true);
     sections[n].hidden = false;
@@ -1078,8 +1088,7 @@
     else state.glassesOS = glasses;
     occluderPrompt.hidden = true;
     testStage.hidden = false;
-    document.body.style.overflow = 'hidden';
-    testStage.classList.add('fullscreen');
+    document.body.classList.add('testing');
     state.testIndex = START_LINE_INDEX;
     state.lastValidLine = null;
     state.correctSoFar = {};
@@ -1231,6 +1240,7 @@
 
   // ===== VOICE INPUT (mirror mode) =====
   const SLOAN_SET = new Set(SLOAN);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let voiceRec = null;
   let voiceSlot = 0;
   let voiceActive = false;
@@ -1266,17 +1276,15 @@
     return null;
   }
 
-  (function initVoiceRec() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    voiceRec = new SR();
-    voiceRec.continuous = false;
-    voiceRec.interimResults = true;
-    voiceRec.lang = 'en-US';
-    voiceRec.maxAlternatives = 5;
+  function makeVoiceRec() {
+    if (!SR) return null;
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 5;
 
-    voiceRec.onresult = (event) => {
-      // Collect final transcript; show interim as hint
+    rec.onresult = (event) => {
       let finalText = '', interimText = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
@@ -1288,16 +1296,14 @@
       }
       if (!finalText) return;
 
-      // Check for "can't see" skip command
       if (/can'?t see|cannot see|can not see|skip|blank|nothing/.test(finalText.toLowerCase())) {
         document.getElementById('vmStatus').textContent = '"Can\'t see" — skipping line…';
         document.getElementById('vmMic').classList.remove('listening');
-        try { voiceRec.abort(); } catch(e) {}
+        if (voiceRec) { try { voiceRec.abort(); } catch(e) {} voiceRec = null; }
         setTimeout(() => document.getElementById('cantSee').click(), 350);
         return;
       }
 
-      // Try all alternatives for best Sloan match
       let letter = null;
       const resultSet = event.results[event.resultIndex];
       if (resultSet) {
@@ -1313,30 +1319,33 @@
       } else {
         document.getElementById('vmStatus').textContent = `"${finalText}" — not recognised, try again`;
         document.getElementById('vmHeard').textContent = '?';
+        voiceRec = null;
         setTimeout(() => voiceListen(voiceSlot), 1100);
       }
     };
 
-    voiceRec.onerror = (e) => {
+    rec.onerror = (e) => {
       document.getElementById('vmMic').classList.remove('listening');
       if (e.error === 'no-speech' && voiceActive) {
+        voiceRec = null;
         setTimeout(() => voiceListen(voiceSlot), 200);
       } else if (e.error !== 'aborted') {
         document.getElementById('vmStatus').textContent = 'Mic error — tap retry or switch to typing';
       }
     };
 
-    voiceRec.onend = () => {
+    rec.onend = () => {
       document.getElementById('vmMic').classList.remove('listening');
     };
-  })();
+
+    return rec;
+  }
 
   function voiceListen(slot) {
-    if (!voiceRec || !voiceActive) return;
+    if (!SR || !voiceActive) return;
     voiceSlot = slot;
     const count = state.currentLetters.length;
 
-    // Rebuild progress dots
     const prog = document.getElementById('vmProgress');
     prog.innerHTML = '';
     for (let i = 0; i < count; i++) {
@@ -1349,9 +1358,12 @@
     document.getElementById('vmHeard').textContent = '';
     document.getElementById('vmMic').classList.add('listening');
 
-    try { voiceRec.abort(); } catch(e) {}
+    // Destroy existing instance so iOS releases its mic indicator
+    if (voiceRec) { try { voiceRec.abort(); } catch(e) {} voiceRec = null; }
     setTimeout(() => {
-      if (voiceActive) try { voiceRec.start(); } catch(e) {}
+      if (!voiceActive) return;
+      voiceRec = makeVoiceRec();
+      if (voiceRec) try { voiceRec.start(); } catch(e) {}
     }, 150);
   }
 
@@ -1380,7 +1392,7 @@
   }
 
   function activateVoiceMode() {
-    if (!voiceRec) return; // no Speech API — stay in normal mode
+    if (!SR) return; // no Speech API — stay in normal mode
     voiceActive = true;
     // Make existing answer inputs display-only
     answerRow.querySelectorAll('input').forEach(inp => {
@@ -1396,7 +1408,10 @@
   function deactivateVoiceMode() {
     if (!voiceActive) return;
     voiceActive = false;
-    try { voiceRec && voiceRec.abort(); } catch(e) {}
+    if (voiceRec) {
+      try { voiceRec.abort(); } catch(e) {}
+      voiceRec = null; // release reference so iOS drops the mic indicator
+    }
     document.getElementById('voicePanel').hidden = true;
     document.getElementById('vmMic').classList.remove('listening');
   }
@@ -1436,8 +1451,7 @@
 
   function finishEye() {
     deactivateVoiceMode();
-    testStage.classList.remove('fullscreen');
-    document.body.style.overflow = '';
+    document.body.classList.remove('testing');
     hapticNotify('Success');
     let finalLogmar, finalSnellen;
     if (state.lastValidLine === null) {
