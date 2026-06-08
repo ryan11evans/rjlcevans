@@ -155,6 +155,26 @@
 
   [hidden] { display: none !important; }
 
+  #landscapeWarn { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.93); color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:32px; }
+  #landscapeWarn:not([hidden]) { display:flex; }
+  #landscapeWarn .lw-icon { font-size:52px; line-height:1; }
+  #landscapeWarn h3 { font-size:22px; font-weight:600; margin:0; }
+  #landscapeWarn p { font-size:14px; color:rgba(255,255,255,0.65); margin:0; line-height:1.6; }
+
+  .referral-flag { display:flex; gap:10px; padding:14px 16px; border-radius:var(--radius-sm); margin-top:14px; font-size:13px; line-height:1.55; }
+  .referral-flag.warn { background:rgba(202,138,4,0.1); border:1px solid rgba(202,138,4,0.35); color:#92400e; }
+  .referral-flag.urgent { background:rgba(185,28,28,0.08); border:1px solid rgba(185,28,28,0.3); color:#991b1b; }
+  .rx-estimate { margin-top:10px; padding:12px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18); border-radius:var(--radius-sm); font-size:13px; color:var(--ink-soft); }
+  .rx-estimate strong { color:var(--ink); }
+  .history-section { margin-top:18px; }
+  .history-row { display:flex; align-items:center; gap:8px; padding:9px 12px; background:rgba(255,255,255,0.45); border:1px solid var(--line); border-radius:var(--radius-sm); margin-bottom:5px; font-size:13px; }
+  .history-row .hr-date { color:var(--ink-mute); min-width:96px; }
+  .history-row .hr-scores { font-weight:600; color:var(--ink); flex:1; }
+  .history-row .hr-type { font-size:11px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.06em; }
+  body.app-mode .history-row { background:rgba(255,255,255,0.04); }
+  body.app-mode .referral-flag.warn { color:#fbbf24; }
+  body.app-mode .referral-flag.urgent { color:#f87171; }
+
   /* ── App mode (Capacitor / ?app=1) ── */
   body.app-mode {
     --paper: #151820; --paper-2: #1e2230; --ink: #e8e4dc; --ink-soft: #a8a49c;
@@ -195,6 +215,11 @@
 </head>
 <body>
 <a href="/" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
+<div id="landscapeWarn" hidden>
+  <div class="lw-icon">⟳</div>
+  <h3>Rotate to portrait</h3>
+  <p>The letter test needs portrait orientation<br>to display letters at the correct physical size.</p>
+</div>
 <div class="wrap">
 
   <div class="app-title-bar" id="appTitleBar">
@@ -382,6 +407,9 @@
       </div>
     </div>
 
+    <div id="referralFlag" hidden></div>
+    <div id="rxEstimate" hidden></div>
+
     <div class="cv-result-block" id="cvResultBlock" hidden>
       <div class="lbl">Color vision screening</div>
       <div class="val" id="cvResultVal">—</div>
@@ -390,6 +418,8 @@
     <div class="disclaimer">
       <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. Refractive error, cataract, glaucoma, and retinal disease can produce 20/20 results yet still require treatment. If you notice any change in vision, schedule an exam with a licensed eye care provider.
     </div>
+
+    <div class="history-section" id="historySection"></div>
 
     <div class="btn-row">
       <button class="btn ghost" id="restart">Test again</button>
@@ -403,7 +433,7 @@
     <h2>Color vision screening</h2>
     <p class="lede">Tap the circle that looks different from the other three. Work quickly — your first impression is most reliable.</p>
 
-    <div class="cv-counter" id="cvCounter">Plate 1 of 6</div>
+    <div class="cv-counter" id="cvCounter">Plate 1 of 12</div>
     <div class="cv-question" id="cvQuestion">Which circle looks different?</div>
     <div class="cv-plate" id="cvPlate"></div>
     <button class="btn primary cv-next" id="cvNext" disabled>Next →</button>
@@ -463,10 +493,16 @@
   const CV_PLATES_DEF = [
     { type: 'control', bg: '#2563EB', fg: '#DC2626' },
     { type: 'control', bg: '#16A34A', fg: '#7C3AED' },
-    { type: 'rg',      bg: '#B33A28', fg: '#3D7A28' },
-    { type: 'rg',      bg: '#C87828', fg: '#6A8C28' },
-    { type: 'by',      bg: '#2D5EA0', fg: '#A09010' },
-    { type: 'by',      bg: '#1A8C8C', fg: '#8C1A50' },
+    { type: 'rg', bg: '#B33A28', fg: '#3D7A28' },
+    { type: 'rg', bg: '#C87828', fg: '#6A8C28' },
+    { type: 'rg', bg: '#A04020', fg: '#608040' },
+    { type: 'rg', bg: '#D05030', fg: '#80A040' },
+    { type: 'rg', bg: '#882020', fg: '#384820' },
+    { type: 'by', bg: '#2D5EA0', fg: '#A09010' },
+    { type: 'by', bg: '#1A8C8C', fg: '#8C1A50' },
+    { type: 'by', bg: '#1840A0', fg: '#A8A020' },
+    { type: 'by', bg: '#20A080', fg: '#A04068' },
+    { type: 'by', bg: '#4060C0', fg: '#C0A020' },
   ];
 
   const state = {
@@ -492,6 +528,13 @@
     cvSelected: null,
   };
 
+  function haptic(style) {
+    try { window.Capacitor?.Plugins?.Haptics?.impact({ style: style || 'Light' }); } catch(e) {}
+  }
+  function hapticNotify(type) {
+    try { window.Capacitor?.Plugins?.Haptics?.notification({ type: type || 'Success' }); } catch(e) {}
+  }
+
   // ===== Step navigation =====
   const stepEls = document.querySelectorAll('.step');
   const sections = {
@@ -508,8 +551,18 @@
       e.classList.toggle('active', num === n);
       e.classList.toggle('done', num < n);
     });
+    document.body.dataset.step = n;
+    checkLandscape();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  function checkLandscape() {
+    const warn = document.getElementById('landscapeWarn');
+    if (!warn) return;
+    const inTest = document.body.dataset.step === '3';
+    warn.hidden = !(window.innerWidth > window.innerHeight && inTest);
+  }
+  window.addEventListener('resize', checkLandscape);
 
   // ===== STEP 1: Calibration =====
   // iPhone model database: ppi = native pixels per inch, nW/nH = native resolution portrait
@@ -620,6 +673,10 @@
       confirm.hidden = false;
       confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
     }
+    setTimeout(() => {
+      const activeBtn = document.querySelector('#iphoneGrid .iphone-btn.active');
+      if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
   }
 
   methodTiles.forEach(t => {
@@ -839,6 +896,7 @@
         } else if (ch === '✓') {
           document.getElementById('submitLine').click();
         } else {
+          haptic('Light');
           state.currentAnswers[state.activeInput] = ch;
           answerRow.children[state.activeInput].value = ch;
           if (state.activeInput < line.count - 1) {
@@ -853,6 +911,7 @@
   }
 
   document.getElementById('submitLine').addEventListener('click', () => {
+    haptic('Medium');
     const line = LINES[state.testIndex];
     let correct = 0;
     state.currentAnswers.forEach((a, i) => { if (a === state.currentLetters[i]) correct++; });
@@ -901,6 +960,7 @@
   });
 
   function finishEye() {
+    hapticNotify('Success');
     let finalLogmar, finalSnellen;
     if (state.lastValidLine === null) {
       finalLogmar = 1.0; finalSnellen = '<20/200';
@@ -956,7 +1016,71 @@
       document.getElementById('bestLogmar').textContent = `logMAR ${best.logmar.toFixed(2)}`;
       document.getElementById('bestInterp').textContent = SNELLEN_INTERP[snellen] || SNELLEN_INTERP['<20/200'];
     }
+
+    const referralFlag = document.getElementById('referralFlag');
+    referralFlag.hidden = true;
+    referralFlag.className = '';
+    referralFlag.textContent = '';
+    if (best) {
+      if (best.logmar >= 1.0) {
+        referralFlag.hidden = false;
+        referralFlag.className = 'referral-flag urgent';
+        referralFlag.innerHTML = '🚨 <strong>Urgent referral recommended.</strong> This result (20/200 or worse) meets criteria for legal low vision in many jurisdictions. Please see an eye care provider promptly.';
+      } else if (best.logmar >= 0.3) {
+        referralFlag.hidden = false;
+        referralFlag.className = 'referral-flag warn';
+        referralFlag.innerHTML = '⚠️ <strong>Eye exam recommended.</strong> 20/40 or worse is below the legal driving standard in most states. Corrective lenses or a prescription update may be needed.';
+      }
+    }
+
+    const rxEl = document.getElementById('rxEstimate');
+    rxEl.hidden = true;
+    rxEl.textContent = '';
+    if (best && best.logmar > 0 && state.testType === 'distance' && (!state.glassesOD || !state.glassesOS)) {
+      const sphere = Math.round(-(best.logmar * 2.5) * 4) / 4;
+      rxEl.hidden = false;
+      rxEl.className = 'rx-estimate';
+      rxEl.innerHTML = `<strong>Rough sphere estimate:</strong> ~${sphere.toFixed(2)}D &nbsp;<span style="color:var(--ink-mute);font-size:11px;">(uncorrected distance — rough guide only, not a prescription)</span>`;
+    }
+
+    saveToHistory({
+      date: new Date().toISOString(),
+      OD: od ? { logmar: od.logmar, snellen: od.snellen } : null,
+      OS: os ? { logmar: os.logmar, snellen: os.snellen } : null,
+      glassesOD: state.glassesOD,
+      glassesOS: state.glassesOS,
+      testType: state.testType,
+    });
+    renderHistory();
+
     goStep(4);
+  }
+
+  function saveToHistory(entry) {
+    try {
+      const hist = JSON.parse(localStorage.getItem('acuity_history') || '[]');
+      hist.unshift(entry);
+      if (hist.length > 20) hist.pop();
+      localStorage.setItem('acuity_history', JSON.stringify(hist));
+    } catch(e) {}
+  }
+
+  function renderHistory() {
+    const section = document.getElementById('historySection');
+    if (!section) return;
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem('acuity_history') || '[]'); } catch(e) {}
+    if (hist.length <= 1) { section.innerHTML = ''; return; }
+    const past = hist.slice(1, 6); // skip current (just saved), show last 5
+    const rows = past.map(h => {
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const od = h.OD ? h.OD.snellen : '—';
+      const os = h.OS ? h.OS.snellen : '—';
+      const gl = (h.glassesOD || h.glassesOS) ? ' (Rx)' : '';
+      return `<div class="history-row"><span class="hr-date">${dateStr}</span><span class="hr-scores">OD ${od} · OS ${os}${gl}</span><span class="hr-type">${h.testType || 'distance'}</span></div>`;
+    }).join('');
+    section.innerHTML = `<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mute);margin:0 0 10px;">Previous tests</h3>${rows}`;
   }
 
   document.getElementById('restart').addEventListener('click', () => {
@@ -964,7 +1088,7 @@
     state.cvPlates = []; state.cvIndex = 0; state.cvAnswers = [];
     document.getElementById('cvResultBlock').hidden = true;
     document.getElementById('colorVisionSection').hidden = true;
-    goStep(1);
+    goStep(2);
   });
 
   document.getElementById('shareResults').addEventListener('click', () => {
@@ -1048,11 +1172,11 @@
     let result;
     if (controlFails >= 2) {
       result = 'Test inconclusive — unable to distinguish clearly different colors. Lighting or screen calibration may be affecting results.';
-    } else if (rgFails >= 1 && byFails >= 1) {
+    } else if (rgFails >= 2 && byFails >= 2) {
       result = 'Possible red-green and blue-yellow color vision deficiency detected. A clinical Ishihara or Farnsworth panel test is recommended.';
-    } else if (rgFails >= 1) {
+    } else if (rgFails >= 2) {
       result = 'Possible red-green color vision deficiency. This affects ~8% of males and ~0.5% of females. A formal clinical test is recommended.';
-    } else if (byFails >= 1) {
+    } else if (byFails >= 2) {
       result = 'Possible blue-yellow (tritan) color vision deficiency. This is less common and may warrant further clinical testing.';
     } else {
       result = 'No color vision deficiency detected in this screening.';
