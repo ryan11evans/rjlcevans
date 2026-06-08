@@ -1,0 +1,18 @@
+{
+  "appId": "com.rjlcevans.visioncheck",
+  "appName": "Vision Check",
+  "webDir": "../visual-acuity",
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#151820",
+      "overlaysWebView": false
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#151820",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    }
+  }
+}

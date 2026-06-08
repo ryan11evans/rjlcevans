@@ -255,6 +255,8 @@
   body.app-mode .ec { background: rgba(255,255,255,0.05); }
   body.app-mode .cv-result-block { background: rgba(255,255,255,0.05); }
   body.app-mode footer { display: none; }
+  /* Step 1 is auto-skipped in app mode; hide the Back button that returns to it */
+  body.app-mode #backTo1 { display: none !important; }
 
   /* ── App mode: layout & structure ── */
   body.app-mode .wrap { max-width: 100%; padding: max(72px, calc(50px + env(safe-area-inset-top))) 0 0; }
@@ -1857,6 +1859,25 @@
   window.addEventListener('beforeunload', () => {
     if (ipdStream) ipdStream.getTracks().forEach(t => t.stop());
   });
+
+  // App mode (Capacitor or ?app=1): auto-detect device and jump straight to test setup.
+  // On a real iOS device screen dimensions are exact, so auto-detection always succeeds
+  // and the credit-card / physical calibration steps are unnecessary.
+  (function () {
+    if (!window.Capacitor && new URLSearchParams(location.search).get('app') !== '1') return;
+    const detected = autoDetectDevice();
+    if (!detected) return; // unknown device — let user pick from list in step 1
+    state.pxPerMm = iphonePpmm(detected);
+    state._selectedDevice = detected;
+    state._selectedDeviceType = detected.type;
+    const confirm = document.getElementById('iphoneConfirm');
+    if (confirm) {
+      confirm.hidden = false;
+      confirm.textContent = '✓ ' + detected.name;
+    }
+    document.getElementById('changeDevice').hidden = false;
+    goStep(2);
+  })();
 })();
 
 // App mode: dark native feel when running inside Capacitor or ?app=1
