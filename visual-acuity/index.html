@@ -221,7 +221,11 @@
     <h2>Calibrate the screen</h2>
     <p class="lede">We need to know your screen's physical pixel density to size the letters correctly. Choose a method:</p>
     <div class="methods" id="methodTiles">
-      <button class="method-tile" data-method="card" aria-pressed="true">
+      <button class="method-tile" data-method="iphone" aria-pressed="true">
+        <div class="mt-name">📱 iPhone model</div>
+        <div class="mt-desc">Pick your iPhone for exact calibration.</div>
+      </button>
+      <button class="method-tile" data-method="card">
         <div class="mt-name">Credit card</div>
         <div class="mt-desc">Match on-screen card to a real one. Most accurate.</div>
       </button>
@@ -229,18 +233,10 @@
         <div class="mt-name">Camera (face)</div>
         <div class="mt-desc">Estimate via interpupillary distance.</div>
       </button>
-      <button class="method-tile" data-method="manual">
-        <div class="mt-name">Manual entry</div>
-        <div class="mt-desc">Enter screen diagonal and resolution.</div>
-      </button>
-      <button class="method-tile" data-method="iphone">
-        <div class="mt-name">📱 iPhone model</div>
-        <div class="mt-desc">Pick your iPhone for exact calibration.</div>
-      </button>
     </div>
 
     <!-- Card method -->
-    <div id="methodCard">
+    <div id="methodCard" hidden>
       <div class="cc-stage">
         <div class="cc-card" id="ccCard" style="width:320px;">
           <div class="cc-label">CALIBRATION CARD</div>
@@ -268,32 +264,8 @@
       </div>
     </div>
 
-    <!-- Manual method -->
-    <div id="methodManual" hidden>
-      <div class="row-2">
-        <div class="field">
-          <label>Screen diagonal (inches)</label>
-          <input type="number" id="screenDiag" min="3" max="40" step="0.1" value="13.3">
-        </div>
-        <div class="field">
-          <label>Native resolution width (px)</label>
-          <input type="number" id="screenResW" min="320" max="8192" step="1" value="2560">
-        </div>
-      </div>
-      <div class="row-2">
-        <div class="field">
-          <label>Native resolution height (px)</label>
-          <input type="number" id="screenResH" min="320" max="8192" step="1" value="1600">
-        </div>
-        <div class="field">
-          <label>Calculated px/mm</label>
-          <input type="number" id="manualPpmm" readonly>
-        </div>
-      </div>
-    </div>
-
     <!-- iPhone model method -->
-    <div id="methodIphone" hidden>
+    <div id="methodIphone">
       <input class="iphone-search" id="iphoneSearch" type="text" placeholder="Search model…" autocomplete="off">
       <div class="iphone-grid" id="iphoneGrid"></div>
       <div class="iphone-confirm" id="iphoneConfirm" hidden></div>
@@ -368,7 +340,10 @@
         <input type="checkbox" id="glassesOn">
         <label for="glassesOn">Testing with glasses / contacts on</label>
       </div>
-      <button class="btn primary" id="beginEye" style="margin-top:8px;">I'm ready — begin</button>
+      <div class="btn-row" style="justify-content:center;margin-top:14px;gap:10px;">
+        <button class="btn ghost" id="backTo2">← Back to setup</button>
+        <button class="btn primary" id="beginEye">I'm ready — begin</button>
+      </div>
     </div>
 
     <div id="testStage" class="test-stage" hidden>
@@ -495,7 +470,7 @@
   ];
 
   const state = {
-    method: 'card',
+    method: 'iphone',
     pxPerMm: null,
     distanceMm: 3000,
     testType: 'distance',
@@ -632,9 +607,21 @@
   const methodPanels = {
     card: document.getElementById('methodCard'),
     camera: document.getElementById('methodCamera'),
-    manual: document.getElementById('methodManual'),
     iphone: document.getElementById('methodIphone'),
   };
+
+  function initIphonePanel() {
+    const detected = autoDetectIphone();
+    if (detected) { state._selectedIphone = detected; }
+    buildIphoneGrid('');
+    if (detected) {
+      state.pxPerMm = iphonePpmm(detected);
+      const confirm = document.getElementById('iphoneConfirm');
+      confirm.hidden = false;
+      confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
+    }
+  }
+
   methodTiles.forEach(t => {
     t.addEventListener('click', () => {
       methodTiles.forEach(x => x.setAttribute('aria-pressed', 'false'));
@@ -642,20 +629,12 @@
       state.method = t.dataset.method;
       Object.values(methodPanels).forEach(p => p.hidden = true);
       methodPanels[state.method].hidden = false;
-      if (state.method === 'manual') updateManualPpmm();
-      if (state.method === 'iphone') {
-        const detected = autoDetectIphone();
-        if (detected) { state._selectedIphone = detected; }
-        buildIphoneGrid('');
-        if (detected) {
-          state.pxPerMm = iphonePpmm(detected);
-          const confirm = document.getElementById('iphoneConfirm');
-          confirm.hidden = false;
-          confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
-        }
-      }
+      if (state.method === 'iphone') initIphonePanel();
     });
   });
+
+  // Initialize iPhone panel on load
+  initIphonePanel();
 
   const ccCard = document.getElementById('ccCard');
   const ccResize = document.getElementById('ccResize');
@@ -701,24 +680,6 @@
     if (ipdStream) { ipdStream.getTracks().forEach(t => t.stop()); ipdStream = null; }
   });
 
-  const screenDiag = document.getElementById('screenDiag');
-  const screenResW = document.getElementById('screenResW');
-  const screenResH = document.getElementById('screenResH');
-  const manualPpmm = document.getElementById('manualPpmm');
-  function updateManualPpmm() {
-    const diagIn = parseFloat(screenDiag.value);
-    const resW = parseFloat(screenResW.value);
-    const resH = parseFloat(screenResH.value);
-    if (!diagIn || !resW || !resH) return;
-    const diagPx = Math.hypot(resW, resH);
-    const ppi = diagPx / diagIn;
-    const ppmm_css = (ppi / 25.4) / (window.devicePixelRatio || 1);
-    manualPpmm.value = ppmm_css.toFixed(2);
-    if (state.method === 'manual') state.pxPerMm = ppmm_css;
-  }
-  [screenDiag, screenResW, screenResH].forEach(el => el.addEventListener('input', updateManualPpmm));
-  updateManualPpmm();
-
   document.getElementById('toStep2').addEventListener('click', () => {
     if (!state.pxPerMm || state.pxPerMm <= 0) { alert('Please complete calibration first.'); return; }
     goStep(2);
@@ -746,6 +707,7 @@
     state.distanceMm = parseFloat(e.target.value) || 3000;
   });
   document.getElementById('backTo1').addEventListener('click', () => goStep(1));
+  document.getElementById('backTo2').addEventListener('click', () => goStep(2));
   document.getElementById('toStep3').addEventListener('click', () => {
     if (state.testType === 'near') {
       state.distanceMm = 400;
