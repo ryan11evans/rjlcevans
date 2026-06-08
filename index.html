@@ -5,7 +5,44 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Evans Family — rjlcevans.com</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23f59e0b'/><text x='50' y='74' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='900' font-size='70' fill='white'>E</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1f1f1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Evans Family">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rjlcevans.com/" />
+  <meta property="og:title" content="Evans Family — rjlcevans.com" />
+  <meta property="og:description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
+  <meta property="og:image" content="https://rjlcevans.com/family.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Evans Family — rjlcevans.com" />
+  <meta name="twitter:description" content="The Evans family of Murrieta, California — and Dr. Ryan Evans's patient education tools." />
+  <meta name="twitter:image" content="https://rjlcevans.com/family.jpg" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Ryan Evans",
+    "honorificPrefix": "Dr.",
+    "jobTitle": "Optometrist",
+    "url": "https://rjlcevans.com",
+    "email": "ryan@rjlcevans.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Murrieta",
+      "addressRegion": "CA",
+      "addressCountry": "US"
+    },
+    "spouse": {
+      "@type": "Person",
+      "name": "Jadyn Evans",
+      "jobTitle": "Optometrist"
+    }
+  }
+  </script>
   <style>
     :root {
       --bg: #ececec;
@@ -47,26 +84,44 @@ header {
   justify-content: space-between;
 }
 .brand {
-  font-weight: 800;
-  font-size: 2.2rem;
-  letter-spacing: 0.04em;
-  color: var(--text);
   display: flex;
-  gap: 0.6rem;
+  gap: 12px;
   align-items: center;
-}
-.brand .logo { font-size: 2.6rem; }
-.contact a {
   text-decoration: none;
   color: var(--text);
-  border: 1px solid rgba(0,0,0,.12);
-  padding: .5rem .9rem;
-  border-radius: 12px;
-  background: #fff;
-  font-size: 1rem;
-  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.contact a:hover { background: var(--text); color: #fff; border-color: var(--text); }
+.brand-badge {
+  width: 48px; height: 48px;
+  background: #f59e0b;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 900; color: #fff;
+  letter-spacing: -0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(245,158,11,.35);
+}
+.brand-text { display: flex; flex-direction: column; gap: 1px; }
+.brand-name {
+  font-size: 1.45rem; font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.1;
+  color: var(--text);
+}
+.brand-sub {
+  font-size: 0.7rem; color: var(--muted);
+  letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
+}
+.contact a {
+  text-decoration: none;
+  color: #fff;
+  border: none;
+  padding: .5rem 1rem;
+  border-radius: 12px;
+  background: #f59e0b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+.contact a:hover { opacity: 0.85; }
 
 main {
   width: 100%;
@@ -86,22 +141,22 @@ main {
   height: auto;
   object-fit: cover;
 }
-.caption {
-  color: #333;
-  text-align: center;
-  font-size: 1.1rem;
-  padding: 12px 12px 16px;
-  border-top: 1px solid rgba(0,0,0,.06);
-  background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.9));
-}
 footer {
   width: 100%;
   max-width: var(--maxw);
   color: var(--muted);
   font-size: .9rem;
-  padding: 14px 18px 36px;
+  padding: 14px 18px 40px;
   text-align: center;
 }
+.footer-links {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 4px 16px; margin-bottom: 10px;
+}
+.footer-links a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+.footer-links a:hover { color: var(--text); }
+footer .footer-copy a { color: var(--muted); text-decoration: none; }
+footer .footer-copy a:hover { color: var(--text); }
 
 /* ===== Clinical Tools Section ===== */
 .tools-section {
@@ -214,7 +269,7 @@ footer {
 .widget-card {
   flex: 1 1 280px;
   min-width: 260px;
-  padding: 18px;
+  padding: 24px 20px 22px;
   text-align: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid rgba(0,0,0,.05);
@@ -229,25 +284,74 @@ footer {
   font-size: 1.25rem;
   color: var(--muted);
 }
-.holiday-name {
-  font-size: 1.6rem;
-  font-weight: bold;
-  color: #e74c3c;
-  margin-bottom: 6px;
+.joke-card {
+  background: linear-gradient(145deg, #fffbeb, #f7f7f7);
+  border-top: 3px solid #f59e0b;
 }
-#timer {
-  font-size: 2.2rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #c0392b;
-  margin: 6px 0;
-  font-variant-numeric: tabular-nums;
+.joke-card h3 { color: #b45309; }
+.weather-card {
+  background: linear-gradient(145deg, #f0f9ff, #f7f7f7);
+  border-top: 3px solid #0ea5e9;
 }
-#holiday-meta {
-  margin: 10px 0 0;
-  font-size: 0.95rem;
-  color: var(--muted);
+.weather-card h3 { color: #0369a1; }
+body.night .joke-card    { background: linear-gradient(145deg, #251e0a, #1e2533); border-top-color: #f59e0b; }
+body.night .joke-card h3 { color: #fbbf24; }
+body.night .weather-card    { background: linear-gradient(145deg, #0a1e2e, #1e2533); border-top-color: #0ea5e9; }
+body.night .weather-card h3 { color: #38bdf8; }
+.fact-card {
+  background: linear-gradient(145deg, #eef2ff, #f7f7f7);
+  border-top: 3px solid #6366f1;
 }
+.fact-card h3 { color: #4338ca; }
+.fact-text { font-size: 1rem; line-height: 1.65; color: var(--text); padding: 0 4px; }
+body.night .fact-card    { background: linear-gradient(145deg, #14122e, #1e2533); border-top-color: #818cf8; }
+body.night .fact-card h3 { color: #a5b4fc; }
+
+/* ===== Our Apps Showcase ===== */
+.apps-section {
+  width: 100%; max-width: var(--maxw);
+  padding: 0 18px; margin: 8px 0 20px;
+}
+.apps-header { text-align: center; margin-bottom: 18px; }
+.apps-eyebrow {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #6366f1; margin: 0 0 6px; font-weight: 700;
+}
+.apps-header h2 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 800; }
+.apps-header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.app-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 20px 24px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+.app-card-icon {
+  width: 88px; height: 88px; border-radius: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}
+.app-card-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em; }
+.app-card-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; margin-bottom: 18px; flex: 1; }
+.app-card-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.app-browser-link {
+  font-size: 0.83rem; color: var(--muted); text-decoration: none;
+  border: 1px solid rgba(0,0,0,.1); border-radius: 8px;
+  padding: 5px 14px; transition: background 0.15s, color 0.15s;
+}
+.app-browser-link:hover { background: var(--text); color: #fff; border-color: var(--text); }
+body.night .app-card { border-color: rgba(255,255,255,.06); }
+body.night .app-browser-link { border-color: rgba(255,255,255,.12); }
+body.night .app-browser-link:hover { background: var(--text); color: var(--bg); }
 .joke-text {
   font-size: 1.1rem;
   min-height: 80px;
@@ -276,12 +380,168 @@ footer {
   border-color: var(--text);
 }
 
+/* ===== Photo Carousel ===== */
+.carousel-wrap { position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
+.carousel-track { display: grid; aspect-ratio: 1 / 1; }
+.carousel-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 0.75s ease; pointer-events: none; overflow: hidden; }
+.carousel-slide.active { opacity: 1; pointer-events: auto; }
+.carousel-slide picture { display: block; width: 100%; height: 100%; }
+.carousel-slide picture img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.carousel-caption-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 1;
+  padding: 48px 18px 14px;
+  background: linear-gradient(transparent, rgba(0,0,0,.52));
+  color: #fff; font-size: 1rem; text-align: center;
+  pointer-events: none;
+  transition: opacity 0.75s ease;
+}
+.carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,.32); backdrop-filter: blur(4px);
+  color: #fff; border: none; border-radius: 50%;
+  width: 46px; height: 46px; font-size: 1.8rem; line-height: 1;
+  cursor: pointer; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.carousel-btn:hover { background: rgba(0,0,0,.62); transform: translateY(-50%) scale(1.08); }
+.carousel-prev { left: 14px; }
+.carousel-next { right: 14px; }
+.carousel-dots {
+  display: flex; justify-content: center; gap: 9px;
+  padding: 11px 0 5px; background: var(--card-bg);
+}
+.carousel-dot {
+  width: 8px; height: 8px; border-radius: 50%; border: none;
+  background: rgba(0,0,0,.18); cursor: pointer; padding: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+.carousel-dot.active { background: rgba(0,0,0,.55); transform: scale(1.4); }
+body.night .carousel-dot { background: rgba(255,255,255,.22); }
+body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
+
+/* ===== Shared info cards ===== */
+.info-card { padding: 24px 20px 26px; text-align: center; }
+.info-card h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.35rem; }
+.info-card > p { color: var(--muted); line-height: 1.6; margin: 0; }
+.card-eyebrow {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 8px; font-weight: 700;
+}
+
+/* About card */
+.about-card {
+  background: linear-gradient(145deg, #fffaf4, #f7f7f7);
+  border-top: 3px solid #f59e0b;
+}
+.about-card .card-eyebrow { color: #d97706; }
+
+/* This Week card */
+.week-card {
+  background: linear-gradient(145deg, #f0f7ff, #f7f7f7);
+  border-top: 3px solid #3b82f6;
+}
+.week-card .card-eyebrow {
+  display: inline-block;
+  background: #3b82f6;
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+/* Superpowers grid */
+.superpower-items {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;
+}
+.superpower-item {
+  border-radius: 12px; padding: 18px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: transform 0.2s ease;
+}
+.superpower-item:hover { transform: translateY(-2px); }
+.sp-ryan   { background: #eff6ff; border: 1px solid #bfdbfe; }
+.sp-jadyn  { background: #faf5ff; border: 1px solid #e9d5ff; }
+.sp-landon { background: #fffbeb; border: 1px solid #fde68a; }
+.sp-cody   { background: #ecfdf5; border: 1px solid #a7f3d0; }
+.sp-ryan .sp-name   { color: #1d4ed8; }
+.sp-jadyn .sp-name  { color: #7c3aed; }
+.sp-landon .sp-name { color: #b45309; }
+.sp-cody .sp-name   { color: #047857; }
+.sp-icon { font-size: 2rem; margin-bottom: 4px; }
+.sp-name { font-weight: 700; font-size: 1rem; }
+.sp-power { font-size: .82rem; color: var(--muted); }
+
+/* Night mode */
+body.night .about-card { background: linear-gradient(145deg, #251e14, #1e2533); border-top-color: #f59e0b; }
+body.night .week-card  { background: linear-gradient(145deg, #111d2e, #1e2533); border-top-color: #3b82f6; }
+body.night .sp-ryan   { background: rgba(59,130,246,.12);  border-color: rgba(59,130,246,.25); }
+body.night .sp-jadyn  { background: rgba(139,92,246,.12);  border-color: rgba(139,92,246,.25); }
+body.night .sp-landon { background: rgba(245,158,11,.12);  border-color: rgba(245,158,11,.25); }
+body.night .sp-cody   { background: rgba(16,185,129,.12);  border-color: rgba(16,185,129,.25); }
+body.night .sp-ryan .sp-name   { color: #93c5fd; }
+body.night .sp-jadyn .sp-name  { color: #c4b5fd; }
+body.night .sp-landon .sp-name { color: #fbbf24; }
+body.night .sp-cody .sp-name   { color: #6ee7b7; }
+
+/* ===== Back to top ===== */
+#back-to-top {
+  position: fixed; bottom: 24px; right: 20px; z-index: 999;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: #f59e0b; color: #fff; border: none;
+  font-size: 1.3rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(245,158,11,.4);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#back-to-top.visible { opacity: 1; pointer-events: auto; }
+#back-to-top:hover { transform: translateY(-2px); }
+
+/* ===== Welcome back toast ===== */
+.welcome-toast {
+  position: fixed; top: 20px; left: 50%; z-index: 1000;
+  transform: translateX(-50%) translateY(-80px);
+  background: #1f1f1f; color: #fff;
+  padding: 10px 22px; border-radius: 30px;
+  font-size: 0.9rem; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  opacity: 0; white-space: nowrap;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  pointer-events: none;
+}
+.welcome-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+body.night .welcome-toast { background: #f59e0b; color: #1f1f1f; }
+
+/* ===== Scroll fade-in ===== */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+}
+
+/* ===== Night mode (8 pm – 6 am) ===== */
+body { transition: background-color 0.6s ease, color 0.6s ease; }
+body.night {
+  --bg: #111827;
+  --card-bg: #1e2533;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --shadow: 0 6px 20px rgba(0,0,0,.35);
+}
+body.night .contact a { background: #d97706; }
+body.night .contact a:hover { opacity: 0.85; }
+body.night .joke-controls button { background: var(--card-bg); border-color: rgba(255,255,255,.12); }
+body.night .joke-controls button:hover { background: var(--text); color: var(--bg); }
+
+body.night .widget-card { border-color: rgba(255,255,255,.06); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
 @media (max-width: 600px) {
-  .brand { font-size: 1.6rem; }
-  .brand .logo { font-size: 2rem; }
+  .brand-badge { width: 40px; height: 40px; font-size: 1.3rem; border-radius: 11px; }
+  .brand-name { font-size: 1.2rem; }
+  .brand-sub { font-size: 0.62rem; }
   .tools-card { padding: 22px 18px; }
 }
 
@@ -289,8 +549,16 @@ footer {
   </style>
 </head>
 <body>
+<button id="back-to-top" aria-label="Back to top">↑</button>
+<div id="welcome-back" class="welcome-toast">Welcome back! 👋</div>
   <header>
-    <div class="brand"><span class="logo">🏡</span>EVANS FAMILY</div>
+    <div class="brand">
+      <div class="brand-badge">E</div>
+      <div class="brand-text">
+        <div class="brand-name">Evans Family</div>
+        <div class="brand-sub">Murrieta, California</div>
+      </div>
+    </div>
     <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
   </header>
 
@@ -298,71 +566,134 @@ footer {
 
 
 <!-- ===== FAMILY CONTENT ===== -->
-<section class="photo card">
-  <img src="family.jpg?v=2" alt="The Evans Family" loading="eager" />
-  <div class="caption">The Evans Family — Murrieta, 2025</div>
-</section>
-
-<section class="card" style="padding:18px;text-align:center">
-  <h3 style="margin-top:0">About</h3>
-  <p>Ryan and Jadyn Evans are both optometrists living in Murrieta, California. They have two sons, Landon and Cody. 😊</p>
-</section>
-
-<section class="card" style="padding:18px;text-align:center">
-  <h3 style="margin-top:0">This Week In Our House</h3>
-  <p id="week-line">Probably coaching, probably snacks, definitely sports.</p>
-</section>
-
-<section class="card" style="padding:18px;text-align:center">
-  <h3 style="margin-top:0">Family Superpowers</h3>
-  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
-    <div>Ryan — Vision &amp; patience 👓</div>
-    <div>Jadyn — Organization &amp; calm ✨</div>
-    <div>Landon — Humor &amp; curiosity 😄</div>
-    <div>Cody — Creativity &amp; speed ⚡</div>
+<section class="card">
+  <div class="carousel-wrap">
+    <div class="carousel-track">
+      <div class="carousel-slide active" data-caption="The Evans Family — Murrieta, 2026">
+        <picture>
+          <source srcset="family.webp" type="image/webp">
+          <img src="family.jpg" alt="The Evans Family" loading="eager">
+        </picture>
+      </div>
+      <div class="carousel-slide" data-caption="Enjoying time at the Padres game — 2026">
+        <picture>
+          <source srcset="family3.webp" type="image/webp">
+          <img src="family3.jpg" alt="The Evans Family at the Padres game" loading="lazy">
+        </picture>
+      </div>
+    </div>
+    <button class="carousel-btn carousel-prev" aria-label="Previous photo">&#8249;</button>
+    <button class="carousel-btn carousel-next" aria-label="Next photo">&#8250;</button>
+    <div class="carousel-caption-overlay" id="carousel-caption">The Evans Family — Murrieta, 2026</div>
+  </div>
+  <div class="carousel-dots">
+    <button class="carousel-dot active" aria-label="Photo 1"></button>
+    <button class="carousel-dot" aria-label="Photo 2"></button>
   </div>
 </section>
 
-<!-- Holiday countdown -->
-<section class="widgets">
-  <div class="widget-grid">
-    <div class="card widget-card">
-      <h3>Next Holiday</h3>
-      <div class="holiday-name" id="holiday-name">—</div>
-      <div id="timer">Calculating...</div>
-      <p id="holiday-meta">—</p>
+<section class="card info-card about-card reveal">
+  <p class="card-eyebrow">📍 Murrieta, California</p>
+  <h3>The Evans Family</h3>
+  <p>Ryan and Jadyn Evans are both optometrists with two sons, Landon and Cody. 😊</p>
+</section>
+
+<section class="card info-card week-card reveal">
+  <p class="card-eyebrow" id="week-day-label">Today</p>
+  <h3>This Week In Our House</h3>
+  <p id="week-line">Probably coaching, probably snacks, definitely sports.</p>
+</section>
+
+<section class="card info-card reveal">
+  <h3>Family Superpowers</h3>
+  <div class="superpower-items">
+    <div class="superpower-item sp-ryan">
+      <span class="sp-icon">👓</span>
+      <div class="sp-name">Ryan</div>
+      <div class="sp-power">Vision &amp; patience</div>
+    </div>
+    <div class="superpower-item sp-jadyn">
+      <span class="sp-icon">✨</span>
+      <div class="sp-name">Jadyn</div>
+      <div class="sp-power">Organization &amp; calm</div>
+    </div>
+    <div class="superpower-item sp-landon">
+      <span class="sp-icon">😄</span>
+      <div class="sp-name">Landon</div>
+      <div class="sp-power">Humor &amp; curiosity</div>
+    </div>
+    <div class="superpower-item sp-cody">
+      <span class="sp-icon">⚡</span>
+      <div class="sp-name">Cody</div>
+      <div class="sp-power">Creativity &amp; speed</div>
     </div>
   </div>
 </section>
 
-<!-- Dad jokes -->
-<section class="card" style="padding:18px;text-align:center">
-  <h3 style="margin-top:0">Dad Joke Time</h3>
-  <div id="joke-text" class="joke-text">Loading a groaner...</div>
-  <div class="joke-controls">
-    <button id="joke-next" type="button">Another one →</button>
+<!-- Widgets: dad joke + weather + eye fact -->
+<section class="widgets reveal">
+  <div class="widget-grid">
+    <div class="card widget-card joke-card">
+      <h3>Dad Joke Time</h3>
+      <div id="joke-text" class="joke-text">Loading a groaner...</div>
+      <div class="joke-controls">
+        <button id="joke-next" type="button">Another one →</button>
+      </div>
+    </div>
+    <div class="card widget-card weather-card">
+      <h3>Murrieta Weather</h3>
+      <div id="weather-icon" style="font-size:2.4rem;margin:4px 0 6px">🌤️</div>
+      <div id="weather-temp" style="font-size:2.2rem;font-weight:700;letter-spacing:1px;color:var(--text)">—</div>
+      <p id="weather-desc" style="margin:6px 0 2px;font-size:.95rem;color:var(--muted)">—</p>
+      <p id="weather-feels" style="margin:0;font-size:.85rem;color:var(--muted)">—</p>
+    </div>
+    <div class="card widget-card fact-card">
+      <h3>👁️ Eye Fact of the Day</h3>
+      <div id="eye-fact" class="fact-text">Loading today's fact...</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OUR APPS SHOWCASE ===== -->
+<section class="apps-section reveal">
+  <div class="apps-header">
+    <p class="apps-eyebrow">Available on the App Store</p>
+    <h2>Our Apps</h2>
+    <p>Patient education tools designed by Dr. Ryan Evans, OD — free to try in your browser.</p>
+  </div>
+  <div class="apps-grid">
+    <div class="app-card">
+      <img class="app-card-icon" src="vision-simulator/visionsim-icon-1024.PNG" alt="Vision Simulator icon">
+      <div class="app-card-name">Vision Simulator</div>
+      <div class="app-card-desc">See the world through eyes affected by cataracts, glaucoma, AMD, refractive error, diabetic retinopathy, and floaters.</div>
+      <div class="app-card-actions">
+        <a href="https://apps.apple.com/app/vision-simulator-by-dr-evans/id6772865195" target="_blank" rel="noopener noreferrer">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:36px;display:block;">
+        </a>
+        <a href="vision-simulator/" class="app-browser-link">Try in browser →</a>
+      </div>
+    </div>
+    <div class="app-card">
+      <img class="app-card-icon" src="dr-glass/drglass-current-icon-1024.png" alt="Dr. Glass icon">
+      <div class="app-card-name">Dr. Glass</div>
+      <div class="app-card-desc">Run, jump, and stomp through eight levels of an optometry office in this Mario-style platformer — office to optic nerve and beyond.</div>
+      <div class="app-card-actions">
+        <a href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:36px;display:block;">
+        </a>
+        <a href="dr-glass/" class="app-browser-link">Play in browser →</a>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- ===== CLINICAL TOOLS SECTION ===== -->
-<section class="tools-section">
+<section class="tools-section reveal">
   <div class="tools-card">
     <p class="tools-eyebrow">From the practice of Dr. Ryan Evans, OD</p>
     <h2>Patient Education Tools</h2>
-    <p class="tools-lede">Educational tools, a wellness dashboard, and two silly games — all themed around how your eyes work. Designed for educational use, not clinical diagnosis.</p>
+    <p class="tools-lede">Educational tools, a wellness dashboard, and games — all built for patients, family, and fun. Designed for educational use, not clinical diagnosis.</p>
     <div class="tools-grid">
-      <a class="tool-link" href="vision-simulator/">
-        <span class="tl-arrow">→</span>
-        <span class="tl-icon"><img src="vision-simulator/icon.svg" alt="" style="width:52px;height:52px;border-radius:12px;display:block;"></span>
-        <div class="tl-title">Vision Impairment Simulator</div>
-        <div class="tl-desc">See through the eyes of someone with cataracts, glaucoma, AMD, refractive error, or floaters.</div>
-      </a>
-      <a class="tool-link" href="vision-assist/">
-        <span class="tl-arrow">→</span>
-        <span class="tl-icon">🔍</span>
-        <div class="tl-title">Vision Assist <span style="font-size:0.75em; opacity:0.7; font-weight:400; font-style:italic;">— beta</span></div>
-        <div class="tl-desc">OCR text reader, text-to-speech, and a saved library — tools to help low-vision patients read the world around them.</div>
-      </a>
       <a class="tool-link" href="visual-acuity/">
         <span class="tl-arrow">→</span>
         <span class="tl-icon">📏</span>
@@ -381,17 +712,12 @@ footer {
         <div class="tl-title">Iris Drift <span style="font-size:0.75em; opacity:0.7; font-weight:400; font-style:italic;">— for fun</span></div>
         <div class="tl-desc">An endless ride through the anatomy of sight. Snowboard across five biomes of the eye, chasing tricks and vision orbs.</div>
       </a>
-      <div class="tool-link" style="cursor:default;">
-        <span class="tl-icon"><img src="dr-glass/drglass-current-icon-1024.png" alt="Dr. Glass" style="width:52px;height:52px;border-radius:12px;display:block;"></span>
-        <div class="tl-title">Dr. Glass <span style="font-size:0.75em; opacity:0.7; font-weight:400; font-style:italic;">— for fun</span></div>
-        <div class="tl-desc">Run, jump, and stomp through five levels of an optometry office with the bespectacled Mr. Glass. Mario-style platforming.</div>
-        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-          <a href="dr-glass/" style="font-size:0.85rem;color:var(--clinical-accent);font-weight:600;text-decoration:underline;">Play in browser</a>
-          <a href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
-            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:30px;display:block;">
-          </a>
-        </div>
-      </div>
+      <a class="tool-link" href="shooter/">
+        <span class="tl-arrow">→</span>
+        <span class="tl-icon">🎮</span>
+        <div class="tl-title">Shooter <span style="font-size:0.75em; opacity:0.7; font-weight:400; font-style:italic;">— beta</span></div>
+        <div class="tl-desc">A 3D third-person adventure with toon-style rendering. Explore, fight, and find the emerald.</div>
+      </a>
     </div>
     <p class="tools-disclaimer">Educational use only. Not a substitute for a comprehensive eye examination.</p>
   </div>
@@ -400,102 +726,99 @@ footer {
 
   </main>
 
-  <footer>© 2026 Evans Family · rjlcevans.com</footer>
+  <footer>
+    <nav class="footer-links">
+      <a href="vision-simulator/">Vision Simulator</a>
+      <a href="visual-acuity/">Acuity Test</a>
+      <a href="eye-wellness/">Eye Wellness</a>
+      <a href="iris-drift/">Iris Drift</a>
+      <a href="dr-glass/">Dr. Glass</a>
+    </nav>
+    <p class="footer-copy">© 2026 Evans Family · rjlcevans.com · <a href="mailto:ryan@rjlcevans.com">Contact</a></p>
+  </footer>
 
   <script>
-  // ===== Holiday Countdown =====
+  // ===== Photo Carousel =====
   (function () {
-    function nthWeekdayOfMonth(year, month, weekday, n) {
-      const first = new Date(year, month, 1);
-      const offset = (weekday - first.getDay() + 7) % 7;
-      return new Date(year, month, 1 + offset + (n - 1) * 7);
+    const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+    const dots   = Array.from(document.querySelectorAll('.carousel-dot'));
+    const caption = document.getElementById('carousel-caption');
+    let current = 0, timer;
+
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = (n + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      dots[current].classList.add('active');
+      if (caption) caption.textContent = slides[current].dataset.caption || '';
     }
-    function lastWeekdayOfMonth(year, month, weekday) {
-      const last = new Date(year, month + 1, 0);
-      const offset = (last.getDay() - weekday + 7) % 7;
-      return new Date(year, month, last.getDate() - offset);
-    }
-    function buildHolidaysForYear(year) {
-      return [
-        { name: "New Year's Day", date: new Date(year, 0, 1), emoji: "🎉" },
-        { name: "Martin Luther King Jr. Day", date: nthWeekdayOfMonth(year, 0, 1, 3), emoji: "✊" },
-        { name: "Valentine's Day", date: new Date(year, 1, 14), emoji: "💝" },
-        { name: "Presidents' Day", date: nthWeekdayOfMonth(year, 1, 1, 3), emoji: "🇺🇸" },
-        { name: "St. Patrick's Day", date: new Date(year, 2, 17), emoji: "☘️" },
-        { name: "Mother's Day", date: nthWeekdayOfMonth(year, 4, 0, 2), emoji: "💐" },
-        { name: "Memorial Day", date: lastWeekdayOfMonth(year, 4, 1), emoji: "🇺🇸" },
-        { name: "Father's Day", date: nthWeekdayOfMonth(year, 5, 0, 3), emoji: "👔" },
-        { name: "Independence Day", date: new Date(year, 6, 4), emoji: "🎆" },
-        { name: "Labor Day", date: nthWeekdayOfMonth(year, 8, 1, 1), emoji: "🛠" },
-        { name: "Halloween", date: new Date(year, 9, 31), emoji: "🎃" },
-        { name: "Thanksgiving", date: nthWeekdayOfMonth(year, 10, 4, 4), emoji: "🦃" },
-        { name: "Christmas", date: new Date(year, 11, 25), emoji: "🎄" },
-        { name: "New Year's Eve", date: new Date(year, 11, 31), emoji: "🥂" }
-      ];
-    }
-    function findNextHoliday() {
-      const now = new Date();
-      const thisYear = buildHolidaysForYear(now.getFullYear());
-      const nextYear = buildHolidaysForYear(now.getFullYear() + 1);
-      const all = [...thisYear, ...nextYear].filter(h => h.date.getTime() > now.getTime());
-      all.sort((a, b) => a.date - b.date);
-      return all[0];
-    }
-    function formatCountdown(ms) {
-      if (ms <= 0) return "Today!";
-      const totalSec = Math.floor(ms / 1000);
-      const days = Math.floor(totalSec / 86400);
-      const hours = Math.floor((totalSec % 86400) / 3600);
-      const minutes = Math.floor((totalSec % 3600) / 60);
-      const seconds = totalSec % 60;
-      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-      if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
-      return `${minutes}m ${seconds}s`;
-    }
-    function updateHoliday() {
-      const next = findNextHoliday();
-      if (!next) return;
-      const nameEl = document.getElementById('holiday-name');
-      const timerEl = document.getElementById('timer');
-      const metaEl = document.getElementById('holiday-meta');
-      nameEl.textContent = `${next.emoji} ${next.name}`;
-      const dateOpts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-      metaEl.textContent = next.date.toLocaleDateString('en-US', dateOpts);
-      function tick() {
-        const ms = next.date.getTime() - Date.now();
-        timerEl.textContent = formatCountdown(ms);
-        if (ms <= 0) updateHoliday();
-      }
-      tick();
-      if (window._holidayInterval) clearInterval(window._holidayInterval);
-      window._holidayInterval = setInterval(tick, 1000);
-    }
-    updateHoliday();
+
+    function startAuto() { timer = setInterval(() => goTo(current + 1), 5000); }
+    function stopAuto()  { clearInterval(timer); }
+
+    document.querySelector('.carousel-next').addEventListener('click', () => { stopAuto(); goTo(current + 1); startAuto(); });
+    document.querySelector('.carousel-prev').addEventListener('click', () => { stopAuto(); goTo(current - 1); startAuto(); });
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); }));
+
+    const wrap = document.querySelector('.carousel-wrap');
+    wrap.addEventListener('mouseenter', stopAuto);
+    wrap.addEventListener('mouseleave', startAuto);
+
+    // Swipe support
+    let touchX = 0;
+    wrap.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    wrap.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) { stopAuto(); goTo(current + (dx < 0 ? 1 : -1)); startAuto(); }
+    }, { passive: true });
+
+    startAuto();
   })();
 
   // ===== Dad Jokes =====
   (function () {
     const jokes = [
-      "I told my optometrist a joke. He said, \u201cI see what you did there.\u201d",
-      "Why don\u2019t eyes ever get lonely? They always come in pairs.",
-      "I\u2019m reading a book about anti-gravity. It\u2019s impossible to put down.",
+      "I told my optometrist a joke. He said, “I see what you did there.”",
+      "Why don’t eyes ever get lonely? They always come in pairs.",
+      "I’m reading a book about anti-gravity. It’s impossible to put down.",
       "What do you call a fish wearing a crown? Your royal haddock-ness.",
       "I used to hate facial hair. Then it grew on me.",
       "Did you hear about the kidnapping at the playground? They woke up.",
       "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
       "Why did the scarecrow win an award? He was outstanding in his field.",
       "I'm on a seafood diet. I see food, and I eat it.",
-      "Parallel lines have so much in common. It\u2019s a shame they\u2019ll never meet.",
+      "Parallel lines have so much in common. It’s a shame they’ll never meet.",
       "I would tell you a construction joke, but I'm still working on it.",
       "Why don't scientists trust atoms? Because they make up everything.",
       "What do you call a bear with no teeth? A gummy bear.",
       "Why did the math book look sad? It had too many problems.",
-      "I'm reading a horror book in braille. Something bad is about to happen \u2014 I can feel it.",
+      "I'm reading a horror book in braille. Something bad is about to happen — I can feel it.",
       "How do you organize a space party? You planet.",
-      "I asked the librarian if they had any books on paranoia. She whispered, \u201cThey\u2019re right behind you.\u201d",
-      "What does a nosy pepper do? Gets jalape\u00f1o business.",
-      "Why don\u2019t skeletons fight each other? They don\u2019t have the guts.",
-      "I gave away all my dead batteries today \u2014 free of charge."
+      "I asked the librarian if they had any books on paranoia. She whispered, “They’re right behind you.”",
+      "What does a nosy pepper do? Gets jalapeño business.",
+      "Why don’t skeletons fight each other? They don’t have the guts.",
+      "I gave away all my dead batteries today — free of charge.",
+      "I tried to write a joke about bifocals, but I couldn’t focus.",
+      "Why did the eye go to school? To improve its pupils.",
+      "Did you hear about the optician who fell into the lens grinder? He made a spectacle of himself.",
+      "What do you call a fish without eyes? A fsh.",
+      "I only know 25 letters of the alphabet. I don’t know y.",
+      "Why did the bicycle fall over? It was two-tired.",
+      "I don’t trust stairs. They’re always up to something.",
+      "What’s the best thing about Switzerland? The flag is a big plus.",
+      "Did you hear about the claustrophobic astronaut? He just needed a little space.",
+      "I’m afraid for the calendar. Its days are numbered.",
+      "Why can’t you give Elsa a balloon? She’ll let it go.",
+      "I used to think I was indecisive, but now I’m not so sure.",
+      "What do you call a sleeping dinosaur? A dino-snore.",
+      "Why did the golfer bring an extra pair of socks? In case he got a hole in one.",
+      "I told my doctor I broke my arm in two places. He told me to stop going to those places.",
+      "What do you call cheese that isn’t yours? Nacho cheese.",
+      "Why don’t eggs tell jokes? They’d crack each other up.",
+      "Time flies like an arrow. Fruit flies like a banana.",
+      "My optometrist’s office is a real sight for sore eyes.",
+      "What do you call a factory that makes okay products? A satisfactory."
     ];
     const el = document.getElementById('joke-text');
     const btn = document.getElementById('joke-next');
@@ -517,20 +840,173 @@ footer {
     el.textContent = pickJoke();
   })();
 
-  // ===== This Week in Our House — varies by day =====
+  // ===== Murrieta Weather =====
   (function () {
-    const lines = {
-      0: "Sunday: pancakes, slow mornings, and one of the boys insisting on baseball.",
-      1: "Monday: school drop-off chaos, coffee, and a fresh week of patients.",
-      2: "Tuesday: practice night \u2014 gloves, shin guards, and snacks in the car.",
-      3: "Wednesday: hump day. Ryan\u2019s probably reviewing OCTs; Jadyn\u2019s probably winning.",
-      4: "Thursday: soccer, homework, and someone asking for a second dinner.",
-      5: "Friday: pizza night, movie picks, and one kid falling asleep on the couch.",
-      6: "Saturday: tournaments, sunshine, and a backyard full of laughter."
-    };
-    const el = document.getElementById('week-line');
-    if (el) el.textContent = lines[new Date().getDay()];
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=33.5539&longitude=-117.2139&current=temperature_2m,apparent_temperature,weathercode&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles';
+    function icon(c) {
+      if (c === 0) return '☀️';
+      if (c <= 2) return '🌤️';
+      if (c === 3) return '☁️';
+      if (c <= 48) return '🌫️';
+      if (c <= 57) return '🌦️';
+      if (c <= 67) return '🌧️';
+      if (c <= 77) return '❄️';
+      if (c <= 82) return '🌦️';
+      return '⛈️';
+    }
+    function desc(c) {
+      if (c === 0) return 'Clear sky';
+      if (c <= 2) return 'Partly cloudy';
+      if (c === 3) return 'Overcast';
+      if (c <= 48) return 'Foggy';
+      if (c <= 57) return 'Drizzle';
+      if (c <= 67) return 'Rainy';
+      if (c <= 77) return 'Snowy';
+      if (c <= 82) return 'Showers';
+      return 'Thunderstorm';
+    }
+    fetch(url).then(r => r.json()).then(d => {
+      const w = d.current;
+      document.getElementById('weather-icon').textContent = icon(w.weathercode);
+      document.getElementById('weather-temp').textContent = Math.round(w.temperature_2m) + '°F';
+      document.getElementById('weather-desc').textContent = desc(w.weathercode);
+      document.getElementById('weather-feels').textContent = 'Feels like ' + Math.round(w.apparent_temperature) + '°F';
+    }).catch(() => {});
   })();
+
+  // ===== Scroll fade-in =====
+  (function () {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  })();
+
+  // ===== Night mode (8 pm – 6 am) =====
+  (function () {
+    function isNight() { const h = new Date().getHours(); return h >= 20 || h < 6; }
+    function applyTheme() { document.body.classList.toggle('night', isNight()); }
+    applyTheme();
+    setInterval(applyTheme, 60000);
+  })();
+
+  // ===== This Week in Our House — seasonal + day =====
+  (function () {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const m = new Date().getMonth();
+    const season = m >= 2 && m <= 4 ? 'spring' : m >= 5 && m <= 7 ? 'summer' : m >= 8 && m <= 10 ? 'fall' : 'winter';
+    const messages = {
+      spring: [
+        "Last few weeks of school — almost summer break, and everyone can feel it.",
+        "School drop-off, coffee, and the final countdown to summer.",
+        "Basketball practice and snacks in the car — playoffs energy is real.",
+        "Midweek. Ryan's probably reviewing OCTs; Jadyn's probably winning.",
+        "Basketball, homework, and someone asking for a second dinner.",
+        "Fri-yay — pizza night and zero school alarms tomorrow.",
+        "Game day. Lawn chairs, snacks, and cheering on the sideline."
+      ],
+      summer: [
+        "Lazy Sunday — pool, backyard, and no alarm clocks.",
+        "Summer Monday — slower pace, later mornings, happy boys.",
+        "Pool day, popsicles, and someone already asking what's for dinner.",
+        "Midweek summer — outdoor adventures and sunscreen reapplied eight times.",
+        "The boys have already been outside for three hours.",
+        "Summer Friday — weekend starts now, sunscreen ready.",
+        "Full summer Saturday — splash pads, backyard games, and a late bedtime."
+      ],
+      fall: [
+        "Sunday prep — lunches packed, backpacks by the door.",
+        "Back to the routine — school drop-off, coffee, ready to see patients.",
+        "Baseball practice is back — bats, gloves, and a packed car.",
+        "Hump day. Ryan's probably reviewing OCTs; Jadyn's probably winning.",
+        "Homework push and an early bedtime attempt (emphasis on attempt).",
+        "Friday! Pizza, movies, and one kid asleep before the credits.",
+        "Game day — lawn chairs, snacks, and loud sideline energy."
+      ],
+      winter: [
+        "Cozy Sunday — hot chocolate, family, and nowhere to be.",
+        "Monday reset — school's back and the week begins again.",
+        "Rainy Tuesday — everybody's under a blanket by 7.",
+        "Midweek. Ryan's probably reviewing OCTs; Jadyn's probably winning.",
+        "Almost Friday. Boys already planning the weekend.",
+        "Friday night and the house smells like something good.",
+        "Warm layers, good games, and a big family dinner."
+      ]
+    };
+    const day = new Date().getDay();
+    const label = document.getElementById('week-day-label');
+    const line  = document.getElementById('week-line');
+    if (label) label.textContent = days[day];
+    if (line)  line.textContent  = messages[season][day];
+  })();
+
+  // ===== Eye Fact of the Day =====
+  (function () {
+    const facts = [
+      "The human eye can distinguish about 10 million different colors.",
+      "Your cornea is the only tissue in the body with no blood supply — it gets oxygen directly from the air.",
+      "Blinking keeps your eyes lubricated — most people blink 15–20 times per minute.",
+      "The retina contains about 120 million rod cells for dim light and 6 million cone cells for color.",
+      "Cataracts are the leading cause of blindness worldwide — and one of the most treatable.",
+      "The 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.",
+      "Glaucoma is often called the 'silent thief of sight' — it causes no pain and no early symptoms.",
+      "About 8% of men and 0.5% of women have some form of color vision deficiency.",
+      "Your eyes have a natural blind spot where the optic nerve exits — your brain fills it in.",
+      "Myopia (nearsightedness) now affects nearly 30% of the world's population.",
+      "Newborns see mostly in shades of gray; full color vision develops in the first few months.",
+      "In complete darkness, the human eye can detect a single photon of light.",
+      "The lens of the eye is the only transparent organ in the human body.",
+      "Dry eye affects an estimated 16 million Americans and is one of the most common reasons for an eye exam.",
+      "Reading in dim light doesn't damage your eyes — it just tires them faster.",
+      "Eye color is determined by the amount and distribution of melanin in the iris.",
+      "Tears have three layers: oil, water, and mucin — you need all three for healthy, comfortable vision.",
+      "The average person spends 7+ hours per day looking at screens.",
+      "The optic nerve is made up of about 1.2 million individual nerve fibers.",
+      "Wearing UV-blocking sunglasses year-round lowers your risk of cataracts and macular degeneration.",
+      "AMD (age-related macular degeneration) is the leading cause of vision loss in adults over 50.",
+      "Amblyopia (lazy eye) affects 2–3% of children and is most successfully treated before age 7.",
+      "Your eyes grow rapidly in the first two years of life, then slowly until about age 20.",
+      "High blood pressure, diabetes, and even brain tumors can first be detected during an eye exam.",
+      "The average blink lasts only about 400 milliseconds.",
+      "Blue light from screens doesn't damage your retina, but it can suppress melatonin and disrupt sleep.",
+      "The fovea — a tiny 1.5mm pit in your retina — is responsible for all your sharp, detailed vision.",
+      "Your eyes use about 65% of your brain's processing power when they are open.",
+      "Omega-3 fatty acids found in fish may help reduce the risk of dry eye and macular degeneration.",
+      "20/20 vision means you can see at 20 feet what a 'normal' eye sees at 20 feet — it's not perfect vision.",
+      "The pupil dilates up to 45% larger when you look at something you find attractive or interesting.",
+      "Comprehensive eye exams are recommended every 1–2 years, even if your vision feels fine."
+    ];
+    const doy = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const el = document.getElementById('eye-fact');
+    if (el) el.textContent = facts[doy % facts.length];
+  })();
+
+  // ===== Back to top =====
+  (function () {
+    const btn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+      btn.classList.toggle('visible', window.scrollY > 320);
+    }, { passive: true });
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  })();
+
+  // ===== Returning visitor greeting =====
+  (function () {
+    const el = document.getElementById('welcome-back');
+    if (!el) return;
+    if (localStorage.getItem('evans-visited')) {
+      el.classList.add('show');
+      setTimeout(() => {
+        el.classList.remove('show');
+      }, 3500);
+    }
+    localStorage.setItem('evans-visited', '1');
+  })();
+
+  // ===== Service Worker =====
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
   </script>
 
 </body>
