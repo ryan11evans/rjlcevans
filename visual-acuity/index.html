@@ -570,11 +570,10 @@
 
   <!-- STEP 2: SETUP -->
   <section class="card" id="step2" hidden>
-    <h2>Test setup</h2>
+    <h2 class="web-only">Test setup</h2>
     <p class="lede">Read each line of letters aloud — letters get smaller until you can't read them. Each eye is tested separately.</p>
 
     <div style="margin-bottom:14px;">
-      <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mute);margin-bottom:8px;">Test type</div>
       <div class="test-type-row">
         <button class="tt-tile" data-type="distance" aria-pressed="true">
           <div class="tt-icon">⚡</div>
@@ -605,9 +604,9 @@
 
     <div id="mirrorWrap" hidden>
       <div class="mirror-setup">
-        <div class="mirror-step"><span class="ms-num">1</span><span>Hold your phone at eye level with the screen facing the mirror — you'll read the reflection, not the screen.</span></div>
-        <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>6 ft (2 m)</strong> from a large mirror, facing it, phone wall behind you.</span></div>
-        <div class="mirror-step"><span class="ms-num">3</span><span>Read the letters in the mirror reflection. Keep your head still.</span></div>
+        <div class="mirror-step"><span class="ms-num">1</span><span>Screen facing the mirror — read the reflection</span></div>
+        <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>6 ft (2 m)</strong> away, back to wall</span></div>
+        <div class="mirror-step"><span class="ms-num">3</span><span>Say the letters aloud, one eye covered</span></div>
         <div class="mirror-note">Effective optical distance: ~13 ft (4 m) &nbsp;·&nbsp; True distance vision test</div>
         <img class="mirror-photo" src="mirror-demo.jpg" alt="Person holding phone with screen facing mirror — eye chart visible in reflection">
       </div>
@@ -2026,7 +2025,7 @@
   if (backBtn) backBtn.style.display = 'none';
 
   // Step name shown as subtitle in title bar
-  var stepNames = { '1': 'Calibrate', '2': 'Test Setup', '3': 'Vision Test', '4': 'Results' };
+  var stepNames = { '1': 'Calibrate', '3': 'Vision Test', '4': 'Results' };
   var titleSub = titleBar && titleBar.querySelector('p');
   function updateStepLabel() {
     var s = document.body.dataset.step;
