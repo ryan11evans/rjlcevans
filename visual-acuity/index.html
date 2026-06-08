@@ -419,6 +419,10 @@
   .app-title-bar { display: none; padding: 6px 16px 14px; border-bottom: 1px solid var(--line); margin-bottom: 20px; text-align: center; }
   .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
   .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .title-chart { display: flex; flex-direction: column; align-items: center; font-family: 'Sloan', monospace; margin-bottom: 6px; line-height: 1.2; }
+  .title-chart .tc-1 { font-size: 22px; color: var(--accent); letter-spacing: 0.15em; }
+  .title-chart .tc-2 { font-size: 14px; color: var(--accent); opacity: 0.65; letter-spacing: 0.3em; }
+  .title-chart .tc-3 { font-size: 10px; color: var(--accent); opacity: 0.38; letter-spacing: 0.45em; }
 
   .mirror-setup { background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--radius-sm); padding: 16px 18px; margin-top: 12px; }
   .mirror-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
@@ -466,6 +470,11 @@
 <div class="wrap">
 
   <div class="app-title-bar" id="appTitleBar">
+    <div class="title-chart" aria-hidden="true">
+      <span class="tc-1">E</span>
+      <span class="tc-2">F P</span>
+      <span class="tc-3">T O Z</span>
+    </div>
     <h2>Eye Chart Test</h2>
     <p>by Dr. Evans, OD</p>
   </div>
