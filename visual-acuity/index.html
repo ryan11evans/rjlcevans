@@ -79,6 +79,7 @@
   .iphone-btn:hover { border-color: var(--accent); }
   .iphone-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .iphone-confirm { margin-top: 12px; padding: 10px 14px; background: rgba(90,122,74,0.1); border: 1px solid var(--good); border-radius: var(--radius-sm); font-size: 13px; color: var(--good); }
+  .calibration-badge { margin-top: 10px; font-size: 12px; color: var(--good); text-align: center; letter-spacing: 0.01em; }
   .device-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
   .device-type-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; color: var(--ink); transition: all 0.15s ease; }
   .device-type-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
@@ -667,6 +668,9 @@
       <div class="btn-row" style="justify-content:center;margin-top:14px;gap:10px;">
         <button class="btn ghost" id="backTo2">← Back to setup</button>
         <button class="btn primary" id="beginEye">I'm ready — begin</button>
+      </div>
+      <div class="calibration-badge" id="calibrationBadge" hidden>
+        ✓ Calibrated for <span id="calibrationDevice"></span>
       </div>
     </div>
 
@@ -2019,6 +2023,9 @@
       confirm.textContent = '✓ ' + detected.name;
     }
     document.getElementById('changeDevice').hidden = false;
+    var badge = document.getElementById('calibrationBadge');
+    var badgeDev = document.getElementById('calibrationDevice');
+    if (badge && badgeDev) { badgeDev.textContent = detected.name; badge.hidden = false; }
     goStep(2);
   })();
 })();
