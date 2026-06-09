@@ -90,8 +90,7 @@ struct ContentView: View {
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3.0
         guard let image = renderer.uiImage else { return }
-        let url = URL(string: "https://apps.apple.com/us/app/tapbtc/id6774023419")!
-        shareItems = [image, url]
+        shareItems = [image]
         showShareSheet = true
     }
 }

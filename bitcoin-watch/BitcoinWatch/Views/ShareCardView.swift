@@ -85,29 +85,25 @@ struct ShareCardView: View {
 
                     Spacer()
 
-                    // App Store badge
-                    HStack(spacing: 5) {
+                    // App Store badge — proper black pill matching Apple's official style
+                    HStack(spacing: 6) {
                         Image(systemName: "apple.logo")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(.white)
-                        VStack(alignment: .leading, spacing: -1) {
+                        VStack(alignment: .leading, spacing: -2) {
                             Text("Download on the")
-                                .font(.system(size: 7.5, weight: .regular))
-                                .foregroundStyle(.white)
+                                .font(.system(size: 8, weight: .regular))
+                                .foregroundStyle(.white.opacity(0.85))
                             Text("App Store")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.white)
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
                     .background(
-                        RoundedRectangle(cornerRadius: 9)
-                            .fill(.white.opacity(0.10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 9)
-                                    .strokeBorder(.white.opacity(0.18), lineWidth: 1)
-                            )
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.black)
                     )
                 }
                 .padding(.horizontal, 22)
