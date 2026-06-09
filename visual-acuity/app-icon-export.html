@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,900&display=swap" rel="stylesheet">
+<style>
+  body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 24px; font-family: sans-serif; }
+  canvas { border-radius: 230px; display: block; width: 512px; height: 512px; }
+  button { padding: 14px 32px; background: #D4A017; color: #111; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; }
+  button:hover { background: #e8b420; }
+  p { color: #888; font-size: 13px; }
+</style>
+</head>
+<body>
+  <canvas id="c" width="1024" height="1024"></canvas>
+  <button onclick="download()">Download 1024×1024 PNG</button>
+  <p>Renders at full resolution — ready for App Store Connect</p>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function draw() {
+  const s = 1024;
+
+  // Background gradient
+  const bg = ctx.createRadialGradient(s*0.4, s*0.35, 0, s*0.5, s*0.5, s*0.75);
+  bg.addColorStop(0, '#242424');
+  bg.addColorStop(1, '#141414');
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  roundRect(ctx, 0, 0, s, s, 230);
+  ctx.fill();
+
+  // Glow
+  ctx.save();
+  ctx.filter = 'blur(60px)';
+  ctx.fillStyle = 'rgba(212,160,23,0.25)';
+  ctx.font = '680px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('E', s/2, s/2 + 30);
+  ctx.restore();
+
+  // Letter
+  ctx.fillStyle = '#D4A017';
+  ctx.font = '900 680px Fraunces';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('E', s/2, s/2 + 30);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function download() {
+  const link = document.createElement('a');
+  link.download = 'eye-chart-icon-1024.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Wait for Fraunces to load then draw
+document.fonts.ready.then(() => {
+  draw();
+});
+</script>
+</body>
+</html>
