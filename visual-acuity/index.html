@@ -153,7 +153,7 @@
   }
   body.testing .answer-row { gap: 7px !important; margin-top: 6px !important; }
   body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
-  body.testing .line-progress { top: max(16px, env(safe-area-inset-top)); }
+  body.testing .line-progress { position: static; text-align: center; font-size: 11px; margin-bottom: 4px; }
   body.testing .vm-panel { gap: 8px !important; padding: 4px 0 0 !important; }
   body.testing .vm-heard { font-size: 80px !important; min-height: 0 !important; height: auto !important; }
   body.testing .vm-mic { width: 54px !important; height: 54px !important; font-size: 24px !important; }
@@ -176,7 +176,7 @@
   @keyframes vm-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(200,129,74,0.5); } 55% { box-shadow: 0 0 0 18px rgba(200,129,74,0); } }
   .vm-status { font-size: 13px; color: var(--ink-mute); min-height: 20px; text-align: center; }
   .vm-btns { display: flex; gap: 10px; }
-  .vm-type-link { font-size: 11px; color: var(--ink-mute); text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; margin-top: 2px; }
+  .vm-type-link { font-size: 13px; font-weight: 500; color: var(--accent); cursor: pointer; background: transparent; border: 1px solid var(--accent); border-radius: 20px; font-family: inherit; padding: 7px 18px; margin-top: 4px; opacity: 0.8; }
 
   .occluder-card { text-align: center; padding: 24px 20px; }
   .occluder-card .eye-icon { font-size: 52px; margin-bottom: 8px; }
@@ -680,7 +680,7 @@
           <button class="btn ghost" id="vmRetry">Retry</button>
           <button class="btn ghost" id="vmSkip">Skip letter</button>
         </div>
-        <button class="vm-type-link" id="vmTypeLink">Switch to typing mode</button>
+        <button class="vm-type-link" id="vmTypeLink">Type instead</button>
       </div>
       <div class="btn-row" style="justify-content:center;margin-top:18px;">
         <button class="btn ghost" id="cantSee">Can't see this line</button>
