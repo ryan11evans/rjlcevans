@@ -149,6 +149,7 @@
     letter-spacing: 0.4em !important; white-space: normal !important;
     word-break: break-all !important; text-align: center !important;
     margin-bottom: 10px !important; overflow: visible !important;
+    line-height: 1.25 !important;
   }
   body.testing .answer-row { gap: 7px !important; margin-top: 6px !important; }
   body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
@@ -1213,10 +1214,14 @@
     // In fullscreen testing mode cap size so all letters fit on one row within the viewport.
     let displayPx = px;
     if (document.body.classList.contains('testing')) {
+      const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      // Cap by height only — letters wrap to a second line if needed.
-      const maxByHeight = vpH * 0.38;
-      displayPx = Math.min(px, maxByHeight);
+      // Target max 2 rows: size each letter so ceil(count/2) fit across the width.
+      // Sloan is square; 0.4em letter-spacing means each slot ≈ 1.5× the font size.
+      const lettersPerRow = Math.ceil(line.count / 2);
+      const maxByWidth = vpW / (lettersPerRow * 1.5);
+      const maxByHeight = vpH * 0.42;
+      displayPx = Math.min(px, maxByWidth, maxByHeight);
     }
     optotypes.style.fontSize = displayPx + 'px';
     optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
