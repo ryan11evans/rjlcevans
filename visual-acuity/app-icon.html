@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .icon {
+    width: 1024px;
+    height: 1024px;
+    background: #1a1a1a;
+    border-radius: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 40% 35%, #2a2a2a 0%, #141414 65%);
+  }
+  .letter {
+    font-family: 'Courier New', monospace;
+    font-size: 580px;
+    font-weight: 900;
+    color: #D4A017;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.05em;
+    text-shadow:
+      0 0 120px rgba(212,160,23,0.25),
+      0 0 40px rgba(212,160,23,0.15);
+    margin-top: 30px;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="icon">
+    <span class="letter" style="font-family:'Fraunces',serif;">E</span>
+  </div>
+</body>
+</html>
