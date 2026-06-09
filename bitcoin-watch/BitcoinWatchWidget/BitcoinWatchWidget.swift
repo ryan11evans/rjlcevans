@@ -7,19 +7,18 @@ import SwiftUI
 // but requires a notification infrastructure).
 struct BitcoinProvider: TimelineProvider {
     func placeholder(in context: Context) -> PriceEntry {
-        PriceEntry(date: Date(), price: BitcoinPrice(usd: 65000, timestamp: Date()))
+        PriceEntry(date: Date(), price: BitcoinPrice(usd: 65000, timestamp: Date()), change24h: 2.5)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (PriceEntry) -> Void) {
         let price = UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 65000, timestamp: Date())
-        completion(PriceEntry(date: Date(), price: price))
+        completion(PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PriceEntry>) -> Void) {
         Task {
             let price = await fetchLatestPrice() ?? UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 0, timestamp: Date())
-            let entry = PriceEntry(date: Date(), price: price)
-            // Request refresh in 10 min — WidgetKit may defer, but this is the minimum ask
+            let entry = PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h())
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 10, to: Date())!
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
@@ -41,6 +40,7 @@ struct BitcoinProvider: TimelineProvider {
 struct PriceEntry: TimelineEntry {
     let date: Date
     let price: BitcoinPrice
+    let change24h: Double?
 }
 
 struct BitcoinWidgetView: View {
@@ -51,7 +51,7 @@ struct BitcoinWidgetView: View {
         switch family {
         case .systemSmall:   SmallWidgetView(entry: entry)
         case .systemMedium:  MediumWidgetView(entry: entry)
-        case .systemLarge:   MediumWidgetView(entry: entry)
+        case .systemLarge:   LargeWidgetView(entry: entry)
         case .accessoryCircular, .accessoryRectangular, .accessoryInline:
             AccessoryWidgetView(entry: entry, family: family)
         default:             SmallWidgetView(entry: entry)
@@ -59,27 +59,32 @@ struct BitcoinWidgetView: View {
     }
 }
 
+// Center-aligned for StandBy — scales up beautifully on a nightstand display
 struct SmallWidgetView: View {
     let entry: PriceEntry
+    private var changeColor: Color {
+        guard let c = entry.change24h else { return .secondary }
+        return c >= 0 ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23)
+    }
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: "bitcoinsign.circle.fill")
-                    .foregroundStyle(.orange)
-                Text("BTC")
-                    .font(.caption2).bold()
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
+        VStack(spacing: 5) {
+            Image(systemName: "bitcoinsign.circle.fill")
+                .foregroundStyle(.orange)
+                .font(.system(size: 32))
             Text(entry.price.shortFormatted)
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.6)
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .minimumScaleFactor(0.5)
                 .lineLimit(1)
+            if let change = entry.change24h {
+                Text(String(format: "%+.1f%%", change))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(changeColor)
+            }
             Text(entry.price.timestamp, style: .relative)
-                .font(.caption2)
+                .font(.system(size: 10))
                 .foregroundStyle(.secondary)
         }
-        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(.background, for: .widget)
     }
 }
@@ -88,7 +93,7 @@ struct MediumWidgetView: View {
     let entry: PriceEntry
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 4) {
                     Image(systemName: "bitcoinsign.circle.fill")
                         .foregroundStyle(.orange)
@@ -96,15 +101,68 @@ struct MediumWidgetView: View {
                     Text("Bitcoin")
                         .font(.headline)
                 }
-                Text(entry.price.formatted)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
+                HStack(alignment: .lastTextBaseline, spacing: 8) {
+                    Text(entry.price.formatted)
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                    if let change = entry.change24h {
+                        Text(String(format: "%+.1f%%", change))
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(change >= 0
+                                ? Color(red: 0.19, green: 0.82, blue: 0.35)
+                                : Color(red: 1, green: 0.27, blue: 0.23))
+                    }
+                }
                 Text(entry.price.timestamp, style: .relative)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
+        }
+        .padding()
+        .containerBackground(.background, for: .widget)
+    }
+}
+
+struct LargeWidgetView: View {
+    let entry: PriceEntry
+    private var changeColor: Color {
+        guard let c = entry.change24h else { return .secondary }
+        return c >= 0 ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23)
+    }
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "bitcoinsign.circle.fill")
+                    .foregroundStyle(.orange)
+                    .font(.title3)
+                Text("Bitcoin")
+                    .font(.headline)
+                Spacer()
+                Text(entry.price.timestamp, style: .relative)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            VStack(spacing: 8) {
+                Text(entry.price.formatted)
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.4)
+                    .lineLimit(1)
+                if let change = entry.change24h {
+                    Text(String(format: "%+.2f%%", change))
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(changeColor)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(changeColor.opacity(0.12)))
+                }
+            }
+            Spacer()
+            Text("TapBTC · Live Price")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
         .padding()
         .containerBackground(.background, for: .widget)
@@ -159,7 +217,7 @@ struct BTCPriceWidget: Widget {
         .configurationDisplayName("Bitcoin Price")
         .description("Live BTC price — refreshes every ~10 minutes.")
         .supportedFamilies([
-            .systemSmall, .systemMedium,
+            .systemSmall, .systemMedium, .systemLarge,
             .accessoryCircular, .accessoryRectangular, .accessoryInline
         ])
     }

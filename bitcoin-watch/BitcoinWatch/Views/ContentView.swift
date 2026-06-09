@@ -1,10 +1,12 @@
 import SwiftUI
+import StoreKit
 
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
     @StateObject private var statsService = StatsService.shared
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
+    @Environment(\.requestReview) private var requestReview
 
     var body: some View {
         NavigationStack {
@@ -47,7 +49,14 @@ struct ContentView: View {
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-            .task { await statsService.fetch() }
+            .task {
+                await statsService.fetch()
+                ReviewManager.shared.recordOpen()
+                if ReviewManager.shared.shouldRequestReview {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    requestReview()
+                }
+            }
             .sheet(isPresented: $showAlertSheet) {
                 PriceAlertView(hasActiveAlert: $hasActiveAlert)
             }
