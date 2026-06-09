@@ -57,9 +57,14 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        chartData = r.prices.map { pair in
+        var points = r.prices.map { pair in
             ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
         }
+        // Pin the right edge to the live price so the chart is always current
+        if let live = stats?.currentPrice {
+            points.append(ChartPoint(date: Date(), price: live))
+        }
+        chartData = points
         chartRange = range
     }
 
