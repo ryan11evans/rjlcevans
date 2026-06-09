@@ -23,25 +23,31 @@
     background: radial-gradient(ellipse at 40% 35%, #2a2a2a 0%, #141414 65%);
   }
   .letter {
-    font-family: 'Courier New', monospace;
-    font-size: 580px;
-    font-weight: 900;
+    font-family: 'Sloan', 'Fraunces', serif;
+    font-weight: normal;
+    font-size: 680px;
     color: #D4A017;
     line-height: 1;
     position: relative;
     z-index: 1;
-    letter-spacing: -0.05em;
+    letter-spacing: 0;
     text-shadow:
-      0 0 120px rgba(212,160,23,0.25),
-      0 0 40px rgba(212,160,23,0.15);
-    margin-top: 30px;
+      0 0 120px rgba(212,160,23,0.3),
+      0 0 50px rgba(212,160,23,0.15);
   }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@900&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Sloan';
+    src: url('Sloan.otf') format('opentype');
+    font-weight: normal;
+  }
+</style>
 </head>
 <body>
   <div class="icon">
-    <span class="letter" style="font-family:'Fraunces',serif;">E</span>
+    <span class="letter">E</span>
   </div>
 </body>
 </html>
