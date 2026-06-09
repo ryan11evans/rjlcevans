@@ -6,6 +6,8 @@ struct ContentView: View {
     @StateObject private var statsService = StatsService.shared
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
+    @State private var showShareSheet = false
+    @State private var shareItems: [Any] = []
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -58,6 +60,10 @@ struct ContentView: View {
             .sheet(isPresented: $showAlertSheet) {
                 PriceAlertView(hasActiveAlert: $hasActiveAlert)
             }
+            .sheet(isPresented: $showShareSheet) {
+                ShareSheetView(items: shareItems)
+                    .ignoresSafeArea()
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { showAlertSheet = true } label: {
@@ -66,19 +72,27 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if let price = service.currentPrice {
-                        ShareLink(item: shareText(price: price)) {
-                            Image(systemName: "square.and.arrow.up")
-                        }
+                    Button {
+                        renderAndShare()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
                     }
+                    .disabled(service.currentPrice == nil)
                 }
             }
         }
     }
 
-    private func shareText(price: BitcoinPrice) -> String {
-        let changeStr = statsService.stats.map { String(format: " (%+.1f%%)", $0.change24h) } ?? ""
-        return "Bitcoin: \(price.formatted)\(changeStr)\nTrack live BTC prices with TapBTC"
+    @MainActor
+    private func renderAndShare() {
+        guard let price = service.currentPrice else { return }
+        let card = ShareCardView(price: price, change24h: statsService.stats?.change24h)
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 3.0
+        guard let image = renderer.uiImage else { return }
+        let url = URL(string: "https://apps.apple.com/us/app/tapbtc/id6774023419")!
+        shareItems = [image, url]
+        showShareSheet = true
     }
 }
 
