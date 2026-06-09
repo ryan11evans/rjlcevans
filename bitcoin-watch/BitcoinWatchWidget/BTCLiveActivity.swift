@@ -50,8 +50,9 @@ struct BTCLiveActivityWidget: Widget {
                     .font(.system(size: 14, weight: .semibold))
             } compactTrailing: {
                 Text(BitcoinPrice(usd: context.state.price, timestamp: context.state.timestamp).shortFormatted)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .widgetAccentable()
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .minimumScaleFactor(0.7)
             } minimal: {
                 Image(systemName: "bitcoinsign.circle.fill")
                     .foregroundStyle(.orange)

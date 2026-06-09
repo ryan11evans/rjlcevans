@@ -32,10 +32,8 @@ struct ContentView: View {
                         }
                         .padding(.horizontal)
 
-                        TimelineView(.periodic(from: .now, by: 1)) { _ in
-                            RefreshStatusView(price: service.currentPrice, error: service.error)
-                        }
-                        .padding(.top, 16)
+                        RefreshStatusView(price: service.currentPrice, error: service.error)
+                            .padding(.top, 16)
 
                         Spacer(minLength: 32)
                     }
@@ -163,17 +161,18 @@ struct RefreshStatusView: View {
     let price: BitcoinPrice?
     let error: String?
 
-    private var statusText: String {
-        if let error { return "Error: \(error)" }
-        guard let price else { return "Fetching..." }
-        let ago = max(0, Int(-price.timestamp.timeIntervalSinceNow))
-        if ago < 60 { return "Updated \(ago)s ago" }
-        return "Updated \(ago / 60)m \(ago % 60)s ago"
-    }
-
     var body: some View {
-        Text(statusText)
-            .font(.caption)
-            .foregroundStyle(error != nil ? .red : .secondary)
+        Group {
+            if let error {
+                Text("Error: \(error)")
+                    .foregroundStyle(.red)
+            } else if let price {
+                Text("Updated ") + Text(price.timestamp, style: .relative)
+            } else {
+                Text("Fetching...")
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 }

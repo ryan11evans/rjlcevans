@@ -80,6 +80,7 @@ class PriceService: ObservableObject {
 
             return price
         } catch {
+            if (error as? URLError)?.code == .cancelled { return nil }
             self.error = error.localizedDescription
             return nil
         }
