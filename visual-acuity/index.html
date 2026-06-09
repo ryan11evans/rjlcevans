@@ -707,6 +707,9 @@
         <button class="btn ghost" id="cantSee">Can't see this line</button>
         <button class="btn" id="submitLine">Submit line →</button>
       </div>
+      <div style="text-align:center;margin-top:12px;">
+        <button class="back-link" id="restartTest">← Start over</button>
+      </div>
     </div>
   </section>
 
@@ -1141,6 +1144,7 @@
   });
   document.getElementById('backTo1').addEventListener('click', () => goStep(1));
   document.getElementById('backTo2').addEventListener('click', () => goStep(2));
+  document.getElementById('restartTest').addEventListener('click', () => goStep(2));
   document.getElementById('toStep3').addEventListener('click', () => {
     if (state.testType === 'near') {
       state.distanceMm = 400;
