@@ -861,6 +861,7 @@
     passedFirstLine: false,
     singleLetterMode: false,
     singleSlot: 0,
+    singleSlotSize: 1,
     resultsUncorrected: { OD: null, OS: null },
     comparingWithGlasses: false,
   };
@@ -1232,23 +1233,25 @@
     let displayPx = px;
     state.singleLetterMode = false;
     state.singleSlot = 0;
+    state.singleSlotSize = 1;
     if (document.body.classList.contains('testing')) {
       const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      const lettersPerRow = Math.ceil(line.count / 2);
-      const maxByWidth = vpW / (lettersPerRow * 1.5);
-      const maxByHeight = vpH * 0.50;
-      if (px > maxByWidth) {
-        // True calibrated size won't fit multi-letter — show one at a time at correct size
-        state.singleLetterMode = true;
-        displayPx = Math.min(px, vpH * 0.65, (window.innerWidth || 390) - 24);
+      const fitsAtOnce = Math.floor(vpW / (px * 1.5));
+      if (fitsAtOnce >= line.count) {
+        displayPx = Math.min(px, vpH * 0.50);
       } else {
-        displayPx = Math.min(px, maxByWidth, maxByHeight);
+        state.singleLetterMode = true;
+        state.singleSlotSize = Math.max(1, fitsAtOnce);
+        displayPx = Math.min(px, vpH * 0.65, vpW - 16);
       }
     }
     optotypes.style.fontSize = displayPx + 'px';
+    optotypes.style.letterSpacing = state.singleLetterMode ? '0' : '';
     optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
-    optotypes.textContent = state.singleLetterMode ? state.currentLetters[0] : state.currentLetters.join('');
+    optotypes.textContent = state.singleLetterMode
+      ? state.currentLetters.slice(0, state.singleSlotSize).join('')
+      : state.currentLetters.join('');
 
     // Show relative progress without revealing the acuity level
     const totalLines = LINES.length;
@@ -1315,8 +1318,9 @@
   function updateSingleLetterDisplay(slot) {
     if (!state.singleLetterMode) return;
     state.singleSlot = slot;
+    const end = Math.min(slot + state.singleSlotSize, state.currentLetters.length);
     if (slot < state.currentLetters.length) {
-      optotypes.textContent = state.currentLetters[slot];
+      optotypes.textContent = state.currentLetters.slice(slot, end).join('');
     }
   }
 
