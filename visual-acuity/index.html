@@ -313,6 +313,7 @@
   body.app-mode .app-title-bar p { font-size: 14px; color: var(--ink-mute); margin: 0; }
   body.app-mode .card .lede { max-width: none; margin-bottom: 16px; }
   body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 22px 20px 20px; }
+  body.app-mode[data-step="4"] .app-title-bar { display: none; }
   body.app-mode .title-chart { margin-bottom: 12px; }
   body.app-mode .title-chart .tc-1 { font-size: 42px; }
   body.app-mode .title-chart .tc-2 { font-size: 26px; }
@@ -733,6 +734,13 @@
       </div>
     </div>
 
+    <div class="results-actions">
+      <button class="btn primary share-btn" id="shareResults">Share results</button>
+      <div class="results-secondary-row">
+        <button class="btn ghost" id="restart">Test again</button>
+      </div>
+    </div>
+
     <div id="referralFlag" hidden></div>
     <div id="rxEstimate" hidden></div>
 
@@ -751,13 +759,6 @@
     </div>
 
     <div class="history-section" id="historySection"></div>
-
-    <div class="results-actions">
-      <button class="btn primary share-btn" id="shareResults">Share results</button>
-      <div class="results-secondary-row">
-        <button class="btn ghost" id="restart">Test again</button>
-      </div>
-    </div>
   </section>
 
   <footer>
