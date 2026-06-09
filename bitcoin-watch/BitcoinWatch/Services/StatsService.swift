@@ -40,6 +40,7 @@ class StatsService: ObservableObject {
         // Also update the shared price so PriceService shows the same number
         let price = BitcoinPrice(usd: current, timestamp: Date())
         UserDefaults.shared.savePrice(price)
+        UserDefaults.shared.saveChange24h(m.change24h)
 
         stats = BitcoinStats(currentPrice: current,
                              high24h: high, low24h: low,

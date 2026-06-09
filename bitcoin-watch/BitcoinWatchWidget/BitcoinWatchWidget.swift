@@ -149,8 +149,7 @@ struct AccessoryWidgetView: View {
     }
 }
 
-@main
-struct BitcoinWatchWidget: Widget {
+struct BTCPriceWidget: Widget {
     let kind = "BitcoinWatchWidget"
 
     var body: some WidgetConfiguration {
@@ -163,5 +162,13 @@ struct BitcoinWatchWidget: Widget {
             .systemSmall, .systemMedium,
             .accessoryCircular, .accessoryRectangular, .accessoryInline
         ])
+    }
+}
+
+@main
+struct BitcoinWatchWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        BTCPriceWidget()
+        BTCLiveActivityWidget()
     }
 }

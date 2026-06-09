@@ -45,6 +45,9 @@ extension UserDefaults {
         guard let data = data(forKey: "lastBitcoinPrice") else { return nil }
         return try? JSONDecoder().decode(BitcoinPrice.self, from: data)
     }
+
+    func saveChange24h(_ change: Double) { set(change, forKey: "btcChange24h") }
+    func loadChange24h() -> Double? { object(forKey: "btcChange24h") as? Double }
 }
 
 // WatchConnectivity message keys

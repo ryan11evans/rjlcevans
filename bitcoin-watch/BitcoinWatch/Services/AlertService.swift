@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import UIKit
 
 class AlertService {
     static let shared = AlertService()
@@ -32,6 +33,8 @@ class AlertService {
         guard triggered else { return }
 
         alertEnabled = false
+
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
 
         let content = UNMutableNotificationContent()
         content.title = "Bitcoin Price Alert"

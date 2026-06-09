@@ -58,8 +58,20 @@ struct ContentView: View {
                             .foregroundStyle(hasActiveAlert ? .orange : .secondary)
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if let price = service.currentPrice {
+                        ShareLink(item: shareText(price: price)) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private func shareText(price: BitcoinPrice) -> String {
+        let changeStr = statsService.stats.map { String(format: " (%+.1f%%)", $0.change24h) } ?? ""
+        return "Bitcoin: \(price.formatted)\(changeStr)\nTrack live BTC prices with TapBTC"
     }
 }
 
@@ -67,6 +79,11 @@ struct PriceHeaderView: View {
     let price: BitcoinPrice?
     let isLoading: Bool
     let change24h: Double?
+
+    @State private var flashColor: Color? = nil
+
+    private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
+    private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
     var body: some View {
         VStack(spacing: 6) {
@@ -86,6 +103,12 @@ struct PriceHeaderView: View {
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
+                        .foregroundStyle(flashColor ?? Color.primary)
+                        .onChange(of: price.usd) { old, new in
+                            let color = new > old ? upColor : downColor
+                            withAnimation(.easeIn(duration: 0.1))  { flashColor = color }
+                            withAnimation(.easeOut(duration: 0.6).delay(0.2)) { flashColor = nil }
+                        }
                 } else {
                     Text("---")
                         .font(.system(size: 52, weight: .bold, design: .rounded))

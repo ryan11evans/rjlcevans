@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import WidgetKit
+import UIKit
 
 @MainActor
 class PriceService: ObservableObject {
@@ -64,6 +65,12 @@ class PriceService: ObservableObject {
 
             // Tell WidgetKit to reload so the lock screen / home screen widget shows fresh data
             WidgetCenter.shared.reloadAllTimelines()
+
+            // Update Live Activity in Dynamic Island
+            LiveActivityManager.shared.update(price: price.usd)
+
+            // Subtle haptic on each successful refresh
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
             // Fire price alert if threshold crossed
             AlertService.shared.checkAndFire(currentPrice: price.usd)
