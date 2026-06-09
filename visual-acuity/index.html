@@ -152,7 +152,7 @@
     margin-bottom: 10px !important; overflow: visible !important;
     line-height: 1.25 !important;
   }
-  body.testing .answer-row { gap: 7px !important; margin-top: 6px !important; }
+  body.testing .answer-row { gap: 7px !important; margin-top: auto !important; }
   body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
   body.testing .line-progress { position: static; text-align: center; font-size: 11px; margin-bottom: 4px; }
   body.testing .vm-panel { gap: 8px !important; padding: 4px 0 0 !important; }
@@ -859,6 +859,8 @@
     direction: null,
     failedAtSmaller: null,
     passedFirstLine: false,
+    singleLetterMode: false,
+    singleSlot: 0,
     resultsUncorrected: { OD: null, OS: null },
     comparingWithGlasses: false,
   };
@@ -1227,21 +1229,26 @@
     state.currentAnswers = new Array(line.count).fill('');
 
     const px = letterHeightPx(line.logmar);
-    // In fullscreen testing mode cap size so all letters fit on one row within the viewport.
     let displayPx = px;
+    state.singleLetterMode = false;
+    state.singleSlot = 0;
     if (document.body.classList.contains('testing')) {
       const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      // Target max 2 rows: size each letter so ceil(count/2) fit across the width.
-      // Sloan is square; 0.4em letter-spacing means each slot ≈ 1.5× the font size.
       const lettersPerRow = Math.ceil(line.count / 2);
       const maxByWidth = vpW / (lettersPerRow * 1.5);
-      const maxByHeight = vpH * 0.42;
-      displayPx = Math.min(px, maxByWidth, maxByHeight);
+      const maxByHeight = vpH * 0.50;
+      if (px > maxByWidth) {
+        // True calibrated size won't fit multi-letter — show one at a time at correct size
+        state.singleLetterMode = true;
+        displayPx = Math.min(px, vpH * 0.65, (window.innerWidth || 390) - 24);
+      } else {
+        displayPx = Math.min(px, maxByWidth, maxByHeight);
+      }
     }
     optotypes.style.fontSize = displayPx + 'px';
     optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
-    optotypes.textContent = state.currentLetters.join('');
+    optotypes.textContent = state.singleLetterMode ? state.currentLetters[0] : state.currentLetters.join('');
 
     // Show relative progress without revealing the acuity level
     const totalLines = LINES.length;
@@ -1259,7 +1266,10 @@
       inp.addEventListener('input', e => {
         e.target.value = e.target.value.toUpperCase();
         state.currentAnswers[i] = e.target.value;
-        if (e.target.value && i < line.count - 1) answerRow.children[i + 1].focus();
+        if (e.target.value && i < line.count - 1) {
+          answerRow.children[i + 1].focus();
+          updateSingleLetterDisplay(i + 1);
+        }
         tryAutoSubmit();
       });
       answerRow.appendChild(inp);
@@ -1292,6 +1302,7 @@
           if (state.activeInput < line.count - 1) {
             state.activeInput++;
             answerRow.children[state.activeInput].focus();
+            updateSingleLetterDisplay(state.activeInput);
           }
           tryAutoSubmit();
         }
@@ -1299,6 +1310,14 @@
       keypad.appendChild(b);
     });
     if (state.testType === 'mirror') activateVoiceMode();
+  }
+
+  function updateSingleLetterDisplay(slot) {
+    if (!state.singleLetterMode) return;
+    state.singleSlot = slot;
+    if (slot < state.currentLetters.length) {
+      optotypes.textContent = state.currentLetters[slot];
+    }
   }
 
   document.getElementById('submitLine').addEventListener('click', () => {
@@ -1455,6 +1474,7 @@
         if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
         document.getElementById('vmHeard').textContent = letter;
         voiceSlot++;
+        updateSingleLetterDisplay(voiceSlot);
       }
 
       if (voiceSlot >= state.currentLetters.length) {
