@@ -193,14 +193,6 @@
   .glasses-toggle label { font-size: 14px; color: var(--ink-soft); cursor: pointer; }
 
   /* Color vision */
-  .cv-plate { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 300px; margin: 20px auto; }
-  .cv-circle { width: 110px; height: 110px; border-radius: 50%; cursor: pointer; border: 4px solid transparent; transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s; }
-  .cv-circle:hover { transform: scale(1.06); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-  .cv-circle:active { transform: scale(0.94); }
-  .cv-circle.selected { border-color: var(--ink); transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-  .cv-question { text-align: center; font-family: 'Fraunces', serif; font-style: italic; font-size: 17px; color: var(--ink-soft); margin: 16px 0 4px; }
-  .cv-counter { text-align: center; font-size: 12px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; }
-  .cv-next { display: block; margin: 16px auto 0; }
 
   /* Result */
   .result-hero { text-align: center; padding: 28px 20px; background: linear-gradient(135deg, rgba(138,51,36,0.08), rgba(138,51,36,0.02)); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -214,9 +206,6 @@
   .ec .lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); }
   .ec .val { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin-top: 4px; }
   .ec .correction-lbl { font-size: 11px; color: var(--ink-mute); margin-top: 3px; font-style: italic; }
-  .cv-result-block { margin-top: 14px; padding: 14px 16px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); }
-  .cv-result-block .lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; }
-  .cv-result-block .val { font-family: 'Fraunces', serif; font-size: 16px; color: var(--ink); }
 
   .disclaimer { margin-top: 20px; padding: 14px 16px; background: rgba(138,51,36,0.06); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
   .disclaimer strong { color: var(--accent); font-weight: 600; }
@@ -270,7 +259,6 @@
   body.app-mode .field input, body.app-mode .field select { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
   body.app-mode .glasses-toggle { background: var(--paper-3); border-color: var(--line); }
   body.app-mode .ec { background: var(--paper-3); }
-  body.app-mode .cv-result-block { background: var(--paper-3); }
   body.app-mode footer { display: none; }
   /* Step 1 is auto-skipped in app mode; hide the Back button that returns to it */
   body.app-mode #backTo1 { display: none !important; }
@@ -467,7 +455,6 @@
     .row-2 { grid-template-columns: 1fr; }
     .step { font-size: 10px; padding: 8px 4px; }
     .answer-row input { width: 48px; height: 48px; font-size: 20px; }
-    .cv-circle { width: 90px; height: 90px; }
     .keypad { grid-template-columns: repeat(6, 1fr); gap: 4px; }
     .keypad button { padding: 15px 0; font-size: 17px; }
   }
@@ -755,11 +742,6 @@
       <button class="btn" id="retestWithGlasses">Compare with glasses →</button>
     </div>
 
-    <div class="cv-result-block" id="cvResultBlock" hidden>
-      <div class="lbl">Color vision screening</div>
-      <div class="val" id="cvResultVal">—</div>
-    </div>
-
     <div class="disclaimer">
       <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. Refractive error, cataract, glaucoma, and retinal disease can produce 20/20 results yet still require treatment. If you notice any change in vision, schedule an exam with a licensed eye care provider.
     </div>
@@ -770,20 +752,8 @@
       <button class="btn primary share-btn" id="shareResults">Share results</button>
       <div class="results-secondary-row">
         <button class="btn ghost" id="restart">Test again</button>
-        <button class="btn ghost" id="testColorVision">Color vision →</button>
       </div>
     </div>
-  </section>
-
-  <!-- COLOR VISION SECTION (inline, shown after step 4) -->
-  <section class="card" id="colorVisionSection" hidden>
-    <h2>Color vision screening</h2>
-    <p class="lede">Tap the circle that looks different from the other three. Work quickly — your first impression is most reliable.</p>
-
-    <div class="cv-counter" id="cvCounter">Plate 1 of 12</div>
-    <div class="cv-question" id="cvQuestion">Which circle looks different?</div>
-    <div class="cv-plate" id="cvPlate"></div>
-    <button class="btn primary cv-next" id="cvNext" disabled>Next →</button>
   </section>
 
   <footer>
@@ -836,22 +806,6 @@
   };
 
   // Color vision plates: 4 circles per plate, odd-one-out position is randomised at runtime
-  // type: 'control' | 'rg' (red-green) | 'by' (blue-yellow)
-  const CV_PLATES_DEF = [
-    { type: 'control', bg: '#2563EB', fg: '#DC2626' },
-    { type: 'control', bg: '#16A34A', fg: '#7C3AED' },
-    { type: 'rg', bg: '#B33A28', fg: '#3D7A28' },
-    { type: 'rg', bg: '#C87828', fg: '#6A8C28' },
-    { type: 'rg', bg: '#A04020', fg: '#608040' },
-    { type: 'rg', bg: '#D05030', fg: '#80A040' },
-    { type: 'rg', bg: '#882020', fg: '#384820' },
-    { type: 'by', bg: '#2D5EA0', fg: '#A09010' },
-    { type: 'by', bg: '#1A8C8C', fg: '#8C1A50' },
-    { type: 'by', bg: '#1840A0', fg: '#A8A020' },
-    { type: 'by', bg: '#20A080', fg: '#A04068' },
-    { type: 'by', bg: '#4060C0', fg: '#C0A020' },
-  ];
-
   const state = {
     method: 'iphone',
     pxPerMm: null,
@@ -871,10 +825,6 @@
     direction: null,
     failedAtSmaller: null,
     passedFirstLine: false,
-    cvPlates: [],
-    cvIndex: 0,
-    cvAnswers: [],
-    cvSelected: null,
     resultsUncorrected: { OD: null, OS: null },
     comparingWithGlasses: false,
   };
@@ -1830,9 +1780,6 @@
     state.comparingWithGlasses = false;
     const glassesToggle = document.getElementById('glassesOn');
     if (glassesToggle) glassesToggle.disabled = false;
-    state.cvPlates = []; state.cvIndex = 0; state.cvAnswers = [];
-    document.getElementById('cvResultBlock').hidden = true;
-    document.getElementById('colorVisionSection').hidden = true;
     goStep(2);
   });
 
@@ -1939,89 +1886,6 @@
       } catch(e) {}
     }, 'image/png');
   });
-
-  // ===== COLOR VISION TEST =====
-  function buildCVPlates() {
-    return CV_PLATES_DEF.map(def => {
-      const oddPos = Math.floor(Math.random() * 4);
-      const colors = [def.bg, def.bg, def.bg, def.bg];
-      colors[oddPos] = def.fg;
-      return { ...def, colors, answer: oddPos };
-    });
-  }
-
-  document.getElementById('testColorVision').addEventListener('click', () => {
-    state.cvPlates = buildCVPlates();
-    state.cvIndex = 0;
-    state.cvAnswers = [];
-    state.cvSelected = null;
-    document.getElementById('colorVisionSection').hidden = false;
-    document.getElementById('colorVisionSection').scrollIntoView({ behavior: 'smooth' });
-    presentCVPlate();
-  });
-
-  function presentCVPlate() {
-    const plate = state.cvPlates[state.cvIndex];
-    document.getElementById('cvCounter').textContent = `Plate ${state.cvIndex + 1} of ${state.cvPlates.length}`;
-    document.getElementById('cvNext').disabled = true;
-    state.cvSelected = null;
-
-    const container = document.getElementById('cvPlate');
-    container.innerHTML = '';
-    plate.colors.forEach((color, i) => {
-      const circle = document.createElement('div');
-      circle.className = 'cv-circle';
-      circle.style.background = color;
-      circle.addEventListener('click', () => {
-        container.querySelectorAll('.cv-circle').forEach(c => c.classList.remove('selected'));
-        circle.classList.add('selected');
-        state.cvSelected = i;
-        document.getElementById('cvNext').disabled = false;
-      });
-      container.appendChild(circle);
-    });
-  }
-
-  document.getElementById('cvNext').addEventListener('click', () => {
-    state.cvAnswers.push({ plate: state.cvPlates[state.cvIndex], selected: state.cvSelected });
-    state.cvIndex++;
-    if (state.cvIndex < state.cvPlates.length) {
-      presentCVPlate();
-    } else {
-      finishCVTest();
-    }
-  });
-
-  function finishCVTest() {
-    document.getElementById('colorVisionSection').hidden = true;
-
-    let controlFails = 0, rgFails = 0, byFails = 0;
-    state.cvAnswers.forEach(({ plate, selected }) => {
-      const correct = selected === plate.answer;
-      if (!correct) {
-        if (plate.type === 'control') controlFails++;
-        else if (plate.type === 'rg') rgFails++;
-        else if (plate.type === 'by') byFails++;
-      }
-    });
-
-    let result;
-    if (controlFails >= 2) {
-      result = 'Test inconclusive — unable to distinguish clearly different colors. Lighting or screen calibration may be affecting results.';
-    } else if (rgFails >= 2 && byFails >= 2) {
-      result = 'Possible red-green and blue-yellow color vision deficiency detected. A clinical Ishihara or Farnsworth panel test is recommended.';
-    } else if (rgFails >= 2) {
-      result = 'Possible red-green color vision deficiency. This affects ~8% of males and ~0.5% of females. A formal clinical test is recommended.';
-    } else if (byFails >= 2) {
-      result = 'Possible blue-yellow (tritan) color vision deficiency. This is less common and may warrant further clinical testing.';
-    } else {
-      result = 'No color vision deficiency detected in this screening.';
-    }
-
-    document.getElementById('cvResultVal').textContent = result;
-    document.getElementById('cvResultBlock').hidden = false;
-    document.getElementById('cvResultBlock').scrollIntoView({ behavior: 'smooth' });
-  }
 
   // Cleanup camera on unload
   window.addEventListener('beforeunload', () => {
