@@ -448,7 +448,10 @@
   body.app-mode .ms-num { background: rgba(37,99,235,0.2); color: #93c5fd; }
   body.app-mode .mirror-step { font-size: 13px; margin-bottom: 6px; gap: 10px; }
   body.app-mode .mirror-note { margin-top: 8px; padding-top: 8px; font-size: 11px; }
-  body.app-mode .mirror-photo { max-height: 145px; width: auto; display: block; margin: 8px auto 0; }
+  .mirror-layout { display: flex; gap: 12px; align-items: center; }
+  .mirror-layout .mirror-photo { width: 42%; max-height: none; margin: 0; flex-shrink: 0; border-radius: 8px; object-fit: cover; aspect-ratio: 3/4; }
+  .mirror-rules { flex: 1; display: flex; flex-direction: column; gap: 0; }
+  body.app-mode .mirror-photo { max-height: none; width: 42%; display: block; margin: 0; }
   body.app-mode #step2 > .lede { display: none; }
   body.app-mode #step2 { padding: 12px 18px; }
   body.app-mode .myopia-note { color: #fbbf24; background: rgba(202,138,4,0.1); border-color: rgba(202,138,4,0.35); }
@@ -615,11 +618,15 @@
 
     <div id="mirrorWrap" hidden>
       <div class="mirror-setup">
-        <div class="mirror-step"><span class="ms-num">1</span><span>Screen facing the mirror — read the reflection</span></div>
-        <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>6 ft (2 m)</strong> away, back to wall</span></div>
-        <div class="mirror-step"><span class="ms-num">3</span><span>Say the letters aloud, one eye covered</span></div>
+        <div class="mirror-layout">
+          <img class="mirror-photo" src="mirror-demo.jpg" alt="Person holding phone with screen facing mirror — eye chart visible in reflection">
+          <div class="mirror-rules">
+            <div class="mirror-step"><span class="ms-num">1</span><span>Screen facing the mirror — read the reflection</span></div>
+            <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>6 ft (2 m)</strong> away, back to wall</span></div>
+            <div class="mirror-step"><span class="ms-num">3</span><span>Say the letters aloud, one eye covered</span></div>
+          </div>
+        </div>
         <div class="mirror-note">Effective optical distance: ~13 ft (4 m) &nbsp;·&nbsp; True distance vision test</div>
-        <img class="mirror-photo" src="mirror-demo.jpg" alt="Person holding phone with screen facing mirror — eye chart visible in reflection">
       </div>
     </div>
 
