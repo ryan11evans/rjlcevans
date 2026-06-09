@@ -188,9 +188,14 @@
   .occluder-card .eye-icon { font-size: 52px; margin-bottom: 8px; }
   .occluder-card .which-eye { font-family: 'Fraunces', serif; font-style: italic; font-size: 28px; margin: 4px 0; }
   .occluder-card .instruction { color: var(--ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 0; line-height: 1.55; }
-  .glasses-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px auto; padding: 12px 18px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); max-width: 300px; cursor: pointer; }
-  .glasses-toggle input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-  .glasses-toggle label { font-size: 14px; color: var(--ink-soft); cursor: pointer; }
+  .glasses-toggle { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 18px auto; padding: 14px 18px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); max-width: 320px; cursor: pointer; }
+  .glasses-toggle input { display: none; }
+  .glasses-toggle label { font-size: 15px; color: var(--ink-soft); cursor: pointer; flex: 1; text-align: left; }
+  .glasses-switch { position: relative; width: 51px; height: 31px; flex-shrink: 0; cursor: pointer; }
+  .glasses-switch::before { content: ''; position: absolute; inset: 0; background: rgba(120,120,128,0.32); border-radius: 16px; transition: background 0.25s; }
+  .glasses-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: transform 0.25s; }
+  #glassesOn:checked ~ .glasses-switch::before { background: var(--accent); }
+  #glassesOn:checked ~ .glasses-switch::after { transform: translateX(20px); }
 
   /* Color vision */
 
@@ -265,6 +270,7 @@
   body.app-mode .cc-stage { background: var(--paper-2); }
   body.app-mode .field input, body.app-mode .field select { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
   body.app-mode .glasses-toggle { background: var(--paper-3); border-color: var(--line); }
+  body.app-mode .glasses-toggle label { color: var(--ink-soft); }
   body.app-mode .ec { background: var(--paper-3); }
   body.app-mode footer { display: none; }
   /* Step 1 is auto-skipped in app mode; hide the Back button that returns to it */
@@ -685,6 +691,7 @@
       <div class="glasses-toggle">
         <input type="checkbox" id="glassesOn">
         <label for="glassesOn">Testing with glasses / contacts on</label>
+        <div class="glasses-switch" onclick="document.getElementById('glassesOn').click()"></div>
       </div>
       <div class="btn-row" style="justify-content:center;margin-top:14px;gap:10px;">
         <button class="btn primary" id="beginEye">I'm ready — begin</button>
