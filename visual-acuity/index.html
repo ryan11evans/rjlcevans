@@ -312,7 +312,7 @@
   }
   body.app-mode .app-title-bar p { font-size: 14px; color: var(--ink-mute); margin: 0; }
   body.app-mode .card .lede { max-width: none; margin-bottom: 16px; }
-  body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 22px 20px 20px; }
+  body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 8px 20px 18px; }
   body.app-mode[data-step="4"] .app-title-bar { display: none; }
   body.app-mode .title-chart { margin-bottom: 12px; }
   body.app-mode .title-chart .tc-1 { font-size: 42px; }
@@ -343,6 +343,12 @@
   body.app-mode .method-tile[aria-pressed="true"] .mt-desc,
   body.app-mode .tt-tile .tt-desc { color: var(--ink-mute); font-size: 12px; line-height: 1.4; margin-top: 2px; }
   body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 16px; line-height: 1.2; }
+
+  /* ── Quick Test: compact secondary row in app mode ── */
+  body.app-mode [data-type="distance"] { padding: 8px 16px !important; }
+  body.app-mode [data-type="distance"] .tt-desc { display: none; }
+  body.app-mode [data-type="distance"] .tt-icon { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
+  body.app-mode [data-type="distance"] .tt-name { font-size: 14px; font-weight: 500; }
 
   /* ── Device type choice (app-mode) ── */
   body.app-mode .device-type-grid {
@@ -442,7 +448,7 @@
   body.app-mode .ms-num { background: rgba(37,99,235,0.2); color: #93c5fd; }
   body.app-mode .mirror-step { font-size: 13px; margin-bottom: 6px; gap: 10px; }
   body.app-mode .mirror-note { margin-top: 8px; padding-top: 8px; font-size: 11px; }
-  body.app-mode .mirror-photo { max-height: 110px; width: auto; display: block; margin: 8px auto 0; }
+  body.app-mode .mirror-photo { max-height: 145px; width: auto; display: block; margin: 8px auto 0; }
   body.app-mode #step2 > .lede { display: none; }
   body.app-mode #step2 { padding: 12px 18px; }
   body.app-mode .myopia-note { color: #fbbf24; background: rgba(202,138,4,0.1); border-color: rgba(202,138,4,0.35); }
