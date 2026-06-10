@@ -86,11 +86,19 @@ struct ContentView: View {
     @MainActor
     private func renderAndShare() {
         guard let price = service.currentPrice else { return }
-        let card = ShareCardView(price: price, change24h: statsService.stats?.change24h)
+        let stats = statsService.stats
+        let liveUSD = price.usd
+        let card = ShareCardView(
+            price: price,
+            change24h: stats?.change24h,
+            high24h: stats.map { max($0.high24h, liveUSD) },
+            low24h:  stats.map { min($0.low24h,  liveUSD) }
+        )
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3.0
-        guard let image = renderer.uiImage else { return }
-        shareItems = [image, "https://apps.apple.com/us/app/tapbtc/id6774023419"]
+        guard let image = renderer.uiImage,
+              let url = URL(string: "https://apps.apple.com/us/app/tapbtc/id6774023419") else { return }
+        shareItems = [image, url]
         showShareSheet = true
     }
 }
