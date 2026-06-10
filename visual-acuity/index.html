@@ -1238,21 +1238,22 @@
     if (document.body.classList.contains('testing')) {
       const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      // 1.15 accounts for 0.15em letter-spacing between grouped letters
-      const fitsAtOnce = Math.floor(vpW / (px * 1.15));
-      if (fitsAtOnce >= line.count) {
-        // All letters fit at calibrated size
-        displayPx = Math.min(px, vpH * 0.60);
-      } else if (fitsAtOnce >= 1) {
-        // 1–(n-1) letters fit — show that many at full calibrated size
-        state.singleLetterMode = true;
-        state.singleSlotSize = fitsAtOnce;
-        displayPx = Math.min(px, vpH * 0.65);
+      // Normal mode uses 0.4em spacing, grouped uses 0.15em — check with correct multiplier
+      const allFitNormal = (line.count * px * 1.4) <= vpW;
+      if (allFitNormal) {
+        // All letters fit at calibrated size with normal 0.4em spacing
+        displayPx = Math.min(px, vpW / (line.count * 1.4), vpH * 0.60);
       } else {
-        // Letter too wide even alone — cap to viewport, preserve relative sizes
+        // Need grouped/single mode — 0.15em spacing between letters
+        const fitsGrouped = Math.floor(vpW / (px * 1.15));
         state.singleLetterMode = true;
-        state.singleSlotSize = 1;
-        displayPx = Math.min(px, vpW * 0.90, vpH * 0.65);
+        if (fitsGrouped >= 1) {
+          state.singleSlotSize = fitsGrouped;
+          displayPx = Math.min(px, vpH * 0.65);
+        } else {
+          state.singleSlotSize = 1;
+          displayPx = Math.min(px, vpW * 0.90, vpH * 0.65);
+        }
       }
     }
     optotypes.style.fontSize = displayPx + 'px';
