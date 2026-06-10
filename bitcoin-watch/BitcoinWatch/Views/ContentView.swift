@@ -6,8 +6,6 @@ struct ContentView: View {
     @StateObject private var statsService = StatsService.shared
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
-    @State private var showShareSheet = false
-    @State private var shareItems: [Any] = []
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -60,10 +58,6 @@ struct ContentView: View {
             .sheet(isPresented: $showAlertSheet) {
                 PriceAlertView(hasActiveAlert: $hasActiveAlert)
             }
-            .sheet(isPresented: $showShareSheet) {
-                ShareSheetView(items: shareItems)
-                    .ignoresSafeArea()
-            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { showAlertSheet = true } label: {
@@ -88,18 +82,26 @@ struct ContentView: View {
         guard let price = service.currentPrice else { return }
         let stats = statsService.stats
         let liveUSD = price.usd
-        let card = ShareCardView(
-            price: price,
-            change24h: stats?.change24h,
-            high24h: stats.map { max($0.high24h, liveUSD) },
-            low24h:  stats.map { min($0.low24h,  liveUSD) }
-        )
-        let renderer = ImageRenderer(content: card)
-        renderer.scale = 3.0
-        guard let image = renderer.uiImage,
-              let url = URL(string: "https://apps.apple.com/us/app/tapbtc/id6774023419") else { return }
-        shareItems = [image, url]
-        showShareSheet = true
+        Task { @MainActor in
+            // Yield one run loop pass — prevents blank share sheet on first tap
+            await Task.yield()
+            let card = ShareCardView(
+                price: price,
+                change24h: stats?.change24h,
+                high24h: stats.map { max($0.high24h, liveUSD) },
+                low24h:  stats.map { min($0.low24h,  liveUSD) }
+            )
+            .environment(\.colorScheme, .dark)
+            let renderer = ImageRenderer(content: card)
+            renderer.scale = UIScreen.main.scale
+            guard let image = renderer.uiImage,
+                  let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let root = scene.windows.first?.rootViewController else { return }
+            var top = root
+            while let next = top.presentedViewController { top = next }
+            let vc = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+            top.present(vc, animated: true)
+        }
     }
 }
 

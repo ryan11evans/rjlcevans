@@ -1,7 +1,5 @@
 import SwiftUI
 
-private let appStoreURLString = "https://apps.apple.com/us/app/tapbtc/id6774023419"
-
 struct ShareCardView: View {
     let price: BitcoinPrice
     let change24h: Double?
@@ -32,14 +30,13 @@ struct ShareCardView: View {
                                    startPoint: .top, endPoint: .bottom)
                 )
                 .frame(width: 3)
-                .padding(.vertical, 16)
-                .padding(.leading, 0)
+                .padding(.vertical, 18)
 
             VStack(alignment: .leading, spacing: 0) {
 
                 // ── Header ──────────────────────────────────────
                 HStack(spacing: 0) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Image(systemName: "bitcoinsign.circle.fill")
                             .foregroundStyle(.orange)
                             .font(.system(size: 13))
@@ -63,8 +60,8 @@ struct ShareCardView: View {
                             .foregroundStyle(.orange)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
+                .padding(.horizontal, 20)
+                .padding(.top, 18)
 
                 // ── Price + change ───────────────────────────────
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
@@ -86,25 +83,21 @@ struct ShareCardView: View {
                             )
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 7)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
 
                 // ── Rule ────────────────────────────────────────
                 Rectangle()
                     .fill(.white.opacity(0.07))
                     .frame(height: 1)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 11)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 13)
 
                 // ── 24h High / Low ───────────────────────────────
-                HStack(spacing: 16) {
+                HStack(spacing: 18) {
                     if let high = high24h {
-                        StatPill(
-                            icon: "arrow.up",
-                            label: "24H HIGH",
-                            value: priceFmt(high),
-                            color: upColor
-                        )
+                        StatPill(icon: "arrow.up",   label: "24H HIGH",
+                                 value: priceFmt(high), color: upColor)
                     }
                     if high24h != nil && low24h != nil {
                         Rectangle()
@@ -112,28 +105,23 @@ struct ShareCardView: View {
                             .frame(width: 1, height: 26)
                     }
                     if let low = low24h {
-                        StatPill(
-                            icon: "arrow.down",
-                            label: "24H LOW",
-                            value: priceFmt(low),
-                            color: downColor
-                        )
+                        StatPill(icon: "arrow.down",  label: "24H LOW",
+                                 value: priceFmt(low),  color: downColor)
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
 
                 // ── Rule ────────────────────────────────────────
                 Rectangle()
                     .fill(.white.opacity(0.07))
                     .frame(height: 1)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 10)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
 
                 // ── Footer ──────────────────────────────────────
                 HStack {
-                    // App Store badge
                     HStack(spacing: 5) {
                         Image(systemName: "apple.logo")
                             .font(.system(size: 12, weight: .medium))
@@ -148,7 +136,7 @@ struct ShareCardView: View {
                         }
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 7)
                     .background(Color.black, in: RoundedRectangle(cornerRadius: 8))
 
                     Spacer()
@@ -157,13 +145,13 @@ struct ShareCardView: View {
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 9)
-                .padding(.bottom, 14)
+                .padding(.horizontal, 20)
+                .padding(.top, 11)
+                .padding(.bottom, 18)
             }
         }
-        .frame(width: 340, height: 182)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .frame(width: 350, height: 196)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
     private func priceFmt(_ v: Double) -> String {
@@ -195,15 +183,6 @@ private struct StatPill: View {
             }
         }
     }
-}
-
-// UIKit share sheet wrapper
-struct ShareSheetView: UIViewControllerRepresentable {
-    let items: [Any]
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-    func updateUIViewController(_ uvc: UIActivityViewController, context: Context) {}
 }
 
 #if DEBUG
