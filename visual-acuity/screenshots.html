@@ -170,12 +170,12 @@ function drawScreen2(ctx) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillText('▼  getting smaller', W/2, 160);
 
-  // Two big Sloan letters — drawn individually (no letterSpacing needed)
+  // Two big Sloan letters — middle baseline so nothing clips
   ctx.fillStyle = '#ffffff';
-  ctx.font = `normal 480px 'Sloan', monospace`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('D', W/2 - 320, 860);
-  ctx.fillText('K', W/2 + 320, 860);
+  ctx.font = `normal 400px 'Sloan', monospace`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('D', W/2 - 260, 680);
+  ctx.fillText('K', W/2 + 260, 680);
 
   // Slot dots — sized for 2064px canvas
   const dotCount = 5, dotSpacing = 140, dotR = 28;
