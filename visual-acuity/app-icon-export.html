@@ -22,14 +22,16 @@ const ctx = canvas.getContext('2d');
 function draw() {
   const s = 1024;
 
+  // Solid fill — Apple applies rounding, PNG must have zero transparency
+  ctx.fillStyle = '#141414';
+  ctx.fillRect(0, 0, s, s);
+
   // Background gradient
   const bg = ctx.createRadialGradient(s*0.4, s*0.35, 0, s*0.5, s*0.5, s*0.75);
   bg.addColorStop(0, '#242424');
   bg.addColorStop(1, '#141414');
   ctx.fillStyle = bg;
-  ctx.beginPath();
-  roundRect(ctx, 0, 0, s, s, 230);
-  ctx.fill();
+  ctx.fillRect(0, 0, s, s);
 
   // Glow
   ctx.save();
