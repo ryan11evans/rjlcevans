@@ -1320,9 +1320,12 @@
   function updateSingleLetterDisplay(slot) {
     if (!state.singleLetterMode) return;
     state.singleSlot = slot;
-    const end = Math.min(slot + state.singleSlotSize, state.currentLetters.length);
-    if (slot < state.currentLetters.length) {
-      optotypes.textContent = state.currentLetters.slice(slot, end).join('');
+    // Only flip to next group at page boundaries — don't slide one letter at a time
+    if (slot % state.singleSlotSize === 0) {
+      const end = Math.min(slot + state.singleSlotSize, state.currentLetters.length);
+      if (slot < state.currentLetters.length) {
+        optotypes.textContent = state.currentLetters.slice(slot, end).join('');
+      }
     }
   }
 
