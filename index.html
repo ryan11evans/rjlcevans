@@ -478,6 +478,10 @@ body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
 .app-strip {
   display: flex; justify-content: center; align-items: flex-start;
   gap: 32px; padding: 22px 20px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 20px 0;
 }
 .app-strip-item {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -619,7 +623,7 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   <p>Ryan and Jadyn Evans are both optometrists with two sons, Landon and Cody. 😊</p>
 </section>
 
-<section class="card app-strip reveal">
+<section class="app-strip reveal">
   <a class="app-strip-item" href="https://apps.apple.com/app/vision-simulator-by-dr-evans/id6772865195" target="_blank" rel="noopener noreferrer">
     <img src="vision-simulator/visionsim-icon-1024.PNG" alt="Vision Simulator">
     <span>Vision Simulator</span>
