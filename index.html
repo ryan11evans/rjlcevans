@@ -474,6 +474,27 @@ body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
 .sp-power { font-size: .82rem; color: var(--muted); }
 
 /* Night mode */
+/* ===== App icon strip ===== */
+.app-strip {
+  display: flex; justify-content: center; align-items: flex-start;
+  gap: 32px; padding: 22px 20px;
+}
+.app-strip-item {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-decoration: none; color: var(--text);
+}
+.app-strip-item img {
+  width: 76px; height: 76px; border-radius: 18px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.18);
+  transition: transform 0.2s ease;
+}
+.app-strip-item:not(.app-strip-soon):hover img { transform: scale(1.07); }
+.app-strip-item span {
+  font-size: 0.72rem; font-weight: 600; color: var(--muted);
+  text-align: center; max-width: 76px; line-height: 1.3;
+}
+.app-strip-soon { opacity: 0.4; cursor: default; }
+
 body.night .about-card { background: linear-gradient(145deg, #251e14, #1e2533); border-top-color: #f59e0b; }
 body.night .week-card  { background: linear-gradient(145deg, #111d2e, #1e2533); border-top-color: #3b82f6; }
 body.night .sp-ryan   { background: rgba(59,130,246,.12);  border-color: rgba(59,130,246,.25); }
@@ -596,6 +617,21 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   <p class="card-eyebrow">📍 Murrieta, California</p>
   <h3>The Evans Family</h3>
   <p>Ryan and Jadyn Evans are both optometrists with two sons, Landon and Cody. 😊</p>
+</section>
+
+<section class="card app-strip reveal">
+  <a class="app-strip-item" href="https://apps.apple.com/app/vision-simulator-by-dr-evans/id6772865195" target="_blank" rel="noopener noreferrer">
+    <img src="vision-simulator/visionsim-icon-1024.PNG" alt="Vision Simulator">
+    <span>Vision Simulator</span>
+  </a>
+  <a class="app-strip-item" href="https://apps.apple.com/us/app/dr-glass/id6772578352" target="_blank" rel="noopener noreferrer">
+    <img src="dr-glass/drglass-current-icon-1024.png" alt="Dr. Glass">
+    <span>Dr. Glass</span>
+  </a>
+  <div class="app-strip-item app-strip-soon">
+    <img src="visual-acuity/icon-1024.png" alt="Visual Acuity Test">
+    <span>Acuity Test</span>
+  </div>
 </section>
 
 <section class="card info-card week-card reveal">
