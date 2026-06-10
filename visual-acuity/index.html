@@ -144,15 +144,14 @@
     flex: 1 !important; border: none !important; border-radius: 0 !important;
     padding: 8px 0 0 !important; margin: 0 !important; background: transparent !important;
     min-height: 0 !important; overflow: hidden !important;
-    justify-content: flex-start !important;
   }
   body.testing .optotypes {
-    letter-spacing: 0.4em !important; white-space: normal !important;
-    word-break: break-all !important; text-align: center !important;
-    margin-bottom: 10px !important; overflow: visible !important;
-    line-height: 1.25 !important;
+    flex: 1 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    overflow: hidden !important; line-height: 1 !important; margin-bottom: 0 !important;
+    white-space: nowrap !important; text-align: center !important;
   }
-  body.testing .answer-row { gap: 7px !important; margin-top: auto !important; }
+  body.testing .answer-row { gap: 7px !important; padding-top: 6px !important; }
   body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
   body.testing .line-progress { position: static; text-align: center; font-size: 11px; margin-bottom: 4px; }
   body.testing .vm-panel { gap: 8px !important; padding: 4px 0 0 !important; }
@@ -1239,15 +1238,18 @@
       const vpH = Math.max(400, window.innerHeight || 844);
       const fitsAtOnce = Math.floor(vpW / (px * 1.5));
       if (fitsAtOnce >= line.count) {
-        displayPx = Math.min(px, vpH * 0.50);
+        displayPx = Math.min(px, vpH * 0.60);
       } else {
         state.singleLetterMode = true;
-        state.singleSlotSize = Math.max(1, fitsAtOnce);
-        displayPx = Math.min(px, vpH * 0.65, vpW - 16);
+        // Always show at least 2 letters — reduce size to fit if needed
+        state.singleSlotSize = Math.max(2, Math.min(fitsAtOnce, line.count));
+        const sizeToFit = vpW / (state.singleSlotSize * 1.4);
+        displayPx = Math.min(px, sizeToFit, vpH * 0.65);
       }
     }
     optotypes.style.fontSize = displayPx + 'px';
-    optotypes.style.letterSpacing = state.singleLetterMode ? '0' : '';
+    // Set letter-spacing via JS so CSS !important doesn't block it
+    optotypes.style.letterSpacing = state.singleLetterMode ? '0' : '0.4em';
     optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
     optotypes.textContent = state.singleLetterMode
       ? state.currentLetters.slice(0, state.singleSlotSize).join('')
