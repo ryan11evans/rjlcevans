@@ -166,59 +166,77 @@ function drawScreen2(ctx) {
   bg(ctx);
 
   // Progress indicator
-  ctx.fillStyle = INK_MUT; ctx.font = `400 44px -apple-system, sans-serif`;
+  ctx.fillStyle = INK_MUT; ctx.font = `400 52px -apple-system, sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('▼  getting smaller', W/2, 120);
+  ctx.fillText('▼  getting smaller', W/2, 160);
 
-  // Big Sloan letters
+  // Two big Sloan letters — drawn individually (no letterSpacing needed)
   ctx.fillStyle = '#ffffff';
-  ctx.font = `normal 420px 'Sloan', monospace`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.letterSpacing = '0.4em';
-  ctx.fillText('D  K', W/2, 680);
+  ctx.font = `normal 480px 'Sloan', monospace`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('D', W/2 - 320, 860);
+  ctx.fillText('K', W/2 + 320, 860);
 
-  // Slot dots
-  const dotY = 1120, dotSpacing = 80, dotCount = 5;
-  const dotStart = W/2 - (dotCount-1)*dotSpacing/2;
+  // Slot dots — sized for 2064px canvas
+  const dotCount = 5, dotSpacing = 140, dotR = 28;
+  const dotY = 1000, dotStart = W/2 - (dotCount-1)*dotSpacing/2;
   for (let i = 0; i < dotCount; i++) {
     ctx.beginPath();
-    ctx.arc(dotStart + i*dotSpacing, dotY, i < 2 ? 20 : 14, 0, Math.PI*2);
+    ctx.arc(dotStart + i*dotSpacing, dotY, i < 2 ? dotR : dotR*0.6, 0, Math.PI*2);
     ctx.fillStyle = i < 2 ? GOLD : 'rgba(255,255,255,0.2)';
     ctx.fill();
   }
 
-  // Answer boxes row
-  const boxW = 160, boxH = 160, boxGap = 28;
+  // Answer boxes
+  const boxW = 220, boxH = 220, boxGap = 36;
   const boxTotal = 5*boxW + 4*boxGap;
   const boxX = (W - boxTotal)/2;
   for (let i = 0; i < 5; i++) {
     const bx = boxX + i*(boxW+boxGap);
     ctx.fillStyle = PAPER3;
-    roundRect(ctx, bx, 1190, boxW, boxH, 28); ctx.fill();
+    roundRect(ctx, bx, 1060, boxW, boxH, 36); ctx.fill();
     if (i === 0) {
-      ctx.strokeStyle = GOLD; ctx.lineWidth = 4;
-      roundRect(ctx, bx, 1190, boxW, boxH, 28); ctx.stroke();
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 5;
+      roundRect(ctx, bx, 1060, boxW, boxH, 36); ctx.stroke();
     }
   }
 
-  // Speak / Type buttons
-  const micR = 120;
+  // Speak / Type buttons — bigger circles
+  const micR = 160;
   ctx.fillStyle = GOLD;
-  ctx.beginPath(); ctx.arc(W/2-200, 1580, micR, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#111'; ctx.font = `500 90px -apple-system, sans-serif`;
+  ctx.beginPath(); ctx.arc(W/2-280, 1520, micR, 0, Math.PI*2); ctx.fill();
+  ctx.font = `500 110px -apple-system, sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🎤', W/2-200, 1580);
-  ctx.fillStyle = PAPER3;
-  ctx.beginPath(); ctx.arc(W/2+200, 1580, micR, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = INK_SOFT; ctx.font = `500 80px -apple-system, sans-serif`;
-  ctx.fillText('⌨', W/2+200, 1580);
-  ctx.fillStyle = INK; ctx.font = `500 44px -apple-system, sans-serif`;
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Speak', W/2-200, 1730); ctx.fillText('Type', W/2+200, 1730);
+  ctx.fillText('🎤', W/2-280, 1520);
 
-  ctx.fillStyle = GOLD; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.fillStyle = PAPER3;
+  ctx.beginPath(); ctx.arc(W/2+280, 1520, micR, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = INK_SOFT; ctx.font = `500 100px -apple-system, sans-serif`;
+  ctx.fillText('⌨', W/2+280, 1520);
+
+  ctx.fillStyle = INK; ctx.font = `500 52px -apple-system, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Speak', W/2-280, 1730);
+  ctx.fillText('Type', W/2+280, 1730);
+
+  // Voice instruction
+  ctx.fillStyle = GOLD; ctx.font = `400 48px -apple-system, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('Say all letters at once — or "can\'t see" to skip', W/2, 1810);
+  ctx.fillText('Say all letters at once — or "can\'t see" to skip', W/2, 1830);
+
+  // Can't see / Submit buttons
+  const btnW = (W-180)/2, btnH = 120, btnY = 1910;
+  ctx.fillStyle = PAPER2; roundRect(ctx, 60, btnY, btnW, btnH, 40); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 2;
+  roundRect(ctx, 60, btnY, btnW, btnH, 40); ctx.stroke();
+  ctx.fillStyle = INK_SOFT; ctx.font = `500 48px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText("Can't see this line", 60 + btnW/2, btnY + btnH/2);
+
+  ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  roundRect(ctx, 60+btnW+60, btnY, btnW, btnH, 40); ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.fillText('Submit line  →', 60+btnW+60 + btnW/2, btnY + btnH/2);
 
   caption(ctx, 'Hands-free voice recognition built in');
 }
