@@ -833,9 +833,9 @@
     '20/80':  'Significantly reduced — most daily tasks will require correction.',
     '20/100': 'Significantly reduced — a current prescription check is recommended.',
     '20/125': 'Substantially reduced — detailed near and distance tasks will be difficult.',
-    '20/160': 'Substantially impaired — an eye exam is strongly recommended.',
-    '20/200': 'Severely reduced — this meets the legal definition of low vision in many regions.',
-    '<20/200':'Severely reduced — an urgent eye examination is recommended.',
+    '20/160': 'Substantially impaired — a comprehensive eye exam with your optometrist is recommended.',
+    '20/200': 'Severely reduced — a comprehensive eye exam with your optometrist is recommended.',
+    '<20/200':'Severely reduced — a comprehensive eye exam with your optometrist is recommended.',
   };
 
   // Color vision plates: 4 circles per plate, odd-one-out position is randomised at runtime
@@ -1765,12 +1765,12 @@
     if (best) {
       if (best.logmar >= 1.0) {
         referralFlag.hidden = false;
-        referralFlag.className = 'referral-flag urgent';
-        referralFlag.innerHTML = '🚨 <strong>Urgent referral recommended.</strong> This result (20/200 or worse) meets criteria for legal low vision in many jurisdictions. Please see an eye care provider promptly.';
+        referralFlag.className = 'referral-flag warn';
+        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to take a closer look.';
       } else if (best.logmar >= 0.3) {
         referralFlag.hidden = false;
         referralFlag.className = 'referral-flag warn';
-        referralFlag.innerHTML = '⚠️ <strong>Eye exam recommended.</strong> 20/40 or worse is below the legal driving standard in most states. Corrective lenses or a prescription update may be needed.';
+        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to check your prescription.';
       }
     }
 
