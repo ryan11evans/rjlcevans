@@ -861,6 +861,7 @@
     singleLetterMode: false,
     singleSlot: 0,
     singleSlotSize: 1,
+    preferTypeMode: false,
     resultsUncorrected: { OD: null, OS: null },
     comparingWithGlasses: false,
   };
@@ -1196,6 +1197,7 @@
     state.direction = null;
     state.failedAtSmaller = null;
     state.passedFirstLine = false;
+    state.preferTypeMode = false;
     presentLine();
   });
 
@@ -1314,7 +1316,7 @@
       });
       keypad.appendChild(b);
     });
-    if (state.testType === 'mirror') activateVoiceMode();
+    if (state.testType === 'mirror' && !state.preferTypeMode) activateVoiceMode();
   }
 
   function updateSingleLetterDisplay(slot) {
@@ -1641,6 +1643,7 @@
     }
   });
   document.getElementById('vmTypeLink').addEventListener('click', () => {
+    state.preferTypeMode = true;
     deactivateVoiceMode();
     answerRow.querySelectorAll('input').forEach(inp => {
       inp.readOnly = false;
