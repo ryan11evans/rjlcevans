@@ -1238,15 +1238,21 @@
     if (document.body.classList.contains('testing')) {
       const vpW = Math.max(260, (window.innerWidth || 390) - 48);
       const vpH = Math.max(400, window.innerHeight || 844);
-      const fitsAtOnce = Math.floor(vpW / (px * 1.5));
+      // 1.15 accounts for 0.15em letter-spacing between grouped letters
+      const fitsAtOnce = Math.floor(vpW / (px * 1.15));
       if (fitsAtOnce >= line.count) {
+        // All letters fit at calibrated size
         displayPx = Math.min(px, vpH * 0.60);
-      } else {
+      } else if (fitsAtOnce >= 1) {
+        // 1–(n-1) letters fit — show that many at full calibrated size
         state.singleLetterMode = true;
-        // Always show at least 2 letters — reduce size to fit if needed
-        state.singleSlotSize = Math.max(2, Math.min(fitsAtOnce, line.count));
-        const sizeToFit = vpW / (state.singleSlotSize * 1.4);
-        displayPx = Math.min(px, sizeToFit, vpH * 0.65);
+        state.singleSlotSize = fitsAtOnce;
+        displayPx = Math.min(px, vpH * 0.65);
+      } else {
+        // Letter too wide even alone — cap to viewport, preserve relative sizes
+        state.singleLetterMode = true;
+        state.singleSlotSize = 1;
+        displayPx = Math.min(px, vpW * 0.90, vpH * 0.65);
       }
     }
     optotypes.style.fontSize = displayPx + 'px';
