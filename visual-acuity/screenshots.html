@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { background: #111; display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 40px 24px; font-family: -apple-system, sans-serif; }
+  h1 { color: #D4A017; margin: 0; font-size: 22px; }
+  p { color: #888; margin: 0; font-size: 13px; text-align: center; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  canvas { border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+  button { padding: 12px 28px; background: #D4A017; color: #111; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  button:hover { background: #e8b420; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+</style>
+<style>
+  @font-face { font-family: 'Sloan'; src: url('Sloan.otf') format('opentype'); }
+</style>
+</head>
+<body>
+<h1>App Store Screenshots — 13-inch iPad (2064 × 2752)</h1>
+<p>Download all 3, then upload to App Store Connect under iPad 13-inch screenshots.</p>
+
+<div class="row" id="cards"></div>
+
+<script>
+const W = 2064, H = 2752;
+const GOLD = '#D4A017';
+const GOLD_DIM = 'rgba(212,160,23,0.7)';
+const DARK = '#0a0a0a';
+const INK = '#f2f2f7';
+const INK_SOFT = 'rgba(242,242,247,0.65)';
+const INK_MUT = 'rgba(242,242,247,0.35)';
+const PAPER2 = '#1c1c1e';
+const PAPER3 = '#2c2c2e';
+
+function bg(ctx) {
+  ctx.fillStyle = DARK;
+  ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(W/2, 0, 0, W/2, 0, H * 0.6);
+  glow.addColorStop(0, 'rgba(212,160,23,0.10)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for (let x = 44; x < W; x += 44)
+    for (let y = 44; y < H; y += 44) {
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+    }
+}
+
+function titleBar(ctx) {
+  // Title chart
+  ctx.fillStyle = GOLD;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `normal 140px 'Sloan', monospace`;
+  ctx.fillText('E', W/2, 340);
+  ctx.font = `normal 86px 'Sloan', monospace`;
+  ctx.fillText('F P', W/2, 450);
+  ctx.font = `normal 56px 'Sloan', monospace`;
+  ctx.fillText('T O Z', W/2, 530);
+  ctx.font = `700 80px -apple-system, sans-serif`;
+  ctx.fillStyle = INK;
+  ctx.fillText('Visual Acuity Chart', W/2, 650);
+  ctx.font = `400 44px -apple-system, sans-serif`;
+  ctx.fillStyle = INK_SOFT;
+  ctx.fillText('by Dr. Evans, OD', W/2, 720);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function tile(ctx, x, y, w, h, icon, title, desc, active) {
+  ctx.fillStyle = active ? 'rgba(212,160,23,0.12)' : PAPER2;
+  roundRect(ctx, x, y, w, h, 40);
+  ctx.fill();
+  if (active) {
+    ctx.strokeStyle = 'rgba(212,160,23,0.5)';
+    ctx.lineWidth = 3;
+    roundRect(ctx, x, y, w, h, 40);
+    ctx.stroke();
+  }
+  ctx.font = `500 72px -apple-system, sans-serif`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = active ? GOLD : INK;
+  ctx.fillText(icon, x+56, y+100);
+  ctx.font = `600 52px -apple-system, sans-serif`;
+  ctx.fillStyle = active ? GOLD : INK;
+  ctx.fillText(title, x+56, y+170);
+  ctx.font = `400 38px -apple-system, sans-serif`;
+  ctx.fillStyle = INK_SOFT;
+  ctx.fillText(desc, x+56, y+228);
+}
+
+function btnPrimary(ctx, x, y, w, h, label) {
+  const g = ctx.createLinearGradient(x, y, x+w, y+h);
+  g.addColorStop(0, '#E8B420'); g.addColorStop(1, '#C49010');
+  ctx.fillStyle = g;
+  roundRect(ctx, x, y, w, h, 36); ctx.fill();
+  ctx.font = `700 56px -apple-system, sans-serif`;
+  ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, x+w/2, y+h/2);
+}
+
+function caption(ctx, text) {
+  ctx.fillStyle = 'rgba(212,160,23,0.9)';
+  ctx.font = `700 52px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(text, W/2, H - 120);
+}
+
+// ── Screenshot 1: Home / Setup screen ──
+function drawScreen1(ctx) {
+  bg(ctx);
+  titleBar(ctx);
+
+  // Calibration badge
+  ctx.fillStyle = 'rgba(212,160,23,0.12)';
+  roundRect(ctx, W/2-360, 790, 720, 90, 45); ctx.fill();
+  ctx.strokeStyle = 'rgba(212,160,23,0.35)'; ctx.lineWidth = 2;
+  roundRect(ctx, W/2-360, 790, 720, 90, 45); ctx.stroke();
+  ctx.fillStyle = GOLD; ctx.font = `500 38px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('✓  Auto-detected: iPhone 16 Pro · 460 ppi', W/2, 835);
+
+  // Test type tiles
+  const tw = W - 120, tx = 60;
+  tile(ctx, tx, 940, tw, 260, '🪞', 'Mirror Test', 'Stand 10 ft back — most accurate', true);
+  tile(ctx, tx, 1220, tw, 180, '📱', 'Quick Test', 'Arms length · instant result', false);
+
+  // Distance selector label
+  ctx.fillStyle = INK_SOFT; ctx.font = `400 40px -apple-system, sans-serif`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Testing distance', 60, 1490);
+  ctx.fillStyle = INK; ctx.font = `600 40px -apple-system, sans-serif`;
+  ctx.fillText('10 ft / 3 m  (Mirror)', 60+340, 1490);
+
+  // Glasses toggle
+  ctx.fillStyle = PAPER2;
+  roundRect(ctx, 60, 1540, tw, 110, 36); ctx.fill();
+  ctx.fillStyle = INK_SOFT; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Wearing glasses or contacts', 120, 1595);
+  // switch
+  ctx.fillStyle = 'rgba(120,120,128,0.32)';
+  roundRect(ctx, W-210, 1562, 148, 90, 45); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(W-210+45+4, 1562+45, 38, 0, Math.PI*2); ctx.fill();
+
+  // CTA button
+  btnPrimary(ctx, 60, 1720, tw, 130, 'Continue →');
+
+  caption(ctx, 'Clinically calibrated for your exact device');
+}
+
+// ── Screenshot 2: Test in progress ──
+function drawScreen2(ctx) {
+  bg(ctx);
+
+  // Progress indicator
+  ctx.fillStyle = INK_MUT; ctx.font = `400 52px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('▼  getting smaller', W/2, 160);
+
+  // Two big Sloan letters — middle baseline so nothing clips
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `normal 400px 'Sloan', monospace`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('D', W/2 - 260, 680);
+  ctx.fillText('K', W/2 + 260, 680);
+
+  // Slot dots — sized for 2064px canvas
+  const dotCount = 5, dotSpacing = 140, dotR = 28;
+  const dotY = 1000, dotStart = W/2 - (dotCount-1)*dotSpacing/2;
+  for (let i = 0; i < dotCount; i++) {
+    ctx.beginPath();
+    ctx.arc(dotStart + i*dotSpacing, dotY, i < 2 ? dotR : dotR*0.6, 0, Math.PI*2);
+    ctx.fillStyle = i < 2 ? GOLD : 'rgba(255,255,255,0.2)';
+    ctx.fill();
+  }
+
+  // Answer boxes
+  const boxW = 220, boxH = 220, boxGap = 36;
+  const boxTotal = 5*boxW + 4*boxGap;
+  const boxX = (W - boxTotal)/2;
+  for (let i = 0; i < 5; i++) {
+    const bx = boxX + i*(boxW+boxGap);
+    ctx.fillStyle = PAPER3;
+    roundRect(ctx, bx, 1060, boxW, boxH, 36); ctx.fill();
+    if (i === 0) {
+      ctx.strokeStyle = GOLD; ctx.lineWidth = 5;
+      roundRect(ctx, bx, 1060, boxW, boxH, 36); ctx.stroke();
+    }
+  }
+
+  // Speak / Type buttons — bigger circles
+  const micR = 160;
+  ctx.fillStyle = GOLD;
+  ctx.beginPath(); ctx.arc(W/2-280, 1520, micR, 0, Math.PI*2); ctx.fill();
+  ctx.font = `500 110px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🎤', W/2-280, 1520);
+
+  ctx.fillStyle = PAPER3;
+  ctx.beginPath(); ctx.arc(W/2+280, 1520, micR, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = INK_SOFT; ctx.font = `500 100px -apple-system, sans-serif`;
+  ctx.fillText('⌨', W/2+280, 1520);
+
+  ctx.fillStyle = INK; ctx.font = `500 52px -apple-system, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Speak', W/2-280, 1730);
+  ctx.fillText('Type', W/2+280, 1730);
+
+  // Voice instruction
+  ctx.fillStyle = GOLD; ctx.font = `400 48px -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Say all letters at once — or "can\'t see" to skip', W/2, 1830);
+
+  // Can't see / Submit buttons
+  const btnW = (W-180)/2, btnH = 120, btnY = 1910;
+  ctx.fillStyle = PAPER2; roundRect(ctx, 60, btnY, btnW, btnH, 40); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 2;
+  roundRect(ctx, 60, btnY, btnW, btnH, 40); ctx.stroke();
+  ctx.fillStyle = INK_SOFT; ctx.font = `500 48px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText("Can't see this line", 60 + btnW/2, btnY + btnH/2);
+
+  ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  roundRect(ctx, 60+btnW+60, btnY, btnW, btnH, 40); ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.fillText('Submit line  →', 60+btnW+60 + btnW/2, btnY + btnH/2);
+
+  caption(ctx, 'Hands-free voice recognition built in');
+}
+
+// ── Screenshot 3: Results screen ──
+function drawScreen3(ctx) {
+  bg(ctx);
+
+  ctx.fillStyle = GOLD; ctx.font = `700 64px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Your Results', W/2, 200);
+
+  // OD result hero
+  const heroW = W-120, heroX = 60;
+  ctx.fillStyle = PAPER2; roundRect(ctx, heroX, 240, heroW, 420, 48); ctx.fill();
+  ctx.fillStyle = INK_MUT; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('RIGHT EYE (OD)', W/2, 330);
+  ctx.fillStyle = GOLD; ctx.font = `bold 240px 'Fraunces', Georgia, serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('20/20', W/2, 600);
+  ctx.fillStyle = INK_SOFT; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.fillText('Normal — the standard for good vision.', W/2, 650);
+
+  // OS result hero
+  ctx.fillStyle = PAPER2; roundRect(ctx, heroX, 700, heroW, 420, 48); ctx.fill();
+  ctx.fillStyle = INK_MUT; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('LEFT EYE (OS)', W/2, 790);
+  ctx.fillStyle = INK; ctx.font = `bold 240px 'Fraunces', Georgia, serif`;
+  ctx.fillText('20/25', W/2, 1060);
+  ctx.fillStyle = INK_SOFT; ctx.font = `400 42px -apple-system, sans-serif`;
+  ctx.fillText('Near normal — most people won\'t notice difficulty.', W/2, 1110);
+
+  // Referral note
+  ctx.fillStyle = 'rgba(212,160,23,0.10)';
+  roundRect(ctx, heroX, 1160, heroW, 160, 36); ctx.fill();
+  ctx.strokeStyle = 'rgba(212,160,23,0.3)'; ctx.lineWidth = 2;
+  roundRect(ctx, heroX, 1160, heroW, 160, 36); ctx.stroke();
+  ctx.fillStyle = GOLD; ctx.font = `400 40px -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('👁  Comprehensive eye exam recommended with your optometrist', W/2, 1240);
+
+  // Share button
+  btnPrimary(ctx, heroX, 1380, heroW, 140, '↑  Share results');
+
+  // Mini share card preview
+  ctx.fillStyle = PAPER2; roundRect(ctx, heroX, 1580, heroW, 500, 48); ctx.fill();
+  const cglow = ctx.createRadialGradient(W/2, 1650, 0, W/2, 1650, 600);
+  cglow.addColorStop(0, 'rgba(212,160,23,0.15)'); cglow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = cglow; roundRect(ctx, heroX, 1580, heroW, 500, 48); ctx.fill();
+  ctx.fillStyle = GOLD; ctx.font = `700 56px 'Fraunces', Georgia, serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('20/20', W/2, 1730);
+  ctx.fillStyle = INK_SOFT; ctx.font = `400 38px -apple-system, sans-serif`;
+  ctx.fillText('Best corrected visual acuity', W/2, 1810);
+  ctx.strokeStyle = 'rgba(212,160,23,0.2)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W*0.2, 1860); ctx.lineTo(W*0.8, 1860); ctx.stroke();
+  ctx.fillStyle = GOLD_DIM; ctx.font = `italic 500 38px 'Fraunces', Georgia, serif`;
+  ctx.fillText('Eye Chart Test by Dr. Evans, OD', W/2, 1930);
+  ctx.fillStyle = INK_MUT; ctx.font = `400 32px -apple-system, sans-serif`;
+  ctx.fillText('rjlcevans.com  ·  Available on the App Store', W/2, 1990);
+
+  caption(ctx, 'Share your results with your doctor or friends');
+}
+
+const screens = [
+  { fn: drawScreen1, label: 'Screenshot 1 — Home', file: 'ipad-screenshot-1.png' },
+  { fn: drawScreen2, label: 'Screenshot 2 — Testing', file: 'ipad-screenshot-2.png' },
+  { fn: drawScreen3, label: 'Screenshot 3 — Results', file: 'ipad-screenshot-3.png' },
+];
+
+function makeCard(s, i) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  c.style.width = Math.round(W/4)+'px';
+  c.style.height = Math.round(H/4)+'px';
+  const ctx = c.getContext('2d');
+  s.fn(ctx);
+  const lbl = document.createElement('p');
+  lbl.textContent = s.label + ' · ' + W + '×' + H;
+  const btn = document.createElement('button');
+  btn.textContent = 'Download';
+  btn.onclick = () => {
+    const a = document.createElement('a');
+    a.download = s.file;
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  div.appendChild(c); div.appendChild(lbl); div.appendChild(btn);
+  document.getElementById('cards').appendChild(div);
+}
+
+// Load Sloan then render
+const font = new FontFace('Sloan', 'url(Sloan.otf)');
+font.load().then(f => {
+  document.fonts.add(f);
+  screens.forEach(makeCard);
+}).catch(() => screens.forEach(makeCard));
+</script>
+</body>
+</html>
