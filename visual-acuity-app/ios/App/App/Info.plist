@@ -19,33 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>That&apos;s a clean success. Now add the microphone permissions:
-
-```bash
-open ios/App/App/Info.plist
-```
-
-This opens in Xcode. You&apos;ll see a list of keys. Right-click any row → **Add Row**, then add these two entries:
-
-| Key | Type | Value |
-|---|---|---|
-| Privacy - Microphone Usage Description | String | Used for hands-free voice input during the vision test. |
-| Privacy - Speech Recognition Usage Description | String | Listens for spoken letters during the vision chart test. |
-
-Save with **Cmd+S**, then come back to Terminal and run:
-
-```bash
-git add ios/
-git commit -m &quot;Add iOS Capacitor project with microphone permissions&quot;
-git push origin main
-```
-
-Then open Xcode:
-
-```bash
-npx cap open ios
-```
-Used for hands-free voice input during vision test. </string>
+	<string>Used for hands-free voice input during the vision test.</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -53,34 +27,7 @@ Used for hands-free voice input during vision test. </string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>That&apos;s a clean success. Now add the microphone permissions:
-
-```bash
-open ios/App/App/Info.plist
-```
-
-This opens in Xcode. You&apos;ll see a list of keys. Right-click any row → **Add Row**, then add these two entries:
-
-| Key | Type | Value |
-|---|---|---|
-| Privacy - Microphone Usage Description | String | Used for hands-free voice input during the vision test. |
-| Privacy - Speech Recognition Usage Description | String | Listens for spoken letters during the vision chart test. |
-
-Save with **Cmd+S**, then come back to Terminal and run:
-
-```bash
-git add ios/
-git commit -m &quot;Add iOS Capacitor project with microphone permissions&quot;
-git push origin main
-```
-
-Then open Xcode:
-
-```bash
-npx cap open ios
-```
-
-Listens for spoken letters during the gision chart test. </string>
+	<string>Listens for spoken letters during the vision chart test.</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
