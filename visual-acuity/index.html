@@ -1249,7 +1249,7 @@
     }
     optotypes.style.fontSize = displayPx + 'px';
     // Set letter-spacing via JS so CSS !important doesn't block it
-    optotypes.style.letterSpacing = state.singleLetterMode ? '0' : '0.4em';
+    optotypes.style.letterSpacing = state.singleLetterMode ? '0.15em' : '0.4em';
     optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
     optotypes.textContent = state.singleLetterMode
       ? state.currentLetters.slice(0, state.singleSlotSize).join('')
