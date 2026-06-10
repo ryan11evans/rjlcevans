@@ -1878,71 +1878,119 @@
     const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
     if (!best) return;
 
-    const W = 680, H = 360, SC = 2;
+    const S = 1080, SC = 1;
     const canvas = document.createElement('canvas');
-    canvas.width = W * SC; canvas.height = H * SC;
+    canvas.width = S * SC; canvas.height = S * SC;
     const ctx = canvas.getContext('2d');
     ctx.scale(SC, SC);
 
-    // Background
-    ctx.fillStyle = '#F6F1EA';
-    ctx.fillRect(0, 0, W, H);
-    // Accent bar
-    ctx.fillStyle = '#8A3324';
-    ctx.fillRect(0, 0, 5, H);
-    // Header line
-    ctx.fillStyle = '#E0D8D0';
-    ctx.fillRect(32, 48, W - 64, 1);
+    // Dark background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, S, S);
 
-    // Date
-    ctx.fillStyle = '#999';
-    ctx.font = '13px system-ui, -apple-system, sans-serif';
-    ctx.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 32, 36);
+    // Radial gold glow top-center
+    const glow = ctx.createRadialGradient(S/2, 0, 0, S/2, 0, S * 0.75);
+    glow.addColorStop(0, 'rgba(212,160,23,0.18)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, S, S);
 
-    // Big VA
-    ctx.fillStyle = '#8A3324';
-    ctx.font = 'bold 68px Georgia, "Times New Roman", serif';
-    ctx.fillText(best.snellen, 32, 130);
+    // Subtle dot grid
+    ctx.fillStyle = 'rgba(255,255,255,0.045)';
+    for (let x = 22; x < S; x += 22)
+      for (let y = 22; y < S; y += 22) {
+        ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill();
+      }
 
-    ctx.fillStyle = '#555';
-    ctx.font = '14px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Best visual acuity · logMAR ' + best.logmar.toFixed(2), 32, 158);
+    // Faint big background "E"
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `bold 680px 'Fraunces', serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('E', S/2, S/2 + 40);
+    ctx.restore();
 
-    // Interpretation
-    const interp = SNELLEN_INTERP[best.snellen] || '';
-    ctx.fillStyle = '#333';
-    ctx.font = '13px system-ui, -apple-system, sans-serif';
-    ctx.fillText(interp, 32, 185);
+    // Top label
+    ctx.fillStyle = 'rgba(212,160,23,0.7)';
+    ctx.font = `500 28px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('VISUAL ACUITY SCORE', S/2, 110);
 
-    // Divider
-    ctx.fillStyle = '#E0D8D0';
-    ctx.fillRect(32, 205, 200, 1);
+    // Thin gold rule
+    ctx.strokeStyle = 'rgba(212,160,23,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.2, 130); ctx.lineTo(S*0.8, 130); ctx.stroke();
 
-    // OD / OS
-    ctx.fillStyle = '#777';
-    ctx.font = '12px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Right eye (OD)', 32, 230);
-    ctx.fillText('Left eye (OS)', 220, 230);
-    ctx.fillStyle = '#1A1714';
-    ctx.font = 'bold 22px Georgia, serif';
-    ctx.fillText(od ? od.snellen : '—', 32, 260);
-    ctx.fillText(os ? os.snellen : '—', 220, 260);
-    if (state.glassesOD && od) {
-      ctx.fillStyle = '#999'; ctx.font = '11px system-ui, sans-serif';
-      ctx.fillText('with correction', 32, 276);
+    // Big VA score
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `bold 200px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(best.snellen, S/2, 390);
+
+    // Best eye label
+    ctx.fillStyle = 'rgba(242,242,247,0.45)';
+    ctx.font = `22px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('best corrected visual acuity', S/2, 438);
+
+    // OD / OS row
+    const midX = S / 2;
+    // divider
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(midX, 510); ctx.lineTo(midX, 600); ctx.stroke();
+
+    const eyeLabel = (snellen, glasses, label) => snellen ? `${snellen}${glasses ? ' ✦' : ''}` : '—';
+
+    // OD
+    ctx.fillStyle = 'rgba(242,242,247,0.4)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText('RIGHT EYE', midX - 40, 530);
+    ctx.fillStyle = '#f2f2f7';
+    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
+    ctx.fillText(eyeLabel(od?.snellen, state.glassesOD), midX - 40, 600);
+
+    // OS
+    ctx.fillStyle = 'rgba(242,242,247,0.4)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('LEFT EYE', midX + 40, 530);
+    ctx.fillStyle = '#f2f2f7';
+    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
+    ctx.fillText(eyeLabel(os?.snellen, state.glassesOS), midX + 40, 600);
+
+    // Glasses footnote
+    if (state.glassesOD || state.glassesOS) {
+      ctx.fillStyle = 'rgba(242,242,247,0.3)';
+      ctx.font = `18px -apple-system, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('✦ with glasses or contacts', S/2, 648);
     }
-    if (state.glassesOS && os) {
-      ctx.fillStyle = '#999'; ctx.font = '11px system-ui, sans-serif';
-      ctx.fillText('with correction', 220, 276);
-    }
 
-    // Branding
-    ctx.fillStyle = '#8A3324';
-    ctx.font = 'italic 14px Georgia, "Times New Roman", serif';
-    ctx.fillText('Dr. Ryan Evans, OD', 32, 320);
-    ctx.fillStyle = '#bbb';
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.fillText('rjlcevans.com/visual-acuity  ·  Educational screening — not a diagnostic result', 32, 342);
+    // Bottom rule
+    ctx.strokeStyle = 'rgba(212,160,23,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.1, 700); ctx.lineTo(S*0.9, 700); ctx.stroke();
+
+    // Branding row
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `italic bold 32px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 762);
+
+    ctx.fillStyle = 'rgba(242,242,247,0.35)';
+    ctx.font = `22px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('rjlcevans.com/visual-acuity  ·  Available on the App Store', S/2, 806);
+
+    // Date bottom right
+    ctx.fillStyle = 'rgba(242,242,247,0.2)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), S/2, 870);
 
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'acuity-results.png', { type: 'image/png' });
