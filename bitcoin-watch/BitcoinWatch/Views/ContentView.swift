@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
     @State private var showCalculator = false
+    @State private var sessionOpenPrice: Double? = nil
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -25,7 +26,8 @@ struct ContentView: View {
                     VStack(spacing: 0) {
                         PriceHeaderView(price: service.currentPrice,
                                        isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h)
+                                       change24h: statsService.stats?.change24h,
+                                       sessionOpenPrice: sessionOpenPrice)
 
                         VStack(spacing: 12) {
                             BTCChartView(statsService: statsService)
@@ -43,6 +45,11 @@ struct ContentView: View {
                 .refreshable {
                     await service.fetchPrice()
                     await statsService.fetch()
+                }
+            }
+            .onChange(of: service.currentPrice?.usd) { _, newUSD in
+                if sessionOpenPrice == nil, let usd = newUSD {
+                    sessionOpenPrice = usd
                 }
             }
             .navigationTitle("Bitcoin")
@@ -117,11 +124,18 @@ struct PriceHeaderView: View {
     let price: BitcoinPrice?
     let isLoading: Bool
     let change24h: Double?
+    var sessionOpenPrice: Double? = nil
 
     @State private var flashColor: Color? = nil
 
     private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
+
+    private var sessionDelta: (dollars: Double, pct: Double)? {
+        guard let open = sessionOpenPrice, let current = price?.usd, open > 0,
+              abs(current - open) / open > 0.0001 else { return nil }
+        return (current - open, (current - open) / open * 100)
+    }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -157,6 +171,22 @@ struct PriceHeaderView: View {
                     ChangeBadge(change: change)
                         .padding(.bottom, 6)
                 }
+            }
+
+            if let delta = sessionDelta {
+                let isUp = delta.dollars >= 0
+                let color = isUp ? upColor : downColor
+                HStack(spacing: 4) {
+                    Image(systemName: isUp ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 10, weight: .bold))
+                    Text(String(format: "%@$%@ (%+.2f%%) this session",
+                                isUp ? "+" : "-",
+                                abs(Int(delta.dollars)).formatted(),
+                                delta.pct))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(color)
+                .padding(.top, 2)
             }
 
             if isLoading {
