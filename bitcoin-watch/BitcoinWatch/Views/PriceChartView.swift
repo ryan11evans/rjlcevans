@@ -6,9 +6,9 @@ struct BitcoinInfoView: View {
     var fearGreed: StatsService.FearGreedData? = nil
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 10) {
             BTCOrbitLogo()
-                .frame(width: 160, height: 160)
+                .frame(width: 100, height: 100)
 
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
@@ -31,56 +31,51 @@ struct BitcoinInfoView: View {
                              subtitle: nil,
                              color: .cyan)
                 }
-                StatTile(label: "Next Halving",
-                         value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
-                         subtitle: stats.map { halvingSubtitle($0.blockHeight) },
-                         color: .purple)
-                if let fg = fearGreed {
-                    FearGreedTile(data: fg)
+                HStack(spacing: 10) {
+                    StatTile(label: "Next Halving",
+                             value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
+                             subtitle: stats.map { halvingSubtitle($0.blockHeight) },
+                             color: .purple)
+                    StatTile(label: "Fear & Greed",
+                             value: fearGreed.map { "\($0.value)" } ?? "—",
+                             subtitle: fearGreed?.classification,
+                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray)
                 }
             }
             .padding(.horizontal)
         }
-        .padding(.top, 8)
+        .padding(.top, 4)
     }
 
-    // Clamp against the live Coinbase price so the band always contains the current reading
     private func high24h(_ s: BitcoinStats) -> Double { max(s.high24h, currentPrice ?? s.high24h) }
     private func low24h(_ s: BitcoinStats) -> Double  { min(s.low24h,  currentPrice ?? s.low24h) }
 
-    private func shortPrice(_ v: Double) -> String {
-        "$\(Int(v).formatted())"
-    }
+    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
 
     private func athDateString(_ d: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "MMM d, yyyy"
-        return f.string(from: d)
+        let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"; return f.string(from: d)
     }
 
-    private func halvingCountdown(_ blockHeight: Int) -> String {
-        let halvingInterval = 210_000
-        let nextHalvingBlock = ((blockHeight / halvingInterval) + 1) * halvingInterval
-        let blocksRemaining = nextHalvingBlock - blockHeight
-        let minutesPerBlock = 10.0
-        let minutesRemaining = Double(blocksRemaining) * minutesPerBlock
-        let daysRemaining = minutesRemaining / (60 * 24)
-        if daysRemaining < 1 {
-            return "< 1 day"
-        } else if daysRemaining < 365 {
-            return "~\(Int(daysRemaining)) days"
-        } else {
-            let years = daysRemaining / 365.25
-            return String(format: "~%.1f years", years)
+    private func fearGreedColor(_ value: Int) -> Color {
+        switch value {
+        case 0..<25:  return Color(red: 1, green: 0.27, blue: 0.23)
+        case 25..<50: return .orange
+        case 50..<75: return Color(red: 0.19, green: 0.82, blue: 0.35)
+        default:      return Color(red: 1.0, green: 0.84, blue: 0.0)
         }
     }
 
+    private func halvingCountdown(_ blockHeight: Int) -> String {
+        let next = ((blockHeight / 210_000) + 1) * 210_000
+        let days = Double(next - blockHeight) * 10 / (60 * 24)
+        if days < 1 { return "< 1 day" }
+        if days < 365 { return "~\(Int(days)) days" }
+        return String(format: "~%.1f yrs", days / 365.25)
+    }
+
     private func halvingSubtitle(_ blockHeight: Int) -> String {
-        let halvingInterval = 210_000
-        let halvingNumber = (blockHeight / halvingInterval) + 1
-        let nextHalvingBlock = halvingNumber * halvingInterval
-        let blocksRemaining = nextHalvingBlock - blockHeight
-        return "Block #\(nextHalvingBlock.formatted()) · \(blocksRemaining.formatted()) to go"
+        let next = ((blockHeight / 210_000) + 1) * 210_000
+        return "Block #\(next.formatted()) · \((next - blockHeight).formatted()) left"
     }
 }
 
@@ -107,7 +102,7 @@ private struct BTCOrbitLogo: View {
                 .overlay(Circle().strokeBorder(Color(red: 0.79, green: 0.43, blue: 0.02).opacity(0.6), lineWidth: 2))
             // ₿ as text so it sits cleanly on top of the orange coin
             Text("₿")
-                .font(.system(size: 72, weight: .bold))
+                .font(.system(size: 45, weight: .bold))
                 .foregroundStyle(Color(red: 0.10, green: 0.07, blue: 0.02))
             // Orbit arrows rotate around the outside
             OrbitArrows()

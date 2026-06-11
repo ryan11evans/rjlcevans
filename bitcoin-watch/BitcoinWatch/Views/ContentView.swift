@@ -30,16 +30,16 @@ struct ContentView: View {
                                        change24h: statsService.stats?.change24h,
                                        sessionOpenPrice: sessionOpenPrice)
 
-                        VStack(spacing: 12) {
+                        VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
                             BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd, fearGreed: statsService.fearGreed)
                         }
                         .padding(.horizontal)
 
                         RefreshStatusView(price: service.currentPrice, error: service.error)
-                            .padding(.top, 16)
+                            .padding(.top, 8)
 
-                        Spacer(minLength: 32)
+                        Spacer(minLength: 4)
                     }
                 }
                 .scrollIndicators(.hidden)
