@@ -67,24 +67,34 @@ struct SmallWidgetView: View {
         return c >= 0 ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23)
     }
     var body: some View {
-        VStack(spacing: 5) {
-            Image(systemName: "bitcoinsign.circle.fill")
-                .foregroundStyle(.orange)
-                .font(.system(size: 32))
-            Text(entry.price.shortFormatted)
-                .font(.system(size: 30, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-            if let change = entry.change24h {
-                Text(String(format: "%+.1f%%", change))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(changeColor)
+        ZStack(alignment: .bottomTrailing) {
+            VStack(spacing: 5) {
+                Image(systemName: "bitcoinsign.circle.fill")
+                    .foregroundStyle(.orange)
+                    .font(.system(size: 32))
+                Text(entry.price.shortFormatted)
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                if let change = entry.change24h {
+                    Text(String(format: "%+.1f%%", change))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(changeColor)
+                }
+                Text(entry.price.timestamp, style: .relative)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
             }
-            Text(entry.price.timestamp, style: .relative)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            Button(intent: RefreshBTCIntent()) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(.background, for: .widget)
     }
 }
@@ -119,6 +129,12 @@ struct MediumWidgetView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Button(intent: RefreshBTCIntent()) {
+                Image(systemName: "arrow.clockwise.circle.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.orange.opacity(0.7))
+            }
+            .buttonStyle(.plain)
         }
         .padding()
         .containerBackground(.background, for: .widget)

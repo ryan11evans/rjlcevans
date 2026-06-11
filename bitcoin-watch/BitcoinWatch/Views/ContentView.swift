@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
     @State private var showCalculator = false
+    @State private var showSettings = false
     @State private var sessionOpenPrice: Double? = nil
     @Environment(\.requestReview) private var requestReview
 
@@ -69,11 +70,20 @@ struct ContentView: View {
             .sheet(isPresented: $showCalculator) {
                 SatoshiConverterView(btcPrice: service.currentPrice?.usd ?? 0)
             }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button { showAlertSheet = true } label: {
-                        Image(systemName: hasActiveAlert ? "bell.fill" : "bell")
-                            .foregroundStyle(hasActiveAlert ? .orange : .secondary)
+                    HStack(spacing: 16) {
+                        Button { showAlertSheet = true } label: {
+                            Image(systemName: hasActiveAlert ? "bell.fill" : "bell")
+                                .foregroundStyle(hasActiveAlert ? .orange : .secondary)
+                        }
+                        Button { showSettings = true } label: {
+                            Image(systemName: "gearshape")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {

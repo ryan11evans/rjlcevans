@@ -7,6 +7,7 @@ struct BitcoinWatchApp: App {
 
     init() {
         BackgroundRefresh.register()
+        BTCShortcutsProvider.updateAppShortcutParameters()
     }
 
     var body: some Scene {
