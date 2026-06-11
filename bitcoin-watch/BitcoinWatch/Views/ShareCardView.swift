@@ -124,11 +124,11 @@ struct ShareCardView: View {
             Chart {
                 ForEach(Array(chartPrices.enumerated()), id: \.offset) { i, p in
                     LineMark(x: .value("T", i), y: .value("P", p))
-                        .foregroundStyle(upColor)
+                        .foregroundStyle(changeColor)
                         .lineStyle(StrokeStyle(lineWidth: 1.8))
                     AreaMark(x: .value("T", i), y: .value("P", p))
                         .foregroundStyle(LinearGradient(
-                            colors: [upColor.opacity(0.28), .clear],
+                            colors: [changeColor.opacity(0.28), .clear],
                             startPoint: .top, endPoint: .bottom
                         ))
                 }
@@ -137,7 +137,7 @@ struct ShareCardView: View {
                         x: .value("T", lastIdx),
                         y: .value("P", chartPrices[lastIdx])
                     )
-                    .foregroundStyle(upColor)
+                    .foregroundStyle(changeColor)
                     .symbolSize(40)
                 }
             }
