@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var statsService = StatsService.shared
     @State private var showAlertSheet = false
     @State private var hasActiveAlert = AlertService.shared.alertEnabled
+    @State private var showCalculator = false
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -58,6 +59,9 @@ struct ContentView: View {
             .sheet(isPresented: $showAlertSheet) {
                 PriceAlertView(hasActiveAlert: $hasActiveAlert)
             }
+            .sheet(isPresented: $showCalculator) {
+                SatoshiConverterView(btcPrice: service.currentPrice?.usd ?? 0)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { showAlertSheet = true } label: {
@@ -66,12 +70,17 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        renderAndShare()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
+                    HStack(spacing: 16) {
+                        Button { showCalculator = true } label: {
+                            Image(systemName: "plusminus")
+                        }
+                        Button {
+                            renderAndShare()
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .disabled(service.currentPrice == nil)
                     }
-                    .disabled(service.currentPrice == nil)
                 }
             }
         }

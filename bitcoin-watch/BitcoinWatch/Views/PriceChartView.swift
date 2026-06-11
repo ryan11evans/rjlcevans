@@ -30,6 +30,10 @@ struct BitcoinInfoView: View {
                              subtitle: nil,
                              color: .cyan)
                 }
+                StatTile(label: "Next Halving",
+                         value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
+                         subtitle: stats.map { halvingSubtitle($0.blockHeight) },
+                         color: .purple)
             }
             .padding(.horizontal)
         }
@@ -48,6 +52,31 @@ struct BitcoinInfoView: View {
         let f = DateFormatter()
         f.dateFormat = "MMM d, yyyy"
         return f.string(from: d)
+    }
+
+    private func halvingCountdown(_ blockHeight: Int) -> String {
+        let halvingInterval = 210_000
+        let nextHalvingBlock = ((blockHeight / halvingInterval) + 1) * halvingInterval
+        let blocksRemaining = nextHalvingBlock - blockHeight
+        let minutesPerBlock = 10.0
+        let minutesRemaining = Double(blocksRemaining) * minutesPerBlock
+        let daysRemaining = minutesRemaining / (60 * 24)
+        if daysRemaining < 1 {
+            return "< 1 day"
+        } else if daysRemaining < 365 {
+            return "~\(Int(daysRemaining)) days"
+        } else {
+            let years = daysRemaining / 365.25
+            return String(format: "~%.1f years", years)
+        }
+    }
+
+    private func halvingSubtitle(_ blockHeight: Int) -> String {
+        let halvingInterval = 210_000
+        let halvingNumber = (blockHeight / halvingInterval) + 1
+        let nextHalvingBlock = halvingNumber * halvingInterval
+        let blocksRemaining = nextHalvingBlock - blockHeight
+        return "Block #\(nextHalvingBlock.formatted()) · \(blocksRemaining.formatted()) to go"
     }
 }
 
