@@ -43,5 +43,37 @@
     <true/>
     <key>UILaunchScreen</key>
     <dict/>
+    <key>CFBundleIcons</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
+        </dict>
+        <key>CFBundleAlternateIcons</key>
+        <dict>
+            <key>AppIcon-Gold</key>
+            <dict>
+                <key>CFBundleIconName</key>
+                <string>AppIcon-Gold</string>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+            <key>AppIcon-Midnight</key>
+            <dict>
+                <key>CFBundleIconName</key>
+                <string>AppIcon-Midnight</string>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+            <key>AppIcon-Silver</key>
+            <dict>
+                <key>CFBundleIconName</key>
+                <string>AppIcon-Silver</string>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+        </dict>
+    </dict>
 </dict>
 </plist>
