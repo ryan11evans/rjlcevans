@@ -241,7 +241,7 @@ private class BTCShareItem: NSObject, UIActivityItemSource {
     func activityViewControllerPlaceholderItem(_ vc: UIActivityViewController) -> Any {
         metadata.url ?? URL(string: "https://rjlcevans.com/tapbtc")!
     }
-    func activityViewController(_ vc: UIActivityViewController, itemForActivityType type: UIActivity.ActivityType?) -> Any? { nil }
+    func activityViewController(_ vc: UIActivityViewController, itemForActivityType type: UIActivity.ActivityType?) -> Any? { metadata.url }
     func activityViewControllerLinkMetadata(_ vc: UIActivityViewController) -> LPLinkMetadata? { metadata }
 }
 
