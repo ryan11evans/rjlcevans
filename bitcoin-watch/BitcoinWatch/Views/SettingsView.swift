@@ -121,28 +121,19 @@ private struct IconTile: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // Rendered preview — shows the color theme even before PNG assets exist
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(LinearGradient(colors: icon.backgroundColors,
-                                        startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 64, height: 64)
-                Circle()
-                    .fill(icon.accentColor.opacity(0.2))
-                    .blur(radius: 10)
-                    .frame(width: 50, height: 50)
-                Text("₿")
-                    .font(.system(size: 30, weight: .heavy))
-                    .foregroundStyle(icon.accentColor)
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(
-                        isSelected ? Color.orange : Color.white.opacity(0.08),
-                        lineWidth: isSelected ? 2.5 : 1
-                    )
-            )
-            .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+            Image(icon.rawValue)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(
+                            isSelected ? Color.orange : Color.white.opacity(0.08),
+                            lineWidth: isSelected ? 2.5 : 1
+                        )
+                )
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
                 .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
