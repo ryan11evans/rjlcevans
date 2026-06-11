@@ -41,6 +41,8 @@ targets:
     sources:
       - path: BitcoinWatch
       - path: Shared
+    resources:
+      - path: BitcoinWatch/AlternateIcons
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch

@@ -54,22 +54,28 @@
         <dict>
             <key>AppIcon-Gold</key>
             <dict>
-                <key>CFBundleIconName</key>
-                <string>AppIcon-Gold</string>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon-Gold</string>
+                </array>
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
             <key>AppIcon-Midnight</key>
             <dict>
-                <key>CFBundleIconName</key>
-                <string>AppIcon-Midnight</string>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon-Midnight</string>
+                </array>
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
             <key>AppIcon-Silver</key>
             <dict>
-                <key>CFBundleIconName</key>
-                <string>AppIcon-Silver</string>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon-Silver</string>
+                </array>
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
