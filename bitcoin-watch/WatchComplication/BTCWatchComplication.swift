@@ -144,8 +144,10 @@ struct InlineView: View {
 struct CornerView: View {
     let entry: WatchBTCEntry
     var body: some View {
-        Text(entry.price?.shortFormatted ?? "---")
+        Text(entry.price?.circularFormatted ?? "---")
             .font(.system(size: 13, weight: .bold, design: .rounded))
+            .minimumScaleFactor(0.6)
+            .lineLimit(1)
             .widgetLabel {
                 if let price = entry.price {
                     Text(price.timestamp, style: .relative)
