@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import LinkPresentation
 
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
@@ -107,9 +108,7 @@ struct ContentView: View {
     private func renderAndShare() {
         guard let price = service.currentPrice else { return }
         let stats = statsService.stats
-        let liveUSD = price.usd
         Task { @MainActor in
-            // Yield one run loop pass — prevents blank share sheet on first tap
             await Task.yield()
             let card = ShareCardView(
                 price: price,
@@ -122,9 +121,16 @@ struct ContentView: View {
             guard let image = renderer.uiImage,
                   let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let root = scene.windows.first?.rootViewController else { return }
+
+            let metadata = LPLinkMetadata()
+            metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
+            metadata.title = "Bitcoin is \(price.formatted)"
+            metadata.imageProvider = NSItemProvider(object: image)
+            let shareItem = BTCShareItem(metadata: metadata)
+
             var top = root
             while let next = top.presentedViewController { top = next }
-            let vc = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+            let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
             top.present(vc, animated: true)
         }
     }
@@ -226,6 +232,17 @@ struct ChangeBadge: View {
                           : Color(red: 1, green: 0.27, blue: 0.23).opacity(0.15))
             )
     }
+}
+
+private class BTCShareItem: NSObject, UIActivityItemSource {
+    let metadata: LPLinkMetadata
+    init(metadata: LPLinkMetadata) { self.metadata = metadata }
+
+    func activityViewControllerPlaceholderItem(_ vc: UIActivityViewController) -> Any {
+        metadata.url ?? URL(string: "https://rjlcevans.com/tapbtc")!
+    }
+    func activityViewController(_ vc: UIActivityViewController, itemForActivityType type: UIActivity.ActivityType?) -> Any? { nil }
+    func activityViewControllerLinkMetadata(_ vc: UIActivityViewController) -> LPLinkMetadata? { metadata }
 }
 
 struct RefreshStatusView: View {
