@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TapBTC – Live Bitcoin Price</title>
-<meta name="description" content="Live Bitcoin price, halving countdown, Fear & Greed Index, and price alerts. On the App Store.">
-<meta property="og:title" content="TapBTC – Live Bitcoin Price">
-<meta property="og:description" content="Track Bitcoin live with halving countdown, Fear & Greed, and price alerts.">
+<title>TapBTC – Bitcoin on Your Wrist</title>
+<meta name="description" content="The fastest-updating Bitcoin complication for Apple Watch. Live price, alerts, halving countdown, and Fear & Greed Index.">
+<meta property="og:title" content="TapBTC – Bitcoin on Your Wrist">
+<meta property="og:description" content="The fastest-updating Bitcoin complication for Apple Watch.">
 <meta property="og:image" content="https://rjlcevans.com/tapbtc/og-image.png">
 <meta property="og:url" content="https://rjlcevans.com/tapbtc">
 <meta name="twitter:card" content="summary_large_image">
@@ -50,9 +50,85 @@
     color: rgba(255,255,255,0.55);
     line-height: 1.5;
     max-width: 320px;
-    margin: 0 auto 28px;
+    margin: 0 auto 24px;
   }
 
+  /* ── Watch hero card ── */
+  .watch-hero {
+    background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 20px 24px;
+    max-width: 320px;
+    width: 100%;
+    margin: 0 auto 28px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .watch-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .watch-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .watch-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f5a623;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 20px;
+    padding: 3px 9px;
+  }
+  .watch-hero h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .watch-hero p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+  }
+  .watch-stats {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .watch-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .watch-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f5a623;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .watch-stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Buttons ── */
   .buttons {
     display: flex;
     flex-direction: column;
@@ -81,26 +157,28 @@
   }
   .open-btn:hover { color: rgba(255,255,255,0.55); }
 
+  /* ── Feature tiles ── */
   .features {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     margin: 0 auto 40px;
     max-width: 320px;
+    width: 100%;
     text-align: left;
   }
   .feature {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
-    padding: 12px 16px;
+    padding: 11px 14px;
   }
-  .feature-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
-  .feature-text { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.4; }
-  .feature-text strong { color: #fff; font-weight: 600; display: block; }
+  .feature-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+  .feature-text { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .feature-text strong { color: rgba(255,255,255,0.9); font-weight: 600; display: block; }
 
   footer { color: rgba(255,255,255,0.25); font-size: 13px; }
   footer a { color: rgba(255,255,255,0.35); text-decoration: none; }
@@ -111,7 +189,31 @@
 
 <div class="coin">₿</div>
 <h1>Tap<span>BTC</span></h1>
-<p class="tagline">Live Bitcoin price, halving countdown, Fear & Greed Index, and price alerts — on iPhone and Apple Watch.</p>
+<p class="tagline">Bitcoin price on your iPhone and Apple Watch — always fresh, no app refresh needed.</p>
+
+<!-- Watch hero -->
+<div class="watch-hero">
+  <div class="watch-hero-top">
+    <span>⌚</span>
+    <span class="watch-badge">Star Feature</span>
+  </div>
+  <h2>The fastest Bitcoin complication on Apple Watch</h2>
+  <p>TapBTC pushes live prices directly to your watch face complications — so the second you raise your wrist, the price is already there. No waiting. No stale numbers.</p>
+  <div class="watch-stats">
+    <div class="watch-stat">
+      <div class="watch-stat-value">⚡</div>
+      <div class="watch-stat-label">Fast updates</div>
+    </div>
+    <div class="watch-stat">
+      <div class="watch-stat-value">🔄</div>
+      <div class="watch-stat-label">Background sync</div>
+    </div>
+    <div class="watch-stat">
+      <div class="watch-stat-value">📲</div>
+      <div class="watch-stat-label">No app open needed</div>
+    </div>
+  </div>
+</div>
 
 <div class="buttons">
   <a class="cta" href="https://apps.apple.com/us/app/tapbtc/id6774023419">
@@ -133,21 +235,21 @@
     <div class="feature-icon">📈</div>
     <div class="feature-text">
       <strong>Live Price + 7-Day Chart</strong>
-      Refreshes automatically with flash animation on price moves
+      Flash animation on every price move
     </div>
   </div>
   <div class="feature">
     <div class="feature-icon">🔔</div>
     <div class="feature-text">
       <strong>Price Alerts</strong>
-      Set multiple alerts with custom labels and repeat mode
+      Multiple alerts, custom labels, repeat mode
     </div>
   </div>
   <div class="feature">
     <div class="feature-icon">⏳</div>
     <div class="feature-text">
       <strong>Halving Countdown</strong>
-      Know exactly how many blocks until the next halving
+      Blocks remaining until the next halving
     </div>
   </div>
   <div class="feature">
@@ -155,13 +257,6 @@
     <div class="feature-text">
       <strong>Fear & Greed Index</strong>
       Live market sentiment from alternative.me
-    </div>
-  </div>
-  <div class="feature">
-    <div class="feature-icon">⌚</div>
-    <div class="feature-text">
-      <strong>Apple Watch + Complications</strong>
-      Price on your wrist, always up to date
     </div>
   </div>
 </div>
