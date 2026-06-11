@@ -1,92 +1,275 @@
 import SwiftUI
 
-struct PriceAlertView: View {
-    @Environment(\.dismiss) var dismiss
-    @State private var targetText: String = ""
-    @State private var alertAbove: Bool = true
-    @State private var permissionDenied = false
-    @Binding var hasActiveAlert: Bool
+// MARK: - Alert List
 
-    private let alert = AlertService.shared
+struct PriceAlertView: View {
+    let currentBTCPrice: Double
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var service = AlertService.shared
+    @State private var showAdd = false
+    @State private var permissionDenied = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(red: 0.07, green: 0.06, blue: 0.06).ignoresSafeArea()
 
-                VStack(spacing: 28) {
-                    // Direction picker
-                    HStack(spacing: 0) {
-                        dirButton(label: "Goes Above", value: true)
-                        dirButton(label: "Goes Below", value: false)
-                    }
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.06)))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
-
-                    // Price input
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("$")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.secondary)
-                        TextField("100,000", text: $targetText)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .keyboardType(.numberPad)
-                            .foregroundStyle(.primary)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
-                    .padding(.horizontal)
-
-                    if permissionDenied {
-                        Text("Enable notifications in Settings → TapBTC to use price alerts.")
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-
-                    // Active alert info
-                    if alert.alertEnabled, let t = alert.targetPrice {
-                        let dir = alert.alertAbove ? "above" : "below"
-                        let fmt = BitcoinPrice(usd: t, timestamp: Date()).formatted
-                        HStack {
-                            Image(systemName: "bell.fill").foregroundStyle(.orange)
-                            Text("Active: notify when \(dir) \(fmt)")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Button("Clear") {
-                                alert.alertEnabled = false
-                                alert.targetPrice = nil
-                                hasActiveAlert = false
-                                dismiss()
-                            }
-                            .font(.footnote)
-                            .foregroundStyle(.red)
+                if service.alerts.isEmpty {
+                    emptyState
+                } else {
+                    List {
+                        ForEach(service.alerts) { alert in
+                            AlertRow(alert: alert)
+                                .listRowBackground(Color.white.opacity(0.05))
+                                .listRowSeparatorTint(.white.opacity(0.07))
                         }
-                        .padding(.horizontal)
+                        .onDelete { service.remove(at: $0) }
                     }
-
-                    Button {
-                        Task { await saveAlert() }
-                    } label: {
-                        Text("Set Alert")
-                            .font(.system(size: 16, weight: .bold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(RoundedRectangle(cornerRadius: 14).fill(targetPrice == nil ? Color.orange.opacity(0.4) : .orange))
-                            .foregroundStyle(.black)
-                    }
-                    .disabled(targetPrice == nil)
-                    .padding(.horizontal)
-
-                    Spacer()
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
-                .padding(.top, 28)
             }
-            .navigationTitle("Price Alert")
+            .navigationTitle("Price Alerts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task {
+                            if await service.requestPermission() { showAdd = true }
+                            else { permissionDenied = true }
+                        }
+                    } label: { Image(systemName: "plus") }
+                }
+            }
+            .sheet(isPresented: $showAdd) {
+                AddAlertView(currentBTCPrice: currentBTCPrice)
+            }
+            .alert("Notifications Disabled", isPresented: $permissionDenied) {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Enable notifications in Settings → TapBTC to receive price alerts.")
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "bell.slash")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+            Text("No Alerts Set")
+                .font(.title3.bold())
+            Text("Tap + to add a price target.\nAlerts fire when BTC crosses your threshold.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+    }
+}
+
+// MARK: - Alert Row
+
+private struct AlertRow: View {
+    let alert: PriceAlert
+    @ObservedObject private var service = AlertService.shared
+
+    private var color: Color {
+        alert.direction == .above
+            ? Color(red: 0.19, green: 0.82, blue: 0.35)
+            : Color(red: 1.00, green: 0.27, blue: 0.23)
+    }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle().fill(color.opacity(0.15)).frame(width: 40, height: 40)
+                Image(systemName: alert.direction == .above ? "arrow.up" : "arrow.down")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(color)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(BitcoinPrice(usd: alert.targetPrice, timestamp: .now).formatted)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(alert.isEnabled ? .white : .secondary)
+                    Text(alert.direction == .above ? "or higher" : "or lower")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+                HStack(spacing: 6) {
+                    if !alert.label.isEmpty {
+                        Text(alert.label)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if alert.isRepeating {
+                        Label("Repeat", systemImage: "repeat")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Capsule().fill(Color.orange.opacity(0.15)))
+                    }
+                    if let fired = alert.lastFiredAt {
+                        Text("Fired \(fired, style: .relative) ago")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            Toggle("", isOn: Binding(
+                get: { alert.isEnabled },
+                set: { _ in service.toggle(id: alert.id) }
+            ))
+            .labelsHidden()
+            .tint(.orange)
+        }
+        .padding(.vertical, 4)
+        .opacity(alert.isEnabled ? 1 : 0.45)
+        .animation(.easeInOut(duration: 0.2), value: alert.isEnabled)
+    }
+}
+
+// MARK: - Add Alert Sheet
+
+struct AddAlertView: View {
+    let currentBTCPrice: Double
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var service = AlertService.shared
+
+    @State private var direction: PriceAlert.Direction = .above
+    @State private var targetText = ""
+    @State private var labelText = ""
+    @State private var isRepeating = false
+    @FocusState private var priceFocused: Bool
+
+    private var targetPrice: Double? {
+        Double(targetText.replacingOccurrences(of: ",", with: ""))
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(red: 0.07, green: 0.06, blue: 0.06).ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 22) {
+                        // Direction
+                        field("Direction") {
+                            HStack(spacing: 0) {
+                                dirButton("Above  ↑", value: .above)
+                                dirButton("Below  ↓", value: .below)
+                            }
+                            .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.06)))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+
+                        // Target price
+                        field("Target Price") {
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text("$")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                TextField("0", text: $targetText)
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .keyboardType(.numberPad)
+                                    .focused($priceFocused)
+                                    .foregroundStyle(.white)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 14)
+                            .background(RoundedRectangle(cornerRadius: 14)
+                                .fill(.white.opacity(0.06))
+                                .overlay(RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(priceFocused ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1)))
+                            .animation(.easeInOut(duration: 0.15), value: priceFocused)
+                        }
+
+                        // Quick suggestions
+                        if currentBTCPrice > 0 {
+                            field("Quick Add") {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(suggestions, id: \.label) { s in
+                                            Button {
+                                                targetText = "\(Int(s.price))"
+                                                priceFocused = false
+                                            } label: {
+                                                VStack(spacing: 2) {
+                                                    Text(s.label)
+                                                        .font(.system(size: 13, weight: .semibold))
+                                                    Text("$\(Int(s.price).formatted())")
+                                                        .font(.system(size: 11))
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                .padding(.horizontal, 14).padding(.vertical, 9)
+                                                .background(RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.08)))
+                                                .foregroundStyle(.white)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Label
+                        field("Label  (optional)") {
+                            TextField("e.g. Take profit, Buy the dip", text: $labelText)
+                                .font(.system(size: 16))
+                                .padding(.horizontal, 16).padding(.vertical, 14)
+                                .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
+                                .foregroundStyle(.white)
+                        }
+
+                        // Repeat
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Repeat")
+                                    .font(.system(size: 16, weight: .medium))
+                                Text("Re-arm after each trigger · 1-hour cooldown")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $isRepeating).labelsHidden().tint(.orange)
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 14)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
+
+                        // Add button
+                        Button {
+                            guard let price = targetPrice else { return }
+                            service.add(PriceAlert(label: labelText, targetPrice: price,
+                                                   direction: direction, isRepeating: isRepeating))
+                            dismiss()
+                        } label: {
+                            Text("Add Alert")
+                                .font(.system(size: 16, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 15)
+                                .background(RoundedRectangle(cornerRadius: 14)
+                                    .fill(targetPrice == nil ? Color.orange.opacity(0.4) : .orange))
+                                .foregroundStyle(.black)
+                        }
+                        .disabled(targetPrice == nil)
+                    }
+                    .padding(20)
+                }
+            }
+            .navigationTitle("New Alert")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
@@ -94,42 +277,42 @@ struct PriceAlertView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .onAppear {
-                if let existing = alert.targetPrice {
-                    targetText = String(Int(existing))
-                    alertAbove = alert.alertAbove
-                }
-            }
+            .onAppear { priceFocused = true }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    @ViewBuilder
+    private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+            content()
         }
     }
 
     @ViewBuilder
-    private func dirButton(label: String, value: Bool) -> some View {
-        Button {
-            alertAbove = value
-        } label: {
-            Text(label)
+    private func dirButton(_ title: String, value: PriceAlert.Direction) -> some View {
+        Button { direction = value } label: {
+            Text(title)
                 .font(.system(size: 14, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
-                .background(alertAbove == value ? Color.orange : Color.clear)
-                .foregroundStyle(alertAbove == value ? .black : .secondary)
+                .background(direction == value ? Color.orange : Color.clear)
+                .foregroundStyle(direction == value ? .black : .secondary)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .animation(.easeInOut(duration: 0.15), value: direction)
     }
 
-    private var targetPrice: Double? {
-        Double(targetText.replacingOccurrences(of: ",", with: ""))
-    }
-
-    private func saveAlert() async {
-        guard let price = targetPrice else { return }
-        let granted = await alert.requestPermission()
-        guard granted else { permissionDenied = true; return }
-        alert.targetPrice = price
-        alert.alertAbove = alertAbove
-        alert.alertEnabled = true
-        hasActiveAlert = true
-        dismiss()
+    // Rounded to nearest $1K for clean chips
+    private var suggestions: [(label: String, price: Double)] {
+        let p = currentBTCPrice
+        return [
+            ("+5%",  p * 1.05), ("+10%", p * 1.10), ("+20%", p * 1.20),
+            ("-5%",  p * 0.95), ("-10%", p * 0.90), ("-20%", p * 0.80),
+        ].map { (label: $0.0, price: Double(Int($0.1 / 1000) * 1000)) }
     }
 }

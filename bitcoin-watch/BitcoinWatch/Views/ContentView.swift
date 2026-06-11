@@ -4,8 +4,8 @@ import StoreKit
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
     @StateObject private var statsService = StatsService.shared
+    @ObservedObject private var alertService = AlertService.shared
     @State private var showAlertSheet = false
-    @State private var hasActiveAlert = AlertService.shared.alertEnabled
     @State private var showCalculator = false
     @State private var showSettings = false
     @State private var sessionOpenPrice: Double? = nil
@@ -65,7 +65,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showAlertSheet) {
-                PriceAlertView(hasActiveAlert: $hasActiveAlert)
+                PriceAlertView(currentBTCPrice: service.currentPrice?.usd ?? 0)
             }
             .sheet(isPresented: $showCalculator) {
                 SatoshiConverterView(btcPrice: service.currentPrice?.usd ?? 0)
@@ -77,8 +77,8 @@ struct ContentView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 16) {
                         Button { showAlertSheet = true } label: {
-                            Image(systemName: hasActiveAlert ? "bell.fill" : "bell")
-                                .foregroundStyle(hasActiveAlert ? .orange : .secondary)
+                            Image(systemName: alertService.alertEnabled ? "bell.fill" : "bell")
+                                .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
                         }
                         Button { showSettings = true } label: {
                             Image(systemName: "gearshape")
