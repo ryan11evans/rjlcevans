@@ -77,20 +77,18 @@
     .score-row {
       display: flex;
       align-items: center;
-      padding: 14px 20px;
-      gap: 14px;
+      padding: 13px 20px;
+      gap: 12px;
       border-bottom: 1px solid var(--divider);
     }
     .score-row:last-child { border-bottom: none; }
 
-    .score-row-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
+    .score-row-logo {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
       flex-shrink: 0;
     }
-    .dot-dodgers  { background: #005A9C; }
-    .dot-lakers   { background: #552583; }
-    .dot-chargers { background: #0080C6; }
 
     .score-row-team {
       flex: 1;
@@ -159,15 +157,6 @@
       50%       { opacity: 0.5; }
     }
 
-    /* Offseason row variant */
-    .score-row-status {
-      font-size: 0.82rem;
-      color: var(--muted);
-      font-style: italic;
-      flex-shrink: 0;
-      text-align: right;
-    }
-
     /* ===== Dark mode ===== */
     body.night {
       --bg: #111827; --card-bg: #1e2533; --text: #f1f5f9;
@@ -185,18 +174,18 @@
 <p class="preview-label">Single-card widget preview</p>
 <button class="toggle-btn" onclick="document.body.classList.toggle('night')">Toggle dark mode</button>
 
-<!-- ===== STATE A: Normal — Dodgers had a game, others offseason ===== -->
+<!-- ===== STATE A: Dodgers played, Lakers + Chargers offseason ===== -->
 <div>
   <p class="preview-label" style="margin-bottom:10px;">State A — Dodgers played, others offseason</p>
   <section class="scores-widget">
     <div class="scores-card">
       <div class="scores-card-header">
-        <span class="scores-card-title">🏙️ LA Teams</span>
+        <span class="scores-card-title">LA Teams</span>
         <span class="scores-card-eyebrow">Last / Current</span>
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-dodgers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/mlb/500/lad.png" alt="Dodgers">
         <div class="score-row-team">
           <div class="score-row-name">Dodgers</div>
           <div class="score-row-sub">vs San Francisco · Jun 10</div>
@@ -210,7 +199,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-lakers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="Lakers">
         <div class="score-row-team">
           <div class="score-row-name">Lakers</div>
           <div class="score-row-sub">L 108–114 vs Denver · May 14</div>
@@ -219,7 +208,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-chargers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" alt="Chargers">
         <div class="score-row-team">
           <div class="score-row-name">Chargers</div>
           <div class="score-row-sub">Season starts Sep 2026</div>
@@ -236,12 +225,12 @@
   <section class="scores-widget">
     <div class="scores-card">
       <div class="scores-card-header">
-        <span class="scores-card-title">🏙️ LA Teams</span>
+        <span class="scores-card-title">LA Teams</span>
         <span class="scores-card-eyebrow">Last / Current</span>
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-dodgers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/mlb/500/lad.png" alt="Dodgers">
         <div class="score-row-team">
           <div class="score-row-name">Dodgers</div>
           <div class="score-row-sub">vs San Francisco · Jun 10</div>
@@ -255,7 +244,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-lakers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="Lakers">
         <div class="score-row-team">
           <div class="score-row-name">Lakers</div>
           <div class="score-row-sub">vs Boston · Jun 8</div>
@@ -269,7 +258,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-chargers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" alt="Chargers">
         <div class="score-row-team">
           <div class="score-row-name">Chargers</div>
           <div class="score-row-sub">vs Kansas City · Jan 19</div>
@@ -291,12 +280,12 @@
   <section class="scores-widget">
     <div class="scores-card">
       <div class="scores-card-header">
-        <span class="scores-card-title">🏙️ LA Teams</span>
+        <span class="scores-card-title">LA Teams</span>
         <span class="scores-card-eyebrow">Last / Current</span>
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-dodgers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/mlb/500/lad.png" alt="Dodgers">
         <div class="score-row-team">
           <div class="score-row-name">Dodgers</div>
           <div class="score-row-sub">vs San Diego · 7th inning</div>
@@ -310,7 +299,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-lakers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="Lakers">
         <div class="score-row-team">
           <div class="score-row-name">Lakers</div>
           <div class="score-row-sub">L 108–114 vs Denver · May 14</div>
@@ -319,7 +308,7 @@
       </div>
 
       <div class="score-row">
-        <div class="score-row-dot dot-chargers"></div>
+        <img class="score-row-logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" alt="Chargers">
         <div class="score-row-team">
           <div class="score-row-name">Chargers</div>
           <div class="score-row-sub">Season starts Sep 2026</div>
