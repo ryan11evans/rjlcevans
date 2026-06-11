@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Score Widget Preview</title>
+  <style>
+    :root {
+      --bg: #ececec;
+      --card-bg: #f7f7f7;
+      --text: #1f1f1f;
+      --muted: #6b6b6b;
+      --radius: 16px;
+      --shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .preview-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* ===== Score section ===== */
+    .scores-section {
+      width: 100%;
+      max-width: 960px;
+    }
+    .scores-eyebrow {
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      font-weight: 700; margin: 0 0 6px; text-align: center;
+      color: var(--muted);
+    }
+    .scores-heading {
+      text-align: center; font-size: 1.45rem; font-weight: 800;
+      margin: 0 0 18px; letter-spacing: -0.01em;
+    }
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== Individual score card ===== */
+    .score-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px 18px;
+      border-top: 4px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .score-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .score-team-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .score-sport-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(0,0,0,.07);
+      color: var(--muted);
+    }
+
+    .score-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .score-logo {
+      font-size: 2.4rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .score-numbers {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .score-us {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .score-sep {
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .score-them {
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    .score-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .score-opponent {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .score-result {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .result-win  { background: #dcfce7; color: #166534; }
+    .result-loss { background: #fee2e2; color: #991b1b; }
+    .result-live { background: #fee2e2; color: #dc2626; animation: pulse 1.4s ease-in-out infinite; }
+    .result-soon { background: #f1f5f9; color: #64748b; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .score-date {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    /* Team accent colors */
+    .card-dodgers  { border-top-color: #005A9C; }
+    .card-lakers   { border-top-color: #552583; }
+    .card-chargers { border-top-color: #0080C6; }
+
+    .card-dodgers  .score-sport-badge { background: rgba(0,90,156,.1);  color: #005A9C; }
+    .card-lakers   .score-sport-badge { background: rgba(85,37,131,.1); color: #552583; }
+    .card-chargers .score-sport-badge { background: rgba(0,128,198,.1); color: #0080C6; }
+
+    .card-dodgers  .score-us { color: #005A9C; }
+    .card-lakers   .score-us { color: #552583; }
+    .card-chargers .score-us { color: #0080C6; }
+
+    /* Offseason / no game state */
+    .score-offseason {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 0 6px;
+      text-align: center;
+    }
+    .score-offseason-icon { font-size: 2rem; }
+    .score-offseason-text { font-size: 0.9rem; color: var(--muted); }
+    .score-offseason-sub  { font-size: 0.75rem; color: var(--muted); opacity: 0.7; }
+
+    /* Dark mode toggle for preview */
+    .toggle-row {
+      display: flex; gap: 12px; align-items: center;
+      font-size: 0.85rem; color: var(--muted);
+    }
+    .toggle-btn {
+      padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,.12);
+      background: var(--card-bg); cursor: pointer; font-size: 0.82rem;
+      color: var(--text); font-family: inherit; transition: background 0.15s;
+    }
+    .toggle-btn:hover { background: #e0e0e0; }
+    body.night { --bg: #111827; --card-bg: #1e2533; --text: #f1f5f9; --muted: #94a3b8; --shadow: 0 6px 20px rgba(0,0,0,.35); }
+    body.night .toggle-btn:hover { background: #2a3347; }
+    body.night .card-dodgers  .score-sport-badge { background: rgba(0,90,156,.2);  }
+    body.night .card-lakers   .score-sport-badge { background: rgba(85,37,131,.2); }
+    body.night .card-chargers .score-sport-badge { background: rgba(0,128,198,.2); }
+    body.night .result-win  { background: #052e16; color: #4ade80; }
+    body.night .result-loss { background: #450a0a; color: #f87171; }
+    body.night .result-live { background: #450a0a; color: #f87171; }
+    body.night .result-soon { background: #1e2533; color: #94a3b8; border: 1px solid rgba(255,255,255,.08); }
+
+    @media (max-width: 600px) {
+      .score-us, .score-them { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<p class="preview-label">Widget Preview — not live on site yet</p>
+
+<div class="toggle-row">
+  <button class="toggle-btn" onclick="document.body.classList.toggle('night')">Toggle dark mode</button>
+</div>
+
+<!-- ===== OPTION A: With section header ===== -->
+<section class="scores-section">
+  <p class="scores-eyebrow">LA Teams</p>
+  <h2 class="scores-heading">Scores</h2>
+  <div class="scores-grid">
+
+    <!-- Dodgers — recent win -->
+    <div class="score-card card-dodgers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Dodgers</span>
+        <span class="score-sport-badge">MLB</span>
+      </div>
+      <div class="score-main">
+        <span class="score-logo">⚾</span>
+        <div class="score-numbers">
+          <span class="score-us">6</span>
+          <span class="score-sep">–</span>
+          <span class="score-them">2</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <span class="score-opponent">vs San Francisco</span>
+        <span class="score-result result-win">W · Final</span>
+      </div>
+      <div class="score-date">Jun 10 · Dodger Stadium</div>
+    </div>
+
+    <!-- Lakers — offseason -->
+    <div class="score-card card-lakers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Lakers</span>
+        <span class="score-sport-badge">NBA</span>
+      </div>
+      <div class="score-offseason">
+        <span class="score-offseason-icon">🏀</span>
+        <span class="score-offseason-text">Offseason</span>
+        <span class="score-offseason-sub">Last: L 108–114 vs Denver · May 14</span>
+      </div>
+    </div>
+
+    <!-- Chargers — offseason -->
+    <div class="score-card card-chargers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Chargers</span>
+        <span class="score-sport-badge">NFL</span>
+      </div>
+      <div class="score-offseason">
+        <span class="score-offseason-icon">🏈</span>
+        <span class="score-offseason-text">Season starts Sep 2026</span>
+        <span class="score-offseason-sub">2025: W 31–17 vs Denver · Week 18</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== OPTION B: Compact, no heading ===== -->
+<p class="preview-label">Option B — compact / no heading</p>
+<section class="scores-section">
+  <div class="scores-grid">
+
+    <div class="score-card card-dodgers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Dodgers</span>
+        <span class="score-sport-badge">MLB</span>
+      </div>
+      <div class="score-main">
+        <span class="score-logo">⚾</span>
+        <div class="score-numbers">
+          <span class="score-us">6</span>
+          <span class="score-sep">–</span>
+          <span class="score-them">2</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <span class="score-opponent">vs San Francisco · Jun 10</span>
+        <span class="score-result result-win">W</span>
+      </div>
+    </div>
+
+    <div class="score-card card-lakers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Lakers</span>
+        <span class="score-sport-badge">NBA</span>
+      </div>
+      <div class="score-offseason">
+        <span class="score-offseason-icon">🏀</span>
+        <span class="score-offseason-text">Offseason</span>
+        <span class="score-offseason-sub">Last: L 108–114 vs Denver · May 14</span>
+      </div>
+    </div>
+
+    <div class="score-card card-chargers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Chargers</span>
+        <span class="score-sport-badge">NFL</span>
+      </div>
+      <div class="score-offseason">
+        <span class="score-offseason-icon">🏈</span>
+        <span class="score-offseason-text">Season starts Sep 2026</span>
+        <span class="score-offseason-sub">Last: W 31–17 vs Denver</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== OPTION C: Live game state ===== -->
+<p class="preview-label">Option C — what a live game looks like</p>
+<section class="scores-section">
+  <div class="scores-grid">
+
+    <div class="score-card card-dodgers">
+      <div class="score-card-top">
+        <span class="score-team-name">LA Dodgers</span>
+        <span class="score-sport-badge">MLB</span>
+      </div>
+      <div class="score-main">
+        <span class="score-logo">⚾</span>
+        <div class="score-numbers">
+          <span class="score-us">4</span>
+          <span class="score-sep">–</span>
+          <span class="score-them">3</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <span class="score-opponent">vs San Diego · 7th inning</span>
+        <span class="score-result result-live">● Live</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>
