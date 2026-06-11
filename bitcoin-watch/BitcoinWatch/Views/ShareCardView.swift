@@ -141,6 +141,7 @@ struct ShareCardView: View {
                     .symbolSize(40)
                 }
             }
+            .chartYScale(domain: (chartPrices.min() ?? 0)...(chartPrices.max() ?? 1))
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
             .frame(width: 148, height: 82)
