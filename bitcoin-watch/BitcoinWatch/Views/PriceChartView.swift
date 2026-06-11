@@ -3,6 +3,7 @@ import SwiftUI
 struct BitcoinInfoView: View {
     let stats: BitcoinStats?
     let currentPrice: Double?
+    var fearGreed: StatsService.FearGreedData? = nil
 
     var body: some View {
         VStack(spacing: 24) {
@@ -34,6 +35,9 @@ struct BitcoinInfoView: View {
                          value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
                          subtitle: stats.map { halvingSubtitle($0.blockHeight) },
                          color: .purple)
+                if let fg = fearGreed {
+                    FearGreedTile(data: fg)
+                }
             }
             .padding(.horizontal)
         }
@@ -153,6 +157,72 @@ private struct ArcArrowhead: Shape {
         let ri = CGPoint(x: tip.x + size * cos(tang + 0.5), y: tip.y + size * sin(tang + 0.5))
         var p = Path(); p.move(to: tip); p.addLine(to: l); p.addLine(to: ri); p.closeSubpath()
         return p
+    }
+}
+
+private struct FearGreedTile: View {
+    let data: StatsService.FearGreedData
+
+    private var color: Color {
+        switch data.value {
+        case 0..<25:  return Color(red: 1, green: 0.27, blue: 0.23)   // red
+        case 25..<50: return .orange
+        case 50..<75: return Color(red: 0.19, green: 0.82, blue: 0.35) // green
+        default:      return Color(red: 1.0, green: 0.84, blue: 0.0)   // gold
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Gauge arc
+            ZStack {
+                Circle()
+                    .trim(from: 0, to: 0.5)
+                    .stroke(Color.white.opacity(0.08), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .rotationEffect(.degrees(180))
+                    .frame(width: 56, height: 28)
+                    .clipped()
+                Circle()
+                    .trim(from: 0, to: CGFloat(data.value) / 200)
+                    .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .rotationEffect(.degrees(180))
+                    .frame(width: 56, height: 28)
+                    .clipped()
+                    .animation(.easeOut(duration: 0.6), value: data.value)
+                Text("\(data.value)")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                    .offset(y: 6)
+            }
+            .frame(width: 56, height: 34)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Fear & Greed")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.3)
+                Text(data.classification)
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(color)
+                Text("Updated daily · alternative.me")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }
 

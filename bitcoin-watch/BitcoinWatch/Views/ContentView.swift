@@ -32,7 +32,7 @@ struct ContentView: View {
 
                         VStack(spacing: 12) {
                             BTCChartView(statsService: statsService)
-                            BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd)
+                            BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd, fearGreed: statsService.fearGreed)
                         }
                         .padding(.horizontal)
 

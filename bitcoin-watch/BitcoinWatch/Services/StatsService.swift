@@ -7,6 +7,21 @@ class StatsService: ObservableObject {
     @Published var stats: BitcoinStats?
     @Published var chartData: [ChartPoint] = []
     @Published var chartRange: ChartRange = .day
+    @Published var fearGreed: FearGreedData? = nil
+
+    struct FearGreedData {
+        let value: Int
+        let classification: String
+
+        var color: String {
+            switch value {
+            case 0..<25:  return "red"
+            case 25..<50: return "orange"
+            case 50..<75: return "green"
+            default:      return "yellow"
+            }
+        }
+    }
 
     struct ChartPoint: Identifiable {
         let id = UUID()
@@ -27,9 +42,11 @@ class StatsService: ObservableObject {
     private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
 
     func fetch() async {
-        async let market = fetchMarket()
-        async let block  = fetchBlock()
-        let (m, b) = await (market, block)
+        async let market   = fetchMarket()
+        async let block    = fetchBlock()
+        async let fng      = fetchFearGreed()
+        let (m, b, fg) = await (market, block, fng)
+        if let fg { fearGreed = fg }
         guard let m, let b else { return }
 
         // Keep current price and 24h band consistent by clamping the band to include it
@@ -95,6 +112,22 @@ class StatsService: ObservableObject {
                             ath:          r.market_data.ath.usd,
                             change24h:    r.market_data.price_change_percentage_24h,
                             athDate:      date)
+    }
+
+    private func fetchFearGreed() async -> FearGreedData? {
+        guard let url = URL(string: "https://api.alternative.me/fng/"),
+              let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        struct R: Decodable {
+            struct Entry: Decodable {
+                let value: String
+                let value_classification: String
+            }
+            let data: [Entry]
+        }
+        guard let r = try? JSONDecoder().decode(R.self, from: data),
+              let entry = r.data.first,
+              let value = Int(entry.value) else { return nil }
+        return FearGreedData(value: value, classification: entry.value_classification)
     }
 
     private func fetchBlock() async -> Int? {
