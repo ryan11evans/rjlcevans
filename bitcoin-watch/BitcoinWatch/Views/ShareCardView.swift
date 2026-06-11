@@ -97,7 +97,12 @@ struct ShareCardView: View {
 
                 // ─── Footer ────────────────────────────────────
                 HStack {
-                    appStoreBadge
+                    HStack(spacing: 10) {
+                        appStoreBadge
+                        Text("TapBTC")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(.orange)
+                    }
                     Spacer()
                     Text(price.timestamp, style: .time)
                         .font(.system(size: 10))
