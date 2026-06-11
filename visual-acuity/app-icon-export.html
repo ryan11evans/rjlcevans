@@ -22,46 +22,106 @@ const ctx = canvas.getContext('2d');
 function draw() {
   const s = 1024;
 
-  // Solid fill — Apple applies rounding, PNG must have zero transparency
-  ctx.fillStyle = '#141414';
+  // Rich warm-dark background
+  ctx.fillStyle = '#0F0D09';
   ctx.fillRect(0, 0, s, s);
 
-  // Background gradient
-  const bg = ctx.createRadialGradient(s*0.4, s*0.35, 0, s*0.5, s*0.5, s*0.75);
-  bg.addColorStop(0, '#242424');
-  bg.addColorStop(1, '#141414');
+  // Background radial gradient — warmer gold undertone
+  const bg = ctx.createRadialGradient(s*0.42, s*0.38, 0, s*0.5, s*0.5, s*0.72);
+  bg.addColorStop(0, '#221C08');
+  bg.addColorStop(0.6, '#161208');
+  bg.addColorStop(1, '#0F0D09');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, s, s);
 
-  // Glow
+  // Wider, warmer ambient glow behind the letter
   ctx.save();
-  ctx.filter = 'blur(60px)';
-  ctx.fillStyle = 'rgba(212,160,23,0.3)';
+  ctx.filter = 'blur(80px)';
+  ctx.fillStyle = 'rgba(255,210,50,0.50)';
   ctx.font = '680px Sloan';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('E', s/2, s/2 + 30);
   ctx.restore();
 
-  // Letter
-  ctx.fillStyle = '#D4A017';
+  // Second tighter glow — warm bright core
+  ctx.save();
+  ctx.filter = 'blur(30px)';
+  ctx.fillStyle = 'rgba(255,230,100,0.35)';
   ctx.font = '680px Sloan';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('E', s/2, s/2 + 30);
-}
+  ctx.restore();
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  // ── Main letter with top-to-bottom 3D gradient ──────────────────────────
+  // Approximate letter bounding box for gradient anchors
+  // Letter center is (512, 542); height ~680px → top ≈ 202, bottom ≈ 882
+  const gradTop = s/2 + 30 - 340;    // ~202
+  const gradBot = s/2 + 30 + 340;    // ~882
+
+  const letterGrad = ctx.createLinearGradient(0, gradTop, 0, gradBot);
+  letterGrad.addColorStop(0.00, '#FFF4A0');  // bright highlight top
+  letterGrad.addColorStop(0.15, '#FFE055');  // warm gold upper face
+  letterGrad.addColorStop(0.40, '#F5C020');  // mid gold
+  letterGrad.addColorStop(0.65, '#C88B10');  // shadow side
+  letterGrad.addColorStop(1.00, '#7A5008');  // deep shadow bottom
+
+  ctx.fillStyle = letterGrad;
+  ctx.font = '680px Sloan';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('E', s/2, s/2 + 30);
+
+  // ── Specular highlight — bright near-white sheen on upper-left ──────────
+  // Clip to letter shape, then paint a soft radial specular spot
+  ctx.save();
+  // Re-draw letter as clip path
+  ctx.beginPath();
+  ctx.font = '680px Sloan';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Use a temporary offscreen to generate clip mask via globalCompositeOperation
+  // (canvas clip from text isn't available directly, use compositing instead)
+  // Strategy: draw letter in white, then overlay specular using source-atop
+  const tmp = document.createElement('canvas');
+  tmp.width = s; tmp.height = s;
+  const t = tmp.getContext('2d');
+
+  // Draw the letter shape in opaque white on tmp
+  t.fillStyle = '#fff';
+  t.font = '680px Sloan';
+  t.textAlign = 'center';
+  t.textBaseline = 'middle';
+  t.fillText('E', s/2, s/2 + 30);
+
+  // Paint specular radial gradient over the letter shape
+  t.globalCompositeOperation = 'source-atop';
+  const spec = t.createRadialGradient(s*0.42, gradTop + 80, 0, s*0.42, gradTop + 80, s*0.38);
+  spec.addColorStop(0.00, 'rgba(255,255,230,0.72)');
+  spec.addColorStop(0.30, 'rgba(255,240,160,0.30)');
+  spec.addColorStop(1.00, 'rgba(255,200,0,0.00)');
+  t.fillStyle = spec;
+  t.fillRect(0, 0, s, s);
+
+  // Composite the specular-painted letter mask onto main canvas (lighter blend)
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(tmp, 0, 0);
+  ctx.restore();
+
+  // ── Thin bright edge rim along top of letter ────────────────────────────
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.18;
+  ctx.filter = 'blur(4px)';
+  ctx.fillStyle = '#FFFDE0';
+  ctx.font = '680px Sloan';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('E', s/2, s/2 + 28);  // very slightly up for rim light
+  ctx.restore();
 }
 
 function download() {
@@ -75,6 +135,9 @@ function download() {
 const font = new FontFace('Sloan', 'url(Sloan.otf)');
 font.load().then(f => {
   document.fonts.add(f);
+  draw();
+}).catch(() => {
+  // Fallback: draw without Sloan
   draw();
 });
 </script>
