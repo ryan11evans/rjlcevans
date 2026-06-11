@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TapBTC — New Features Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', sans-serif;
+    color: white;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 40px;
+  }
+
+  .row {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .phone-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #555;
+  }
+
+  /* iPhone shell */
+  .phone {
+    width: 393px;
+    height: 852px;
+    background: linear-gradient(160deg, #1e1d1c 0%, #111 40%, #060606 100%);
+    border-radius: 55px;
+    border: 1.5px solid #2a2a2a;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* Dynamic island */
+  .island {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 36px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 10;
+  }
+
+  /* Navigation bar */
+  .nav-bar {
+    position: absolute;
+    top: 0;
+    left: 0; right: 0;
+    height: 100px;
+    background: rgba(28,27,26,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 20px 14px;
+    z-index: 5;
+  }
+  .nav-title {
+    flex: 1;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .nav-left, .nav-right {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .nav-right { justify-content: flex-end; }
+  .nav-icon {
+    font-size: 18px;
+    color: rgba(255,255,255,0.75);
+  }
+  .nav-icon.orange { color: #ff9f0a; }
+
+  /* Scroll content */
+  .screen-content {
+    position: absolute;
+    top: 100px;
+    left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* ─────────────────── SATOSHI CALCULATOR ─────────────────── */
+  .calc-wrap {
+    padding: 0;
+  }
+
+  .calc-fields {
+    padding: 20px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 6px;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.09);
+    transition: border-color 0.15s;
+  }
+  .input-row.focused {
+    border-color: rgba(255,159,10,0.5);
+  }
+
+  .input-prefix {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ff9f0a;
+    min-width: 28px;
+  }
+  .input-prefix.sat {
+    font-size: 15px;
+  }
+  .input-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    flex: 1;
+    letter-spacing: -0.02em;
+  }
+  .input-clear {
+    color: #555;
+    font-size: 16px;
+  }
+
+  .swap-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 4px 0;
+  }
+  .swap-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .swap-center {
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .swap-arrows {
+    font-size: 13px;
+    color: #666;
+  }
+  .swap-text {
+    font-size: 10px;
+    font-weight: 500;
+    color: #555;
+  }
+
+  /* Quick amounts */
+  .quick-section {
+    padding: 12px 0 0;
+  }
+  .quick-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #555;
+    padding: 0 20px;
+    margin-bottom: 10px;
+  }
+  .quick-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .quick-chip {
+    background: rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .quick-chip.active {
+    background: rgba(255,159,10,0.2);
+    color: #ff9f0a;
+  }
+
+  /* Footer info */
+  .calc-footer {
+    margin: 20px 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .footer-col { display: flex; flex-direction: column; gap: 3px; }
+  .footer-sublabel { font-size: 11px; color: #666; }
+  .footer-value { font-size: 15px; font-weight: 700; color: white; }
+  .footer-value.orange { color: #ff9f0a; }
+
+  /* ─────────────────── MAIN SCREEN w/ HALVING ─────────────────── */
+  .main-screen .price-header {
+    padding: 20px 20px 16px;
+    text-align: center;
+  }
+  .btc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .btc-badge .btc-icon { color: #ff9f0a; }
+  .price-big {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .change-badge {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+  .change-up { color: #31d158; background: rgba(49,209,88,0.15); }
+  .change-dn { color: #ff453a; background: rgba(255,69,58,0.15); }
+
+  /* Chart area */
+  .chart-area {
+    margin: 0 16px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 14px 10px;
+    height: 170px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-svg {
+    width: 100%;
+    height: 130px;
+  }
+  .chart-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+  .chart-tab {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 7px;
+    color: #666;
+  }
+  .chart-tab.active {
+    background: rgba(255,159,10,0.18);
+    color: #ff9f0a;
+  }
+
+  /* Orbit logo */
+  .orbit-logo {
+    width: 100px;
+    height: 100px;
+    margin: 16px auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .orbit-coin {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fbb540 0%, #f79410 50%, #e48006 100%);
+    border: 2px solid rgba(200,110,5,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: rgba(25,18,5,0.85);
+    font-weight: 900;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 28px rgba(255,159,10,0.3);
+  }
+  .orbit-ring {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 0; left: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #ff9f0a;
+    border-bottom-color: #ff9f0a;
+    opacity: 0.5;
+  }
+
+  /* Stat tiles */
+  .stats-grid {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 10px;
+  }
+  .stat-tile {
+    flex: 1;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-tile.green  { background: rgba(49,209,88,0.08);  border: 1px solid rgba(49,209,88,0.2); }
+  .stat-tile.red    { background: rgba(255,69,58,0.08);   border: 1px solid rgba(255,69,58,0.2); }
+  .stat-tile.orange { background: rgba(255,159,10,0.08);  border: 1px solid rgba(255,159,10,0.2); }
+  .stat-tile.cyan   { background: rgba(90,200,250,0.08);  border: 1px solid rgba(90,200,250,0.2); }
+  .stat-tile.purple { background: rgba(191,90,242,0.08);  border: 1px solid rgba(191,90,242,0.22); }
+
+  .stat-tile-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #666;
+  }
+  .stat-tile-value {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .stat-tile.green  .stat-tile-value { color: #31d158; }
+  .stat-tile.red    .stat-tile-value { color: #ff453a; }
+  .stat-tile.orange .stat-tile-value { color: #ff9f0a; }
+  .stat-tile.cyan   .stat-tile-value { color: #5ac8fa; }
+  .stat-tile.purple .stat-tile-value { color: #bf5af2; }
+
+  .stat-tile-sub {
+    font-size: 10px;
+    color: #555;
+    margin-top: 1px;
+  }
+
+  /* Divider */
+  .stat-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+    margin: 4px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>TapBTC — New Features Preview</h1>
+
+<div class="row">
+
+  <!-- ─── SATOSHI CALCULATOR ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Satoshi Calculator</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="nav-bar">
+        <div class="nav-left">
+          <span class="nav-icon">🔔</span>
+        </div>
+        <div class="nav-title">Satoshi Calculator</div>
+        <div class="nav-right">
+          <!-- empty for this sheet -->
+        </div>
+      </div>
+
+      <div class="screen-content">
+        <div class="calc-wrap">
+          <div class="calc-fields">
+
+            <!-- USD field (focused / active) -->
+            <div>
+              <div class="field-label">US Dollars</div>
+              <div class="input-row focused">
+                <div class="input-prefix">$</div>
+                <div class="input-value">100</div>
+                <div class="input-clear">✕</div>
+              </div>
+            </div>
+
+            <!-- Swap indicator -->
+            <div class="swap-row">
+              <div class="swap-line"></div>
+              <div class="swap-center">
+                <div class="swap-arrows">⇅</div>
+                <div class="swap-text">1 BTC = 100,000,000 sats</div>
+              </div>
+              <div class="swap-line"></div>
+            </div>
+
+            <!-- Sats field (calculated) -->
+            <div>
+              <div class="field-label">Satoshis</div>
+              <div class="input-row">
+                <div class="input-prefix sat">sat</div>
+                <div class="input-value">93,284</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick amounts -->
+          <div class="quick-section">
+            <div class="quick-label">Quick amounts</div>
+            <div class="quick-scroll">
+              <div class="quick-chip">$1</div>
+              <div class="quick-chip">$10</div>
+              <div class="quick-chip active">$100</div>
+              <div class="quick-chip">$500</div>
+              <div class="quick-chip">$1,000</div>
+              <div class="quick-chip">$10,000</div>
+            </div>
+          </div>
+
+          <!-- Context footer -->
+          <div class="calc-footer">
+            <div class="footer-col">
+              <div class="footer-sublabel">Bitcoin price</div>
+              <div class="footer-value">$107,198</div>
+            </div>
+            <div class="footer-col" style="text-align:right">
+              <div class="footer-sublabel">1 sat equals</div>
+              <div class="footer-value orange">$0.001072</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MAIN SCREEN w/ HALVING TILE ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Main Screen (updated stats)</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="nav-bar">
+        <div class="nav-left">
+          <span class="nav-icon orange">🔔</span>
+        </div>
+        <div class="nav-title">Bitcoin</div>
+        <div class="nav-right">
+          <span class="nav-icon" style="font-size:15px">±</span>
+          <span class="nav-icon" style="font-size:15px">↑□</span>
+        </div>
+      </div>
+
+      <div class="screen-content">
+        <!-- Price header -->
+        <div class="price-header">
+          <div class="btc-badge">
+            <span class="btc-icon">₿</span> BTC / USD
+          </div>
+          <div class="price-big">
+            <span>$107,198</span>
+            <span class="change-badge change-up">+2.4%</span>
+          </div>
+        </div>
+
+        <!-- Mini chart -->
+        <div class="chart-area">
+          <svg class="chart-svg" viewBox="0 0 345 130" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#31d158" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#31d158" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,95 C20,90 40,88 60,80 C80,72 100,65 120,52 C140,39 160,34 180,28 C200,22 220,18 240,22 C260,26 280,30 300,25 C320,20 335,18 345,15"
+                  fill="none" stroke="#31d158" stroke-width="2" stroke-linecap="round"/>
+            <path d="M0,95 C20,90 40,88 60,80 C80,72 100,65 120,52 C140,39 160,34 180,28 C200,22 220,18 240,22 C260,26 280,30 300,25 C320,20 335,18 345,15 L345,130 L0,130 Z"
+                  fill="url(#grad)"/>
+            <circle cx="345" cy="15" r="4" fill="#31d158"/>
+          </svg>
+          <div class="chart-tabs">
+            <div class="chart-tab active">1D</div>
+            <div class="chart-tab">7D</div>
+            <div class="chart-tab">30D</div>
+          </div>
+        </div>
+
+        <!-- Orbit logo -->
+        <div class="orbit-logo">
+          <div class="orbit-ring"></div>
+          <div class="orbit-coin">₿</div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="stats-grid">
+          <div class="stats-row">
+            <div class="stat-tile green">
+              <div class="stat-tile-label">24h High</div>
+              <div class="stat-tile-value">$108,450</div>
+              <div class="stat-tile-sub"> </div>
+            </div>
+            <div class="stat-tile red">
+              <div class="stat-tile-label">24h Low</div>
+              <div class="stat-tile-value">$104,821</div>
+              <div class="stat-tile-sub"> </div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-tile orange">
+              <div class="stat-tile-label">All-Time High</div>
+              <div class="stat-tile-value">$109,382</div>
+              <div class="stat-tile-sub">Jan 20, 2025</div>
+            </div>
+            <div class="stat-tile cyan">
+              <div class="stat-tile-label">Block Height</div>
+              <div class="stat-tile-value">#901,204</div>
+              <div class="stat-tile-sub"> </div>
+            </div>
+          </div>
+          <!-- NEW: Halving countdown tile (full width) -->
+          <div class="stats-row">
+            <div class="stat-tile purple" style="flex:1">
+              <div class="stat-tile-label">Next Halving</div>
+              <div class="stat-tile-value">~2.1 years</div>
+              <div class="stat-tile-sub">Block #1,050,000 · 148,796 to go</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center; margin-top:50px; font-size:12px; color:#333; letter-spacing:0.04em;">
+  TAPBTC · FEATURE PREVIEW · BEFORE APP STORE SUBMISSION
+</div>
+
+</body>
+</html>
