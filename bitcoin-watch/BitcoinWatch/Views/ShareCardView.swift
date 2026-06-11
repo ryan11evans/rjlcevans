@@ -1,10 +1,10 @@
 import SwiftUI
+import Charts
 
 struct ShareCardView: View {
     let price: BitcoinPrice
     let change24h: Double?
-    let high24h: Double?
-    let low24h: Double?
+    let chartPrices: [Double]
 
     private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let downColor = Color(red: 1.00, green: 0.27, blue: 0.23)
@@ -23,175 +23,158 @@ struct ShareCardView: View {
                 endPoint: .bottomTrailing
             )
 
-            // Orange left accent bar
+            // Orange left accent
             Rectangle()
-                .fill(
-                    LinearGradient(colors: [.orange, .orange.opacity(0.4)],
-                                   startPoint: .top, endPoint: .bottom)
-                )
+                .fill(LinearGradient(colors: [.orange, .orange.opacity(0.3)],
+                                     startPoint: .top, endPoint: .bottom))
                 .frame(width: 3)
-                .padding(.vertical, 18)
+                .padding(.vertical, 16)
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
+                // ─── Two-column body ─────────────────────────────
+                HStack(alignment: .top, spacing: 0) {
 
-                // ── Header ──────────────────────────────────────
-                HStack(spacing: 0) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "bitcoinsign.circle.fill")
-                            .foregroundStyle(.orange)
-                            .font(.system(size: 13))
-                        Text("BTC / USD")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(upColor)
-                            .frame(width: 5, height: 5)
-                        Text("LIVE")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(upColor)
-                        Text("·")
-                            .foregroundStyle(.secondary)
-                            .font(.system(size: 8))
-                        Text("TapBTC")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                            .foregroundStyle(.orange)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 18)
-
-                // ── Price + change ───────────────────────────────
-                HStack(alignment: .lastTextBaseline, spacing: 8) {
-                    Text(price.formatted)
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                    Spacer()
-                    if let change = change24h {
-                        Text(String(format: "%+.2f%%", change))
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(changeColor)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(changeColor.opacity(0.15))
-                            )
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-
-                // ── Rule ────────────────────────────────────────
-                Rectangle()
-                    .fill(.white.opacity(0.07))
-                    .frame(height: 1)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 13)
-
-                // ── 24h High / Low ───────────────────────────────
-                HStack(spacing: 18) {
-                    if let high = high24h {
-                        StatPill(icon: "arrow.up",   label: "24H HIGH",
-                                 value: priceFmt(high), color: upColor)
-                    }
-                    if high24h != nil && low24h != nil {
-                        Rectangle()
-                            .fill(.white.opacity(0.12))
-                            .frame(width: 1, height: 26)
-                    }
-                    if let low = low24h {
-                        StatPill(icon: "arrow.down",  label: "24H LOW",
-                                 value: priceFmt(low),  color: downColor)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-
-                // ── Rule ────────────────────────────────────────
-                Rectangle()
-                    .fill(.white.opacity(0.07))
-                    .frame(height: 1)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-
-                // ── Footer ──────────────────────────────────────
-                HStack {
-                    HStack(spacing: 5) {
-                        Image(systemName: "apple.logo")
-                            .font(.system(size: 12, weight: .medium))
+                    // LEFT: label + big price + badge
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "bitcoinsign.circle.fill")
+                                .foregroundStyle(.orange)
+                                .font(.system(size: 12))
+                            Text("BTC / USD")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(price.formatted)
+                            .font(.system(size: 44, weight: .heavy, design: .rounded))
                             .foregroundStyle(.white)
-                        VStack(alignment: .leading, spacing: -1) {
-                            Text("Download on the")
-                                .font(.system(size: 7, weight: .regular))
-                                .foregroundStyle(.white.opacity(0.8))
-                            Text("App Store")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.white)
+                            .minimumScaleFactor(0.45)
+                            .lineLimit(1)
+                        if let change = change24h {
+                            Text(String(format: "%+.2f%%", change))
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(changeColor)
+                                .padding(.horizontal, 9).padding(.vertical, 3)
+                                .background(RoundedRectangle(cornerRadius: 7)
+                                    .fill(changeColor.opacity(0.15)))
+                                .padding(.top, 7)
                         }
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(Color.black, in: RoundedRectangle(cornerRadius: 8))
+                    .padding(.leading, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
+                    // RIGHT: chart header + sparkline
+                    VStack(alignment: .trailing, spacing: 6) {
+                        HStack(spacing: 5) {
+                            Text("24H")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 3) {
+                                Circle().fill(upColor).frame(width: 5, height: 5)
+                                Text("LIVE")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(upColor)
+                            }
+                            Text("TapBTC")
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .foregroundStyle(.orange)
+                        }
+                        sparkline
+                    }
+                    .padding(.trailing, 16)
+                    .padding(.top, 18)
+                    .padding(.bottom, 14)
+                    .frame(width: 164)
+                }
+
+                // ─── Rule ──────────────────────────────────────
+                Rectangle()
+                    .fill(.white.opacity(0.07))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+
+                // ─── Footer ────────────────────────────────────
+                HStack {
+                    appStoreBadge
                     Spacer()
-
                     Text(price.timestamp, style: .time)
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 11)
-                .padding(.bottom, 18)
+                .padding(.vertical, 12)
             }
         }
-        .frame(width: 350, height: 196)
+        .frame(width: 375, height: 205)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
-    private func priceFmt(_ v: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencySymbol = "$"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: v)) ?? "$\(Int(v))"
+    @ViewBuilder
+    private var sparkline: some View {
+        if chartPrices.isEmpty {
+            Rectangle().fill(.clear).frame(width: 148, height: 82)
+        } else {
+            Chart {
+                ForEach(Array(chartPrices.enumerated()), id: \.offset) { i, p in
+                    LineMark(x: .value("T", i), y: .value("P", p))
+                        .foregroundStyle(upColor)
+                        .lineStyle(StrokeStyle(lineWidth: 1.8))
+                    AreaMark(x: .value("T", i), y: .value("P", p))
+                        .foregroundStyle(LinearGradient(
+                            colors: [upColor.opacity(0.28), .clear],
+                            startPoint: .top, endPoint: .bottom
+                        ))
+                }
+                if let lastIdx = chartPrices.indices.last {
+                    PointMark(
+                        x: .value("T", lastIdx),
+                        y: .value("P", chartPrices[lastIdx])
+                    )
+                    .foregroundStyle(upColor)
+                    .symbolSize(40)
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(width: 148, height: 82)
+        }
     }
-}
 
-private struct StatPill: View {
-    let icon: String
-    let label: String
-    let value: String
-    let color: Color
-    var body: some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(color)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+    private var appStoreBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "apple.logo")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+            VStack(alignment: .leading, spacing: -1) {
+                Text("Download on the")
+                    .font(.system(size: 7.5, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.8))
+                Text("App Store")
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
             }
         }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 7)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 9))
     }
 }
 
 #if DEBUG
+private let previewPrices: [Double] = [
+    103_420, 103_890, 104_230, 104_050, 103_780, 104_510,
+    104_890, 105_230, 104_980, 105_670, 106_120, 105_890,
+    106_340, 106_780, 107_050, 106_820, 107_180, 107_420,
+    107_090, 106_940, 107_310, 107_580, 107_240, 107_324
+]
+
 #Preview {
     ShareCardView(
         price: BitcoinPrice(usd: 107_324.50, timestamp: Date()),
         change24h: 3.47,
-        high24h: 109_150,
-        low24h: 103_420
+        chartPrices: previewPrices
     )
     .padding()
     .background(Color.black)

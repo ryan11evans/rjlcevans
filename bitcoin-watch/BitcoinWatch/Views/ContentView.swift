@@ -88,8 +88,7 @@ struct ContentView: View {
             let card = ShareCardView(
                 price: price,
                 change24h: stats?.change24h,
-                high24h: stats.map { max($0.high24h, liveUSD) },
-                low24h:  stats.map { min($0.low24h,  liveUSD) }
+                chartPrices: statsService.chartData.map { $0.price }
             )
             .environment(\.colorScheme, .dark)
             let renderer = ImageRenderer(content: card)
