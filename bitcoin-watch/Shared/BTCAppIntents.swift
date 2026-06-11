@@ -69,8 +69,8 @@ struct BTCShortcutsProvider: AppShortcutsProvider {
             intent: ConvertToSatoshisIntent(),
             phrases: [
                 "Convert dollars to sats in \(.applicationName)",
-                "How many sats is \(\.$dollars) in \(.applicationName)",
-                "Satoshi calculator in \(.applicationName)"
+                "Satoshi calculator in \(.applicationName)",
+                "How many sats in \(.applicationName)"
             ],
             shortTitle: "Convert to Sats",
             systemImageName: "plusminus"
