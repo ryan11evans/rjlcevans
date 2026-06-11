@@ -284,20 +284,6 @@ footer .footer-copy a:hover { color: var(--text); }
   font-size: 1.25rem;
   color: var(--muted);
 }
-.joke-card {
-  background: linear-gradient(145deg, #fffbeb, #f7f7f7);
-  border-top: 3px solid #f59e0b;
-}
-.joke-card h3 { color: #b45309; }
-.weather-card {
-  background: linear-gradient(145deg, #f0f9ff, #f7f7f7);
-  border-top: 3px solid #0ea5e9;
-}
-.weather-card h3 { color: #0369a1; }
-body.night .joke-card    { background: linear-gradient(145deg, #251e0a, #1e2533); border-top-color: #f59e0b; }
-body.night .joke-card h3 { color: #fbbf24; }
-body.night .weather-card    { background: linear-gradient(145deg, #0a1e2e, #1e2533); border-top-color: #0ea5e9; }
-body.night .weather-card h3 { color: #38bdf8; }
 .fact-card {
   background: linear-gradient(145deg, #eef2ff, #f7f7f7);
   border-top: 3px solid #6366f1;
@@ -352,33 +338,6 @@ body.night .fact-card h3 { color: #a5b4fc; }
 body.night .app-card { border-color: rgba(255,255,255,.06); }
 body.night .app-browser-link { border-color: rgba(255,255,255,.12); }
 body.night .app-browser-link:hover { background: var(--text); color: var(--bg); }
-.joke-text {
-  font-size: 1.1rem;
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-  padding: 0 12px;
-}
-.joke-text.fade { opacity: 0; }
-.joke-controls { margin-top: 8px; }
-.joke-controls button {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,.12);
-  padding: .4rem .9rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  color: var(--text);
-  transition: background 0.15s, border-color 0.15s;
-}
-.joke-controls button:hover {
-  background: var(--text);
-  color: #fff;
-  border-color: var(--text);
-}
 
 /* ===== Photo Carousel ===== */
 .carousel-wrap { position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
@@ -555,8 +514,6 @@ body.night {
 }
 body.night .contact a { background: #d97706; }
 body.night .contact a:hover { opacity: 0.85; }
-body.night .joke-controls button { background: var(--card-bg); border-color: rgba(255,255,255,.12); }
-body.night .joke-controls button:hover { background: var(--text); color: var(--bg); }
 
 body.night .widget-card { border-color: rgba(255,255,255,.06); }
 
@@ -670,23 +627,9 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<!-- Widgets: dad joke + weather + eye fact -->
+<!-- Eye Fact widget -->
 <section class="widgets reveal">
   <div class="widget-grid">
-    <div class="card widget-card joke-card">
-      <h3>Dad Joke Time</h3>
-      <div id="joke-text" class="joke-text">Loading a groaner...</div>
-      <div class="joke-controls">
-        <button id="joke-next" type="button">Another one →</button>
-      </div>
-    </div>
-    <div class="card widget-card weather-card">
-      <h3>Murrieta Weather</h3>
-      <div id="weather-icon" style="font-size:2.4rem;margin:4px 0 6px">🌤️</div>
-      <div id="weather-temp" style="font-size:2.2rem;font-weight:700;letter-spacing:1px;color:var(--text)">—</div>
-      <p id="weather-desc" style="margin:6px 0 2px;font-size:.95rem;color:var(--muted)">—</p>
-      <p id="weather-feels" style="margin:0;font-size:.85rem;color:var(--muted)">—</p>
-    </div>
     <div class="card widget-card fact-card">
       <h3>👁️ Eye Fact of the Day</h3>
       <div id="eye-fact" class="fact-text">Loading today's fact...</div>
@@ -815,104 +758,6 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     }, { passive: true });
 
     startAuto();
-  })();
-
-  // ===== Dad Jokes =====
-  (function () {
-    const jokes = [
-      "I told my optometrist a joke. He said, “I see what you did there.”",
-      "Why don’t eyes ever get lonely? They always come in pairs.",
-      "I’m reading a book about anti-gravity. It’s impossible to put down.",
-      "What do you call a fish wearing a crown? Your royal haddock-ness.",
-      "I used to hate facial hair. Then it grew on me.",
-      "Did you hear about the kidnapping at the playground? They woke up.",
-      "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
-      "Why did the scarecrow win an award? He was outstanding in his field.",
-      "I'm on a seafood diet. I see food, and I eat it.",
-      "Parallel lines have so much in common. It’s a shame they’ll never meet.",
-      "I would tell you a construction joke, but I'm still working on it.",
-      "Why don't scientists trust atoms? Because they make up everything.",
-      "What do you call a bear with no teeth? A gummy bear.",
-      "Why did the math book look sad? It had too many problems.",
-      "I'm reading a horror book in braille. Something bad is about to happen — I can feel it.",
-      "How do you organize a space party? You planet.",
-      "I asked the librarian if they had any books on paranoia. She whispered, “They’re right behind you.”",
-      "What does a nosy pepper do? Gets jalapeño business.",
-      "Why don’t skeletons fight each other? They don’t have the guts.",
-      "I gave away all my dead batteries today — free of charge.",
-      "I tried to write a joke about bifocals, but I couldn’t focus.",
-      "Why did the eye go to school? To improve its pupils.",
-      "Did you hear about the optician who fell into the lens grinder? He made a spectacle of himself.",
-      "What do you call a fish without eyes? A fsh.",
-      "I only know 25 letters of the alphabet. I don’t know y.",
-      "Why did the bicycle fall over? It was two-tired.",
-      "I don’t trust stairs. They’re always up to something.",
-      "What’s the best thing about Switzerland? The flag is a big plus.",
-      "Did you hear about the claustrophobic astronaut? He just needed a little space.",
-      "I’m afraid for the calendar. Its days are numbered.",
-      "Why can’t you give Elsa a balloon? She’ll let it go.",
-      "I used to think I was indecisive, but now I’m not so sure.",
-      "What do you call a sleeping dinosaur? A dino-snore.",
-      "Why did the golfer bring an extra pair of socks? In case he got a hole in one.",
-      "I told my doctor I broke my arm in two places. He told me to stop going to those places.",
-      "What do you call cheese that isn’t yours? Nacho cheese.",
-      "Why don’t eggs tell jokes? They’d crack each other up.",
-      "Time flies like an arrow. Fruit flies like a banana.",
-      "My optometrist’s office is a real sight for sore eyes.",
-      "What do you call a factory that makes okay products? A satisfactory."
-    ];
-    const el = document.getElementById('joke-text');
-    const btn = document.getElementById('joke-next');
-    let lastIdx = -1;
-    function pickJoke() {
-      let idx;
-      do { idx = Math.floor(Math.random() * jokes.length); } while (idx === lastIdx && jokes.length > 1);
-      lastIdx = idx;
-      return jokes[idx];
-    }
-    function showJoke() {
-      el.classList.add('fade');
-      setTimeout(() => {
-        el.textContent = pickJoke();
-        el.classList.remove('fade');
-      }, 350);
-    }
-    btn.addEventListener('click', showJoke);
-    el.textContent = pickJoke();
-  })();
-
-  // ===== Murrieta Weather =====
-  (function () {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=33.5539&longitude=-117.2139&current=temperature_2m,apparent_temperature,weathercode&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles';
-    function icon(c) {
-      if (c === 0) return '☀️';
-      if (c <= 2) return '🌤️';
-      if (c === 3) return '☁️';
-      if (c <= 48) return '🌫️';
-      if (c <= 57) return '🌦️';
-      if (c <= 67) return '🌧️';
-      if (c <= 77) return '❄️';
-      if (c <= 82) return '🌦️';
-      return '⛈️';
-    }
-    function desc(c) {
-      if (c === 0) return 'Clear sky';
-      if (c <= 2) return 'Partly cloudy';
-      if (c === 3) return 'Overcast';
-      if (c <= 48) return 'Foggy';
-      if (c <= 57) return 'Drizzle';
-      if (c <= 67) return 'Rainy';
-      if (c <= 77) return 'Snowy';
-      if (c <= 82) return 'Showers';
-      return 'Thunderstorm';
-    }
-    fetch(url).then(r => r.json()).then(d => {
-      const w = d.current;
-      document.getElementById('weather-icon').textContent = icon(w.weathercode);
-      document.getElementById('weather-temp').textContent = Math.round(w.temperature_2m) + '°F';
-      document.getElementById('weather-desc').textContent = desc(w.weathercode);
-      document.getElementById('weather-feels').textContent = 'Feels like ' + Math.round(w.apparent_temperature) + '°F';
-    }).catch(() => {});
   })();
 
   // ===== Scroll fade-in =====
