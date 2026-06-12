@@ -8,6 +8,7 @@ struct ContentView: View {
     @ObservedObject private var alertService = AlertService.shared
     @State private var showAlertSheet = false
     @State private var showCalculator = false
+    @State private var showDCA = false
     @State private var showSettings = false
     @Environment(\.requestReview) private var requestReview
 
@@ -64,6 +65,9 @@ struct ContentView: View {
             .sheet(isPresented: $showCalculator) {
                 SatoshiConverterView(btcPrice: service.currentPrice?.usd ?? 0)
             }
+            .sheet(isPresented: $showDCA) {
+                DCACalculatorView(currentPrice: service.currentPrice?.usd)
+            }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
@@ -82,6 +86,9 @@ struct ContentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
+                        Button { showDCA = true } label: {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                        }
                         Button { showCalculator = true } label: {
                             Image(systemName: "plusminus")
                         }
@@ -205,7 +212,7 @@ struct ChangeBadge: View {
     }
 }
 
-private class BTCShareItem: NSObject, UIActivityItemSource {
+class BTCShareItem: NSObject, UIActivityItemSource {
     let metadata: LPLinkMetadata
     init(metadata: LPLinkMetadata) { self.metadata = metadata }
 
