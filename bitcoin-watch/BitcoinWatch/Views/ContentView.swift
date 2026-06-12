@@ -33,6 +33,9 @@ struct ContentView: View {
                         VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
                             BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd, fearGreed: statsService.fearGreed)
+                            if let price = service.currentPrice?.usd {
+                                RoundNumberProgressView(price: price)
+                            }
                         }
                         .padding(.horizontal)
 
@@ -66,7 +69,7 @@ struct ContentView: View {
                 SatoshiConverterView(btcPrice: service.currentPrice?.usd ?? 0)
             }
             .sheet(isPresented: $showDCA) {
-                DCACalculatorView(currentPrice: service.currentPrice?.usd)
+                CalculatorsView(currentPrice: service.currentPrice?.usd)
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
