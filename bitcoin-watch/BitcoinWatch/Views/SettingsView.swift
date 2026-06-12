@@ -114,6 +114,18 @@ private struct IconPickerSection: View {
     }
 }
 
+private func loadIconImage(_ name: String) -> UIImage? {
+    // Default icon lives in the asset catalog
+    if let img = UIImage(named: name) { return img }
+    // Alternate icons are in the AlternateIcons bundle subfolder
+    let suffix = UIScreen.main.scale >= 3 ? "@3x" : "@2x"
+    for candidate in ["\(name)\(suffix)", name] {
+        if let path = Bundle.main.path(forResource: candidate, ofType: "png", inDirectory: "AlternateIcons"),
+           let img = UIImage(contentsOfFile: path) { return img }
+    }
+    return nil
+}
+
 private struct IconTile: View {
     let icon: AppIcon
     let isSelected: Bool
@@ -121,19 +133,31 @@ private struct IconTile: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Image(icon.rawValue)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(
-                            isSelected ? Color.orange : Color.white.opacity(0.08),
-                            lineWidth: isSelected ? 2.5 : 1
-                        )
-                )
-                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+            Group {
+                if let img = loadIconImage(icon.rawValue) {
+                    Image(uiImage: img)
+                        .resizable()
+                        .interpolation(.high)
+                } else {
+                    // Fallback if image not found
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.white.opacity(0.08))
+                        Text("₿").font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(icon.accentColor)
+                    }
+                }
+            }
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? Color.orange : Color.white.opacity(0.08),
+                        lineWidth: isSelected ? 2.5 : 1
+                    )
+            )
+            .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
                 .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
