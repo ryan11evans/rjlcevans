@@ -920,7 +920,7 @@
     { name: 'iPhone 11 Pro Max / XS Max',                       ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019, type: 'iPhone' },
     { name: 'iPhone 11 Pro / XS / X',                           ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019, type: 'iPhone' },
     { name: 'iPhone 11 / XR',                                   ppi: 326, nW:  828, nH: 1792, dpr: 2, year: 2019, type: 'iPhone' },
-    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, year: 2017, type: 'iPhone' },
+    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, logicalW: 414, logicalH: 736, year: 2017, type: 'iPhone' },
   ];
 
   const IPAD_MODELS = [
@@ -944,14 +944,18 @@
     const sh = Math.max(screen.width, screen.height);
     const dpr = window.devicePixelRatio || 1;
     return ALL_DEVICES.find(m => {
-      const logW = Math.round(m.nW / m.dpr);
-      const logH = Math.round(m.nH / m.dpr);
+      const logW = m.logicalW || Math.round(m.nW / m.dpr);
+      const logH = m.logicalH || Math.round(m.nH / m.dpr);
       return Math.min(logW, logH) === sw && Math.max(logW, logH) === sh && m.dpr === dpr;
     }) || null;
   }
 
   function iphonePpmm(model) {
-    return (model.ppi / 25.4) / (window.devicePixelRatio || model.dpr);
+    // For devices where rendered DPR != physical pixel ratio (e.g. iPhone Plus models),
+    // use stored logical dimensions to get the true CSS px/mm ratio.
+    const cssW = model.logicalW || Math.round(model.nW / model.dpr);
+    const physWidthMm = model.nW / (model.ppi / 25.4);
+    return cssW / physWidthMm;
   }
 
   function buildIphoneGrid(filter) {

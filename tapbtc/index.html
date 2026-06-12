@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TapBTC – Bitcoin on Your Wrist</title>
+<meta name="description" content="Bitcoin price on your Apple Watch. One tap to refresh — no phone needed. Live price, alerts, halving countdown, and Fear & Greed Index.">
+<meta property="og:title" content="TapBTC – Bitcoin on Your Wrist">
+<meta property="og:description" content="Bitcoin price on your Apple Watch. One tap to refresh — no phone needed.">
+<meta property="og:image" content="https://rjlcevans.com/tapbtc/og-image.png">
+<meta property="og:url" content="https://rjlcevans.com/tapbtc">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'SF Pro Rounded', BlinkMacSystemFont, sans-serif;
+    background: #080706;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .coin {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, #fbb246, #f79318, #e47f07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    font-weight: 700;
+    color: rgba(25,18,5,0.9);
+    box-shadow: 0 0 40px rgba(245,166,35,0.4), 0 8px 24px rgba(0,0,0,0.6);
+    border: 2px solid rgba(200,110,5,0.4);
+    margin: 0 auto 24px;
+  }
+
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  h1 span { color: #f5a623; }
+
+  .tagline {
+    font-size: 17px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+    max-width: 320px;
+    margin: 0 auto 24px;
+  }
+
+  .watch-hero {
+    background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 20px 24px;
+    max-width: 320px;
+    width: 100%;
+    margin: 0 auto 28px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .watch-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .watch-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .watch-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #f5a623;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 20px;
+    padding: 3px 9px;
+  }
+  .watch-hero h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .watch-hero p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+  }
+  .watch-hero p .highlight {
+    color: #f5a623;
+    font-weight: 600;
+  }
+  .watch-stats {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .watch-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .watch-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f5a623;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .watch-stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 7px;
+    border-radius: 18px;
+    background: #f5a623;
+    box-shadow: 0 4px 20px rgba(245,166,35,0.45);
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    line-height: 0;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,166,35,0.55); }
+
+  .open-btn {
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .open-btn:hover { color: rgba(255,255,255,0.55); }
+
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 auto 40px;
+    max-width: 320px;
+    width: 100%;
+    text-align: left;
+  }
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 11px 14px;
+  }
+  .feature-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+  .feature-text { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .feature-text strong { color: rgba(255,255,255,0.9); font-weight: 600; display: block; }
+
+  footer { color: rgba(255,255,255,0.25); font-size: 13px; }
+  footer a { color: rgba(255,255,255,0.35); text-decoration: none; }
+  footer a:hover { color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<div class="coin">₿</div>
+<h1>Tap<span>BTC</span></h1>
+<p class="tagline">Bitcoin price on your iPhone and Apple Watch — always within reach.</p>
+
+<div class="watch-hero">
+  <div class="watch-hero-top">
+    <span>⌚</span>
+    <span class="watch-badge">Star Feature</span>
+  </div>
+  <h2>Check Bitcoin from your wrist in one tap</h2>
+  <p>TapBTC lives right on your watch face as a complication. Raise your wrist, tap once — price refreshes instantly. No phone, no unlocking, no waiting, <span class="highlight">no stale price.</span></p>
+  <div class="watch-stats">
+    <div class="watch-stat">
+      <div class="watch-stat-value">1</div>
+      <div class="watch-stat-label">Tap to refresh</div>
+    </div>
+    <div class="watch-stat">
+      <div class="watch-stat-value">⚡</div>
+      <div class="watch-stat-label">Instant price</div>
+    </div>
+    <div class="watch-stat">
+      <div class="watch-stat-value">📵</div>
+      <div class="watch-stat-label">No phone needed</div>
+    </div>
+  </div>
+</div>
+
+<div class="buttons">
+  <a class="cta" href="https://apps.apple.com/us/app/tapbtc/id6774023419">
+    <svg width="180" height="54" viewBox="0 0 180 54" xmlns="http://www.w3.org/2000/svg">
+      <rect width="180" height="54" rx="11" fill="#000"/>
+      <g transform="translate(14, 11) scale(1.36)">
+        <path d="M15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" fill="white"/>
+        <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z" fill="white"/>
+      </g>
+      <text x="55" y="22" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="11.5" fill="white" letter-spacing="0.2">Download on the</text>
+      <text x="53" y="42" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="white">App Store</text>
+    </svg>
+  </a>
+  <a class="open-btn" href="tapbtc://">Already installed? Tap here</a>
+</div>
+
+<div class="features">
+  <div class="feature">
+    <div class="feature-icon">📈</div>
+    <div class="feature-text">
+      <strong>Live Price + 7-Day Chart</strong>
+      Flash animation on every price move
+    </div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🔔</div>
+    <div class="feature-text">
+      <strong>Price Alerts</strong>
+      Multiple alerts, custom labels, repeat mode
+    </div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">⏳</div>
+    <div class="feature-text">
+      <strong>Halving Countdown</strong>
+      Blocks remaining until the next halving
+    </div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🧠</div>
+    <div class="feature-text">
+      <strong>Fear & Greed Index</strong>
+      Live market sentiment from alternative.me
+    </div>
+  </div>
+</div>
+
+<footer>
+  No account required &middot; No data collected<br><br>
+  <a href="/tapbtc-privacy.html">Privacy Policy</a> &middot;
+  <a href="/">rjlcevans.com</a>
+</footer>
+
+<script>
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    window.location.href = 'tapbtc://';
+  }
+</script>
+</body>
+</html>
