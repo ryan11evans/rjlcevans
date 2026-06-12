@@ -40,6 +40,7 @@ class StatsService: ObservableObject {
 
     private let geckoURL = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
     private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
+    private var lastChartFetch: Date? = nil
 
     func fetch() async {
         async let market   = fetchMarket()
@@ -64,7 +65,9 @@ class StatsService: ObservableObject {
                              ath: m.ath, athDate: m.athDate,
                              change24h: m.change24h, blockHeight: b)
 
-        if chartData.isEmpty {
+        let needsChartRefresh = chartData.isEmpty || lastChartFetch.map { Date().timeIntervalSince($0) > 300 } ?? true
+        if needsChartRefresh {
+            lastChartFetch = Date()
             await fetchChart(range: chartRange)
         }
     }
