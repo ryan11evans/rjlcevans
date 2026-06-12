@@ -33,9 +33,6 @@ struct ContentView: View {
                         VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
                             BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd, fearGreed: statsService.fearGreed)
-                            if let price = service.currentPrice?.usd {
-                                RoundNumberProgressView(price: price)
-                            }
                         }
                         .padding(.horizontal)
 
