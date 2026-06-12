@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct BitcoinWatchApp: App {
@@ -8,6 +9,7 @@ struct BitcoinWatchApp: App {
     init() {
         BackgroundRefresh.register()
         BTCShortcutsProvider.updateAppShortcutParameters()
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
     }
 
     var body: some Scene {
@@ -26,5 +28,16 @@ struct BitcoinWatchApp: App {
                 break
             }
         }
+    }
+}
+
+// Shows notification banners even when the app is in the foreground
+private class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationDelegate()
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler handler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        handler([.banner, .sound])
     }
 }
