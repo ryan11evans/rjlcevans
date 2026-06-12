@@ -1,4 +1,4 @@
-const CACHE = 'evans-v2';
+const CACHE = 'evans-v3';
 const PRECACHE = ['/', '/index.html', '/family.webp', '/family3.webp', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {

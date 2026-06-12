@@ -340,16 +340,17 @@ body.night .app-browser-link { border-color: rgba(255,255,255,.12); }
 body.night .app-browser-link:hover { background: var(--text); color: var(--bg); }
 
 /* ===== Photo Carousel ===== */
-.carousel-wrap { position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
-.carousel-track { display: grid; aspect-ratio: 1 / 1; }
+.hero-carousel { width: 100%; }
+.carousel-wrap { position: relative; overflow: hidden; }
+.carousel-track { display: grid; aspect-ratio: 16 / 9; min-height: 280px; }
 .carousel-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 0.75s ease; pointer-events: none; overflow: hidden; }
 .carousel-slide.active { opacity: 1; pointer-events: auto; }
 .carousel-slide picture { display: block; width: 100%; height: 100%; }
 .carousel-slide picture img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .carousel-caption-overlay {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 1;
-  padding: 48px 18px 14px;
-  background: linear-gradient(transparent, rgba(0,0,0,.52));
+  padding: 72px 18px 38px;
+  background: linear-gradient(transparent, rgba(0,0,0,.55));
   color: #fff; font-size: 1rem; text-align: center;
   pointer-events: none;
   transition: opacity 0.75s ease;
@@ -367,17 +368,15 @@ body.night .app-browser-link:hover { background: var(--text); color: var(--bg); 
 .carousel-prev { left: 14px; }
 .carousel-next { right: 14px; }
 .carousel-dots {
+  position: absolute; bottom: 14px; left: 0; right: 0; z-index: 3;
   display: flex; justify-content: center; gap: 9px;
-  padding: 11px 0 5px; background: var(--card-bg);
 }
 .carousel-dot {
   width: 8px; height: 8px; border-radius: 50%; border: none;
-  background: rgba(0,0,0,.18); cursor: pointer; padding: 0;
+  background: rgba(255,255,255,.5); cursor: pointer; padding: 0;
   transition: background 0.2s, transform 0.2s;
 }
-.carousel-dot.active { background: rgba(0,0,0,.55); transform: scale(1.4); }
-body.night .carousel-dot { background: rgba(255,255,255,.22); }
-body.night .carousel-dot.active { background: rgba(255,255,255,.72); }
+.carousel-dot.active { background: #fff; transform: scale(1.4); }
 
 /* ===== Shared info cards ===== */
 .info-card { padding: 24px 20px 26px; text-align: center; }
@@ -544,11 +543,8 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
   </header>
 
-  <main>
-
-
-<!-- ===== FAMILY CONTENT ===== -->
-<section class="card">
+<!-- ===== HERO CAROUSEL ===== -->
+<section class="hero-carousel">
   <div class="carousel-wrap">
     <div class="carousel-track">
       <div class="carousel-slide active" data-caption="The Evans Family — Murrieta, 2026">
@@ -567,12 +563,14 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     <button class="carousel-btn carousel-prev" aria-label="Previous photo">&#8249;</button>
     <button class="carousel-btn carousel-next" aria-label="Next photo">&#8250;</button>
     <div class="carousel-caption-overlay" id="carousel-caption">The Evans Family — Murrieta, 2026</div>
-  </div>
-  <div class="carousel-dots">
-    <button class="carousel-dot active" aria-label="Photo 1"></button>
-    <button class="carousel-dot" aria-label="Photo 2"></button>
+    <div class="carousel-dots">
+      <button class="carousel-dot active" aria-label="Photo 1"></button>
+      <button class="carousel-dot" aria-label="Photo 2"></button>
+    </div>
   </div>
 </section>
+
+  <main>
 
 <section class="card info-card about-card reveal">
   <p class="card-eyebrow">📍 Murrieta, California</p>
