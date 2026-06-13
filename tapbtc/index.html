@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TapBTC — Live Bitcoin Price</title>
+<meta name="description" content="Live Bitcoin price on your iPhone, Apple Watch, and Lock Screen. Price alerts, DCA calculator, and more. Free on the App Store.">
+<meta property="og:title" content="TapBTC — Live Bitcoin Price">
+<meta property="og:description" content="Bitcoin price on your wrist in one tap. No phone, no unlocking, no waiting, no stale price.">
+<meta property="og:url" content="https://rjlcevans.com/tapbtc">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #f5a623;
+    --green:  #30d358;
+    --bg:     #0a0908;
+    --card:   rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.08);
+  }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 72px 24px 48px;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,166,35,0.12) 0%, transparent 70%);
+  }
+
+  .app-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    background: linear-gradient(160deg, #fbb246, #e47f07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    font-weight: 700;
+    color: rgba(20,14,3,0.9);
+    box-shadow: 0 8px 32px rgba(245,166,35,0.35), 0 2px 8px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--orange); }
+
+  .hero .sub {
+    font-size: clamp(16px, 4vw, 20px);
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    max-width: 480px;
+    margin-bottom: 8px;
+  }
+
+  .hero .sub strong {
+    color: var(--orange);
+    font-weight: 600;
+  }
+
+  .cta-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .btn-appstore {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    padding: 13px 22px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-appstore:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+
+  .btn-appstore svg { flex-shrink: 0; }
+
+  .btn-appstore .label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .btn-appstore .label .top {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.8;
+    line-height: 1.2;
+  }
+
+  .btn-appstore .label .bottom {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .already-link {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+  }
+  .already-link:hover { color: rgba(255,255,255,0.5); }
+
+  /* ── WATCH HERO ── */
+  .watch-hero {
+    margin: 0 auto;
+    max-width: 680px;
+    padding: 0 24px 64px;
+  }
+
+  .watch-card {
+    background: linear-gradient(135deg, rgba(245,166,35,0.1) 0%, rgba(255,255,255,0.03) 60%);
+    border: 1px solid rgba(245,166,35,0.25);
+    border-radius: 24px;
+    padding: 36px 32px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .watch-icon-wrap {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    background: rgba(245,166,35,0.12);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+
+  .watch-text { flex: 1; min-width: 200px; }
+
+  .watch-text h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .watch-text p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.55;
+  }
+
+  .watch-text p strong { color: #fff; }
+
+  .watch-badge {
+    display: inline-block;
+    background: rgba(245,166,35,0.15);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(245,166,35,0.3);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ── FEATURES ── */
+  .features {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  .features h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .watch-card { flex-direction: column; text-align: center; }
+    .watch-icon-wrap { margin: 0 auto; }
+  }
+
+  .feature-tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .feature-tile .icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .feature-tile h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+
+  .feature-tile p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.5;
+  }
+
+  .feature-tile.new {
+    border-color: rgba(245,166,35,0.25);
+    background: rgba(245,166,35,0.05);
+  }
+
+  .new-badge {
+    display: inline-block;
+    background: var(--orange);
+    color: #000;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px 24px 48px;
+    border-top: 1px solid var(--border);
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+  }
+
+  footer a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  footer a:hover { color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="app-icon">₿</div>
+  <h1>Bitcoin price.<br><span>Always one tap away.</span></h1>
+  <p class="sub">
+    Live BTC/USD on your iPhone, Apple Watch, and Lock Screen.
+    No phone, no unlocking, no waiting, <strong>no stale price.</strong>
+  </p>
+
+  <div class="cta-group">
+    <a href="https://apps.apple.com/us/app/tapbtc/id6774023419" class="btn-appstore">
+      <svg width="22" height="27" viewBox="0 0 22 27" fill="white">
+        <path d="M18.05 14.3c-.03-3.23 2.64-4.79 2.76-4.86-1.51-2.2-3.85-2.5-4.67-2.53-1.99-.2-3.88 1.17-4.89 1.17-1.01 0-2.57-1.14-4.23-1.11-2.17.03-4.18 1.26-5.29 3.19C-.57 14.26.92 20.1 3.05 23.3c1.06 1.55 2.32 3.29 3.98 3.23 1.6-.07 2.21-1.04 4.14-1.04 1.94 0 2.49 1.04 4.19 1.01 1.72-.03 2.81-1.57 3.86-3.13 1.22-1.79 1.72-3.53 1.75-3.62-.04-.01-3.38-1.3-3.41-5.45zM14.9 4.7C15.77 3.63 16.36 2.16 16.2.65c-1.3.06-2.87.88-3.8 1.93-.83.94-1.56 2.45-1.37 3.88 1.45.11 2.94-.74 3.87-1.76z"/>
+      </svg>
+      <span class="label">
+        <span class="top">Download on the</span>
+        <span class="bottom">App Store</span>
+      </span>
+    </a>
+    <a href="https://apps.apple.com/us/app/tapbtc/id6774023419" class="already-link">Already installed? Tap here</a>
+  </div>
+</section>
+
+<!-- WATCH HERO -->
+<div class="watch-hero">
+  <div class="watch-card">
+    <div class="watch-icon-wrap">⌚</div>
+    <div class="watch-text">
+      <div class="watch-badge">Star Feature</div>
+      <h2>Check Bitcoin from your wrist</h2>
+      <p>
+        Live complications on every watch face. <strong>One tap to refresh</strong> — no phone, no app launch, just the latest price straight from your wrist. Works even when your iPhone is in another room.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features">
+  <h2>Everything in TapBTC</h2>
+  <div class="feature-grid">
+
+    <div class="feature-tile">
+      <span class="icon">📈</span>
+      <h3>Live Price & Chart</h3>
+      <p>Updates every 15 seconds when the app is open. 1D, 7D, and 30D charts with touch scrubbing.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🔔</span>
+      <h3>Price Alerts</h3>
+      <p>Set alerts above or below any price. Repeating or one-shot, with notifications even when the app is open.</p>
+    </div>
+
+    <div class="feature-tile new">
+      <span class="icon">🔁</span>
+      <h3>DCA Calculator <span class="new-badge">New</span></h3>
+      <p>See how much Bitcoin you'd stack investing $25, $50, or $100 every week. Projects 1–10 years out.</p>
+    </div>
+
+    <div class="feature-tile new">
+      <span class="icon">💭</span>
+      <h3>What If? <span class="new-badge">New</span></h3>
+      <p>"What if I'd bought $1,000 a year ago?" Uses real historical prices to show your actual return.</p>
+    </div>
+
+    <div class="feature-tile new">
+      <span class="icon">🎯</span>
+      <h3>Goal Tracker <span class="new-badge">New</span></h3>
+      <p>Set a BTC target, enter what you hold, and watch a live progress ring show how close you are.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🧮</span>
+      <h3>Satoshi Calculator</h3>
+      <p>Instant USD ↔ satoshi conversion. Quick amounts for $1, $10, $100, and more.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">📱</span>
+      <h3>Widgets & Lock Screen</h3>
+      <p>Home screen, Lock Screen, and Dynamic Island widgets. Live price always one glance away.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🎙️</span>
+      <h3>Siri Shortcuts</h3>
+      <p>"What's Bitcoin at?" and "Convert $100 to sats" work hands-free in Siri and Spotlight.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    <a href="https://apps.apple.com/us/app/tapbtc/id6774023419">TapBTC on the App Store</a>
+    &nbsp;·&nbsp;
+    <a href="https://rjlcevans.com">rjlcevans.com</a>
+  </p>
+  <p style="margin-top:8px;">© 2025 Ryan Evans</p>
+</footer>
+
+</body>
+</html>

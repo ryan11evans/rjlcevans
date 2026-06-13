@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["9B9PTBR9A2.com.rjlcevans.rjlbtcwatch"],
+        "components": [{ "/": "/tapbtc*" }]
+      }
+    ]
+  }
+}
