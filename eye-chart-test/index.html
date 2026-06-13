@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eye Chart Test — Vision Screening by Dr. Evans, OD</title>
+<meta name="description" content="Test your vision in 60 seconds with a properly calibrated Snellen chart. Made by a real optometrist. Free on the App Store.">
+<meta property="og:title" content="Eye Chart Test — by Dr. Evans, OD">
+<meta property="og:description" content="A real eye doctor built this. Calibrated to your exact screen, not a guess. Test OD, OS, with and without glasses. Free.">
+<meta property="og:url" content="https://rjlcevans.com/eye-chart-test">
+<meta property="og:image" content="https://rjlcevans.com/visual-acuity/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:    #D4A017;
+    --gold-dim: rgba(212,160,23,0.14);
+    --bg:      #0a0a0a;
+    --card:    rgba(255,255,255,0.05);
+    --border:  rgba(255,255,255,0.08);
+    --gold-border: rgba(212,160,23,0.22);
+  }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 72px 24px 52px;
+    background: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(212,160,23,0.13) 0%, transparent 70%);
+  }
+
+  .app-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 62px;
+    color: var(--gold);
+    box-shadow:
+      0 8px 32px rgba(212,160,23,0.30),
+      0 2px 8px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    margin-bottom: 24px;
+    flex-shrink: 0;
+    text-shadow: 0 0 24px rgba(212,160,23,0.6);
+    border: 1px solid rgba(212,160,23,0.2);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(212,160,23,0.12);
+    border: 1px solid var(--gold-border);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-size: clamp(34px, 8vw, 54px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.08;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 span { color: var(--gold); }
+
+  .hero .sub {
+    font-size: clamp(16px, 4vw, 19px);
+    color: rgba(255,255,255,0.58);
+    line-height: 1.55;
+    max-width: 460px;
+    margin-bottom: 8px;
+  }
+
+  .hero .sub strong { color: var(--gold); font-weight: 600; }
+
+  .cta-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .btn-appstore {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    padding: 13px 24px;
+    border-radius: 16px;
+    border: 2px solid var(--gold);
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(212,160,23,0.25);
+  }
+
+  .btn-appstore:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(212,160,23,0.35);
+  }
+
+  .btn-appstore svg { flex-shrink: 0; }
+
+  .btn-appstore .label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-appstore .label .top {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.75;
+    line-height: 1.2;
+  }
+
+  .btn-appstore .label .bottom {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .try-web-link {
+    font-size: 13px;
+    color: rgba(255,255,255,0.32);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .try-web-link:hover { color: rgba(255,255,255,0.55); }
+
+  /* ── RESULT CARD PREVIEW (for share links) ── */
+  .result-preview-section {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+  }
+
+  .result-preview-label {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); text-align: center; margin-bottom: 16px;
+  }
+
+  .result-card {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--gold-border);
+    background: #0a0a0a;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 28px;
+    gap: 0;
+    box-shadow: 0 8px 40px rgba(212,160,23,0.15);
+  }
+
+  /* Mini chart rows watermark */
+  .rc-watermark {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 16px 20px 0;
+    opacity: 0.07;
+    font-family: 'Fraunces', serif;
+    color: var(--gold);
+    line-height: 1.1;
+    pointer-events: none;
+    text-align: center;
+  }
+  .rc-watermark div { letter-spacing: 0.25em; }
+
+  .rc-eyebrow {
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(212,160,23,0.6); margin-bottom: 8px; position: relative;
+  }
+
+  .rc-score {
+    font-family: 'Fraunces', serif; font-weight: 700;
+    font-size: clamp(56px, 16vw, 88px);
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    position: relative;
+    text-shadow: 0 0 48px rgba(212,160,23,0.45);
+  }
+  .rc-score em { opacity: 0.6; font-style: italic; font-weight: 400; }
+
+  .rc-sub {
+    font-size: 11px; color: rgba(242,242,247,0.38); margin-top: 6px;
+    letter-spacing: 0.08em; text-transform: uppercase; position: relative;
+  }
+
+  .rc-divider {
+    width: 55%; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(212,160,23,0.28), transparent);
+    margin: 18px 0; position: relative;
+  }
+
+  .rc-eyes {
+    display: flex; gap: 28px; position: relative; align-items: center;
+  }
+  .rc-eye { text-align: center; }
+  .rc-eye-label {
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(242,242,247,0.32); margin-bottom: 5px;
+  }
+  .rc-eye-val {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: 24px; color: rgba(242,242,247,0.88);
+  }
+  .rc-eye-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
+
+  .rc-brand { position: relative; margin-top: 18px; text-align: center; }
+  .rc-brand-name {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+    font-size: 14px; color: var(--gold);
+  }
+  .rc-brand-url {
+    font-size: 11px; color: rgba(242,242,247,0.28); margin-top: 4px; letter-spacing: 0.04em;
+  }
+
+  /* ── DOCTOR SECTION ── */
+  .doctor-section {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+  }
+
+  .doctor-card {
+    background: linear-gradient(135deg, rgba(212,160,23,0.10) 0%, rgba(255,255,255,0.03) 60%);
+    border: 1px solid var(--gold-border);
+    border-radius: 24px;
+    padding: 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .doctor-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(212,160,23,0.12);
+    border: 2px solid var(--gold-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    flex-shrink: 0;
+  }
+
+  .doctor-text { flex: 1; min-width: 200px; }
+  .doctor-badge {
+    display: inline-block;
+    background: rgba(212,160,23,0.15);
+    color: var(--gold);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--gold-border);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .doctor-text h2 {
+    font-size: 21px; font-weight: 700;
+    margin-bottom: 8px; letter-spacing: -0.3px;
+  }
+
+  .doctor-text p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.58);
+    line-height: 1.6;
+  }
+
+  .doctor-text p strong { color: #fff; }
+
+  /* ── FEATURES ── */
+  .features {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  .features h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .doctor-card { flex-direction: column; }
+  }
+
+  .feature-tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .feature-tile.gold {
+    border-color: var(--gold-border);
+    background: rgba(212,160,23,0.06);
+  }
+
+  .feature-tile .icon { font-size: 28px; margin-bottom: 10px; display: block; }
+
+  .feature-tile h3 {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 5px;
+  }
+
+  .feature-tile p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.48);
+    line-height: 1.55;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px 24px 48px;
+    border-top: 1px solid var(--border);
+    color: rgba(255,255,255,0.28);
+    font-size: 13px;
+  }
+  footer a { color: rgba(255,255,255,0.38); text-decoration: none; }
+  footer a:hover { color: rgba(255,255,255,0.65); }
+  footer .sep { margin: 0 8px; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="app-icon">E</div>
+
+  <div class="hero-badge">
+    👨‍⚕️ Made by a real optometrist
+  </div>
+
+  <h1>Test your vision.<br><span>Built by a real eye doctor.</span></h1>
+
+  <p class="sub">
+    A properly calibrated Snellen chart that adapts to your exact screen.
+    Test each eye, with and without glasses —
+    <strong>results in under 60 seconds.</strong>
+  </p>
+
+  <div class="cta-group">
+    <a href="https://apps.apple.com/us/app/eye-chart-test/id6747164571" class="btn-appstore">
+      <svg width="22" height="27" viewBox="0 0 22 27" fill="white">
+        <path d="M18.05 14.3c-.03-3.23 2.64-4.79 2.76-4.86-1.51-2.2-3.85-2.5-4.67-2.53-1.99-.2-3.88 1.17-4.89 1.17-1.01 0-2.57-1.14-4.23-1.11-2.17.03-4.18 1.26-5.29 3.19C-.57 14.26.92 20.1 3.05 23.3c1.06 1.55 2.32 3.29 3.98 3.23 1.6-.07 2.21-1.04 4.14-1.04 1.94 0 2.49 1.04 4.19 1.01 1.72-.03 2.81-1.57 3.86-3.13 1.22-1.79 1.72-3.53 1.75-3.62-.04-.01-3.38-1.3-3.41-5.45zM14.9 4.7C15.77 3.63 16.36 2.16 16.2.65c-1.3.06-2.87.88-3.8 1.93-.83.94-1.56 2.45-1.37 3.88 1.45.11 2.94-.74 3.87-1.76z"/>
+      </svg>
+      <span class="label">
+        <span class="top">Download on the</span>
+        <span class="bottom">App Store</span>
+      </span>
+    </a>
+    <a href="https://rjlcevans.com/visual-acuity" class="try-web-link">Try it in your browser instead →</a>
+  </div>
+</section>
+
+<!-- SHARED RESULT CARD PREVIEW (shown when someone lands via a share link) -->
+<div class="result-preview-section">
+  <div class="result-preview-label">Someone shared their results with you</div>
+  <div class="result-card">
+    <div class="rc-watermark">
+      <div style="font-size:32px">E</div>
+      <div style="font-size:21px">F P</div>
+      <div style="font-size:15px">T O Z</div>
+      <div style="font-size:10px">L P E D</div>
+      <div style="font-size:8px">P E C F D</div>
+    </div>
+    <div class="rc-eyebrow">Eye Chart Test · Dr. Evans, OD</div>
+    <div class="rc-score">20<em>/</em>20</div>
+    <div class="rc-sub">Visual acuity · best eye</div>
+    <div class="rc-divider"></div>
+    <div class="rc-eyes">
+      <div class="rc-eye">
+        <div class="rc-eye-label">Right (OD)</div>
+        <div class="rc-eye-val">20/20</div>
+      </div>
+      <div class="rc-eye-sep"></div>
+      <div class="rc-eye">
+        <div class="rc-eye-label">Left (OS)</div>
+        <div class="rc-eye-val">20/20</div>
+      </div>
+    </div>
+    <div class="rc-brand">
+      <div class="rc-brand-name">Eye Chart Test by Dr. Evans, OD</div>
+      <div class="rc-brand-url">rjlcevans.com/eye-chart-test</div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCTOR SECTION -->
+<div class="doctor-section">
+  <div class="doctor-card">
+    <div class="doctor-avatar">👨‍⚕️</div>
+    <div class="doctor-text">
+      <div class="doctor-badge">Why this one is different</div>
+      <h2>Built by Dr. Ryan Evans, OD</h2>
+      <p>
+        Most vision apps show you a chart at an arbitrary size and hope for the best.
+        This one <strong>calibrates to your exact screen's pixel density</strong> —
+        the way we do it in a real exam room.
+        Every letter is the mathematically correct size for the distance you're testing at.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features">
+  <h2>What's inside</h2>
+  <div class="feature-grid">
+
+    <div class="feature-tile gold">
+      <span class="icon">📐</span>
+      <h3>True calibration</h3>
+      <p>Picks your exact iPhone or iPad model and calculates the precise pixel-per-mm ratio. No guessing.</p>
+    </div>
+
+    <div class="feature-tile gold">
+      <span class="icon">🪞</span>
+      <h3>Mirror mode</h3>
+      <p>Test at 10 ft using just your phone and a mirror — the most accurate at-home method.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">👁</span>
+      <h3>Both eyes, with & without glasses</h3>
+      <p>Test OD and OS separately. Compare corrected vs. uncorrected side by side.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🎙</span>
+      <h3>Hands-free voice input</h3>
+      <p>Say the letters out loud. Perfect for mirror mode when your hands are holding the phone.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">📊</span>
+      <h3>Share your results</h3>
+      <p>Tap Share to get a shareable result card with your Snellen score and logMAR value.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">📋</span>
+      <h3>Test history</h3>
+      <p>Results are saved locally on your device. Track changes over time without any account.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🔒</span>
+      <h3>Fully private</h3>
+      <p>No data ever leaves your phone. No account, no tracking, no ads.</p>
+    </div>
+
+    <div class="feature-tile">
+      <span class="icon">🆓</span>
+      <h3>Free</h3>
+      <p>No subscription, no paywalls. Download and use it as much as you want.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    <a href="https://apps.apple.com/us/app/eye-chart-test/id6747164571">Eye Chart Test on the App Store</a>
+    <span class="sep">·</span>
+    <a href="https://rjlcevans.com/visual-acuity">Try in browser</a>
+    <span class="sep">·</span>
+    <a href="https://rjlcevans.com/visual-acuity/privacy.html">Privacy</a>
+    <span class="sep">·</span>
+    <a href="https://rjlcevans.com">rjlcevans.com</a>
+  </p>
+  <p style="margin-top:8px;">© 2026 Dr. Ryan Evans, OD · Educational use only · Not a diagnostic tool</p>
+</footer>
+
+</body>
+</html>
