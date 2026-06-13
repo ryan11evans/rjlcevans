@@ -1,454 +1,797 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f6f1ea">
-<title>Visual Acuity Tester — Dr. Ryan Evans, OD</title>
+<title>Eye Chart Test by Dr. Evans, OD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rjlcevans.com/visual-acuity/">
+<meta property="og:title" content="Calibrated Acuity Test | rjlcevans.com">
+<meta property="og:description" content="A properly-sized Snellen chart for at-home visual acuity screening, with full-screen calibration.">
+<meta property="og:image" content="https://rjlcevans.com/family.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calibrated Acuity Test | rjlcevans.com">
+<meta name="twitter:description" content="A properly-sized Snellen chart for at-home visual acuity screening, with full-screen calibration.">
+<meta name="twitter:image" content="https://rjlcevans.com/family.jpg">
 <style>
+  @font-face {
+    font-family: 'Sloan';
+    src: url('Sloan.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
   :root {
-    --paper: #f6f1ea;
-    --paper-2: #ede5d6;
-    --ink: #1a1a1a;
-    --ink-soft: #4a4a4a;
-    --ink-mute: #8a8175;
-    --line: #d8cfbe;
-    --accent: #8a3324;        /* iron-oxide red */
-    --accent-soft: #a85a4d;
-    --good: #5a7a4a;
-    --radius: 12px;
-    --radius-sm: 6px;
+    --paper: #f6f1ea; --paper-2: #ede5d6; --ink: #1a1a1a; --ink-soft: #4a4a4a;
+    --ink-mute: #8a8175; --line: #d8cfbe; --accent: #8a3324; --accent-soft: #a85a4d;
+    --good: #5a7a4a; --radius: 12px; --radius-sm: 6px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
-  body {
-    background:
-      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(168, 90, 77, 0.04) 28px, rgba(168, 90, 77, 0.04) 29px),
-      var(--paper);
-    min-height: 100vh;
+  body { background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(168,90,77,0.04) 28px, rgba(168,90,77,0.04) 29px), var(--paper); min-height: 100vh; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 80px; }
+
+  header.hero { padding: 4px 4px 18px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .hero-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0 0 10px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(24px, 4vw, 36px); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 4px; }
+  h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .sub { color: var(--ink-soft); font-size: 13px; max-width: 60ch; line-height: 1.55; margin: 0; }
+  .credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--ink-mute); padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,0.4); }
+
+  .stepper { display: flex; margin: 0 0 24px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: rgba(255,255,255,0.5); }
+  .step { flex: 1; padding: 10px 8px; text-align: center; font-size: 12px; color: var(--ink-mute); border-right: 1px solid var(--line); }
+  .step:last-child { border-right: 0; }
+  .step.active { background: var(--ink); color: var(--paper); }
+  .step.done { color: var(--accent); }
+  .step .num { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; margin-right: 4px; }
+
+  .card { background: rgba(255,255,255,0.55); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 18px; backdrop-filter: blur(2px); }
+  .card h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .card .lede { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0 0 16px; max-width: 60ch; }
+
+  .btn { appearance: none; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); padding: 11px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+  .btn.primary:hover { background: #6e2819; }
+  .btn.ghost { background: transparent; border-color: var(--line); color: var(--ink-soft); }
+  .btn.ghost:hover { background: rgba(0,0,0,0.04); color: var(--ink); }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+  .methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+  .method-tile { padding: 16px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); text-align: left; cursor: pointer; font-family: inherit; transition: all 0.15s ease; color: var(--ink); }
+  .method-tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .method-tile[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .method-tile .mt-name { font-weight: 600; font-size: 14px; }
+  .method-tile .mt-desc { font-size: 12px; color: var(--ink-mute); margin-top: 4px; line-height: 1.4; }
+  .method-tile[aria-pressed="true"] .mt-desc { color: rgba(246,241,234,0.7); }
+
+  .iphone-search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.8); color: var(--ink); margin-top: 14px; margin-bottom: 10px; }
+  .iphone-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 320px; overflow-y: auto; }
+  .iphone-group-label { grid-column: 1/-1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); padding: 6px 2px 2px; border-top: 1px solid var(--line); margin-top: 4px; }
+  .iphone-group-label:first-child { border-top: none; margin-top: 0; }
+  .iphone-btn { padding: 9px 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; cursor: pointer; text-align: left; color: var(--ink); transition: all 0.12s ease; }
+  .iphone-btn:hover { border-color: var(--accent); }
+  .iphone-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .iphone-confirm { margin-top: 12px; padding: 10px 14px; background: rgba(90,122,74,0.1); border: 1px solid var(--good); border-radius: var(--radius-sm); font-size: 13px; color: var(--good); }
+  .calibration-badge { margin-top: 10px; font-size: 12px; color: var(--good); text-align: center; letter-spacing: 0.01em; }
+  .device-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .device-type-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; color: var(--ink); transition: all 0.15s ease; }
+  .device-type-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .device-type-btn .dt-icon { font-size: 36px; line-height: 1; }
+  .device-type-btn .dt-name { font-weight: 600; font-size: 16px; }
+  .device-type-btn .dt-sub { font-size: 11px; color: var(--ink-mute); text-align: center; }
+  .back-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--ink-soft); background: none; border: none; cursor: pointer; font-family: inherit; padding: 6px 2px; margin-top: 10px; }
+  .back-link:hover { color: var(--accent); }
+  .change-device-link { display: inline-block; font-size: 12px; color: var(--accent); background: none; border: none; cursor: pointer; font-family: inherit; margin-top: 8px; text-decoration: underline; padding: 0; }
+
+  .test-type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .tt-tile { padding: 20px 16px; border: 1px solid var(--line); background: rgba(255,255,255,0.6); border-radius: var(--radius-sm); text-align: center; cursor: pointer; font-family: inherit; transition: all 0.15s ease; color: var(--ink); }
+  .tt-tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .tt-tile[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .tt-tile .tt-icon { font-size: 30px; margin-bottom: 8px; }
+  .tt-tile .tt-name { font-weight: 600; font-size: 15px; }
+  .tt-tile .tt-desc { font-size: 12px; color: var(--ink-mute); margin-top: 4px; line-height: 1.4; }
+  .tt-tile[aria-pressed="true"] .tt-desc { color: rgba(246,241,234,0.7); }
+
+  .field { display: grid; gap: 6px; margin-top: 14px; }
+  .field label { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.04em; text-transform: uppercase; }
+  .field input[type="number"], .field select { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.7); color: var(--ink); }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .cc-stage { background: var(--paper-2); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 24px; display: grid; place-items: center; margin-top: 14px; }
+  .cc-card { position: relative; background: linear-gradient(135deg, #2a2a2a, #1a1a1a); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); color: rgba(255,255,255,0.85); padding: 14px; display: flex; flex-direction: column; justify-content: space-between; aspect-ratio: 85.6/53.98; user-select: none; }
+  .cc-card::after { content: ''; position: absolute; right: 14px; top: 14px; width: 30px; height: 22px; background: linear-gradient(135deg, #d4a574, #a47842); border-radius: 3px; }
+  .cc-card .cc-label { font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; opacity: 0.6; letter-spacing: 0.1em; }
+  .cc-card .cc-num { font-family: 'Fraunces', serif; font-size: 14px; letter-spacing: 0.15em; }
+  .cc-resize { width: 100%; margin-top: 14px; }
+  .cc-result { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+  .cc-result strong { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); }
+
+  .cam-stage { position: relative; aspect-ratio: 4/3; background: #000; border-radius: var(--radius-sm); overflow: hidden; margin-top: 14px; }
+  .cam-stage video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam-overlay { position: absolute; inset: 0; pointer-events: none; border: 2px dashed rgba(255,255,255,0.4); margin: 18%; border-radius: 50% / 35%; }
+  .cam-readout { position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-family: 'Fraunces', serif; font-style: italic; backdrop-filter: blur(8px); }
+
+  .test-stage { background: white; border: 1px solid var(--line); border-radius: var(--radius); padding: 40px 20px; margin-top: 18px; text-align: center; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  .line-progress { position: absolute; top: 12px; right: 16px; font-size: 12px; color: var(--ink-mute); letter-spacing: 0.05em; }
+  .optotypes { font-family: 'Sloan', monospace; font-weight: normal; letter-spacing: 0.3em; color: #000; line-height: 1; margin-bottom: 20px; user-select: none; }
+  .answer-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+  .answer-row input { width: 56px; height: 56px; text-align: center; font-size: 24px; font-family: inherit; font-weight: 600; text-transform: uppercase; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); transition: border-color 0.15s, background 0.15s; }
+  .answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* ── Full-screen test mode ── */
+  /* Target #step3 directly — child of .wrap, no stacking context above it */
+  body.testing { overflow: hidden; }
+  body.testing #step3 {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important;
+    height: 100vh !important; height: 100dvh !important; /* dvh excludes Safari URL bar */
+    z-index: 9999 !important;
+    border-radius: 0 !important; margin: 0 !important;
+    padding: max(20px, env(safe-area-inset-top)) 24px max(16px, env(safe-area-inset-bottom)) !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    background: var(--paper) !important; overflow: hidden !important;
+    display: flex !important; flex-direction: column !important;
+  }
+  body.testing #step3 > h2,
+  body.testing #step3 > .lede { display: none !important; }
+  body.testing .test-stage {
+    flex: 1 !important; border: none !important; border-radius: 0 !important;
+    padding: 8px 0 0 !important; margin: 0 !important; background: transparent !important;
+    min-height: 0 !important; overflow: hidden !important;
+  }
+  body.testing .optotypes {
+    flex: 1 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    overflow: hidden !important; line-height: 1 !important; margin-bottom: 0 !important;
+    white-space: nowrap !important; text-align: center !important;
+  }
+  body.testing .answer-row { gap: 7px !important; padding-top: 6px !important; }
+  body.testing .answer-row input { width: 42px !important; height: 42px !important; font-size: 18px !important; }
+  body.testing .line-progress { position: static; text-align: center; font-size: 11px; margin-bottom: 4px; }
+  body.testing .vm-panel { gap: 8px !important; padding: 4px 0 0 !important; }
+  body.testing .vm-heard { font-size: 80px !important; min-height: 0 !important; height: auto !important; }
+  body.testing .vm-mic { width: 54px !important; height: 54px !important; font-size: 24px !important; }
+  body.testing .keypad { max-width: 420px; margin-top: 10px !important; }
+  body.testing .keypad button { padding: 13px 0 !important; }
+  .keypad { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 18px auto 0; max-width: 400px; width: 100%; }
+  .keypad button { padding: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm); font-family: 'Fraunces', serif; font-size: 20px; cursor: pointer; transition: all 0.12s ease; color: var(--ink); }
+  .keypad button:hover { background: var(--ink); color: var(--paper); }
+  .keypad button:active { transform: scale(0.93); }
+  /* ── Voice input mode ── */
+  .vm-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; width: 100%; }
+  .vm-progress { display: flex; gap: 8px; min-height: 12px; }
+  .vm-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); transition: background 0.2s; flex-shrink: 0; }
+  .vm-dot.done  { background: var(--good); }
+  .vm-dot.active { background: var(--accent); transform: scale(1.2); }
+  .vm-heard { font-family: 'Sloan', monospace; font-weight: normal; font-size: 80px; min-height: 90px; line-height: 1; display: flex; align-items: center; justify-content: center; color: var(--accent); letter-spacing: 0; }
+  .vm-mic { width: 62px; height: 62px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; font-size: 28px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; flex-shrink: 0; }
+  .vm-mic:active { transform: scale(0.9); }
+  .vm-mic.listening { animation: vm-pulse 1.1s ease-in-out infinite; }
+  @keyframes vm-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(200,129,74,0.5); } 55% { box-shadow: 0 0 0 18px rgba(200,129,74,0); } }
+  .vm-status { font-size: 13px; color: var(--ink-mute); min-height: 20px; text-align: center; }
+  body.app-mode .vm-status { color: var(--accent); }
+  .vm-input-row { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
+  .vm-input-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vm-input-label { font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; }
+  .vm-btns { display: flex; gap: 10px; }
+  .vm-type-link { width: 62px; height: 62px; border-radius: 50%; font-size: 26px; display: flex; align-items: center; justify-content: center; background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; font-family: inherit; padding: 0; opacity: 0.7; transition: transform 0.1s, opacity 0.15s; flex-shrink: 0; }
+  .vm-type-link:active { transform: scale(0.9); }
+  body.testing .vm-type-link { width: 54px !important; height: 54px !important; font-size: 22px !important; }
+
+  .occluder-card { text-align: center; padding: 24px 20px; }
+  .occluder-card .eye-icon { font-size: 52px; margin-bottom: 8px; }
+  .occluder-card .which-eye { font-family: 'Fraunces', serif; font-style: italic; font-size: 28px; margin: 4px 0; }
+  .occluder-card .instruction { color: var(--ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 0; line-height: 1.55; }
+  .glasses-toggle { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 18px auto; padding: 14px 18px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); max-width: 320px; cursor: pointer; }
+  .glasses-toggle input { display: none; }
+  .glasses-toggle label { font-size: 15px; font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-soft); cursor: pointer; flex: 1; text-align: left; line-height: 1.3; }
+  .glasses-switch { position: relative; width: 51px; height: 31px; flex-shrink: 0; cursor: pointer; }
+  .glasses-switch::before { content: ''; position: absolute; inset: 0; background: rgba(120,120,128,0.32); border-radius: 16px; transition: background 0.25s; }
+  .glasses-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: transform 0.25s; }
+  #glassesOn:checked ~ .glasses-switch::before { background: var(--accent); }
+  #glassesOn:checked ~ .glasses-switch::after { transform: translateX(20px); }
+
+  /* Color vision */
+
+  /* Result */
+  .result-hero { text-align: center; padding: 28px 20px; background: linear-gradient(135deg, rgba(138,51,36,0.08), rgba(138,51,36,0.02)); border: 1px solid var(--line); border-radius: var(--radius); }
+  .result-badge { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 4px; }
+  .result-snellen { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height: 1; margin: 4px 0; color: var(--accent); letter-spacing: -0.02em; }
+  .result-snellen em { font-style: italic; font-weight: 400; }
+  .result-logmar { font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-soft); font-size: 15px; }
+  .result-interp { font-size: 14px; color: var(--ink-soft); margin-top: 12px; line-height: 1.55; max-width: 42ch; margin-left: auto; margin-right: auto; }
+  .result-eye-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .ec { padding: 14px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); text-align: center; }
+  .ec .lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); }
+  .ec .val { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin-top: 4px; }
+  .ec .correction-lbl { font-size: 11px; color: var(--ink-mute); margin-top: 3px; font-style: italic; }
+
+  .disclaimer { margin-top: 20px; padding: 14px 16px; background: rgba(138,51,36,0.06); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  .disclaimer strong { color: var(--accent); font-weight: 600; }
+
+  footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  [hidden] { display: none !important; }
+
+  #landscapeWarn { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.93); color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:32px; }
+  #landscapeWarn:not([hidden]) { display:flex; }
+  #landscapeWarn .lw-icon { font-size:52px; line-height:1; }
+  #landscapeWarn h3 { font-size:22px; font-weight:600; margin:0; }
+  #landscapeWarn p { font-size:14px; color:rgba(255,255,255,0.65); margin:0; line-height:1.6; }
+
+  .referral-flag { display:flex; gap:10px; padding:14px 16px; border-radius:var(--radius-sm); margin-top:14px; font-size:13px; line-height:1.55; }
+  .referral-flag.warn { background:rgba(202,138,4,0.1); border:1px solid rgba(202,138,4,0.35); color:#92400e; }
+  .referral-flag.urgent { background:rgba(185,28,28,0.08); border:1px solid rgba(185,28,28,0.3); color:#991b1b; }
+  .rx-estimate { margin-top:10px; padding:12px 14px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.18); border-radius:var(--radius-sm); font-size:13px; color:var(--ink-soft); }
+  .rx-estimate strong { color:var(--ink); }
+  .history-section { margin-top:18px; }
+  .history-row { display:flex; align-items:center; gap:8px; padding:9px 12px; background:rgba(255,255,255,0.45); border:1px solid var(--line); border-radius:var(--radius-sm); margin-bottom:5px; font-size:13px; }
+  .history-row .hr-date { color:var(--ink-mute); min-width:96px; }
+  .history-row .hr-scores { font-weight:600; color:var(--ink); flex:1; }
+  .history-row .hr-type { font-size:11px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.06em; }
+  body.app-mode .history-row { background:rgba(255,255,255,0.04); }
+  body.app-mode .referral-flag.warn { color:#fbbf24; }
+  body.app-mode .referral-flag.urgent { color:#f87171; }
+
+  /* ── App mode (Capacitor / ?app=1) ── */
+  body.app-mode {
+    --paper: #0a0a0a; --paper-2: #1c1c1e; --paper-3: #2c2c2e;
+    --ink: #f2f2f7; --ink-soft: rgba(242,242,247,0.65);
+    --ink-mute: rgba(242,242,247,0.35); --line: rgba(255,255,255,0.10);
+    --accent: #D4A017; --accent-soft: #B8880F;
+    --good: #30d158; --radius: 16px; --radius-sm: 10px;
+  }
+  body.app-mode {
+    background-color: #0a0a0a;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(212,160,23,0.07) 0%, transparent 55%),
+      radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
+    background-size: 100% 100%, 22px 22px;
+    background-attachment: fixed;
+  }
+  body.app-mode .wrap { padding-top: 0; }
+  body.app-mode .card { background: var(--paper-2); }
+  body.app-mode .method-tile, body.app-mode .tt-tile { background: transparent; }
+  body.app-mode .method-tile[aria-pressed="true"], body.app-mode .tt-tile[aria-pressed="true"] { background: rgba(212,160,23,0.10); }
+  body.app-mode .iphone-btn { background: transparent; }
+  body.app-mode .iphone-btn.active { background: rgba(212,160,23,0.10); color: var(--accent) !important; font-weight: 600; }
+  body.app-mode .test-stage { background: #000; }
+  body.app-mode .optotypes { color: #fff; }
+  body.app-mode .answer-row input { background: var(--paper-3); border-color: var(--line); color: var(--ink); }
+  body.app-mode .keypad button { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
+  body.app-mode .cc-stage { background: var(--paper-2); }
+  body.app-mode .field input, body.app-mode .field select { background: var(--paper-3); color: var(--ink); border-color: var(--line); }
+  body.app-mode .glasses-toggle { background: var(--paper-3); border-color: var(--line); }
+  body.app-mode .glasses-toggle label { color: var(--ink-soft); }
+  body.app-mode .ec { background: var(--paper-3); }
+  body.app-mode footer { display: none; }
+  /* Step 1 is auto-skipped in app mode; hide the Back button that returns to it */
+  body.app-mode #backTo1 { display: none !important; }
+
+  /* ── App mode: visibility helpers ── */
+  .app-only { display: none; }
+  body.app-mode .app-only { display: revert; }
+  body.app-mode .web-only { display: none !important; }
+
+  /* ── App mode: "Most Accurate" badge ── */
+  .app-badge {
+    display: none;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 99px;
+    background: rgba(212,160,23,0.18); color: var(--accent);
+    margin-left: 7px; vertical-align: middle;
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+  }
+  body.app-mode .app-badge { display: inline; }
+
+  /* ── App mode: test-type tile icon bubbles ── */
+  body.app-mode .tt-icon {
+    width: 42px; height: 42px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0; line-height: 1;
+  }
+  body.app-mode [data-type="mirror"] .tt-icon { background: var(--accent); }
+  body.app-mode [data-type="distance"] .tt-icon { background: #0A84FF; }
+  body.app-mode [data-type="near"] .tt-icon { background: #FF9F0A; }
+
+  /* ── App mode: tile ordering — mirror first, distance second, near hidden ── */
+  body.app-mode .test-type-row { display: flex; flex-direction: column; }
+  body.app-mode [data-type="mirror"] { order: 1; }
+  body.app-mode [data-type="distance"] { order: 2; }
+  body.app-mode [data-type="near"] { display: none !important; }
+
+  /* ── App mode: layout & structure ── */
+  body.app-mode .wrap { max-width: 100%; padding: max(72px, calc(50px + env(safe-area-inset-top))) 0 0; }
+  body.app-mode .stepper { display: none; }
+  body.app-mode .card {
+    border: none; border-radius: 0; margin-bottom: 0;
+    padding: 20px 20px 12px; backdrop-filter: none; background: transparent;
+  }
+  body.app-mode .card h2 {
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.035em; margin-bottom: 6px;
+  }
+  body.app-mode .app-title-bar h2 {
+    font-family: 'Inter Tight', sans-serif; font-style: normal;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+  }
+  body.app-mode .app-title-bar p { font-size: 14px; color: var(--ink-mute); margin: 0; }
+  body.app-mode .card .lede { max-width: none; margin-bottom: 16px; }
+  body.app-mode .app-title-bar { border-bottom: none; margin-bottom: 0; padding: 28px 20px 18px; }
+  body.app-mode[data-step="4"] .app-title-bar { display: none; }
+  body.app-mode .title-chart { margin-bottom: 12px; }
+  body.app-mode .title-chart .tc-1 { font-size: 42px; }
+  body.app-mode .title-chart .tc-2 { font-size: 26px; }
+  body.app-mode .title-chart .tc-3 { font-size: 18px; }
+
+  /* ── Grouped list containers (method + test-type tiles) ── */
+  body.app-mode .methods,
+  body.app-mode .test-type-row {
+    display: flex; flex-direction: column; gap: 0; margin-top: 10px;
+    background: var(--paper-2); border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+  }
+  body.app-mode .method-tile,
+  body.app-mode .tt-tile {
+    background: transparent !important; border: none !important;
+    border-bottom: 1px solid var(--line) !important; border-radius: 0 !important;
+    padding: 12px 16px; transform: none !important;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+  }
+  body.app-mode .method-tile:last-child,
+  body.app-mode .tt-tile:last-child { border-bottom: none !important; }
+  body.app-mode .method-tile[aria-pressed="true"],
+  body.app-mode .tt-tile[aria-pressed="true"] {
+    background: rgba(212,160,23,0.10) !important; color: var(--ink) !important;
+  }
+  body.app-mode .method-tile[aria-pressed="true"] .mt-name,
+  body.app-mode .tt-tile[aria-pressed="true"] .tt-name { color: var(--accent); }
+  body.app-mode .method-tile[aria-pressed="true"] .mt-desc,
+  body.app-mode .tt-tile .tt-desc { color: var(--ink-mute); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+  body.app-mode .tt-tile .tt-name { font-weight: 600; font-size: 16px; line-height: 1.2; }
+
+  /* ── Quick Test: compact secondary row in app mode ── */
+  body.app-mode [data-type="distance"] { padding: 8px 16px !important; opacity: 0.45; }
+  body.app-mode [data-type="distance"] .tt-desc { display: none; }
+  body.app-mode [data-type="distance"] .tt-icon { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
+  body.app-mode [data-type="distance"] .tt-name { font-size: 14px; font-weight: 500; }
+
+  /* ── Device type choice (app-mode) ── */
+  body.app-mode .device-type-grid {
+    display: flex; flex-direction: column; gap: 0; margin-top: 10px;
+    background: var(--paper-2); border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+  }
+  body.app-mode .device-type-btn {
+    background: transparent; border: none; border-bottom: 1px solid var(--line);
+    border-radius: 0 !important; padding: 15px 16px; transform: none;
+    flex-direction: row; justify-content: flex-start; text-align: left; gap: 14px;
+  }
+  body.app-mode .device-type-btn:last-child { border-bottom: none; }
+  body.app-mode .device-type-btn .dt-icon { font-size: 26px; flex-shrink: 0; }
+  body.app-mode .device-type-btn .dt-name { font-size: 16px; }
+  body.app-mode .device-type-btn .dt-sub { text-align: left; }
+
+  /* ── iPhone picker as native list ── */
+  body.app-mode .iphone-search {
+    background: var(--paper-2); border-color: var(--line); color: var(--ink); border-radius: 12px;
+  }
+  body.app-mode .iphone-grid {
+    display: flex; flex-direction: column; gap: 0;
+    background: var(--paper-2); border-radius: 14px; overflow-y: auto;
+    border: 1px solid var(--line); margin-top: 6px; max-height: 260px;
+  }
+  body.app-mode .iphone-btn {
+    background: transparent !important; border: none !important;
+    border-bottom: 1px solid var(--line) !important; border-radius: 0 !important;
+    padding: 13px 16px; font-size: 14px;
+  }
+  body.app-mode .iphone-btn:last-child { border-bottom: none !important; }
+  body.app-mode .iphone-btn.active {
+    background: rgba(212,160,23,0.10) !important; color: var(--accent) !important; font-weight: 600;
+  }
+  body.app-mode .iphone-group-label {
+    background: var(--paper); padding: 8px 16px 4px;
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1;
+    font-size: 11px;
   }
 
-.wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 80px; }
+  /* ── Navigation buttons: full-width stacked (steps 1/2/occluder) ── */
+  body.app-mode #step1 > .btn-row,
+  body.app-mode #step2 > .btn-row,
+  body.app-mode .occluder-card .btn-row {
+    flex-direction: column; gap: 4px; align-items: stretch; margin-top: 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+  body.app-mode #step1 > .btn-row .btn,
+  body.app-mode #step2 > .btn-row .btn,
+  body.app-mode .occluder-card .btn-row .btn {
+    width: 100%; justify-content: center; padding: 15px; border-radius: 14px; font-size: 16px;
+  }
+  body.app-mode #step1 > .btn-row .btn.primary,
+  body.app-mode #step2 > .btn-row .btn.primary,
+  body.app-mode .occluder-card .btn-row .btn.primary { font-weight: 600; }
+  body.app-mode #step1 > .btn-row .btn.ghost,
+  body.app-mode #step2 > .btn-row .btn.ghost,
+  body.app-mode .occluder-card .btn-row .btn.ghost {
+    background: transparent; border: none; color: var(--ink-mute); padding: 10px; font-size: 15px;
+  }
 
-/* Header */
-header.hero { padding: 8px 4px 22px; border-bottom: 1px solid var(–line); margin-bottom: 28px; }
-.eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(–ink-mute); margin: 0 0 10px; }
-h1 {
-font-family: ‘Fraunces’, serif; font-weight: 500;
-font-size: clamp(30px, 5vw, 48px); line-height: 1.02; letter-spacing: -0.015em;
-margin: 0 0 8px;
-}
-h1 em { font-style: italic; color: var(–accent); font-weight: 400; }
-.sub { color: var(–ink-soft); font-size: 14px; max-width: 60ch; line-height: 1.55; }
-.credit { display: inline-block; margin-top: 10px; font-size: 12px; color: var(–ink-mute); padding: 4px 10px; border: 1px solid var(–line); border-radius: 999px; background: rgba(255,255,255,0.4); }
+  /* ── Step 3: test stage & occluder ── */
+  body.app-mode .test-stage { border-radius: 14px; }
+  body.app-mode .occluder-card {
+    background: var(--paper-2); border-radius: 14px; border: 1px solid var(--line); padding: 32px 24px;
+  }
 
-/* Step indicator */
-.stepper { display: flex; gap: 0; margin: 0 0 24px; border: 1px solid var(–line); border-radius: var(–radius); overflow: hidden; background: rgba(255,255,255,0.5); }
-.step {
-flex: 1; padding: 10px 12px; text-align: center; font-size: 12px; color: var(–ink-mute);
-border-right: 1px solid var(–line); position: relative;
-}
-.step:last-child { border-right: 0; }
-.step.active { background: var(–ink); color: var(–paper); }
-.step.done { color: var(–accent); }
-.step .num { font-family: ‘Fraunces’, serif; font-style: italic; font-size: 14px; margin-right: 6px; }
+  /* ── Step 4: results ── */
+  body.app-mode .result-hero { border: none; background: transparent; padding: 12px 0 16px; }
+  body.app-mode .result-snellen { font-size: 80px; }
 
-/* Cards */
-.card {
-background: rgba(255,255,255,0.55); border: 1px solid var(–line); border-radius: var(–radius);
-padding: 22px; margin-bottom: 18px; backdrop-filter: blur(2px);
-}
-.card h2 {
-font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 22px; letter-spacing: -0.01em;
-margin: 0 0 6px;
-}
-.card .lede { color: var(–ink-soft); font-size: 14px; line-height: 1.55; margin: 0 0 16px; max-width: 60ch; }
+  .results-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .results-actions .share-btn { width: 100%; justify-content: center; font-size: 17px; font-weight: 600; padding: 16px; border-radius: 16px; letter-spacing: 0.01em; }
+  .results-secondary-row { display: flex; gap: 8px; justify-content: center; }
+  .results-secondary-row .btn.ghost { flex: 1; justify-content: center; font-size: 14px; color: var(--ink-mute); padding: 10px 12px; }
+  body.app-mode .results-actions .share-btn { padding: 18px; border-radius: 16px; font-size: 17px; }
+  body.app-mode .results-secondary-row .btn.ghost { border: none; background: transparent; color: var(--accent); font-size: 15px; padding: 12px; }
 
-/* Buttons */
-.btn {
-appearance: none; border: 1px solid var(–ink); background: var(–paper); color: var(–ink);
-padding: 11px 18px; border-radius: var(–radius-sm); font-family: inherit; font-size: 14px;
-font-weight: 500; cursor: pointer; transition: all 0.15s ease;
-display: inline-flex; align-items: center; gap: 8px;
-}
-.btn:hover { background: var(–ink); color: var(–paper); }
-.btn:active { transform: translateY(1px); }
-.btn.primary { background: var(–accent); color: var(–paper); border-color: var(–accent); }
-.btn.primary:hover { background: #6e2819; }
-.btn.ghost { background: transparent; border-color: var(–line); color: var(–ink-soft); }
-.btn.ghost:hover { background: rgba(0,0,0,0.04); color: var(–ink); }
-.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .app-title-bar { display: none; padding: 6px 16px 14px; border-bottom: 1px solid var(--line); margin-bottom: 20px; text-align: center; }
+  .app-title-bar h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 2px; color: var(--ink); letter-spacing: -0.01em; }
+  .app-title-bar p { font-size: 12px; color: var(--ink-mute); margin: 0; }
+  .title-chart { display: flex; flex-direction: column; align-items: center; font-family: 'Sloan', monospace; margin-bottom: 6px; line-height: 1.2; }
+  .title-chart .tc-1 { font-size: 22px; color: var(--accent); letter-spacing: 0.15em; }
+  .title-chart .tc-2 { font-size: 14px; color: var(--accent); opacity: 0.65; letter-spacing: 0.3em; }
+  .title-chart .tc-3 { font-size: 10px; color: var(--accent); opacity: 0.38; letter-spacing: 0.45em; }
 
-/* Method picker tiles */
-.methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
-.method-tile {
-padding: 16px; border: 1px solid var(–line); background: rgba(255,255,255,0.6);
-border-radius: var(–radius-sm); text-align: left; cursor: pointer; font-family: inherit;
-transition: all 0.15s ease; color: var(–ink);
-}
-.method-tile:hover { border-color: var(–accent); transform: translateY(-1px); }
-.method-tile[aria-pressed=“true”] { background: var(–ink); color: var(–paper); border-color: var(–ink); }
-.method-tile .mt-name { font-weight: 600; font-size: 14px; }
-.method-tile .mt-desc { font-size: 12px; color: var(–ink-mute); margin-top: 4px; line-height: 1.4; }
-.method-tile[aria-pressed=“true”] .mt-desc { color: rgba(246, 241, 234, 0.7); }
+  .mirror-setup { background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.2); border-radius: var(--radius-sm); padding: 16px 18px; margin-top: 12px; }
+  .mirror-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+  .mirror-step:last-of-type { margin-bottom: 0; }
+  .ms-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(37,99,235,0.15); color: #1d4ed8; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .mirror-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .mirror-diagram { display: block; width: 100%; margin-top: 14px; overflow: visible; }
+  body.app-mode #testHeading { display: none; }
+  .mirror-photo { display: block; max-height: 180px; width: auto; max-width: 100%; margin: 12px auto 0; border-radius: var(--radius-sm); object-fit: cover; }
+  .myopia-note { padding: 12px 14px; background: rgba(202,138,4,0.08); border: 1px solid rgba(202,138,4,0.3); border-radius: var(--radius-sm); font-size: 13px; color: #92400e; line-height: 1.55; margin-top: 12px; }
+  body.app-mode .mirror-setup { background: rgba(212,160,23,0.08); border-color: rgba(212,160,23,0.25); padding: 10px 14px; margin-top: 8px; }
+  body.app-mode .ms-num { background: rgba(212,160,23,0.2); color: #D4A017; }
+  body.app-mode .mirror-step { font-size: 13px; margin-bottom: 6px; gap: 10px; }
+  body.app-mode .mirror-note { margin-top: 8px; padding-top: 8px; font-size: 11px; }
+  .mirror-layout { display: flex; gap: 12px; align-items: center; }
+  .mirror-layout .mirror-photo { width: 42%; max-height: none; margin: 0; flex-shrink: 0; border-radius: 8px; object-fit: cover; aspect-ratio: 3/4; }
+  .mirror-rules { flex: 1; display: flex; flex-direction: column; gap: 0; }
+  body.app-mode .mirror-photo { max-height: none; width: 42%; display: block; margin: 0; }
+  body.app-mode #step2 > .lede { display: none; }
+  body.app-mode #step2 { padding: 12px 18px; }
+  body.app-mode .myopia-note { color: #fbbf24; background: rgba(202,138,4,0.1); border-color: rgba(202,138,4,0.35); }
+  .compare-header { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); margin-bottom: 10px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .cg-cell { padding: 10px 12px; background: rgba(255,255,255,0.4); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 13px; text-align: center; }
+  .cg-cell .cg-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 4px; }
+  .cg-cell .cg-val { font-family: 'Fraunces', serif; font-size: 20px; color: var(--ink); }
+  .cg-cell.cg-gap .cg-val { color: var(--accent); }
+  .compare-rx { font-size: 13px; color: var(--ink-soft); padding: 10px 12px; background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15); border-radius: var(--radius-sm); line-height: 1.55; }
+  body.app-mode .cg-cell { background: rgba(255,255,255,0.04); }
+  body.app-mode .compare-rx { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); }
 
-/* Form */
-.field { display: grid; gap: 6px; margin-top: 14px; }
-.field label { font-size: 12px; color: var(–ink-soft); letter-spacing: 0.04em; text-transform: uppercase; }
-.field input[type=“number”], .field select {
-padding: 10px 12px; border: 1px solid var(–line); border-radius: var(–radius-sm);
-font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.7); color: var(–ink);
-}
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-/* Credit card calibration */
-.cc-stage {
-background: var(–paper-2); border: 1px dashed var(–line); border-radius: var(–radius-sm);
-padding: 24px; display: grid; place-items: center; margin-top: 14px;
-}
-.cc-card {
-position: relative; background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-color: rgba(255,255,255,0.85); padding: 14px;
-display: flex; flex-direction: column; justify-content: space-between;
-aspect-ratio: 85.6 / 53.98;
-user-select: none; touch-action: none;
-}
-.cc-card::after {
-content: ‘’; position: absolute; right: 14px; top: 14px;
-width: 30px; height: 22px; background: linear-gradient(135deg, #d4a574, #a47842); border-radius: 3px;
-}
-.cc-card .cc-label { font-family: ‘Fraunces’, serif; font-style: italic; font-size: 11px; opacity: 0.6; letter-spacing: 0.1em; }
-.cc-card .cc-num { font-family: ‘Fraunces’, serif; font-size: 14px; letter-spacing: 0.15em; }
-.cc-resize {
-width: 100%; margin-top: 14px;
-}
-.cc-result { margin-top: 10px; font-size: 13px; color: var(–ink-soft); }
-.cc-result strong { font-family: ‘Fraunces’, serif; font-style: italic; color: var(–accent); }
-
-/* Camera calibration */
-.cam-stage { position: relative; aspect-ratio: 4/3; background: #000; border-radius: var(–radius-sm); overflow: hidden; margin-top: 14px; }
-.cam-stage video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-.cam-overlay {
-position: absolute; inset: 0; pointer-events: none;
-border: 2px dashed rgba(255,255,255,0.4);
-margin: 18%;
-border-radius: 50% / 35%;
-}
-.cam-readout {
-position: absolute; bottom: 10px; left: 10px; right: 10px;
-background: rgba(0,0,0,0.6); color: white; padding: 8px 12px;
-border-radius: var(–radius-sm); font-size: 13px; font-family: ‘Fraunces’, serif; font-style: italic;
-backdrop-filter: blur(8px);
-}
-
-/* Test stage */
-.test-stage {
-background: white; border: 1px solid var(–line); border-radius: var(–radius);
-padding: 40px 20px; margin-top: 18px; text-align: center; min-height: 320px;
-display: flex; flex-direction: column; align-items: center; justify-content: center;
-position: relative;
-}
-.line-label {
-position: absolute; top: 12px; left: 16px; font-family: ‘Fraunces’, serif; font-style: italic;
-font-size: 13px; color: var(–ink-mute);
-}
-.line-progress {
-position: absolute; top: 12px; right: 16px; font-size: 12px; color: var(–ink-mute);
-letter-spacing: 0.05em;
-}
-.optotypes {
-font-family: ‘Sloan’, ‘Courier New’, monospace; /* fallback */
-font-weight: 400; letter-spacing: 0.5em; color: #000; line-height: 1;
-/* font-size set dynamically */
-margin-bottom: 20px;
-user-select: none;
-}
-.answer-row {
-display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px;
-}
-.answer-row input {
-width: 48px; height: 48px; text-align: center; font-size: 22px;
-font-family: inherit; font-weight: 600; text-transform: uppercase;
-border: 1px solid var(–line); border-radius: var(–radius-sm); background: var(–paper);
-color: var(–ink);
-}
-.answer-row input:focus { outline: 2px solid var(–accent); outline-offset: 1px; }
-.keypad {
-display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-margin: 18px auto 0; max-width: 360px;
-}
-.keypad button {
-padding: 14px 0; border: 1px solid var(–line); background: rgba(255,255,255,0.7);
-border-radius: var(–radius-sm); font-family: ‘Fraunces’, serif; font-size: 18px; cursor: pointer;
-transition: all 0.15s ease; color: var(–ink);
-}
-.keypad button:hover { background: var(–ink); color: var(–paper); }
-
-/* Result */
-.result-hero {
-text-align: center; padding: 30px 20px;
-background: linear-gradient(135deg, rgba(138, 51, 36, 0.08), rgba(138, 51, 36, 0.02));
-border: 1px solid var(–line); border-radius: var(–radius);
-}
-.result-snellen {
-font-family: ‘Fraunces’, serif; font-weight: 500; font-size: 64px; line-height: 1;
-margin: 8px 0; color: var(–accent); letter-spacing: -0.02em;
-}
-.result-snellen em { font-style: italic; font-weight: 400; }
-.result-logmar { font-family: ‘Fraunces’, serif; font-style: italic; color: var(–ink-soft); font-size: 16px; }
-.result-meta { font-size: 13px; color: var(–ink-mute); margin-top: 8px; }
-.result-eye-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-.result-eye-row .ec {
-padding: 14px; background: rgba(255,255,255,0.6); border: 1px solid var(–line); border-radius: var(–radius-sm);
-text-align: center;
-}
-.result-eye-row .ec .lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(–ink-mute); }
-.result-eye-row .ec .val { font-family: ‘Fraunces’, serif; font-size: 24px; color: var(–ink); margin-top: 4px; }
-
-/* Disclaimer */
-.disclaimer {
-margin-top: 20px; padding: 14px 16px;
-background: rgba(138, 51, 36, 0.06); border-left: 3px solid var(–accent);
-border-radius: 0 var(–radius-sm) var(–radius-sm) 0;
-font-size: 13px; color: var(–ink-soft); line-height: 1.55;
-}
-.disclaimer strong { color: var(–accent); font-weight: 600; }
-
-/* Footer */
-footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(–line); color: var(–ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-footer a { color: var(–accent); text-decoration: none; }
-footer a:hover { text-decoration: underline; }
-
-/* Eye occluder reminder */
-.occluder-card {
-text-align: center; padding: 30px 20px;
-}
-.occluder-card .eye-icon {
-font-family: ‘Fraunces’, serif; font-size: 56px; color: var(–accent); margin-bottom: 8px;
-}
-.occluder-card .which-eye {
-font-family: ‘Fraunces’, serif; font-style: italic; font-size: 28px; margin: 4px 0;
-}
-.occluder-card .instruction {
-color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px; line-height: 1.55;
-}
-
-/* Hide / show */
-[hidden] { display: none !important; }
-
-@media (max-width: 600px) {
-.row-2 { grid-template-columns: 1fr; }
-.step { font-size: 11px; padding: 8px 6px; }
-.step .num { display: block; margin: 0; }
-.answer-row input { width: 42px; height: 42px; font-size: 18px; }
-}
+  @media (max-width: 600px) {
+    .row-2 { grid-template-columns: 1fr; }
+    .step { font-size: 10px; padding: 8px 4px; }
+    .answer-row input { width: 48px; height: 48px; font-size: 20px; }
+    .keypad { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+    .keypad button { padding: 15px 0; font-size: 17px; }
+  }
 </style>
-
 </head>
 <body>
+<a href="/" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
+<div id="landscapeWarn" hidden>
+  <div class="lw-icon">⟳</div>
+  <h3>Rotate to portrait</h3>
+  <p>The letter test needs portrait orientation<br>to display letters at the correct physical size.</p>
+</div>
 <div class="wrap">
 
+  <div class="app-title-bar" id="appTitleBar">
+    <div class="title-chart" aria-hidden="true">
+      <span class="tc-1">E</span>
+      <span class="tc-2">F P</span>
+      <span class="tc-3">T O Z</span>
+    </div>
+    <h2>Visual Acuity Chart</h2>
+    <p>by Dr. Evans, OD</p>
+  </div>
+
   <header class="hero">
-    <p class="eyebrow">Patient self-screening · Educational use only</p>
-    <h1>A Calibrated Test of <em>Visual Acuity</em></h1>
-    <p class="sub">A Sloan-letter distance acuity screening, properly sized to your screen and viewing distance. The same logMAR progression used in the clinic — adapted for the desk at home.</p>
-    <span class="credit">Built by Dr. Ryan Evans, OD</span>
+    <h1>Visual Acuity Chart</h1>
+    <p class="sub">by Dr. Ryan Evans, OD</p>
   </header>
 
   <div class="stepper" id="stepper">
     <div class="step active" data-step="1"><span class="num">i.</span>Calibrate</div>
-    <div class="step" data-step="2"><span class="num">ii.</span>Distance</div>
+    <div class="step" data-step="2"><span class="num">ii.</span>Setup</div>
     <div class="step" data-step="3"><span class="num">iii.</span>Test</div>
     <div class="step" data-step="4"><span class="num">iv.</span>Result</div>
   </div>
 
-  <!-- ============ STEP 1: METHOD ============ -->
-
+  <!-- STEP 1: CALIBRATE -->
   <section class="card" id="step1">
     <h2>Calibrate the screen</h2>
-    <p class="lede">First we need to know how large a millimetre is on your display. Choose a method:</p>
     <div class="methods" id="methodTiles">
-      <button class="method-tile" data-method="card" aria-pressed="true">
+      <button class="method-tile" data-method="iphone" aria-pressed="true">
+        <div class="mt-name">📱 iPhone / iPad</div>
+        <div class="mt-desc">Pick your Apple device for exact calibration.</div>
+      </button>
+      <button class="method-tile" data-method="card">
         <div class="mt-name">Credit card</div>
-        <div class="mt-desc">Match an on-screen card to a real one. Most accurate.</div>
+        <div class="mt-desc">Match on-screen card to a real one. Most accurate.</div>
       </button>
       <button class="method-tile" data-method="camera">
         <div class="mt-name">Camera (face)</div>
-        <div class="mt-desc">Estimate via your interpupillary distance.</div>
-      </button>
-      <button class="method-tile" data-method="manual">
-        <div class="mt-name">Manual entry</div>
-        <div class="mt-desc">Type your screen's diagonal and resolution.</div>
+        <div class="mt-desc">Estimate via interpupillary distance.</div>
       </button>
     </div>
 
-```
-<!-- Card method -->
-<div id="methodCard">
-  <div class="cc-stage">
-    <div class="cc-card" id="ccCard" style="width: 320px;">
-      <div class="cc-label">CALIBRATION CARD</div>
-      <div class="cc-num">0000 · 0000 · 0000</div>
+    <!-- Card method -->
+    <div id="methodCard" hidden>
+      <div class="cc-stage">
+        <div class="cc-card" id="ccCard" style="width:320px;">
+          <div class="cc-label">CALIBRATION CARD</div>
+          <div class="cc-num">0000 · 0000 · 0000</div>
+        </div>
+        <input type="range" id="ccResize" class="cc-resize" min="180" max="600" value="320" step="1">
+        <div class="cc-result">Resize until it matches a real credit card. Current: <strong id="ccPpmm">—</strong> px/mm</div>
+      </div>
     </div>
-    <input type="range" id="ccResize" class="cc-resize" min="180" max="600" value="320" step="1">
-    <div class="cc-result">Resize until it matches a real credit card. Current: <strong id="ccPpmm">—</strong> px/mm</div>
-  </div>
-</div>
 
-<!-- Camera method -->
-<div id="methodCamera" hidden>
-  <div class="field">
-    <label>Your interpupillary distance (mm) — average adult is 63</label>
-    <input type="number" id="ipdInput" min="50" max="80" value="63">
-  </div>
-  <div class="cam-stage">
-    <video id="ipdVideo" autoplay playsinline muted></video>
-    <div class="cam-overlay"></div>
-    <div class="cam-readout" id="ipdReadout">Align your face inside the oval, then start.</div>
-  </div>
-  <div class="btn-row">
-    <button class="btn" id="startIpdCam">Start camera</button>
-    <button class="btn ghost" id="captureIpd" disabled>Capture &amp; estimate</button>
-  </div>
-</div>
+    <!-- Camera method -->
+    <div id="methodCamera" hidden>
+      <div class="field">
+        <label>Your interpupillary distance (mm) — average adult is 63</label>
+        <input type="number" id="ipdInput" min="50" max="80" value="63">
+      </div>
+      <div class="cam-stage">
+        <video id="ipdVideo" autoplay playsinline muted></video>
+        <div class="cam-overlay"></div>
+        <div class="cam-readout" id="ipdReadout">Align your face inside the oval, then capture.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="startIpdCam">Start camera</button>
+        <button class="btn ghost" id="captureIpd" disabled>Capture &amp; estimate</button>
+      </div>
+    </div>
 
-<!-- Manual method -->
-<div id="methodManual" hidden>
-  <div class="row-2">
-    <div class="field">
-      <label>Screen diagonal (inches)</label>
-      <input type="number" id="screenDiag" min="3" max="40" step="0.1" value="13.3">
+    <!-- iPhone / iPad model method -->
+    <div id="methodIphone">
+      <div id="deviceTypeChoice">
+        <div class="device-type-grid">
+          <button class="device-type-btn" id="chooseIphone">
+            <span class="dt-icon">📱</span>
+            <span class="dt-name">iPhone</span>
+            <span class="dt-sub">All models from 6s onward</span>
+          </button>
+          <button class="device-type-btn" id="chooseIpad">
+            <span class="dt-icon">📋</span>
+            <span class="dt-name">iPad</span>
+            <span class="dt-sub">All iPad models</span>
+          </button>
+        </div>
+      </div>
+      <div id="deviceModelPicker" hidden>
+        <button class="back-link" id="backToDeviceType">← Back</button>
+        <input class="iphone-search" id="iphoneSearch" type="text" placeholder="Search model…" autocomplete="off">
+        <div class="iphone-grid" id="iphoneGrid"></div>
+      </div>
+      <div class="iphone-confirm" id="iphoneConfirm" hidden></div>
+      <button class="change-device-link" id="changeDevice" hidden>Change device</button>
     </div>
-    <div class="field">
-      <label>Native resolution width (px)</label>
-      <input type="number" id="screenResW" min="320" max="8192" step="1" value="2560">
-    </div>
-  </div>
-  <div class="row-2">
-    <div class="field">
-      <label>Native resolution height (px)</label>
-      <input type="number" id="screenResH" min="320" max="8192" step="1" value="1600">
-    </div>
-    <div class="field">
-      <label>Calculated px/mm</label>
-      <input type="number" id="manualPpmm" readonly>
-    </div>
-  </div>
-</div>
 
-<div class="btn-row">
-  <button class="btn primary" id="toStep2">Next: viewing distance →</button>
-</div>
-```
-
+    <div class="btn-row">
+      <button class="btn primary" id="toStep2">Next: test setup →</button>
+    </div>
   </section>
 
-  <!-- ============ STEP 2: DISTANCE ============ -->
-
+  <!-- STEP 2: SETUP -->
   <section class="card" id="step2" hidden>
-    <h2>Viewing distance</h2>
-    <p class="lede">Sit a measured distance from the screen. Standard testing distance is 10 ft (3 m); shorter distances are valid if your screen is small.</p>
+    <h2 class="web-only">Test setup</h2>
+    <p class="lede">Read each line of letters aloud — letters get smaller until you can't read them. Each eye is tested separately.</p>
 
-```
-<div class="field">
-  <label>Test distance</label>
-  <select id="distancePreset">
-    <option value="3000">3 m (10 ft) — standard</option>
-    <option value="6000">6 m (20 ft) — full clinical</option>
-    <option value="4000">4 m (13 ft) — ETDRS</option>
-    <option value="2000">2 m (6.5 ft) — small screen</option>
-    <option value="1000">1 m (3.3 ft) — phone/tablet</option>
-    <option value="custom">Custom…</option>
-  </select>
-</div>
-<div class="field" id="customDistanceWrap" hidden>
-  <label>Custom distance (mm)</label>
-  <input type="number" id="customDistance" min="300" max="10000" step="50" value="3000">
-</div>
+    <div style="margin-bottom:14px;">
+      <div class="test-type-row">
+        <button class="tt-tile" data-type="distance" aria-pressed="true">
+          <div class="tt-icon">⚡</div>
+          <div>
+            <div class="tt-name web-only">Distance vision</div>
+            <div class="tt-name app-only">Quick Test</div>
+            <div class="tt-desc web-only">How clearly you see far away. Measured at 10–20 feet.</div>
+            <div class="tt-desc app-only">Hold the phone at arm's length and read the chart. Fast setup, no mirror needed.</div>
+          </div>
+        </button>
+        <button class="tt-tile" data-type="near" aria-pressed="false">
+          <div class="tt-icon">📖</div>
+          <div>
+            <div class="tt-name">Near vision</div>
+            <div class="tt-desc">Reading distance (~40 cm). Important for presbyopia.</div>
+          </div>
+        </button>
+        <button class="tt-tile" data-type="mirror" aria-pressed="false">
+          <div class="tt-icon">🪞</div>
+          <div>
+            <div class="tt-name">Mirror test <span class="app-badge">Most Accurate</span></div>
+            <div class="tt-desc web-only">True distance vision — prop phone against wall, read via mirror.</div>
+            <div class="tt-desc app-only">Use your bathroom mirror. Say the letters aloud — hands-free &amp; voice-enabled.</div>
+          </div>
+        </button>
+      </div>
+    </div>
 
-<div class="disclaimer">
-  <strong>Tip.</strong> Use a tape measure or a known length (a US dollar bill is 156 mm; a credit card is 86 mm). Sit so your eyes are level with the screen.
-</div>
+    <div id="mirrorWrap" hidden>
+      <div class="mirror-setup">
+        <div class="mirror-layout">
+          <img class="mirror-photo" src="mirror-demo.jpg" alt="Person holding phone with screen facing mirror — eye chart visible in reflection">
+          <div class="mirror-rules">
+            <div class="mirror-step"><span class="ms-num">1</span><span>Screen facing the mirror — read the reflection</span></div>
+            <div class="mirror-step"><span class="ms-num">2</span><span>Stand <strong>6 ft (2 m)</strong> away, back to wall</span></div>
+            <div class="mirror-step"><span class="ms-num">3</span><span>Say the letters aloud, one eye covered</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<div class="btn-row">
-  <button class="btn ghost" id="backTo1">← Back</button>
-  <button class="btn primary" id="toStep3">Next: begin test →</button>
-</div>
-```
+    <div id="distanceWrap">
+      <div class="field">
+        <label>Viewing distance</label>
+        <select id="distancePreset">
+          <option value="3000">10 ft (3 m) — standard</option>
+          <option value="6000">20 ft (6 m) — full clinical</option>
+          <option value="4000">13 ft (4 m) — ETDRS</option>
+          <option value="2000">6.5 ft (2 m) — small screen</option>
+          <option value="1000">3.3 ft (1 m) — phone/tablet</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+      <div class="field" id="customDistanceWrap" hidden>
+        <label>Custom distance (mm)</label>
+        <input type="number" id="customDistance" min="300" max="10000" step="50" value="3000">
+      </div>
+    </div>
 
+    <div id="nearWrap" hidden>
+      <div class="disclaimer">
+        <strong>Near vision test.</strong> Hold your device at comfortable reading distance — about 40 cm (16 inches). When the test begins, keep it at that distance and cover one eye at a time.
+      </div>
+    </div>
+
+    <div id="myopiaNote" hidden class="myopia-note">
+      ⚠️ <strong>Nearsighted without glasses?</strong> Testing at arm's length won't detect myopia — your near focus compensates. Use <strong>Mirror Mode</strong> for a true distance check, or test corrected vs. uncorrected to estimate your prescription.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="backTo1">← Back</button>
+      <button class="btn primary" id="toStep3">Begin test →</button>
+    </div>
+    <div class="calibration-badge" id="calibrationBadge2" hidden>
+      ✓ Calibrated for <span id="calibrationDevice2"></span>
+    </div>
   </section>
 
-  <!-- ============ STEP 3: TEST ============ -->
-
+  <!-- STEP 3: TEST -->
   <section class="card" id="step3" hidden>
-    <h2 id="testHeading">Right eye — cover the left</h2>
-    <p class="lede" id="testLede">Cover your left eye gently with your palm (don't press on the eyeball). Read the letters aloud. Tap each letter you can identify, or type it. If unsure, guess — partial credit counts.</p>
+    <h2 id="testHeading">Right eye</h2>
+    <p class="lede" id="testLede"></p>
 
-```
-<div id="occluderPrompt" class="occluder-card">
-  <div class="eye-icon">◉</div>
-  <div class="which-eye" id="whichEye">Right eye (OD)</div>
-  <div class="instruction" id="occluderText">Cover your <strong>left</strong> eye. When ready, the test will begin at the largest line and progress smaller.</div>
-  <button class="btn primary" id="beginEye">I'm ready — begin</button>
-</div>
+    <div id="occluderPrompt" class="occluder-card">
+      <div class="eye-icon" id="occluderIcon">👁️</div>
+      <div class="which-eye" id="whichEye">Right eye (OD)</div>
+      <div class="instruction" id="occluderText">Cover your left eye gently with your palm. Don't press on the eyeball.</div>
+      <div class="glasses-toggle">
+        <input type="checkbox" id="glassesOn">
+        <label for="glassesOn">Wearing glasses or contacts</label>
+        <div class="glasses-switch" onclick="document.getElementById('glassesOn').click()"></div>
+      </div>
+      <div class="btn-row" style="justify-content:center;margin-top:14px;gap:10px;">
+        <button class="btn primary" id="beginEye">I'm ready — begin</button>
+      </div>
+      <div class="calibration-badge" id="calibrationBadge" hidden>
+        ✓ Calibrated for <span id="calibrationDevice"></span>
+      </div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="back-link" id="backTo2">← Back to setup</button>
+      </div>
+    </div>
 
-<div id="testStage" class="test-stage" hidden>
-  <div class="line-label" id="lineLabel"></div>
-  <div class="line-progress" id="lineProgress"></div>
-  <div class="optotypes" id="optotypes"></div>
-  <div class="answer-row" id="answerRow"></div>
-  <div class="keypad" id="keypad"></div>
-  <div class="btn-row" style="justify-content: center;">
-    <button class="btn ghost" id="cantSee">Can't see this line</button>
-    <button class="btn" id="submitLine">Submit line</button>
-  </div>
-</div>
-```
-
+    <div id="testStage" class="test-stage" hidden>
+      <div class="line-progress" id="lineProgress"></div>
+      <div class="optotypes" id="optotypes"></div>
+      <div class="answer-row" id="answerRow"></div>
+      <div class="keypad" id="keypad"></div>
+      <div id="voicePanel" class="vm-panel" hidden>
+        <div class="vm-progress" id="vmProgress"></div>
+        <div class="vm-heard" id="vmHeard"></div>
+        <div class="vm-input-row">
+          <div class="vm-input-col">
+            <button class="vm-mic" id="vmMic" aria-label="Tap to listen again">🎤</button>
+            <span class="vm-input-label">Speak</span>
+          </div>
+          <div class="vm-input-col">
+            <button class="vm-type-link" id="vmTypeLink" aria-label="Switch to typing">⌨️</button>
+            <span class="vm-input-label">Type</span>
+          </div>
+        </div>
+        <div class="vm-status" id="vmStatus">Say the letter — or "can't see" to skip line</div>
+        <div class="vm-btns">
+          <button class="btn ghost" id="vmRetry">Retry</button>
+          <button class="btn ghost" id="vmSkip">Skip letter</button>
+        </div>
+      </div>
+      <div class="btn-row" style="justify-content:center;margin-top:18px;">
+        <button class="btn ghost" id="cantSee">Can't see this line</button>
+        <button class="btn" id="submitLine">Submit line →</button>
+      </div>
+      <div style="text-align:center;margin-top:12px;">
+        <button class="back-link" id="restartTest">← Start over</button>
+      </div>
+    </div>
   </section>
 
-  <!-- ============ STEP 4: RESULT ============ -->
-
+  <!-- STEP 4: RESULTS -->
   <section class="card" id="step4" hidden>
     <h2>Your results</h2>
+
     <div class="result-hero">
-      <div class="result-meta">Best uncorrected acuity (better eye)</div>
+      <div class="result-badge">Best acuity (better eye)</div>
       <div class="result-snellen" id="bestSnellen">—</div>
       <div class="result-logmar" id="bestLogmar"></div>
+      <div class="result-interp" id="bestInterp"></div>
     </div>
 
-```
-<div class="result-eye-row">
-  <div class="ec">
-    <div class="lbl">Right (OD)</div>
-    <div class="val" id="odResult">—</div>
-  </div>
-  <div class="ec">
-    <div class="lbl">Left (OS)</div>
-    <div class="val" id="osResult">—</div>
-  </div>
-</div>
+    <div class="result-eye-row">
+      <div class="ec">
+        <div class="lbl">Right (OD)</div>
+        <div class="val" id="odResult">—</div>
+        <div class="correction-lbl" id="odCorrection"></div>
+      </div>
+      <div class="ec">
+        <div class="lbl">Left (OS)</div>
+        <div class="val" id="osResult">—</div>
+        <div class="correction-lbl" id="osCorrection"></div>
+      </div>
+    </div>
 
-<div class="disclaimer">
-  <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. Refractive error, cataract, glaucoma, and retinal disease can produce 20/20 results yet still require treatment. If you notice any change in vision, schedule an exam with a licensed eye care provider.
-</div>
+    <div class="results-actions">
+      <button class="btn primary share-btn" id="shareResults">Share results</button>
+      <div class="results-secondary-row">
+        <button class="btn ghost" id="restart">Test again</button>
+      </div>
+    </div>
 
-<div class="btn-row">
-  <button class="btn ghost" id="restart">Test again</button>
-</div>
-```
+    <div id="referralFlag" hidden></div>
+    <div id="rxEstimate" hidden></div>
 
+    <div id="compareBlock" hidden>
+      <div class="compare-header">Corrected vs. uncorrected comparison</div>
+      <div class="compare-grid" id="compareGrid"></div>
+      <div class="compare-rx" id="compareRx"></div>
+    </div>
+
+    <div class="btn-row" id="compareBtn" hidden style="margin-top:12px;">
+      <button class="btn" id="retestWithGlasses">Compare with glasses →</button>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. Refractive error, cataract, glaucoma, and retinal disease can produce 20/20 results yet still require treatment. If you notice any change in vision, schedule an exam with a licensed eye care provider.
+    </div>
+
+    <div class="history-section" id="historySection"></div>
   </section>
 
   <footer>
-    <span>© Dr. Ryan Evans, OD · Educational demonstration only</span>
-    <a href="https://rjlcevans.com/">← Return to Evans Family Home</a>
+    <span>© Dr. Ryan Evans, OD · Educational demonstration only · Not a diagnostic tool</span>
+    <a href="https://rjlcevans.com/">← rjlcevans.com</a>
   </footer>
 </div>
 
@@ -456,12 +799,8 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
 (() => {
   'use strict';
 
-  // ===== Sloan letter set (NAS-NRC, 1980) =====
   const SLOAN = ['C','D','H','K','N','O','R','S','V','Z'];
 
-  // ===== logMAR lines: 0.0 = 20/20; each line is 0.1 logMAR larger going up =====
-  // Snellen equivalent: 20 / (20 * 10^logMAR) — but expressed in feet
-  // We test from logMAR 1.0 (20/200) down to -0.3 (20/10)
   const LINES = [
     { logmar: 1.0,  snellen: '20/200', count: 4 },
     { logmar: 0.9,  snellen: '20/160', count: 5 },
@@ -475,34 +814,76 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
     { logmar: 0.1,  snellen: '20/25',  count: 5 },
     { logmar: 0.0,  snellen: '20/20',  count: 5 },
     { logmar: -0.1, snellen: '20/16',  count: 5 },
-    { logmar: -0.2, snellen: '20/12.5',count: 5 },
-    { logmar: -0.3, snellen: '20/10',  count: 5 }
+    { logmar: -0.2, snellen: '20/12',  count: 5 },
+    { logmar: -0.3, snellen: '20/10',  count: 5 },
   ];
 
-  // ===== State =====
-  const state = {
-    method: 'card',
-    pxPerMm: null,
-    distanceMm: 3000,
-    currentEye: 'OD',
-    results: { OD: null, OS: null },
-    testIndex: 0,           // pointer into LINES
-    currentLetters: [],
-    currentAnswers: [],
-    correctSoFar: {},       // {logmar: correctCount}
-    lastValidLine: null,    // logmar value of best (smallest) line passed
-    direction: null,        // 'down' = going smaller, 'up' = going larger
-    failedAtSmaller: null,  // index of smallest line that was failed (for ETDRS scoring)
-    passedFirstLine: false, // did they pass the starting line?
+  const START_LINE_INDEX = 4; // 20/80
+
+  const SNELLEN_INTERP = {
+    '20/10':  'Exceptional — significantly better than average.',
+    '20/12':  'Excellent — well above average acuity.',
+    '20/16':  'Very good — better than most people.',
+    '20/20':  'Normal — the standard for good vision.',
+    '20/25':  'Near normal — most people won\'t notice any difficulty.',
+    '20/32':  'Slightly reduced — typically still functional without correction.',
+    '20/40':  'Reduced — you may benefit from glasses, especially for driving.',
+    '20/50':  'Moderately reduced — difficulty with fine detail and small print.',
+    '20/63':  'Moderately reduced — glasses or contact lenses recommended.',
+    '20/80':  'Significantly reduced — most daily tasks will require correction.',
+    '20/100': 'Significantly reduced — a current prescription check is recommended.',
+    '20/125': 'Substantially reduced — detailed near and distance tasks will be difficult.',
+    '20/160': 'Substantially impaired — a comprehensive eye exam with your optometrist is recommended.',
+    '20/200': 'Severely reduced — a comprehensive eye exam with your optometrist is recommended.',
+    '<20/200':'Severely reduced — a comprehensive eye exam with your optometrist is recommended.',
   };
 
-  // Index of the starting line (20/80, logMAR 0.6)
-  const START_LINE_INDEX = 4;
+  // Color vision plates: 4 circles per plate, odd-one-out position is randomised at runtime
+  const state = {
+    method: 'iphone',
+    pxPerMm: null,
+    _selectedDevice: null,
+    _selectedDeviceType: null,
+    distanceMm: 3000,
+    testType: 'distance',
+    currentEye: 'OD',
+    results: { OD: null, OS: null },
+    glassesOD: false,
+    glassesOS: false,
+    testIndex: 0,
+    currentLetters: [],
+    currentAnswers: [],
+    correctSoFar: {},
+    lastValidLine: null,
+    direction: null,
+    failedAtSmaller: null,
+    passedFirstLine: false,
+    singleLetterMode: false,
+    singleSlot: 0,
+    singleSlotSize: 1,
+    preferTypeMode: false,
+    resultsUncorrected: { OD: null, OS: null },
+    comparingWithGlasses: false,
+  };
+
+  function haptic(style) {
+    try { window.Capacitor?.Plugins?.Haptics?.impact({ style: style || 'Light' }); } catch(e) {}
+  }
+  function hapticNotify(type) {
+    try { window.Capacitor?.Plugins?.Haptics?.notification({ type: type || 'Success' }); } catch(e) {}
+  }
 
   // ===== Step navigation =====
   const stepEls = document.querySelectorAll('.step');
-  const sections = { 1: document.getElementById('step1'), 2: document.getElementById('step2'), 3: document.getElementById('step3'), 4: document.getElementById('step4') };
+  const sections = {
+    1: document.getElementById('step1'),
+    2: document.getElementById('step2'),
+    3: document.getElementById('step3'),
+    4: document.getElementById('step4'),
+  };
   function goStep(n) {
+    document.body.classList.remove('testing');
+    deactivateVoiceMode();
     Object.values(sections).forEach(s => s.hidden = true);
     sections[n].hidden = false;
     stepEls.forEach(e => {
@@ -510,16 +891,162 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
       e.classList.toggle('active', num === n);
       e.classList.toggle('done', num < n);
     });
+    document.body.dataset.step = n;
+    checkLandscape();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ===== STEP 1: Method picker =====
+  function checkLandscape() {
+    const warn = document.getElementById('landscapeWarn');
+    if (!warn) return;
+    const inTest = document.body.dataset.step === '3';
+    warn.hidden = !(window.innerWidth > window.innerHeight && inTest);
+  }
+  window.addEventListener('resize', checkLandscape);
+
+  // ===== STEP 1: Calibration =====
+  // Device model databases — models with identical screen dimensions are grouped.
+  // ppi = native pixels per inch, nW/nH = native resolution portrait, dpr = device pixel ratio.
+  const IPHONE_MODELS = [
+    { name: 'iPhone 17e / 16e / 14 / 13 / 12 series',          ppi: 460, nW: 1170, nH: 2532, dpr: 3, year: 2026, type: 'iPhone' },
+    { name: 'iPhone 17 Pro Max / 16 Pro Max',                   ppi: 460, nW: 1320, nH: 2868, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 17 Air',                                    ppi: 460, nW: 1260, nH: 2736, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 17 / 17 Pro / 16 Pro',                      ppi: 460, nW: 1206, nH: 2622, dpr: 3, year: 2025, type: 'iPhone' },
+    { name: 'iPhone 16 Plus / 15 Plus / 15 Pro Max / 14 Pro Max', ppi: 460, nW: 1290, nH: 2796, dpr: 3, year: 2024, type: 'iPhone' },
+    { name: 'iPhone 16 / 15 / 15 Pro / 14 Pro',                 ppi: 460, nW: 1179, nH: 2556, dpr: 3, year: 2024, type: 'iPhone' },
+    { name: 'iPhone 14 Plus / 13 Pro Max / 12 Pro Max',         ppi: 458, nW: 1284, nH: 2778, dpr: 3, year: 2022, type: 'iPhone' },
+    { name: 'iPhone SE (2nd–3rd gen) / 8 / 7 / 6s',            ppi: 326, nW:  750, nH: 1334, dpr: 2, year: 2022, type: 'iPhone' },
+    { name: 'iPhone 13 mini / 12 mini',                         ppi: 476, nW: 1080, nH: 2340, dpr: 3, year: 2021, type: 'iPhone' },
+    { name: 'iPhone 11 Pro Max / XS Max',                       ppi: 458, nW: 1242, nH: 2688, dpr: 3, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 11 Pro / XS / X',                           ppi: 458, nW: 1125, nH: 2436, dpr: 3, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 11 / XR',                                   ppi: 326, nW:  828, nH: 1792, dpr: 2, year: 2019, type: 'iPhone' },
+    { name: 'iPhone 8 Plus / 7 Plus / 6s Plus',                 ppi: 401, nW: 1080, nH: 1920, dpr: 3, logicalW: 414, logicalH: 736, year: 2017, type: 'iPhone' },
+  ];
+
+  const IPAD_MODELS = [
+    { name: 'iPad Pro 13" (M4) / iPad Air 13" (M2)',            ppi: 264, nW: 2064, nH: 2752, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Pro 11" (M4)',                                 ppi: 264, nW: 1668, nH: 2420, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Air 11" (M2) / iPad 10 / Air 5 / Air 4',      ppi: 264, nW: 1640, nH: 2360, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad mini 7 / mini 6',                              ppi: 326, nW: 1488, nH: 2266, dpr: 2, year: 2024, type: 'iPad' },
+    { name: 'iPad Pro 12.9" (all gens, 2015–2022)',              ppi: 264, nW: 2048, nH: 2732, dpr: 2, year: 2022, type: 'iPad' },
+    { name: 'iPad Pro 11" (M1/M2 / 1st–3rd gen)',               ppi: 264, nW: 1668, nH: 2388, dpr: 2, year: 2022, type: 'iPad' },
+    { name: 'iPad 9th / 8th / 7th gen',                         ppi: 264, nW: 1620, nH: 2160, dpr: 2, year: 2021, type: 'iPad' },
+    { name: 'iPad mini 5',                                       ppi: 326, nW: 1536, nH: 2048, dpr: 2, year: 2019, type: 'iPad' },
+    { name: 'iPad Air 3 / iPad Pro 10.5"',                       ppi: 264, nW: 1668, nH: 2224, dpr: 2, year: 2019, type: 'iPad' },
+    { name: 'iPad 6th gen / iPad Pro 9.7" / iPad Air 2',         ppi: 264, nW: 1536, nH: 2048, dpr: 2, year: 2018, type: 'iPad' },
+  ];
+
+  const ALL_DEVICES = [...IPAD_MODELS, ...IPHONE_MODELS];
+
+  // Try to auto-detect device from logical screen size + DPR across all Apple devices
+  function autoDetectDevice() {
+    const sw = Math.min(screen.width, screen.height);
+    const sh = Math.max(screen.width, screen.height);
+    const dpr = window.devicePixelRatio || 1;
+    return ALL_DEVICES.find(m => {
+      const logW = m.logicalW || Math.round(m.nW / m.dpr);
+      const logH = m.logicalH || Math.round(m.nH / m.dpr);
+      return Math.min(logW, logH) === sw && Math.max(logW, logH) === sh && m.dpr === dpr;
+    }) || null;
+  }
+
+  function iphonePpmm(model) {
+    // For devices where rendered DPR != physical pixel ratio (e.g. iPhone Plus models),
+    // use stored logical dimensions to get the true CSS px/mm ratio.
+    const cssW = model.logicalW || Math.round(model.nW / model.dpr);
+    const physWidthMm = model.nW / (model.ppi / 25.4);
+    return cssW / physWidthMm;
+  }
+
+  function buildIphoneGrid(filter) {
+    const grid = document.getElementById('iphoneGrid');
+    grid.innerHTML = '';
+    const lower = (filter || '').toLowerCase();
+    const source = ALL_DEVICES.filter(m => m.type === state._selectedDeviceType);
+    const years = [...new Set(source.map(m => m.year))].sort((a, b) => b - a);
+    years.forEach(year => {
+      const group = source.filter(m => m.year === year && (!lower || m.name.toLowerCase().includes(lower)));
+      if (!group.length) return;
+      const lbl = document.createElement('div');
+      lbl.className = 'iphone-group-label';
+      lbl.textContent = year;
+      grid.appendChild(lbl);
+      group.forEach(model => {
+        const btn = document.createElement('button');
+        btn.className = 'iphone-btn';
+        btn.textContent = model.name;
+        if (state._selectedDevice && state._selectedDevice.name === model.name) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          grid.querySelectorAll('.iphone-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state._selectedDevice = model;
+          const ppmm = iphonePpmm(model);
+          state.pxPerMm = ppmm;
+          const confirm = document.getElementById('iphoneConfirm');
+          confirm.hidden = false;
+          confirm.textContent = `✓ ${model.name} · ${model.ppi} ppi · ${ppmm.toFixed(2)} px/mm`;
+        });
+        grid.appendChild(btn);
+      });
+    });
+  }
+
+  document.getElementById('iphoneSearch').addEventListener('input', e => {
+    buildIphoneGrid(e.target.value);
+  });
+
   const methodTiles = document.querySelectorAll('.method-tile');
   const methodPanels = {
     card: document.getElementById('methodCard'),
     camera: document.getElementById('methodCamera'),
-    manual: document.getElementById('methodManual'),
+    iphone: document.getElementById('methodIphone'),
   };
+
+  function showDeviceTypeChoice() {
+    document.getElementById('deviceTypeChoice').hidden = false;
+    document.getElementById('deviceModelPicker').hidden = true;
+    document.getElementById('iphoneConfirm').hidden = true;
+    document.getElementById('changeDevice').hidden = true;
+  }
+
+  function showDeviceModelPicker(type) {
+    state._selectedDeviceType = type;
+    document.getElementById('deviceTypeChoice').hidden = true;
+    document.getElementById('deviceModelPicker').hidden = false;
+    document.getElementById('iphoneSearch').value = '';
+    buildIphoneGrid('');
+    setTimeout(() => {
+      const activeBtn = document.querySelector('#iphoneGrid .iphone-btn.active');
+      if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
+  }
+
+  function initIphonePanel() {
+    const detected = autoDetectDevice();
+    if (detected) {
+      state._selectedDevice = detected;
+      state._selectedDeviceType = detected.type;
+      state.pxPerMm = iphonePpmm(detected);
+      document.getElementById('deviceTypeChoice').hidden = true;
+      document.getElementById('deviceModelPicker').hidden = true;
+      const confirm = document.getElementById('iphoneConfirm');
+      confirm.hidden = false;
+      confirm.textContent = `✓ Auto-detected: ${detected.name} · ${detected.ppi} ppi · ${state.pxPerMm.toFixed(2)} px/mm`;
+      document.getElementById('changeDevice').hidden = false;
+    } else {
+      showDeviceTypeChoice();
+    }
+  }
+
+  document.getElementById('chooseIphone').addEventListener('click', () => showDeviceModelPicker('iPhone'));
+  document.getElementById('chooseIpad').addEventListener('click', () => showDeviceModelPicker('iPad'));
+  document.getElementById('backToDeviceType').addEventListener('click', showDeviceTypeChoice);
+  document.getElementById('changeDevice').addEventListener('click', () => {
+    state._selectedDevice = null;
+    state.pxPerMm = null;
+    showDeviceTypeChoice();
+  });
+
   methodTiles.forEach(t => {
     t.addEventListener('click', () => {
       methodTiles.forEach(x => x.setAttribute('aria-pressed', 'false'));
@@ -527,15 +1054,17 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
       state.method = t.dataset.method;
       Object.values(methodPanels).forEach(p => p.hidden = true);
       methodPanels[state.method].hidden = false;
-      if (state.method === 'manual') updateManualPpmm();
+      if (state.method === 'iphone') initIphonePanel();
     });
   });
 
-  // ----- Credit card calibration -----
+  // Initialize iPhone panel on load
+  initIphonePanel();
+
   const ccCard = document.getElementById('ccCard');
   const ccResize = document.getElementById('ccResize');
   const ccPpmm = document.getElementById('ccPpmm');
-  const CC_REAL_WIDTH_MM = 85.60; // ISO/IEC 7810 ID-1
+  const CC_REAL_WIDTH_MM = 85.60;
   function updateCcCalibration() {
     const widthPx = parseFloat(ccResize.value);
     ccCard.style.width = widthPx + 'px';
@@ -546,167 +1075,139 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
   ccResize.addEventListener('input', updateCcCalibration);
   updateCcCalibration();
 
-  // ----- Camera (IPD) calibration -----
-  // Uses face detection if available, otherwise asks user to manually mark pupils.
-  // Approach: detect face width in pixels from a still capture, scale by IPD/face-width ratio.
   let ipdStream = null;
   const ipdVideo = document.getElementById('ipdVideo');
   const ipdReadout = document.getElementById('ipdReadout');
-  const startIpdCam = document.getElementById('startIpdCam');
-  const captureIpd = document.getElementById('captureIpd');
-  const ipdInput = document.getElementById('ipdInput');
-
-  startIpdCam.addEventListener('click', async () => {
+  document.getElementById('startIpdCam').addEventListener('click', async () => {
     try {
       ipdStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
       ipdVideo.srcObject = ipdStream;
       await ipdVideo.play();
-      captureIpd.disabled = false;
+      document.getElementById('captureIpd').disabled = false;
       ipdReadout.textContent = 'Align your face in the oval, eyes level. Click capture when ready.';
     } catch (err) {
       ipdReadout.textContent = 'Camera unavailable: ' + err.message;
     }
   });
-
-  captureIpd.addEventListener('click', async () => {
-    // Use FaceDetector if available (Chrome/Edge)
+  document.getElementById('captureIpd').addEventListener('click', async () => {
     let faceWidthPx = null;
     if ('FaceDetector' in window) {
       try {
         const detector = new window.FaceDetector({ fastMode: true });
         const faces = await detector.detect(ipdVideo);
-        if (faces.length > 0) {
-          faceWidthPx = faces[0].boundingBox.width;
-        }
-      } catch (e) { /* fall through */ }
+        if (faces.length > 0) faceWidthPx = faces[0].boundingBox.width;
+      } catch (e) {}
     }
-    if (!faceWidthPx) {
-      // Fallback: assume face fills 60% of video width when in oval
-      faceWidthPx = ipdVideo.videoWidth * 0.55;
-      ipdReadout.textContent = 'Face detection unavailable — used oval-fit estimate.';
-    }
-    const ipdMm = parseFloat(ipdInput.value) || 63;
-    // Empirical: IPD ≈ 0.46 × face width
-    const faceWidthMm = ipdMm / 0.46;
-    // Now we know the camera sees `faceWidthMm` mm as `faceWidthPx` pixels at the user's distance
-    // But that's pixels in the *video stream* — we need pixels on the *display*.
-    // Use device pixel ratio + display width as bridge.
-    // Simpler: assume the user is at typical laptop distance (~500 mm) and use display DPI guess.
-    // We instead compute pxPerMm by assuming the screen is at the same distance as the face was —
-    // which it isn't. Better: ask user to confirm distance later, and use screen.width/window.innerWidth.
-    // Practical compromise: estimate via screen physical size from devicePixelRatio.
-    const dpr = window.devicePixelRatio || 1;
-    // Approximate physical width: most consumer displays are ~96 CSS px per inch baseline → 96/25.4 px/mm
-    // Refined by dpr — but this is a rough estimate, hence flagged as approximate.
-    const estPpmm = (96 / 25.4); // CSS px per mm; dpr cancels out for CSS layout
-    state.pxPerMm = estPpmm;
-    ipdReadout.innerHTML = `IPD ${ipdMm} mm · face ≈ ${faceWidthMm.toFixed(0)} mm wide · screen estimate ${estPpmm.toFixed(2)} px/mm <em>(approximate)</em>`;
+    if (!faceWidthPx) faceWidthPx = ipdVideo.videoWidth * 0.55;
+    const ipdMm = parseFloat(document.getElementById('ipdInput').value) || 63;
+    state.pxPerMm = 96 / 25.4;
+    ipdReadout.innerHTML = `IPD ${ipdMm} mm · screen estimate ${state.pxPerMm.toFixed(2)} px/mm <em>(approximate)</em>`;
     if (ipdStream) { ipdStream.getTracks().forEach(t => t.stop()); ipdStream = null; }
   });
 
-  // ----- Manual entry -----
-  const screenDiag = document.getElementById('screenDiag');
-  const screenResW = document.getElementById('screenResW');
-  const screenResH = document.getElementById('screenResH');
-  const manualPpmm = document.getElementById('manualPpmm');
-  function updateManualPpmm() {
-    const diagIn = parseFloat(screenDiag.value);
-    const resW = parseFloat(screenResW.value);
-    const resH = parseFloat(screenResH.value);
-    if (!diagIn || !resW || !resH) return;
-    const diagPx = Math.hypot(resW, resH);
-    const ppi = diagPx / diagIn;
-    const ppmm_native = ppi / 25.4;
-    // CSS pixels are typically 1× device pixels divided by devicePixelRatio
-    const dpr = window.devicePixelRatio || 1;
-    const ppmm_css = ppmm_native / dpr;
-    manualPpmm.value = ppmm_css.toFixed(2);
-    if (state.method === 'manual') state.pxPerMm = ppmm_css;
-  }
-  [screenDiag, screenResW, screenResH].forEach(el => el.addEventListener('input', updateManualPpmm));
-  updateManualPpmm();
-
-  // ===== STEP 1 → 2 =====
   document.getElementById('toStep2').addEventListener('click', () => {
-    if (!state.pxPerMm || state.pxPerMm <= 0) {
-      alert('Please complete calibration first.');
-      return;
-    }
+    if (!state.pxPerMm || state.pxPerMm <= 0) { alert('Please complete calibration first.'); return; }
     goStep(2);
   });
 
-  // ===== STEP 2: Distance =====
+  // ===== STEP 2: Setup =====
+  const ttTiles = document.querySelectorAll('.tt-tile');
+  ttTiles.forEach(t => {
+    t.addEventListener('click', () => {
+      ttTiles.forEach(x => x.setAttribute('aria-pressed', 'false'));
+      t.setAttribute('aria-pressed', 'true');
+      state.testType = t.dataset.type;
+      document.getElementById('distanceWrap').hidden = state.testType !== 'distance';
+      document.getElementById('nearWrap').hidden = state.testType !== 'near';
+      document.getElementById('mirrorWrap').hidden = state.testType !== 'mirror';
+      if (state.testType === 'mirror') state.distanceMm = 4000;
+      updateMyopiaNote();
+    });
+  });
+
+  function updateMyopiaNote() {
+    const note = document.getElementById('myopiaNote');
+    if (!note) return;
+    note.hidden = state.testType !== 'distance';
+  }
+
   const distancePreset = document.getElementById('distancePreset');
   const customDistanceWrap = document.getElementById('customDistanceWrap');
-  const customDistance = document.getElementById('customDistance');
   distancePreset.addEventListener('change', () => {
-    if (distancePreset.value === 'custom') {
-      customDistanceWrap.hidden = false;
-    } else {
-      customDistanceWrap.hidden = true;
-      state.distanceMm = parseFloat(distancePreset.value);
-    }
+    customDistanceWrap.hidden = distancePreset.value !== 'custom';
+    if (distancePreset.value !== 'custom') state.distanceMm = parseFloat(distancePreset.value);
   });
-  customDistance.addEventListener('input', () => {
-    state.distanceMm = parseFloat(customDistance.value) || 3000;
+  document.getElementById('customDistance').addEventListener('input', e => {
+    state.distanceMm = parseFloat(e.target.value) || 3000;
   });
   document.getElementById('backTo1').addEventListener('click', () => goStep(1));
+  document.getElementById('backTo2').addEventListener('click', () => goStep(2));
+  document.getElementById('restartTest').addEventListener('click', () => goStep(2));
   document.getElementById('toStep3').addEventListener('click', () => {
-    if (distancePreset.value === 'custom') state.distanceMm = parseFloat(customDistance.value) || 3000;
-    else state.distanceMm = parseFloat(distancePreset.value);
+    if (state.testType === 'near') {
+      state.distanceMm = 400;
+    } else if (state.testType === 'mirror') {
+      state.distanceMm = 4000;
+    } else {
+      if (distancePreset.value === 'custom') {
+        state.distanceMm = parseFloat(document.getElementById('customDistance').value) || 3000;
+      } else {
+        state.distanceMm = parseFloat(distancePreset.value);
+      }
+    }
     state.currentEye = 'OD';
     showOccluder();
     goStep(3);
   });
 
+  // Call updateMyopiaNote once on init (distance is default, so note should show)
+  updateMyopiaNote();
+
   // ===== STEP 3: Test =====
   const testStage = document.getElementById('testStage');
   const occluderPrompt = document.getElementById('occluderPrompt');
-  const beginEye = document.getElementById('beginEye');
-  const testHeading = document.getElementById('testHeading');
-  const whichEye = document.getElementById('whichEye');
-  const occluderText = document.getElementById('occluderText');
   const optotypes = document.getElementById('optotypes');
   const answerRow = document.getElementById('answerRow');
   const keypad = document.getElementById('keypad');
-  const lineLabel = document.getElementById('lineLabel');
   const lineProgress = document.getElementById('lineProgress');
 
   function showOccluder() {
     testStage.hidden = true;
     occluderPrompt.hidden = false;
+    document.getElementById('glassesOn').checked = false;
     if (state.currentEye === 'OD') {
-      testHeading.textContent = 'Right eye — cover the left';
-      whichEye.textContent = 'Right eye (OD)';
-      occluderText.innerHTML = 'Cover your <strong>left</strong> eye gently with your palm. Don\'t press on the eyeball.';
+      document.getElementById('testHeading').textContent = 'Right eye';
+      document.getElementById('whichEye').textContent = 'Right eye (OD)';
+      document.getElementById('occluderText').innerHTML = 'Cover your <strong>left</strong> eye gently with your palm. Don\'t press on the eyeball.';
+      document.getElementById('occluderIcon').textContent = '👁️';
     } else {
-      testHeading.textContent = 'Left eye — cover the right';
-      whichEye.textContent = 'Left eye (OS)';
-      occluderText.innerHTML = 'Now cover your <strong>right</strong> eye and read with your <strong>left</strong>.';
+      document.getElementById('testHeading').textContent = 'Left eye';
+      document.getElementById('whichEye').textContent = 'Left eye (OS)';
+      document.getElementById('occluderText').innerHTML = 'Now cover your <strong>right</strong> eye and read with your <strong>left</strong>.';
+      document.getElementById('occluderIcon').textContent = '👁️';
     }
   }
 
-  beginEye.addEventListener('click', () => {
+  document.getElementById('beginEye').addEventListener('click', () => {
+    const glasses = document.getElementById('glassesOn').checked;
+    if (state.currentEye === 'OD') state.glassesOD = glasses;
+    else state.glassesOS = glasses;
     occluderPrompt.hidden = true;
     testStage.hidden = false;
-    state.testIndex = START_LINE_INDEX; // start at 20/80
+    document.body.classList.add('testing');
+    state.testIndex = START_LINE_INDEX;
     state.lastValidLine = null;
     state.correctSoFar = {};
     state.direction = null;
     state.failedAtSmaller = null;
     state.passedFirstLine = false;
+    state.preferTypeMode = false;
     presentLine();
   });
 
-  // ===== Letter sizing =====
-  // A logMAR-0 (20/20) letter subtends 5 arcminutes at the test distance.
-  // Letter height in mm = 2 * distanceMm * tan(2.5 arcminutes)
-  // For other logMAR values, multiply by 10^logmar.
   function letterHeightPx(logmar) {
-    const arcmin = 5; // 5 arcminutes for 20/20
-    const heightMmAt20_20 = 2 * state.distanceMm * Math.tan((arcmin / 2) * (Math.PI / 180 / 60));
-    const heightMm = heightMmAt20_20 * Math.pow(10, logmar);
-    return heightMm * state.pxPerMm;
+    const heightMmAt20_20 = 2 * state.distanceMm * Math.tan(2.5 * (Math.PI / 180 / 60));
+    return heightMmAt20_20 * Math.pow(10, logmar) * state.pxPerMm;
   }
 
   function pickRandomLetters(n) {
@@ -720,31 +1221,58 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
     return out;
   }
 
-  function presentLine() {
-    if (state.testIndex >= LINES.length) {
-      finishEye();
-      return;
+  function tryAutoSubmit() {
+    const filled = state.currentAnswers.every(a => a !== '');
+    if (filled) {
+      setTimeout(() => document.getElementById('submitLine').click(), 180);
     }
+  }
+
+  function presentLine() {
+    if (state.testIndex < 0 || state.testIndex >= LINES.length) { finishEye(); return; }
     const line = LINES[state.testIndex];
     state.currentLetters = pickRandomLetters(line.count);
     state.currentAnswers = new Array(line.count).fill('');
 
-    // Set font size on the line element
     const px = letterHeightPx(line.logmar);
-    optotypes.style.fontSize = px + 'px';
-    // Sloan letters are designed on a 5x5 grid — height = font-size approximation
-    optotypes.textContent = state.currentLetters.join(' ');
-
-    lineLabel.textContent = `${line.snellen} · logMAR ${line.logmar.toFixed(1)}`;
-    if (state.direction === 'down') {
-      lineProgress.textContent = 'going smaller ↓';
-    } else if (state.direction === 'up') {
-      lineProgress.textContent = 'going larger ↑';
-    } else {
-      lineProgress.textContent = 'starting line';
+    let displayPx = px;
+    state.singleLetterMode = false;
+    state.singleSlot = 0;
+    state.singleSlotSize = 1;
+    if (document.body.classList.contains('testing')) {
+      const vpW = Math.max(260, (window.innerWidth || 390) - 48);
+      const vpH = Math.max(400, window.innerHeight || 844);
+      // Normal mode uses 0.4em spacing, grouped uses 0.15em — check with correct multiplier
+      const allFitNormal = (line.count * px * 1.4) <= vpW;
+      if (allFitNormal) {
+        // All letters fit at calibrated size with normal 0.4em spacing
+        displayPx = Math.min(px, vpW / (line.count * 1.4), vpH * 0.60);
+      } else {
+        // Need grouped/single mode — 0.15em spacing between letters
+        const fitsGrouped = Math.floor(vpW / (px * 1.15));
+        state.singleLetterMode = true;
+        if (fitsGrouped >= 1) {
+          state.singleSlotSize = fitsGrouped;
+          displayPx = Math.min(px, vpH * 0.65);
+        } else {
+          state.singleSlotSize = 1;
+          displayPx = Math.min(px, vpW * 0.90, vpH * 0.65);
+        }
+      }
     }
+    optotypes.style.fontSize = displayPx + 'px';
+    // Set letter-spacing via JS so CSS !important doesn't block it
+    optotypes.style.letterSpacing = state.singleLetterMode ? '0.15em' : '0.4em';
+    optotypes.style.transform = state.testType === 'mirror' ? 'scaleX(-1)' : '';
+    optotypes.textContent = state.singleLetterMode
+      ? state.currentLetters.slice(0, state.singleSlotSize).join('')
+      : state.currentLetters.join('');
 
-    // Build answer inputs
+    // Show relative progress without revealing the acuity level
+    const totalLines = LINES.length;
+    const pct = Math.round(((totalLines - state.testIndex) / totalLines) * 100);
+    lineProgress.textContent = state.direction === 'down' ? '▼ getting smaller' : state.direction === 'up' ? '▲ getting larger' : '';
+
     answerRow.innerHTML = '';
     for (let i = 0; i < line.count; i++) {
       const inp = document.createElement('input');
@@ -758,126 +1286,393 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
         state.currentAnswers[i] = e.target.value;
         if (e.target.value && i < line.count - 1) {
           answerRow.children[i + 1].focus();
+          updateSingleLetterDisplay(i + 1);
         }
+        tryAutoSubmit();
       });
       answerRow.appendChild(inp);
     }
-    // Focus first
     answerRow.children[0].focus();
     state.activeInput = 0;
 
-    // Build keypad with Sloan letters
     keypad.innerHTML = '';
-    [...SLOAN, '⌫', '∅'].forEach(ch => {
+    [...SLOAN, '⌫', '✓'].forEach(ch => {
       const b = document.createElement('button');
       b.textContent = ch;
       b.addEventListener('click', () => {
         if (ch === '⌫') {
-          if (state.activeInput > 0) {
-            state.activeInput--;
-            answerRow.children[state.activeInput].focus();
-            answerRow.children[state.activeInput].value = '';
-            state.currentAnswers[state.activeInput] = '';
-          } else {
-            answerRow.children[0].value = '';
-            state.currentAnswers[0] = '';
+          const idx = state.currentAnswers.findLastIndex ? state.currentAnswers.findLastIndex(a => a !== '') : (() => {
+            for (let j = state.currentAnswers.length - 1; j >= 0; j--) if (state.currentAnswers[j] !== '') return j;
+            return -1;
+          })();
+          if (idx >= 0) {
+            state.currentAnswers[idx] = '';
+            answerRow.children[idx].value = '';
+            answerRow.children[idx].focus();
+            state.activeInput = idx;
           }
-        } else if (ch === '∅') {
-          // skip / blank
-          state.currentAnswers[state.activeInput] = '';
-          answerRow.children[state.activeInput].value = '';
-          if (state.activeInput < line.count - 1) {
-            state.activeInput++;
-            answerRow.children[state.activeInput].focus();
-          }
+        } else if (ch === '✓') {
+          document.getElementById('submitLine').click();
         } else {
+          haptic('Light');
           state.currentAnswers[state.activeInput] = ch;
           answerRow.children[state.activeInput].value = ch;
           if (state.activeInput < line.count - 1) {
             state.activeInput++;
             answerRow.children[state.activeInput].focus();
+            updateSingleLetterDisplay(state.activeInput);
           }
+          tryAutoSubmit();
         }
       });
       keypad.appendChild(b);
     });
+    if (state.testType === 'mirror' && !state.preferTypeMode) activateVoiceMode();
+  }
+
+  function updateSingleLetterDisplay(slot) {
+    if (!state.singleLetterMode) return;
+    state.singleSlot = slot;
+    // Only flip to next group at page boundaries — don't slide one letter at a time
+    if (slot % state.singleSlotSize === 0) {
+      const end = Math.min(slot + state.singleSlotSize, state.currentLetters.length);
+      if (slot < state.currentLetters.length) {
+        optotypes.textContent = state.currentLetters.slice(slot, end).join('');
+      }
+    }
   }
 
   document.getElementById('submitLine').addEventListener('click', () => {
+    haptic('Medium');
     const line = LINES[state.testIndex];
     let correct = 0;
-    state.currentAnswers.forEach((a, i) => {
-      if (a === state.currentLetters[i]) correct++;
-    });
+    state.currentAnswers.forEach((a, i) => { if (a === state.currentLetters[i]) correct++; });
     state.correctSoFar[line.logmar] = correct;
+    const passed = correct >= Math.ceil(line.count * 0.6);
 
-    const threshold = Math.ceil(line.count * 0.6); // 3 of 5
-    const passed = correct >= threshold;
-
-    // Bidirectional staircase logic
     if (state.direction === null) {
-      // First line tested — decide direction
       if (passed) {
         state.lastValidLine = line.logmar;
         state.passedFirstLine = true;
-        state.direction = 'down'; // go smaller
+        state.direction = 'down';
         state.testIndex++;
-        if (state.testIndex >= LINES.length) finishEye();
-        else presentLine();
+        if (state.testIndex >= LINES.length) finishEye(); else presentLine();
       } else {
-        state.direction = 'up'; // go larger to find threshold
+        state.direction = 'up';
         state.failedAtSmaller = state.testIndex;
         state.testIndex--;
-        if (state.testIndex < 0) finishEye();
-        else presentLine();
+        if (state.testIndex < 0) finishEye(); else presentLine();
       }
     } else if (state.direction === 'down') {
-      // Going smaller — continue while passing, stop on first fail
       if (passed) {
         state.lastValidLine = line.logmar;
         state.testIndex++;
-        if (state.testIndex >= LINES.length) finishEye();
-        else presentLine();
+        if (state.testIndex >= LINES.length) finishEye(); else presentLine();
       } else {
-        // Failed — this is the threshold line; finish with ETDRS refinement
         state.failedAtSmaller = state.testIndex;
         finishEye();
       }
-    } else if (state.direction === 'up') {
-      // Going larger — continue while failing, stop on first pass
+    } else {
       if (passed) {
         state.lastValidLine = line.logmar;
         finishEye();
       } else {
         state.failedAtSmaller = state.testIndex;
         state.testIndex--;
-        if (state.testIndex < 0) {
-          // Failed every line down to 20/200 — score is worse than that
-          finishEye();
-        } else {
-          presentLine();
-        }
+        if (state.testIndex < 0) finishEye(); else presentLine();
       }
     }
   });
 
   document.getElementById('cantSee').addEventListener('click', () => {
-    // Treat as 0 correct on this line, then drive the staircase as a fail
     const line = LINES[state.testIndex];
     state.correctSoFar[line.logmar] = 0;
     state.currentAnswers = new Array(line.count).fill('');
     document.getElementById('submitLine').click();
   });
 
+  // ===== VOICE INPUT (mirror mode) =====
+  const SLOAN_SET = new Set(SLOAN);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let voiceRec = null;
+  let voiceSlot = 0;
+  let voiceActive = false;
+
+  function speechToLetters(text) {
+    if (!text) return [];
+    const map = {
+      see:'C', sea:'C', si:'C',
+      dee:'D',
+      aitch:'H', haitch:'H', ache:'H',
+      kay:'K',
+      en:'N',
+      oh:'O',
+      are:'R', arr:'R', our:'R',
+      es:'S', ess:'S',
+      vee:'V',
+      zee:'Z', zed:'Z',
+    };
+    const out = [];
+    for (const w of text.toLowerCase().trim().split(/[\s,.'!?]+/)) {
+      if (!w) continue;
+      const up = w.toUpperCase();
+      if (SLOAN_SET.has(up)) { out.push(up); continue; }
+      if (up.length === 1 && /^[A-Z]$/.test(up)) { out.push(up); continue; }
+      const m = map[w];
+      if (m) { out.push(m); continue; }
+      // ASR sometimes merges spoken letters into one token (e.g. "zdroh" for "Z D R O H")
+      const chars = [...up];
+      if (chars.length > 1 && chars.every(c => /^[A-Z]$/.test(c))) {
+        out.push(...chars);
+      }
+    }
+    return out;
+  }
+
+  function makeVoiceRec() {
+    if (!SR) return null;
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 5;
+    let lastInterim = '';
+    let lastResultEvent = null;
+
+    rec.onresult = (event) => {
+      let finalText = '', interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) finalText += event.results[i][0].transcript + ' ';
+        else interimText += event.results[i][0].transcript;
+      }
+      finalText = finalText.trim();
+
+      if (!finalText && interimText) {
+        lastInterim = interimText;
+        lastResultEvent = event;
+        document.getElementById('vmStatus').textContent = `Hearing: "${interimText}"…`;
+        return;
+      }
+      lastInterim = '';
+      lastResultEvent = null;
+      if (!finalText) return;
+
+      if (/can'?t see|cannot see|can not see|skip|blank|nothing/.test(finalText.toLowerCase())) {
+        document.getElementById('vmStatus').textContent = '"Can\'t see" — skipping line…';
+        document.getElementById('vmMic').classList.remove('listening');
+        if (voiceRec) { try { voiceRec.abort(); } catch(e) {} voiceRec = null; }
+        setTimeout(() => document.getElementById('cantSee').click(), 350);
+        return;
+      }
+
+      // Try all alternatives, keep the one with the most recognised letters
+      const resultSet = event.results[event.resultIndex];
+      let bestLetters = speechToLetters(finalText);
+      if (resultSet) {
+        for (let alt = 0; alt < resultSet.length; alt++) {
+          const letters = speechToLetters(resultSet[alt].transcript);
+          if (letters.length > bestLetters.length) bestLetters = letters;
+        }
+      }
+
+      if (bestLetters.length === 0) {
+        document.getElementById('vmStatus').textContent = `"${finalText}" — not recognised, try again`;
+        document.getElementById('vmHeard').textContent = '?';
+        voiceRec = null;
+        setTimeout(() => voiceListen(voiceSlot), 1100);
+        return;
+      }
+
+      // Accept as many letters as were heard (up to remaining slots)
+      document.getElementById('vmMic').classList.remove('listening');
+      const inputs = answerRow.querySelectorAll('input');
+      const dots = document.getElementById('vmProgress').children;
+      const toAccept = bestLetters.slice(0, state.currentLetters.length - voiceSlot);
+
+      for (const letter of toAccept) {
+        haptic('Light');
+        state.currentAnswers[voiceSlot] = letter;
+        if (inputs[voiceSlot]) inputs[voiceSlot].value = letter;
+        if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
+        document.getElementById('vmHeard').textContent = letter;
+        voiceSlot++;
+        updateSingleLetterDisplay(voiceSlot);
+      }
+
+      if (voiceSlot >= state.currentLetters.length) {
+        document.getElementById('vmStatus').textContent = 'All done — submitting…';
+        setTimeout(() => document.getElementById('submitLine').click(), 700);
+      } else {
+        // Heard some but not all — restart for the remaining letters
+        document.getElementById('vmStatus').textContent = `"${toAccept.join(' ')}" heard — say the rest`;
+        voiceRec = null;
+        setTimeout(() => voiceListen(voiceSlot), 400);
+      }
+    };
+
+    rec.onerror = (e) => {
+      document.getElementById('vmMic').classList.remove('listening');
+      if (e.error === 'no-speech' && voiceActive) {
+        voiceRec = null;
+        setTimeout(() => voiceListen(voiceSlot), 200);
+      } else if (e.error !== 'aborted') {
+        document.getElementById('vmStatus').textContent = 'Mic error — tap retry or switch to typing';
+      }
+    };
+
+    rec.onend = () => {
+      document.getElementById('vmMic').classList.remove('listening');
+      // iOS Safari fires onend without ever sending isFinal:true — treat last interim as final
+      if (lastInterim && voiceActive) {
+        const text = lastInterim;
+        lastInterim = '';
+        const event = lastResultEvent;
+        lastResultEvent = null;
+
+        if (/can'?t see|cannot see|can not see|skip|blank|nothing/.test(text.toLowerCase())) {
+          document.getElementById('vmStatus').textContent = '"Can\'t see" — skipping line…';
+          if (voiceRec) { try { voiceRec.abort(); } catch(e) {} voiceRec = null; }
+          setTimeout(() => document.getElementById('cantSee').click(), 350);
+          return;
+        }
+
+        let bestLetters = speechToLetters(text);
+        if (event) {
+          const resultSet = event.results[event.resultIndex];
+          if (resultSet) {
+            for (let alt = 0; alt < resultSet.length; alt++) {
+              const letters = speechToLetters(resultSet[alt].transcript);
+              if (letters.length > bestLetters.length) bestLetters = letters;
+            }
+          }
+        }
+
+        if (bestLetters.length === 0) {
+          document.getElementById('vmStatus').textContent = `"${text}" — not recognised, try again`;
+          document.getElementById('vmHeard').textContent = '?';
+          voiceRec = null;
+          setTimeout(() => voiceListen(voiceSlot), 1100);
+          return;
+        }
+
+        const inputs = answerRow.querySelectorAll('input');
+        const dots = document.getElementById('vmProgress').children;
+        const toAccept = bestLetters.slice(0, state.currentLetters.length - voiceSlot);
+        for (const letter of toAccept) {
+          haptic('Light');
+          state.currentAnswers[voiceSlot] = letter;
+          if (inputs[voiceSlot]) inputs[voiceSlot].value = letter;
+          if (dots[voiceSlot]) dots[voiceSlot].className = 'vm-dot done';
+          document.getElementById('vmHeard').textContent = letter;
+          voiceSlot++;
+        }
+
+        if (voiceSlot >= state.currentLetters.length) {
+          document.getElementById('vmStatus').textContent = 'All done — submitting…';
+          setTimeout(() => document.getElementById('submitLine').click(), 700);
+        } else {
+          document.getElementById('vmStatus').textContent = `"${toAccept.join(' ')}" heard — say the rest`;
+          voiceRec = null;
+          setTimeout(() => voiceListen(voiceSlot), 400);
+        }
+      }
+    };
+
+    return rec;
+  }
+
+  function voiceListen(slot) {
+    if (!SR || !voiceActive) return;
+    voiceSlot = slot;
+    const count = state.currentLetters.length;
+
+    const prog = document.getElementById('vmProgress');
+    prog.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('div');
+      d.className = 'vm-dot' + (i < slot ? ' done' : i === slot ? ' active' : '');
+      prog.appendChild(d);
+    }
+
+    document.getElementById('vmStatus').textContent = 'Say all letters at once — or "can\'t see" to skip';
+    document.getElementById('vmHeard').textContent = '';
+    document.getElementById('vmMic').classList.add('listening');
+
+    // Destroy existing instance so iOS releases its mic indicator
+    if (voiceRec) { try { voiceRec.abort(); } catch(e) {} voiceRec = null; }
+    setTimeout(() => {
+      if (!voiceActive) return;
+      voiceRec = makeVoiceRec();
+      if (voiceRec) try { voiceRec.start(); } catch(e) {}
+    }, 150);
+  }
+
+  function activateVoiceMode() {
+    if (!SR) return; // no Speech API — stay in normal mode
+    voiceActive = true;
+    // Make existing answer inputs display-only
+    answerRow.querySelectorAll('input').forEach(inp => {
+      inp.readOnly = true;
+      inp.style.pointerEvents = 'none';
+      inp.style.opacity = '0.6';
+    });
+    keypad.style.display = 'none';
+    document.getElementById('voicePanel').hidden = false;
+    voiceListen(0);
+  }
+
+  function deactivateVoiceMode() {
+    if (!voiceActive) return;
+    voiceActive = false;
+    if (voiceRec) {
+      try { voiceRec.abort(); } catch(e) {}
+      voiceRec = null; // release reference so iOS drops the mic indicator
+    }
+    document.getElementById('voicePanel').hidden = true;
+    document.getElementById('vmMic').classList.remove('listening');
+  }
+
+  document.getElementById('vmMic').addEventListener('click', () => {
+    haptic('Light');
+    voiceListen(voiceSlot);
+  });
+  document.getElementById('vmRetry').addEventListener('click', () => {
+    haptic('Light');
+    state.currentAnswers[voiceSlot] = '';
+    const inputs = answerRow.querySelectorAll('input');
+    if (inputs[voiceSlot]) inputs[voiceSlot].value = '';
+    voiceListen(voiceSlot);
+  });
+  document.getElementById('vmSkip').addEventListener('click', () => {
+    haptic('Light');
+    state.currentAnswers[voiceSlot] = '';
+    const next = voiceSlot + 1;
+    if (next >= state.currentLetters.length) {
+      setTimeout(() => document.getElementById('submitLine').click(), 300);
+    } else {
+      voiceListen(next);
+    }
+  });
+  document.getElementById('vmTypeLink').addEventListener('click', () => {
+    state.preferTypeMode = true;
+    deactivateVoiceMode();
+    answerRow.querySelectorAll('input').forEach(inp => {
+      inp.readOnly = false;
+      inp.style.pointerEvents = '';
+      inp.style.opacity = '';
+    });
+    keypad.style.display = '';
+    answerRow.children[0]?.focus();
+    state.activeInput = 0;
+  });
+
   function finishEye() {
-    // ETDRS letter-by-letter refinement:
-    // Final logMAR = last passed line - 0.02 × (correct on the smallest failed line)
-    let finalLogmar;
-    let finalSnellen;
+    deactivateVoiceMode();
+    document.body.classList.remove('testing');
+    hapticNotify('Success');
+    let finalLogmar, finalSnellen;
     if (state.lastValidLine === null) {
-      // Never passed any line — worse than 20/200
-      finalLogmar = 1.0;
-      finalSnellen = '<20/200';
+      finalLogmar = 1.0; finalSnellen = '<20/200';
     } else {
       let extraCorrect = 0;
       if (state.failedAtSmaller !== null) {
@@ -893,12 +1688,15 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
       state.currentEye = 'OS';
       showOccluder();
     } else {
+      if (state.comparingWithGlasses) {
+        const gt = document.getElementById('glassesOn');
+        if (gt) gt.disabled = false;
+      }
       showResults();
     }
   }
 
   function logMarToSnellen(logmar) {
-    // Find closest standard line
     let best = LINES[0], bestDiff = Infinity;
     LINES.forEach(L => {
       const d = Math.abs(L.logmar - logmar);
@@ -908,40 +1706,366 @@ color: var(–ink-soft); font-size: 14px; max-width: 40ch; margin: 8px auto 20px
   }
 
   // ===== STEP 4: Results =====
+  function renderComparison() {
+    const uc = state.resultsUncorrected;
+    const c  = state.results;
+    const grid = document.getElementById('compareGrid');
+    const rxEl = document.getElementById('compareRx');
+    if (!grid) return;
+
+    function gapToSphere(gapLogmar) {
+      // gap_logmar = uncorrected - corrected (positive = uncorrected worse)
+      if (gapLogmar <= 0.05) return null;
+      return Math.round(gapLogmar * 3.0 * 4) / 4; // rough sphere magnitude
+    }
+
+    const rows = ['OD', 'OS'].map(eye => {
+      const u = uc[eye], cc = c[eye];
+      if (!u || !cc) return '';
+      const gap = parseFloat((u.logmar - cc.logmar).toFixed(2));
+      const sphere = gapToSphere(gap);
+      const sphereStr = sphere ? `~−${sphere.toFixed(2)}D` : '—';
+      return `
+        <div class="cg-cell"><div class="cg-lbl">${eye} uncorrected</div><div class="cg-val">${u.snellen}</div></div>
+        <div class="cg-cell"><div class="cg-lbl">${eye} corrected</div><div class="cg-val">${cc.snellen}</div></div>
+        <div class="cg-cell cg-gap"><div class="cg-lbl">Est. sphere</div><div class="cg-val">${sphereStr}</div></div>
+      `;
+    }).join('');
+
+    grid.innerHTML = rows;
+
+    const odGap = (uc.OD && c.OD) ? uc.OD.logmar - c.OD.logmar : 0;
+    const osGap = (uc.OS && c.OS) ? uc.OS.logmar - c.OS.logmar : 0;
+    const avgGap = (odGap + osGap) / 2;
+    const sphere = gapToSphere(avgGap);
+    if (sphere) {
+      rxEl.innerHTML = `<strong>Estimated sphere:</strong> approximately −${sphere.toFixed(2)} D &nbsp;<span style="color:var(--ink-mute);font-size:11px;">(rough guide from VA gap — not a prescription; see your optometrist for an exact Rx)</span>`;
+    } else {
+      rxEl.innerHTML = `<strong>No significant VA gap detected.</strong> Your corrected and uncorrected acuity are similar at this test distance.`;
+    }
+  }
+
   function showResults() {
     const od = state.results.OD;
     const os = state.results.OS;
-    document.getElementById('odResult').innerHTML = od ? `${od.snellen}<br><span style="font-size:13px;color:var(--ink-mute);font-style:italic;">logMAR ${od.logmar.toFixed(2)}</span>` : '—';
-    document.getElementById('osResult').innerHTML = os ? `${os.snellen}<br><span style="font-size:13px;color:var(--ink-mute);font-style:italic;">logMAR ${os.logmar.toFixed(2)}</span>` : '—';
 
-    // Best eye
-    const best = (od && os) ? (od.logmar < os.logmar ? od : os) : (od || os);
-    if (best) {
-      const [num, den] = best.snellen.replace('<','').split('/');
-      document.getElementById('bestSnellen').innerHTML = `${num}<em>/</em>${den}`;
-      document.getElementById('bestLogmar').textContent = `logMAR ${best.logmar.toFixed(2)}`;
+    function eyeHTML(r) {
+      if (!r) return '—';
+      const [num, den] = r.snellen.replace('<','').split('/');
+      return `${r.snellen}<br><span style="font-size:12px;color:var(--ink-mute);font-style:italic;">logMAR ${r.logmar.toFixed(2)}</span>`;
     }
+
+    document.getElementById('odResult').innerHTML = eyeHTML(od);
+    document.getElementById('osResult').innerHTML = eyeHTML(os);
+    document.getElementById('odCorrection').textContent = od ? (state.glassesOD ? 'with correction' : 'without correction') : '';
+    document.getElementById('osCorrection').textContent = os ? (state.glassesOS ? 'with correction' : 'without correction') : '';
+
+    const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
+    if (best) {
+      const snellen = best.snellen;
+      const parts = snellen.replace('<','').split('/');
+      document.getElementById('bestSnellen').innerHTML = `${parts[0]}<em>/</em>${parts[1]}`;
+      document.getElementById('bestLogmar').textContent = `logMAR ${best.logmar.toFixed(2)}`;
+      document.getElementById('bestInterp').textContent = SNELLEN_INTERP[snellen] || SNELLEN_INTERP['<20/200'];
+    }
+
+    const referralFlag = document.getElementById('referralFlag');
+    referralFlag.hidden = true;
+    referralFlag.className = '';
+    referralFlag.textContent = '';
+    if (best) {
+      if (best.logmar >= 1.0) {
+        referralFlag.hidden = false;
+        referralFlag.className = 'referral-flag warn';
+        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to take a closer look.';
+      } else if (best.logmar >= 0.3) {
+        referralFlag.hidden = false;
+        referralFlag.className = 'referral-flag warn';
+        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to check your prescription.';
+      }
+    }
+
+    const rxEl = document.getElementById('rxEstimate');
+    rxEl.hidden = true;
+    rxEl.textContent = '';
+    if (best && best.logmar > 0 && state.testType === 'distance' && (!state.glassesOD || !state.glassesOS)) {
+      const sphere = Math.round(-(best.logmar * 2.5) * 4) / 4;
+      rxEl.hidden = false;
+      rxEl.className = 'rx-estimate';
+      rxEl.innerHTML = `<strong>Rough sphere estimate:</strong> ~${sphere.toFixed(2)}D &nbsp;<span style="color:var(--ink-mute);font-size:11px;">(uncorrected distance — rough guide only, not a prescription)</span>`;
+    }
+
+    // Show compare-with-glasses button if first uncorrected pass
+    const compareBtnEl = document.getElementById('compareBtn');
+    const compareBlock = document.getElementById('compareBlock');
+    compareBtnEl.hidden = true;
+    compareBlock.hidden = true;
+
+    if (state.comparingWithGlasses) {
+      // Second pass: show comparison
+      compareBlock.hidden = false;
+      compareBtnEl.hidden = true;
+      renderComparison();
+    } else {
+      // First pass: offer comparison if at least one eye uncorrected
+      const anyUncorrected = (!state.glassesOD && od) || (!state.glassesOS && os);
+      compareBtnEl.hidden = !anyUncorrected;
+    }
+
+    saveToHistory({
+      date: new Date().toISOString(),
+      OD: od ? { logmar: od.logmar, snellen: od.snellen } : null,
+      OS: os ? { logmar: os.logmar, snellen: os.snellen } : null,
+      glassesOD: state.glassesOD,
+      glassesOS: state.glassesOS,
+      testType: state.testType,
+    });
+    renderHistory();
+
     goStep(4);
+  }
+
+  function saveToHistory(entry) {
+    try {
+      const hist = JSON.parse(localStorage.getItem('acuity_history') || '[]');
+      hist.unshift(entry);
+      if (hist.length > 20) hist.pop();
+      localStorage.setItem('acuity_history', JSON.stringify(hist));
+    } catch(e) {}
+  }
+
+  function renderHistory() {
+    const section = document.getElementById('historySection');
+    if (!section) return;
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem('acuity_history') || '[]'); } catch(e) {}
+    if (hist.length <= 1) { section.innerHTML = ''; return; }
+    const past = hist.slice(1, 6); // skip current (just saved), show last 5
+    const rows = past.map(h => {
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const od = h.OD ? h.OD.snellen : '—';
+      const os = h.OS ? h.OS.snellen : '—';
+      const gl = (h.glassesOD || h.glassesOS) ? ' (Rx)' : '';
+      return `<div class="history-row"><span class="hr-date">${dateStr}</span><span class="hr-scores">OD ${od} · OS ${os}${gl}</span><span class="hr-type">${h.testType || 'distance'}</span></div>`;
+    }).join('');
+    section.innerHTML = `<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mute);margin:0 0 10px;">Previous tests</h3>${rows}`;
   }
 
   document.getElementById('restart').addEventListener('click', () => {
     state.results = { OD: null, OS: null };
-    state.currentEye = 'OD';
-    state.testIndex = START_LINE_INDEX;
-    state.lastValidLine = null;
-    state.correctSoFar = {};
-    state.direction = null;
-    state.failedAtSmaller = null;
-    state.passedFirstLine = false;
-    goStep(1);
+    state.resultsUncorrected = { OD: null, OS: null };
+    state.comparingWithGlasses = false;
+    const glassesToggle = document.getElementById('glassesOn');
+    if (glassesToggle) glassesToggle.disabled = false;
+    goStep(2);
   });
 
-  // Cleanup
+  document.getElementById('retestWithGlasses').addEventListener('click', () => {
+    // Save current uncorrected results
+    state.resultsUncorrected = {
+      OD: state.results.OD ? { ...state.results.OD } : null,
+      OS: state.results.OS ? { ...state.results.OS } : null,
+    };
+    state.comparingWithGlasses = true;
+    state.results = { OD: null, OS: null };
+    state.currentEye = 'OD';
+    // Pre-check the glasses toggle and lock it
+    const glassesToggle = document.getElementById('glassesOn');
+    if (glassesToggle) { glassesToggle.checked = true; glassesToggle.disabled = true; }
+    showOccluder();
+    goStep(3);
+  });
+
+  document.getElementById('shareResults').addEventListener('click', async () => {
+    const od = state.results.OD;
+    const os = state.results.OS;
+    const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
+    if (!best) return;
+
+    const S = 1080, SC = 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = S * SC; canvas.height = S * SC;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SC, SC);
+
+    // Dark background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, S, S);
+
+    // Radial gold glow top-center
+    const glow = ctx.createRadialGradient(S/2, 0, 0, S/2, 0, S * 0.75);
+    glow.addColorStop(0, 'rgba(212,160,23,0.18)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, S, S);
+
+    // Subtle dot grid
+    ctx.fillStyle = 'rgba(255,255,255,0.045)';
+    for (let x = 22; x < S; x += 22)
+      for (let y = 22; y < S; y += 22) {
+        ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill();
+      }
+
+    // Faint big background "E"
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `bold 680px 'Fraunces', serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('E', S/2, S/2 + 40);
+    ctx.restore();
+
+    // Top label
+    ctx.fillStyle = 'rgba(212,160,23,0.7)';
+    ctx.font = `500 28px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('VISUAL ACUITY SCORE', S/2, 110);
+
+    // Thin gold rule
+    ctx.strokeStyle = 'rgba(212,160,23,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.2, 130); ctx.lineTo(S*0.8, 130); ctx.stroke();
+
+    // Big VA score
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `bold 200px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(best.snellen, S/2, 390);
+
+    // Best eye label
+    ctx.fillStyle = 'rgba(242,242,247,0.45)';
+    ctx.font = `22px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('best corrected visual acuity', S/2, 438);
+
+    // OD / OS row
+    const midX = S / 2;
+    // divider
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(midX, 510); ctx.lineTo(midX, 600); ctx.stroke();
+
+    const eyeLabel = (snellen, glasses, label) => snellen ? `${snellen}${glasses ? ' ✦' : ''}` : '—';
+
+    // OD
+    ctx.fillStyle = 'rgba(242,242,247,0.4)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText('RIGHT EYE', midX - 40, 530);
+    ctx.fillStyle = '#f2f2f7';
+    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
+    ctx.fillText(eyeLabel(od?.snellen, state.glassesOD), midX - 40, 600);
+
+    // OS
+    ctx.fillStyle = 'rgba(242,242,247,0.4)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('LEFT EYE', midX + 40, 530);
+    ctx.fillStyle = '#f2f2f7';
+    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
+    ctx.fillText(eyeLabel(os?.snellen, state.glassesOS), midX + 40, 600);
+
+    // Glasses footnote
+    if (state.glassesOD || state.glassesOS) {
+      ctx.fillStyle = 'rgba(242,242,247,0.3)';
+      ctx.font = `18px -apple-system, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('✦ with glasses or contacts', S/2, 648);
+    }
+
+    // Bottom rule
+    ctx.strokeStyle = 'rgba(212,160,23,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.1, 700); ctx.lineTo(S*0.9, 700); ctx.stroke();
+
+    // Branding row
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `italic bold 32px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 762);
+
+    ctx.fillStyle = 'rgba(242,242,247,0.35)';
+    ctx.font = `22px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('rjlcevans.com/visual-acuity  ·  Available on the App Store', S/2, 806);
+
+    // Date bottom right
+    ctx.fillStyle = 'rgba(242,242,247,0.2)';
+    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), S/2, 870);
+
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'acuity-results.png', { type: 'image/png' });
+      try {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'My Visual Acuity Results' });
+        } else if (navigator.share) {
+          await navigator.share({ title: 'Visual Acuity Results', text: `OD ${od?.snellen || '—'} · OS ${os?.snellen || '—'} · rjlcevans.com/visual-acuity` });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'acuity-results.png'; a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+      } catch(e) {}
+    }, 'image/png');
+  });
+
+  // Cleanup camera on unload
   window.addEventListener('beforeunload', () => {
     if (ipdStream) ipdStream.getTracks().forEach(t => t.stop());
   });
+
+  // App mode (Capacitor or ?app=1): auto-detect device and jump to step 2
+  (function () {
+    if (!window.Capacitor && new URLSearchParams(location.search).get('app') !== '1') return;
+    // Default to mirror test (most accurate) in app mode
+    const mirrorTile = document.querySelector('[data-type="mirror"]');
+    if (mirrorTile) mirrorTile.click();
+    const detected = autoDetectDevice();
+    if (!detected) return; // unknown device — let user pick from list in step 1
+    state.pxPerMm = iphonePpmm(detected);
+    state._selectedDevice = detected;
+    state._selectedDeviceType = detected.type;
+    const confirm = document.getElementById('iphoneConfirm');
+    if (confirm) {
+      confirm.hidden = false;
+      confirm.textContent = '✓ ' + detected.name;
+    }
+    document.getElementById('changeDevice').hidden = false;
+    ['calibrationBadge', 'calibrationBadge2'].forEach(function(id, i) {
+      var b = document.getElementById(id);
+      var d = document.getElementById(i === 0 ? 'calibrationDevice' : 'calibrationDevice2');
+      if (b && d) { d.textContent = detected.name; b.hidden = false; }
+    });
+    goStep(2);
+  })();
+})();
+
+// App mode: dark native feel when running inside Capacitor or ?app=1
+(function () {
+  if (!window.Capacitor && new URLSearchParams(location.search).get('app') !== '1') return;
+
+  document.body.classList.add('app-mode');
+  var hero = document.querySelector('header.hero');
+  if (hero) hero.style.display = 'none';
+  var titleBar = document.getElementById('appTitleBar');
+  if (titleBar) titleBar.style.display = 'block';
+  var backBtn = document.querySelector('a[href="/"]');
+  if (backBtn) backBtn.style.display = 'none';
+
+  // Step name shown as subtitle in title bar
+  var stepNames = { '1': 'Calibrate', '3': 'Vision Test', '4': 'Results' };
+  var titleSub = titleBar && titleBar.querySelector('p');
+  function updateStepLabel() {
+    var s = document.body.dataset.step;
+    if (titleSub && s) titleSub.textContent = stepNames[s] || 'by Dr. Ryan Evans, OD';
+  }
+  new MutationObserver(updateStepLabel).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
+  updateStepLabel();
 })();
 </script>
-
 </body>
 </html>

@@ -1,0 +1,20 @@
+{
+  "name": "vision-check-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vision Check — calibrated Snellen/ETDRS acuity tester for iPhone and iPad",
+  "scripts": {
+    "sync": "npx cap sync",
+    "open:ios": "npx cap open ios",
+    "build:ios": "npx cap build ios --prod"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/haptics": "^6.0.3",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/status-bar": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}
