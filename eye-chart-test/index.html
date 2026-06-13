@@ -47,22 +47,18 @@
     width: 100px;
     height: 100px;
     border-radius: 24px;
-    background: #141414;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 62px;
-    color: var(--gold);
+    overflow: hidden;
     box-shadow:
       0 8px 32px rgba(212,160,23,0.30),
-      0 2px 8px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(255,255,255,0.07);
+      0 2px 8px rgba(0,0,0,0.6);
     margin-bottom: 24px;
     flex-shrink: 0;
-    text-shadow: 0 0 24px rgba(212,160,23,0.6);
-    border: 1px solid rgba(212,160,23,0.2);
+  }
+
+  .app-icon img {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 
   .hero-badge {
@@ -374,7 +370,9 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="app-icon">E</div>
+  <div class="app-icon">
+    <img src="../visual-acuity/icon-preview.png" alt="Eye Chart Test app icon">
+  </div>
 
   <div class="hero-badge">
     👨‍⚕️ Made by a real optometrist
