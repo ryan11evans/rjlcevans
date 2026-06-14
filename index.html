@@ -110,6 +110,20 @@ header {
   font-size: 0.7rem; color: var(--muted);
   letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
 }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+#theme-toggle {
+  background: none;
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 10px;
+  width: 38px; height: 38px;
+  font-size: 1.1rem; line-height: 1;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+#theme-toggle:hover { background: rgba(0,0,0,.06); }
+body.night #theme-toggle { border-color: rgba(255,255,255,.15); }
+body.night #theme-toggle:hover { background: rgba(255,255,255,.08); }
 .contact a {
   text-decoration: none;
   color: #fff;
@@ -540,7 +554,10 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
         <div class="brand-sub">Murrieta, California</div>
       </div>
     </div>
-    <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
+    <div class="header-actions">
+      <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      <nav class="contact"><a href="mailto:ryan@rjlcevans.com">Contact</a></nav>
+    </div>
   </header>
 
 <!-- ===== HERO CAROUSEL ===== -->
@@ -766,12 +783,26 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   })();
 
-  // ===== Night mode (8 pm – 6 am) =====
+  // ===== Night mode — auto (8pm–6am) with manual override =====
   (function () {
-    function isNight() { const h = new Date().getHours(); return h >= 20 || h < 6; }
-    function applyTheme() { document.body.classList.toggle('night', isNight()); }
-    applyTheme();
-    setInterval(applyTheme, 60000);
+    const KEY = 'evans-theme';
+    function isNightAuto() { const h = new Date().getHours(); return h >= 20 || h < 6; }
+    function isDark() {
+      const s = localStorage.getItem(KEY);
+      return s === 'dark' ? true : s === 'light' ? false : isNightAuto();
+    }
+    function applyTheme(dark) {
+      document.body.classList.toggle('night', dark);
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = dark ? '☀️' : '🌙';
+    }
+    applyTheme(isDark());
+    setInterval(() => { if (!localStorage.getItem(KEY)) applyTheme(isNightAuto()); }, 60000);
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('night');
+      localStorage.setItem(KEY, dark ? 'dark' : 'light');
+      applyTheme(dark);
+    });
   })();
 
   // ===== This Week in Our House — seasonal + day =====
