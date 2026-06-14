@@ -228,24 +228,6 @@
   .eye-card-label { font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 7px; }
   .eye-card-score { font-family: 'Fraunces', serif; font-weight: 600; font-size: 30px; color: var(--ink); line-height: 1; letter-spacing: -0.02em; }
   .eye-card-correction { font-size: 11px; color: var(--ink-mute); margin-top: 5px; font-style: italic; }
-  /* Inline share card preview */
-  .share-preview-wrap { margin-bottom: 14px; }
-  .share-preview-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 10px; }
-  .share-card-inline { border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(212,160,23,0.20); background: #0a0a0a; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; aspect-ratio: 1; box-shadow: 0 4px 24px rgba(212,160,23,0.10); }
-  .sci-watermark { position: absolute; top: 0; left: 0; right: 0; padding: 12px 16px 0; opacity: 0.07; font-family: 'Sloan', monospace; color: #D4A017; line-height: 1.15; pointer-events: none; text-align: center; }
-  .sci-eyebrow { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(212,160,23,0.60); margin-bottom: 6px; position: relative; }
-  .sci-score { font-family: 'Fraunces', serif; font-weight: 700; font-size: clamp(46px,13vw,74px); color: #D4A017; line-height: 1; letter-spacing: -0.03em; position: relative; text-shadow: 0 0 32px rgba(212,160,23,0.45); }
-  .sci-score em { opacity: 0.6; font-style: italic; font-weight: 400; }
-  .sci-label { font-size: 9px; color: rgba(242,242,247,0.35); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; position: relative; }
-  .sci-divider { width: 50%; height: 1px; background: linear-gradient(to right, transparent, rgba(212,160,23,0.28), transparent); margin: 12px 0; position: relative; }
-  .sci-eyes { display: flex; gap: 20px; position: relative; align-items: center; }
-  .sci-eye { text-align: center; }
-  .sci-eye-label { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(242,242,247,0.30); margin-bottom: 4px; }
-  .sci-eye-val { font-family: 'Fraunces', serif; font-weight: 600; font-size: 19px; color: rgba(242,242,247,0.88); }
-  .sci-sep { width: 1px; height: 28px; background: rgba(255,255,255,0.10); }
-  .sci-brand { position: relative; margin-top: 12px; text-align: center; }
-  .sci-brand-name { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 11px; color: #D4A017; }
-  .sci-brand-url { font-size: 9px; color: rgba(242,242,247,0.26); margin-top: 3px; }
   /* Share button */
   .share-btn-big { width: 100%; padding: 17px; background: var(--accent); color: #111; font-weight: 700; font-size: 17px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; box-shadow: 0 4px 20px rgba(212,160,23,0.28); transition: opacity 0.15s; }
   .share-btn-big:active { opacity: 0.85; }
@@ -810,46 +792,14 @@
       </div>
     </div>
 
-    <div id="referralFlag" hidden></div>
-    <div id="rxEstimate" hidden></div>
-
-    <div class="share-preview-wrap">
-      <div class="share-preview-label">Your shareable result card</div>
-      <div class="share-card-inline">
-        <div class="sci-watermark" aria-hidden="true">
-          <div style="font-size:28px">E</div>
-          <div style="font-size:19px">F P</div>
-          <div style="font-size:13px">T O Z</div>
-          <div style="font-size:9px">L P E D</div>
-          <div style="font-size:7px">P E C F D</div>
-        </div>
-        <div class="sci-eyebrow">Eye Chart Test · Dr. Evans, OD</div>
-        <div class="sci-score" id="sciScore">—</div>
-        <div class="sci-label">Visual acuity · best eye</div>
-        <div class="sci-divider"></div>
-        <div class="sci-eyes">
-          <div class="sci-eye">
-            <div class="sci-eye-label">Right (OD)</div>
-            <div class="sci-eye-val" id="sciOD">—</div>
-          </div>
-          <div class="sci-sep"></div>
-          <div class="sci-eye">
-            <div class="sci-eye-label">Left (OS)</div>
-            <div class="sci-eye-val" id="sciOS">—</div>
-          </div>
-        </div>
-        <div class="sci-brand">
-          <div class="sci-brand-name">Eye Chart Test by Dr. Evans, OD</div>
-          <div class="sci-brand-url">rjlcevans.com/eye-chart-test</div>
-        </div>
-      </div>
-    </div>
-
     <button class="share-btn-big" id="shareResults">↑ Share your results</button>
 
     <div class="results-secondary-row" style="margin-bottom:12px;">
       <button class="btn ghost" id="restart">Test again</button>
     </div>
+
+    <div id="referralFlag" hidden></div>
+    <div id="rxEstimate" hidden></div>
 
     <div id="compareBlock" hidden>
       <div class="compare-header">Corrected vs. uncorrected comparison</div>
@@ -1834,12 +1784,6 @@
     document.getElementById('osCorrection').textContent = os ? (state.glassesOS ? 'with correction' : 'without correction') : '';
 
     const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
-
-    // Inline share card preview
-    const snellenFmt = s => { const p = s.replace('<','').split('/'); return `${p[0]}<em>/</em>${p[1]}`; };
-    document.getElementById('sciScore').innerHTML = best ? snellenFmt(best.snellen) : '—';
-    document.getElementById('sciOD').textContent = od ? od.snellen : '—';
-    document.getElementById('sciOS').textContent = os ? os.snellen : '—';
 
     if (best) {
       const snellen = best.snellen;
