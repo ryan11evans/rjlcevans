@@ -63,6 +63,7 @@
   --clinical-accent: #e8b87f;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 html, body { height: 100%; margin: 0; }
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -158,19 +159,31 @@ main {
 footer {
   width: 100%;
   max-width: var(--maxw);
-  color: var(--muted);
-  font-size: .9rem;
-  padding: 14px 18px 40px;
+  padding: 40px 18px 56px;
   text-align: center;
+  border-top: 1px solid rgba(0,0,0,.08);
+  margin-top: 12px;
 }
+.footer-brand {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 20px;
+}
+.footer-badge {
+  width: 30px; height: 30px; background: #f59e0b; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; font-weight: 900; color: #fff; letter-spacing: -0.04em;
+}
+.footer-brand-name { font-size: 0.9rem; font-weight: 700; color: var(--muted); }
 .footer-links {
   display: flex; flex-wrap: wrap; justify-content: center;
-  gap: 4px 16px; margin-bottom: 10px;
+  gap: 4px 20px; margin-bottom: 16px;
 }
 .footer-links a { color: var(--muted); text-decoration: none; font-size: .85rem; }
 .footer-links a:hover { color: var(--text); }
+.footer-copy { color: var(--muted); font-size: 0.78rem; margin: 0; }
 footer .footer-copy a { color: var(--muted); text-decoration: none; }
 footer .footer-copy a:hover { color: var(--text); }
+body.night footer { border-top-color: rgba(255,255,255,.07); }
 
 /* ===== Clinical Tools Section ===== */
 .tools-section {
@@ -691,6 +704,10 @@ body.night .contact a:hover { opacity: 0.85; }
   </main>
 
   <footer>
+    <div class="footer-brand">
+      <div class="footer-badge">E</div>
+      <span class="footer-brand-name">Evans Family</span>
+    </div>
     <nav class="footer-links">
       <a href="vision-simulator/">Vision Simulator</a>
       <a href="visual-acuity/">Acuity Test</a>
@@ -698,7 +715,7 @@ body.night .contact a:hover { opacity: 0.85; }
       <a href="iris-drift/">Iris Drift</a>
       <a href="dr-glass/">Dr. Glass</a>
     </nav>
-    <p class="footer-copy">© 2026 Evans Family · rjlcevans.com · <a href="mailto:ryan@rjlcevans.com">Contact</a></p>
+    <p class="footer-copy">© 2026 Evans Family · Murrieta, California · <a href="mailto:ryan@rjlcevans.com">ryan@rjlcevans.com</a></p>
   </footer>
 
   <script>
