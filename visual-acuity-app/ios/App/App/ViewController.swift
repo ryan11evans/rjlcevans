@@ -11,6 +11,13 @@ class ViewController: CAPBridgeViewController {
         schemeHandler.viewController = self
         configuration.userContentController.add(shareHandler, name: "nativeShare")
         configuration.setURLSchemeHandler(schemeHandler, forURLScheme: "nativeshare")
+        // Diagnostic: confirm this override fires and both bridges are wired
+        let diag = WKUserScript(
+            source: "console.log('[VC] nativeShare=' + !!(window.webkit?.messageHandlers?.nativeShare) + ' Capacitor=' + !!window.Capacitor);",
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        configuration.userContentController.addUserScript(diag)
         return super.webView(with: frame, configuration: configuration)
     }
 }
