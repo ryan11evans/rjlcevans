@@ -3,10 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Share Card Mockup</title>
+<title>Share Card Mockup v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-<!-- QR code library -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; font-family: sans-serif; padding: 24px; }
   .card-wrap { width: min(90vw, 420px); aspect-ratio: 1; position: relative; }
@@ -21,136 +19,119 @@
   <canvas id="card" width="1080" height="1080"></canvas>
 </div>
 <button onclick="download()">Download 1080×1080 PNG</button>
-<p>Mockup — letters brighter, URL prominent, QR code to app page</p>
+<p>Proposed v2 — score shifted up, OD/OS larger, labels more readable</p>
 
 <script>
 const canvas = document.getElementById('card');
 const ctx = canvas.getContext('2d');
 const S = 1080;
 
-async function draw() {
+// Sample data — edit to preview different results
+const bestSnellen = '20/200';
+const odSnellen   = '20/100';
+const osSnellen   = '20/200';
+
+function draw() {
   // ── Background ─────────────────────────────────────────────────────────────
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, 0, S, S);
 
-  // Radial gold glow
-  const bgGlow = ctx.createRadialGradient(S/2, S*0.12, 0, S/2, S*0.28, S*0.68);
-  bgGlow.addColorStop(0, 'rgba(212,160,23,0.20)');
+  const bgGlow = ctx.createRadialGradient(S/2, S*0.1, 0, S/2, S*0.25, S*0.65);
+  bgGlow.addColorStop(0, 'rgba(212,160,23,0.18)');
   bgGlow.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = bgGlow;
   ctx.fillRect(0, 0, S, S);
 
-  // ── Cascading chart letters — brighter & readable ─────────────────────────
-  const chartRows = [
-    { text: 'E',         size: 108, y: 32  },
-    { text: 'F  P',      size: 72,  y: 152 },
-    { text: 'T  O  Z',   size: 48,  y: 236 },
-    { text: 'L  P  E  D', size: 32, y: 298 },
-    { text: 'P  E  C  F  D', size: 22, y: 342 },
-  ];
+  // ── Cascading chart watermark ───────────────────────────────────────────────
   ctx.save();
+  ctx.globalAlpha = 0.20;
+  ctx.fillStyle = '#D4A017';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  chartRows.forEach((r, i) => {
-    // Fade from more opaque at top to less at bottom
-    ctx.globalAlpha = 0.22 - i * 0.02;
-    ctx.fillStyle = '#D4A017';
-    ctx.font = `700 ${r.size}px Georgia, 'Times New Roman', serif`;
+  const rows = [
+    { text: 'E',             size: 110, y: 28  },
+    { text: 'F P',           size: 74,  y: 150 },
+    { text: 'T O Z',         size: 50,  y: 238 },
+    { text: 'L P E D',       size: 34,  y: 302 },
+    { text: 'P E C F D',     size: 24,  y: 348 },
+  ];
+  rows.forEach(r => {
+    ctx.font = `700 ${r.size}px Georgia, serif`;
     ctx.fillText(r.text, S/2, r.y);
   });
   ctx.restore();
 
   // ── Eyebrow ────────────────────────────────────────────────────────────────
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = 'rgba(212,160,23,0.65)';
-  ctx.font = `500 24px -apple-system, system-ui, sans-serif`;
+  ctx.fillStyle = 'rgba(212,160,23,0.62)';
+  ctx.font = `500 26px -apple-system, system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('EYE CHART TEST  ·  DR. EVANS, OD', S/2, 448);
 
-  // ── Big score with glow ───────────────────────────────────────────────────
+  // ── Big score — moved up 35px ─────────────────────────────────────────────
   ctx.save();
   ctx.filter = 'blur(28px)';
   ctx.fillStyle = 'rgba(212,160,23,0.55)';
   ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('20/20', S/2, 660);
+  ctx.fillText(bestSnellen, S/2, 625);
   ctx.restore();
 
   ctx.fillStyle = '#D4A017';
   ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('20/20', S/2, 660);
+  ctx.fillText(bestSnellen, S/2, 625);
 
-  ctx.fillStyle = 'rgba(242,242,247,0.38)';
-  ctx.font = `20px -apple-system, system-ui, sans-serif`;
-  ctx.fillText('VISUAL ACUITY  ·  BEST EYE', S/2, 704);
+  // Sub-label — bigger (26px, was 20px) ─────────────────────────────────────
+  ctx.fillStyle = 'rgba(242,242,247,0.42)';
+  ctx.font = `500 26px -apple-system, system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('VISUAL ACUITY  ·  BEST EYE', S/2, 672);
 
   // ── Divider ────────────────────────────────────────────────────────────────
   ctx.strokeStyle = 'rgba(212,160,23,0.28)';
   ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(S*0.25, 736); ctx.lineTo(S*0.75, 736); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(S*0.25, 706); ctx.lineTo(S*0.75, 706); ctx.stroke();
 
-  // ── OD / OS ───────────────────────────────────────────────────────────────
+  // ── OD / OS — larger scores (82px, was 54px) ─────────────────────────────
   const midX = S / 2;
   ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(midX, 758); ctx.lineTo(midX, 840); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(midX, 726); ctx.lineTo(midX, 858); ctx.stroke();
 
-  ctx.fillStyle = 'rgba(242,242,247,0.35)';
-  ctx.font = `18px -apple-system, system-ui, sans-serif`;
+  // Labels — bigger (22px, was 18px)
+  ctx.fillStyle = 'rgba(242,242,247,0.38)';
+  ctx.font = `500 22px -apple-system, system-ui, sans-serif`;
   ctx.textAlign = 'right';
-  ctx.fillText('RIGHT (OD)', midX - 36, 774);
+  ctx.fillText('RIGHT EYE', midX - 36, 748);
   ctx.textAlign = 'left';
-  ctx.fillText('LEFT (OS)', midX + 36, 774);
+  ctx.fillText('LEFT EYE', midX + 36, 748);
 
-  ctx.fillStyle = 'rgba(242,242,247,0.90)';
-  ctx.font = `bold 54px 'Fraunces', Georgia, serif`;
+  // Scores — 82px (was 54px)
+  ctx.fillStyle = 'rgba(242,242,247,0.92)';
+  ctx.font = `bold 82px 'Fraunces', Georgia, serif`;
   ctx.textAlign = 'right';
-  ctx.fillText('20/20', midX - 36, 836);
+  ctx.fillText(odSnellen, midX - 36, 848);
   ctx.textAlign = 'left';
-  ctx.fillText('20/20', midX + 36, 836);
+  ctx.fillText(osSnellen, midX + 36, 848);
 
   // ── Bottom rule ───────────────────────────────────────────────────────────
   ctx.strokeStyle = 'rgba(212,160,23,0.22)';
   ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(S*0.08, 876); ctx.lineTo(S*0.92, 876); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(S*0.12, 892); ctx.lineTo(S*0.88, 892); ctx.stroke();
 
-  // ── Brand name ────────────────────────────────────────────────────────────
+  // ── Brand ─────────────────────────────────────────────────────────────────
   ctx.fillStyle = '#D4A017';
-  ctx.font = `italic bold 28px 'Fraunces', Georgia, serif`;
+  ctx.font = `italic bold 30px 'Fraunces', Georgia, serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 918);
+  ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 938);
 
-  // ── QR code (left) + URL (right) ─────────────────────────────────────────
-  // Generate QR into temp canvas
-  const qrCanvas = document.createElement('canvas');
-  await QRCode.toCanvas(qrCanvas, 'https://rjlcevans.com/eye-chart-test', {
-    width: 140,
-    margin: 1,
-    color: { dark: '#D4A017', light: '#00000000' }
-  });
-
-  // Draw QR code
-  const qrSize = 120;
-  const qrX = S * 0.10;
-  const qrY = 938;
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-  ctx.restore();
-
-  // URL text next to QR
-  ctx.fillStyle = '#D4A017';
-  ctx.font = `700 28px -apple-system, system-ui, sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.fillText('rjlcevans.com/eye-chart-test', qrX + qrSize + 24, qrY + 44);
-
-  ctx.fillStyle = 'rgba(242,242,247,0.35)';
-  ctx.font = `18px -apple-system, system-ui, sans-serif`;
-  ctx.fillText('Scan to download on the App Store', qrX + qrSize + 24, qrY + 78);
+  // URL — bigger (24px, was 20px)
+  ctx.fillStyle = 'rgba(242,242,247,0.32)';
+  ctx.font = `20px -apple-system, system-ui, sans-serif`;
+  ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 976);
 }
 
 function download() {
