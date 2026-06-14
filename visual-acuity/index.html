@@ -1778,6 +1778,14 @@
     const od = state.results.OD;
     const os = state.results.OS;
 
+    // Debug: show whether native share handler is wired up
+    const shareBtn = document.getElementById('shareResults');
+    if (shareBtn) {
+      shareBtn.textContent = window.webkit?.messageHandlers?.nativeShare
+        ? '↑ Share your results (native ✓)'
+        : '↑ Share your results';
+    }
+
     document.getElementById('odResult').textContent = od ? od.snellen : '—';
     document.getElementById('osResult').textContent = os ? os.snellen : '—';
     document.getElementById('odCorrection').textContent = od ? (state.glassesOD ? 'with correction' : 'without correction') : '';
