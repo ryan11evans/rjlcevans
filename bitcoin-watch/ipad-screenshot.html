@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TapBTC – iPad Screenshot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 2048px;
+    height: 2732px;
+    overflow: hidden;
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', sans-serif;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Status bar */
+  .status-bar {
+    width: 100%;
+    padding: 40px 72px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 34px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .status-right { display: flex; align-items: center; gap: 18px; }
+  .battery {
+    width: 56px; height: 28px; border: 3px solid #fff; border-radius: 6px;
+    display: flex; align-items: center; padding: 3px;
+    position: relative;
+  }
+  .battery::after {
+    content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+    width: 5px; height: 14px; background: #fff; border-radius: 0 2px 2px 0;
+  }
+  .battery-fill { width: 65%; height: 100%; background: #fff; border-radius: 2px; }
+
+  /* Nav bar */
+  .nav {
+    width: 100%;
+    padding: 32px 72px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nav-title { font-size: 52px; font-weight: 700; color: #fff; }
+  .nav-btn {
+    width: 88px; height: 88px; border-radius: 44px;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px; color: #fff;
+  }
+
+  /* Price section */
+  .price-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 56px;
+    gap: 10px;
+  }
+  .btc-label {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 38px; font-weight: 500; color: rgba(255,255,255,0.65);
+  }
+  .btc-icon {
+    width: 52px; height: 52px; border-radius: 26px; background: #f7931a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900; color: #000;
+  }
+  .price {
+    font-size: 144px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -4px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  /* Bitcoin logo animation */
+  .logo-wrap {
+    position: relative;
+    width: 520px; height: 520px;
+    margin-top: 40px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .orbit-ring {
+    position: absolute;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    animation: spin 6s linear infinite;
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .btc-circle {
+    width: 380px; height: 380px; border-radius: 50%;
+    background: #f7931a;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 2;
+    box-shadow: 0 0 80px rgba(247,147,26,0.35);
+  }
+  .btc-symbol {
+    font-size: 190px; font-weight: 900; color: rgba(0,0,0,0.85);
+    line-height: 1; margin-top: -8px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    width: 1600px;
+    margin-top: 60px;
+  }
+  .stat-card {
+    background: #1c1c1e;
+    border-radius: 28px;
+    padding: 52px 56px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .stat-label {
+    font-size: 34px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.3px;
+  }
+  .stat-value {
+    font-size: 72px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .stat-sub {
+    font-size: 30px; color: rgba(255,255,255,0.4);
+    margin-top: -4px;
+  }
+  .green  { color: #30d158; }
+  .red    { color: #ff453a; }
+  .orange { color: #f7931a; }
+  .cyan   { color: #5ac8fa; }
+
+  /* Footer */
+  .footer {
+    margin-top: auto;
+    padding-bottom: 80px;
+    font-size: 34px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 400;
+  }
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span>11:23</span>
+  <div class="status-right">
+    <svg width="38" height="28" viewBox="0 0 38 28" fill="white">
+      <rect x="0" y="18" width="6" height="10" rx="1.5" opacity="0.4"/>
+      <rect x="8" y="12" width="6" height="16" rx="1.5" opacity="0.6"/>
+      <rect x="16" y="6" width="6" height="22" rx="1.5" opacity="0.8"/>
+      <rect x="24" y="0" width="6" height="28" rx="1.5"/>
+    </svg>
+    <span>LTE</span>
+    <div class="battery"><div class="battery-fill"></div></div>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="nav-title">Bitcoin</div>
+  <div class="nav-btn">↻</div>
+</div>
+
+<!-- Price -->
+<div class="price-section">
+  <div class="btc-label">
+    <div class="btc-icon">₿</div>
+    BTC / USD
+  </div>
+  <div class="price">$73,540</div>
+</div>
+
+<!-- Animated logo -->
+<div class="logo-wrap">
+  <!-- Orbit SVG arrows -->
+  <svg class="orbit-ring" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Top arc arrow -->
+    <path d="M 260 30 A 230 230 0 0 1 460 180" stroke="#f7931a" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <polygon points="460,160 480,192 442,188" fill="#f7931a" opacity="0.85"/>
+    <!-- Bottom arc arrow -->
+    <path d="M 260 490 A 230 230 0 0 1 60 340" stroke="#f7931a" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+    <polygon points="60,360 40,328 78,332" fill="#f7931a" opacity="0.85"/>
+  </svg>
+  <div class="btc-circle">
+    <span class="btc-symbol">₿</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">24h High</div>
+    <div class="stat-value green">$75,312</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">24h Low</div>
+    <div class="stat-value red">$72,669</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">All-Time High</div>
+    <div class="stat-value orange">$126,080</div>
+    <div class="stat-sub">Oct 6, 2025</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Block Height</div>
+    <div class="stat-value cyan">#951,424</div>
+  </div>
+</div>
+
+<div class="footer">Just updated</div>
+
+</body>
+</html>

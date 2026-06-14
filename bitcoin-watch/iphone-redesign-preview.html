@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TapBTC iPhone – Redesign Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    gap: 48px;
+    color: #fff;
+  }
+
+  h2 { font-size: 11px; color: #636366; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 320px;
+    height: 692px;
+    background: linear-gradient(175deg, #1e1c19 0%, #111010 45%, #050505 100%);
+    border-radius: 52px;
+    border: 6px solid #2c2c2e;
+    box-shadow: 0 0 0 1px #3a3a3c, 0 32px 64px rgba(0,0,0,0.95);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Dynamic island */
+  .island {
+    width: 100px; height: 28px;
+    background: #000;
+    border-radius: 20px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+  }
+
+  /* Status bar */
+  .status {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 22px 0;
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .status-right { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+  /* Nav */
+  .nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 20px 0;
+    flex-shrink: 0;
+  }
+  .nav-title { font-size: 17px; font-weight: 600; color: #fff; }
+  .nav-btn {
+    width: 34px; height: 34px; border-radius: 17px;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: rgba(255,255,255,0.7);
+  }
+
+  /* Price section */
+  .price-section {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 20px 0;
+    flex-shrink: 0;
+  }
+  .btc-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.45);
+    margin-bottom: 4px;
+  }
+  .btc-dot {
+    width: 18px; height: 18px; border-radius: 9px;
+    background: #f7931a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900; color: #000;
+  }
+  .price-row {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .price {
+    font-size: 52px; font-weight: 700; color: #fff;
+    letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .change-badge {
+    font-size: 15px; font-weight: 600;
+    padding: 3px 8px; border-radius: 8px;
+    margin-bottom: 4px;
+  }
+  .change-up   { background: rgba(48,209,88,0.15); color: #30d158; }
+  .change-down { background: rgba(255,69,58,0.15);  color: #ff453a; }
+
+  /* Coin logo */
+  .coin-wrap {
+    width: 140px; height: 140px;
+    margin: 14px auto 0;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .coin-glow {
+    position: absolute; inset: -20px;
+    background: radial-gradient(circle, rgba(247,147,26,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .coin {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: linear-gradient(175deg, #fbb347 0%, #f7931a 48%, #e37f0a 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px rgba(201,110,6,0.5), 0 8px 24px rgba(247,147,26,0.3);
+    position: relative;
+    font-size: 72px; font-weight: 900; color: rgba(26,18,6,0.85);
+    font-family: 'Liberation Sans', Arial, sans-serif;
+  }
+  /* Orbit rings */
+  .orbit {
+    position: absolute; inset: -20px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+  }
+
+  /* Stats grid */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    padding: 14px 16px 0;
+    flex-shrink: 0;
+  }
+  .tile {
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 3px;
+    position: relative; overflow: hidden;
+  }
+  .tile-green  { background: linear-gradient(135deg, rgba(48,209,88,0.12) 0%, rgba(48,209,88,0.05) 100%); border: 1px solid rgba(48,209,88,0.18); }
+  .tile-red    { background: linear-gradient(135deg, rgba(255,69,58,0.12)  0%, rgba(255,69,58,0.05)  100%); border: 1px solid rgba(255,69,58,0.18); }
+  .tile-orange { background: linear-gradient(135deg, rgba(247,147,26,0.14) 0%, rgba(247,147,26,0.05) 100%); border: 1px solid rgba(247,147,26,0.2); }
+  .tile-cyan   { background: linear-gradient(135deg, rgba(90,200,250,0.12) 0%, rgba(90,200,250,0.05) 100%); border: 1px solid rgba(90,200,250,0.18); }
+  .tile-lbl    { font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: 0.3px; }
+  .tile-val    { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; line-height: 1.1; }
+  .tile-sub    { font-size: 9.5px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+  .green { color: #30d158; }
+  .red   { color: #ff453a; }
+  .orange{ color: #f7931a; }
+  .cyan  { color: #5ac8fa; }
+
+  /* Status footer */
+  .footer {
+    margin-top: auto;
+    padding: 10px 0 16px;
+    text-align: center;
+    font-size: 11px; color: rgba(255,255,255,0.25);
+  }
+
+  /* ── Side-by-side comparison ── */
+  .comparison { display: flex; gap: 40px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+  /* OLD phone (simplified) */
+  .phone-old {
+    width: 320px; height: 692px;
+    background: #000;
+    border-radius: 52px;
+    border: 6px solid #2c2c2e;
+    box-shadow: 0 0 0 1px #3a3a3c, 0 32px 64px rgba(0,0,0,0.95);
+    overflow: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0 16px;
+  }
+  .old-island { width: 100px; height: 28px; background: #000; border-radius: 20px; margin: 12px auto 0; flex-shrink: 0; border: 1px solid #222; }
+  .old-status { width: 100%; display: flex; justify-content: space-between; padding: 6px 6px 0; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .old-nav { width: 100%; display: flex; justify-content: center; align-items: center; padding: 8px 0 0; font-size: 17px; font-weight: 600; flex-shrink: 0; position: relative; }
+  .old-nav-btn { position: absolute; right: 0; width: 34px; height: 34px; border-radius: 17px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.5); }
+  .old-label { display: flex; align-items: center; gap: 6px; margin-top: 20px; font-size: 15px; color: rgba(255,255,255,0.5); }
+  .old-price { font-size: 52px; font-weight: 700; letter-spacing: -2px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .old-coin { width: 140px; height: 140px; border-radius: 50%; background: rgba(255,149,0,0.08); display: flex; align-items: center; justify-content: center; margin-top: 18px; font-size: 64px; color: #f7931a; flex-shrink: 0; }
+  .old-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 14px; }
+  .old-tile { border-radius: 10px; padding: 10px 12px; background: rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 2px; }
+  .old-tile-lbl { font-size: 10px; color: rgba(255,255,255,0.4); }
+  .old-tile-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .old-footer { margin-top: auto; padding-bottom: 16px; font-size: 11px; color: rgba(255,255,255,0.25); }
+</style>
+</head>
+<body>
+
+<div class="comparison">
+
+  <!-- BEFORE -->
+  <div class="col">
+    <h2>Before</h2>
+    <div class="phone-old">
+      <div class="old-island"></div>
+      <div class="old-status"><span>9:41</span><span>●●●</span></div>
+      <div class="old-nav">Bitcoin<div class="old-nav-btn">↻</div></div>
+      <div class="old-label">
+        <div style="width:20px;height:20px;border-radius:50%;background:#f7931a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#000">₿</div>
+        BTC / USD
+      </div>
+      <div class="old-price">$73,540</div>
+      <div class="old-coin">₿</div>
+      <div class="old-tiles">
+        <div class="old-tile"><div class="old-tile-lbl">24h High</div><div class="old-tile-val green">$75,312</div></div>
+        <div class="old-tile"><div class="old-tile-lbl">24h Low</div><div class="old-tile-val red">$72,669</div></div>
+        <div class="old-tile"><div class="old-tile-lbl">All-Time High</div><div class="old-tile-val orange">$126,080</div><div style="font-size:9px;color:rgba(255,255,255,0.3)">Oct 6, 2025</div></div>
+        <div class="old-tile"><div class="old-tile-lbl">Block Height</div><div class="old-tile-val cyan">#951,424</div></div>
+      </div>
+      <div class="old-footer">Just updated</div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="col">
+    <h2>After</h2>
+    <div class="phone">
+      <div class="island"></div>
+
+      <div class="status">
+        <span>9:41</span>
+        <div class="status-right"><span>●●●</span></div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-title">Bitcoin</div>
+        <div class="nav-btn">↻</div>
+      </div>
+
+      <!-- Price -->
+      <div class="price-section">
+        <div class="btc-label">
+          <div class="btc-dot">₿</div>
+          BTC / USD
+        </div>
+        <div class="price-row">
+          <div class="price">$73,540</div>
+          <div class="change-badge change-up">+2.4%</div>
+        </div>
+      </div>
+
+      <!-- Coin -->
+      <div class="coin-wrap">
+        <div class="coin-glow"></div>
+        <div class="coin">₿</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="tile tile-green">
+          <div class="tile-lbl">24H HIGH</div>
+          <div class="tile-val green">$75,312</div>
+          <div class="tile-sub">&nbsp;</div>
+        </div>
+        <div class="tile tile-red">
+          <div class="tile-lbl">24H LOW</div>
+          <div class="tile-val red">$72,669</div>
+          <div class="tile-sub">&nbsp;</div>
+        </div>
+        <div class="tile tile-orange">
+          <div class="tile-lbl">ALL-TIME HIGH</div>
+          <div class="tile-val orange">$126,080</div>
+          <div class="tile-sub">Oct 6, 2025</div>
+        </div>
+        <div class="tile tile-cyan">
+          <div class="tile-lbl">BLOCK HEIGHT</div>
+          <div class="tile-val cyan">#951,424</div>
+          <div class="tile-sub">&nbsp;</div>
+        </div>
+      </div>
+
+      <div class="footer">Just updated</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

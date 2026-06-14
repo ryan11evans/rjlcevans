@@ -1,0 +1,29 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#23211F"/>
+    <stop offset="55%" stop-color="#121110"/>
+    <stop offset="100%" stop-color="#050505"/>
+  </linearGradient>
+  <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#FBB347"/>
+    <stop offset="48%" stop-color="#F7931A"/>
+    <stop offset="100%" stop-color="#E37F0A"/>
+  </linearGradient>
+</defs>
+
+<!-- Full orange background — watchOS crops to circle so corners never show -->
+<rect width="1024" height="1024" fill="url(#coin)"/>
+
+<!-- ₿ symbol -->
+<text
+  x="518"
+  y="518"
+  font-family="Liberation Sans, Arial, sans-serif"
+  font-size="520"
+  font-weight="bold"
+  text-anchor="middle"
+  dominant-baseline="central"
+  fill="#1A1206">&#x20BF;</text>
+
+</svg>

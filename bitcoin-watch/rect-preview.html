@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rectangular Complication – Before vs After</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', sans-serif;
+    gap: 40px;
+    color: #fff;
+  }
+
+  h1 { font-size: 16px; color: #8e8e93; font-weight: 500; letter-spacing: 0.5px; }
+
+  .row {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .col-label {
+    font-size: 11px;
+    color: #8e8e93;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Watch frame */
+  .watch {
+    width: 200px;
+    height: 244px;
+    background: #000;
+    border-radius: 56px;
+    border: 5px solid #2a2a2a;
+    box-shadow: 0 0 0 1px #444, 0 20px 40px rgba(0,0,0,0.9);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .watch-inline {
+    margin-top: 16px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #ff9f0a;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .watch-inline-dot { width: 5px; height: 5px; border-radius: 50%; background: #ff9f0a; }
+
+  .watch-time {
+    font-size: 48px;
+    font-weight: 200;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-top: 4px;
+  }
+
+  .watch-date { font-size: 10px; color: #8e8e93; margin-top: 1px; }
+
+  /* ── BEFORE rectangular ── */
+  .rect-before {
+    width: 176px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 6px 9px;
+    margin-top: 8px;
+  }
+  .rect-before-header {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 1px;
+  }
+  .rect-before-icon { font-size: 9px; color: #ff9f0a; }
+  .rect-before-label { font-size: 9px; font-weight: 600; color: #8e8e93; letter-spacing: 0.5px; flex: 1; }
+  .rect-before-arr { font-size: 7px; color: rgba(255,255,255,0.15); }
+  .rect-before-price { font-size: 17px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.3px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .rect-before-time { font-size: 9px; color: #8e8e93; margin-top: 1px; }
+
+  /* ── AFTER rectangular ── */
+  .rect-after {
+    width: 176px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 6px 9px;
+    margin-top: 8px;
+  }
+  .rect-after-header {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 0px;
+  }
+  .rect-after-icon { font-size: 9px; color: #ff9f0a; }
+  .rect-after-label { font-size: 9px; font-weight: 600; color: #8e8e93; letter-spacing: 0.5px; flex: 1; }
+  .rect-after-arr { font-size: 7px; color: rgba(255,255,255,0.15); }
+  .rect-after-price { font-size: 24px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .rect-after-time { font-size: 7.5px; color: rgba(255,255,255,0.35); margin-top: 0px; }
+
+  /* close-up cards */
+  .cards { display: flex; gap: 20px; }
+  .card {
+    background: #1c1c1e;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 220px;
+  }
+  .card-label { font-size: 11px; color: #8e8e93; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<h1>Rectangular Complication — Before vs After</h1>
+
+<!-- Watch face comparison -->
+<div class="row">
+
+  <!-- BEFORE -->
+  <div class="col">
+    <span class="col-label">Before</span>
+    <div class="watch">
+      <div class="watch-inline"><div class="watch-inline-dot"></div>₿ BTC $104,382</div>
+      <div class="watch-time">8:38</div>
+      <div class="watch-date">THU, MAY 28</div>
+      <div class="rect-before">
+        <div class="rect-before-header">
+          <span class="rect-before-icon">₿</span>
+          <span class="rect-before-label">BITCOIN</span>
+          <span class="rect-before-arr">↻</span>
+        </div>
+        <div class="rect-before-price">$104,382</div>
+        <div class="rect-before-time">6 minutes ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="col">
+    <span class="col-label">After</span>
+    <div class="watch">
+      <div class="watch-inline"><div class="watch-inline-dot"></div>₿ BTC $104,382</div>
+      <div class="watch-time">8:38</div>
+      <div class="watch-date">THU, MAY 28</div>
+      <div class="rect-after">
+        <div class="rect-after-header">
+          <span class="rect-after-icon">₿</span>
+          <span class="rect-after-label">BITCOIN</span>
+          <span class="rect-after-arr">↻</span>
+        </div>
+        <div class="rect-after-price">$104,382</div>
+        <div class="rect-after-time">6 min ago</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Close-up comparison -->
+<div class="cards">
+  <div class="card">
+    <span class="card-label">BEFORE — price 17pt, time 9pt</span>
+    <div class="rect-before">
+      <div class="rect-before-header">
+        <span class="rect-before-icon">₿</span>
+        <span class="rect-before-label">BITCOIN</span>
+        <span class="rect-before-arr">↻</span>
+      </div>
+      <div class="rect-before-price">$104,382</div>
+      <div class="rect-before-time">6 minutes ago</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-label">AFTER — price 24pt, time 7.5pt</span>
+    <div class="rect-after">
+      <div class="rect-after-header">
+        <span class="rect-after-icon">₿</span>
+        <span class="rect-after-label">BITCOIN</span>
+        <span class="rect-after-arr">↻</span>
+      </div>
+      <div class="rect-after-price">$104,382</div>
+      <div class="rect-after-time">6 min ago</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

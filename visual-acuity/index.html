@@ -199,18 +199,38 @@
 
   /* Color vision */
 
-  /* Result */
-  .result-hero { text-align: center; padding: 28px 20px; background: linear-gradient(135deg, rgba(138,51,36,0.08), rgba(138,51,36,0.02)); border: 1px solid var(--line); border-radius: var(--radius); }
-  .result-badge { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 4px; }
-  .result-snellen { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height: 1; margin: 4px 0; color: var(--accent); letter-spacing: -0.02em; }
-  .result-snellen em { font-style: italic; font-weight: 400; }
-  .result-logmar { font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-soft); font-size: 15px; }
-  .result-interp { font-size: 14px; color: var(--ink-soft); margin-top: 12px; line-height: 1.55; max-width: 42ch; margin-left: auto; margin-right: auto; }
-  .result-eye-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-  .ec { padding: 14px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); text-align: center; }
-  .ec .lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); }
-  .ec .val { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin-top: 4px; }
-  .ec .correction-lbl { font-size: 11px; color: var(--ink-mute); margin-top: 3px; font-style: italic; }
+  /* ── Results page ── */
+  .score-hero { text-align: center; padding: 28px 20px 22px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 12px; position: relative; overflow: hidden; }
+  .score-hero.good { background: radial-gradient(ellipse at 50% 0%, rgba(34,197,94,0.10) 0%, transparent 70%); border-color: rgba(34,197,94,0.22); }
+  .score-hero.warn { background: radial-gradient(ellipse at 50% 0%, rgba(212,160,23,0.12) 0%, transparent 70%); border-color: rgba(212,160,23,0.24); }
+  .score-hero.needs-exam { background: radial-gradient(ellipse at 50% 0%, rgba(217,119,6,0.12) 0%, transparent 70%); border-color: rgba(217,119,6,0.24); }
+  .score-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; }
+  .score-number { font-family: 'Fraunces', serif; font-weight: 600; font-size: 88px; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
+  .score-number em { font-style: italic; font-weight: 400; opacity: 0.6; }
+  .score-hero.good .score-number { color: #16a34a; }
+  .score-hero.warn .score-number { color: var(--accent); }
+  .score-hero.needs-exam .score-number { color: #d97706; }
+  body.app-mode .score-hero.good .score-number { color: #30d158; }
+  body.app-mode .score-hero.needs-exam .score-number { color: #ff9f0a; }
+  .score-logmar { font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-mute); font-size: 14px; margin-top: 3px; }
+  .spectrum-wrap { margin: 16px 0 2px; }
+  .spectrum-bar { height: 6px; border-radius: 3px; background: linear-gradient(to right, #ef4444 0%, #f97316 18%, #D4A017 38%, #22c55e 65%, #16a34a 100%); position: relative; }
+  .spectrum-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 3px #16a34a, 0 2px 6px rgba(0,0,0,0.25); transition: left 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  .score-hero.warn .spectrum-marker { box-shadow: 0 0 0 3px var(--accent), 0 2px 6px rgba(0,0,0,0.25); }
+  .score-hero.needs-exam .spectrum-marker { box-shadow: 0 0 0 3px #d97706, 0 2px 6px rgba(0,0,0,0.25); }
+  body.app-mode .spectrum-marker { background: #0a0a0a; }
+  .spectrum-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--ink-mute); margin-top: 6px; letter-spacing: 0.03em; }
+  .score-interp { font-size: 13px; color: var(--ink-soft); margin-top: 14px; line-height: 1.6; max-width: 38ch; margin-left: auto; margin-right: auto; }
+  .result-eye-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .eye-card { padding: 16px 12px; background: rgba(255,255,255,0.55); border: 1px solid var(--line); border-radius: var(--radius-sm); text-align: center; }
+  body.app-mode .eye-card { background: rgba(255,255,255,0.05); }
+  .eye-card-icon { font-size: 18px; margin-bottom: 4px; }
+  .eye-card-label { font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 7px; }
+  .eye-card-score { font-family: 'Fraunces', serif; font-weight: 600; font-size: 30px; color: var(--ink); line-height: 1; letter-spacing: -0.02em; }
+  .eye-card-correction { font-size: 11px; color: var(--ink-mute); margin-top: 5px; font-style: italic; }
+  /* Share button */
+  .share-btn-big { width: 100%; padding: 17px; background: var(--accent); color: #111; font-weight: 700; font-size: 17px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; box-shadow: 0 4px 20px rgba(212,160,23,0.28); transition: opacity 0.15s; }
+  .share-btn-big:active { opacity: 0.85; }
 
   .disclaimer { margin-top: 20px; padding: 14px 16px; background: rgba(138,51,36,0.06); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
   .disclaimer strong { color: var(--accent); font-weight: 600; }
@@ -742,31 +762,40 @@
   <section class="card" id="step4" hidden>
     <h2>Your results</h2>
 
-    <div class="result-hero">
-      <div class="result-badge">Best acuity (better eye)</div>
-      <div class="result-snellen" id="bestSnellen">—</div>
-      <div class="result-logmar" id="bestLogmar"></div>
-      <div class="result-interp" id="bestInterp"></div>
+    <div class="score-hero" id="scoreHero">
+      <div class="score-eyebrow">Visual acuity · best eye</div>
+      <div class="score-number" id="bestSnellen">—</div>
+      <div class="score-logmar" id="bestLogmar"></div>
+      <div class="spectrum-wrap">
+        <div class="spectrum-bar">
+          <div class="spectrum-marker" id="spectrumMarker" style="left:50%"></div>
+        </div>
+        <div class="spectrum-labels">
+          <span>20/200</span><span>20/100</span><span>20/40</span><span>20/20</span><span>20/10</span>
+        </div>
+      </div>
+      <div class="score-interp" id="bestInterp"></div>
     </div>
 
     <div class="result-eye-row">
-      <div class="ec">
-        <div class="lbl">Right (OD)</div>
-        <div class="val" id="odResult">—</div>
-        <div class="correction-lbl" id="odCorrection"></div>
+      <div class="eye-card">
+        <div class="eye-card-icon">👁</div>
+        <div class="eye-card-label">Right eye (OD)</div>
+        <div class="eye-card-score" id="odResult">—</div>
+        <div class="eye-card-correction" id="odCorrection"></div>
       </div>
-      <div class="ec">
-        <div class="lbl">Left (OS)</div>
-        <div class="val" id="osResult">—</div>
-        <div class="correction-lbl" id="osCorrection"></div>
+      <div class="eye-card">
+        <div class="eye-card-icon">👁</div>
+        <div class="eye-card-label">Left eye (OS)</div>
+        <div class="eye-card-score" id="osResult">—</div>
+        <div class="eye-card-correction" id="osCorrection"></div>
       </div>
     </div>
 
-    <div class="results-actions">
-      <button class="btn primary share-btn" id="shareResults">Share results</button>
-      <div class="results-secondary-row">
-        <button class="btn ghost" id="restart">Test again</button>
-      </div>
+    <button class="share-btn-big" id="shareResults">↑ Share your results</button>
+
+    <div class="results-secondary-row" style="margin-bottom:12px;">
+      <button class="btn ghost" id="restart">Test again</button>
     </div>
 
     <div id="referralFlag" hidden></div>
@@ -1749,40 +1778,40 @@
     const od = state.results.OD;
     const os = state.results.OS;
 
-    function eyeHTML(r) {
-      if (!r) return '—';
-      const [num, den] = r.snellen.replace('<','').split('/');
-      return `${r.snellen}<br><span style="font-size:12px;color:var(--ink-mute);font-style:italic;">logMAR ${r.logmar.toFixed(2)}</span>`;
-    }
-
-    document.getElementById('odResult').innerHTML = eyeHTML(od);
-    document.getElementById('osResult').innerHTML = eyeHTML(os);
+    document.getElementById('odResult').textContent = od ? od.snellen : '—';
+    document.getElementById('osResult').textContent = os ? os.snellen : '—';
     document.getElementById('odCorrection').textContent = od ? (state.glassesOD ? 'with correction' : 'without correction') : '';
     document.getElementById('osCorrection').textContent = os ? (state.glassesOS ? 'with correction' : 'without correction') : '';
 
     const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
+
     if (best) {
       const snellen = best.snellen;
       const parts = snellen.replace('<','').split('/');
       document.getElementById('bestSnellen').innerHTML = `${parts[0]}<em>/</em>${parts[1]}`;
       document.getElementById('bestLogmar').textContent = `logMAR ${best.logmar.toFixed(2)}`;
       document.getElementById('bestInterp').textContent = SNELLEN_INTERP[snellen] || SNELLEN_INTERP['<20/200'];
+
+      // Color class and spectrum marker
+      const hero = document.getElementById('scoreHero');
+      hero.classList.remove('good', 'warn', 'needs-exam');
+      if (best.logmar <= 0.1) hero.classList.add('good');
+      else if (best.logmar <= 0.4) hero.classList.add('warn');
+      else hero.classList.add('needs-exam');
+
+      // Spectrum: logMAR 1.0 → left 5%, logMAR -0.3 → left 95%
+      const pct = Math.round(5 + (1.0 - best.logmar) / 1.3 * 90);
+      document.getElementById('spectrumMarker').style.left = Math.min(95, Math.max(5, pct)) + '%';
     }
 
     const referralFlag = document.getElementById('referralFlag');
     referralFlag.hidden = true;
     referralFlag.className = '';
-    referralFlag.textContent = '';
-    if (best) {
-      if (best.logmar >= 1.0) {
-        referralFlag.hidden = false;
-        referralFlag.className = 'referral-flag warn';
-        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to take a closer look.';
-      } else if (best.logmar >= 0.3) {
-        referralFlag.hidden = false;
-        referralFlag.className = 'referral-flag warn';
-        referralFlag.innerHTML = '👁 <strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist to check your prescription.';
-      }
+    referralFlag.innerHTML = '';
+    if (best && best.logmar >= 0.3) {
+      referralFlag.hidden = false;
+      referralFlag.className = 'referral-flag warn';
+      referralFlag.innerHTML = '<strong>Eye exam recommended.</strong> We suggest scheduling a comprehensive eye exam with your local optometrist' + (best.logmar >= 1.0 ? ' to take a closer look.' : ' to check your prescription.');
     }
 
     const rxEl = document.getElementById('rxEstimate');
@@ -1883,127 +1912,126 @@
     const best = (od && os) ? (od.logmar <= os.logmar ? od : os) : (od || os);
     if (!best) return;
 
-    const S = 1080, SC = 1;
+    const S = 1080;
     const canvas = document.createElement('canvas');
-    canvas.width = S * SC; canvas.height = S * SC;
+    canvas.width = S; canvas.height = S;
     const ctx = canvas.getContext('2d');
-    ctx.scale(SC, SC);
 
-    // Dark background
+    // Background
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, S, S);
 
-    // Radial gold glow top-center
-    const glow = ctx.createRadialGradient(S/2, 0, 0, S/2, 0, S * 0.75);
-    glow.addColorStop(0, 'rgba(212,160,23,0.18)');
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow;
+    // Radial gold glow
+    const bgGlow = ctx.createRadialGradient(S/2, S*0.1, 0, S/2, S*0.25, S*0.65);
+    bgGlow.addColorStop(0, 'rgba(212,160,23,0.18)');
+    bgGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = bgGlow;
     ctx.fillRect(0, 0, S, S);
 
-    // Subtle dot grid
-    ctx.fillStyle = 'rgba(255,255,255,0.045)';
-    for (let x = 22; x < S; x += 22)
-      for (let y = 22; y < S; y += 22) {
-        ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill();
-      }
-
-    // Faint big background "E"
+    // Descending chart watermark rows
     ctx.save();
-    ctx.globalAlpha = 0.04;
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = '#D4A017';
-    ctx.font = `bold 680px 'Fraunces', serif`;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('E', S/2, S/2 + 40);
+    ctx.textBaseline = 'top';
+    const rows = [
+      { text: 'E',         size: 110, y: 28 },
+      { text: 'F P',       size: 74,  y: 150 },
+      { text: 'T O Z',     size: 50,  y: 238 },
+      { text: 'L P E D',   size: 34,  y: 302 },
+      { text: 'P E C F D', size: 24,  y: 348 },
+    ];
+    rows.forEach(r => {
+      ctx.font = `700 ${r.size}px Georgia, serif`;
+      ctx.fillText(r.text, S/2, r.y);
+    });
     ctx.restore();
 
-    // Top label
-    ctx.fillStyle = 'rgba(212,160,23,0.7)';
-    ctx.font = `500 28px -apple-system, system-ui, sans-serif`;
+    // Eyebrow
+    ctx.fillStyle = 'rgba(212,160,23,0.62)';
+    ctx.font = `500 26px -apple-system, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText('VISUAL ACUITY SCORE', S/2, 110);
+    ctx.fillText('EYE CHART TEST  ·  DR. EVANS, OD', S/2, 448);
 
-    // Thin gold rule
-    ctx.strokeStyle = 'rgba(212,160,23,0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(S*0.2, 130); ctx.lineTo(S*0.8, 130); ctx.stroke();
+    // Big score with glow
+    ctx.save();
+    ctx.filter = 'blur(28px)';
+    ctx.fillStyle = 'rgba(212,160,23,0.55)';
+    ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(best.snellen, S/2, 660);
+    ctx.restore();
 
-    // Big VA score
     ctx.fillStyle = '#D4A017';
-    ctx.font = `bold 200px 'Fraunces', Georgia, serif`;
+    ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(best.snellen, S/2, 390);
+    ctx.fillText(best.snellen, S/2, 660);
 
-    // Best eye label
-    ctx.fillStyle = 'rgba(242,242,247,0.45)';
-    ctx.font = `22px -apple-system, system-ui, sans-serif`;
-    ctx.fillText('best corrected visual acuity', S/2, 438);
+    // Sub-label
+    ctx.fillStyle = 'rgba(242,242,247,0.38)';
+    ctx.font = `20px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('VISUAL ACUITY  ·  BEST EYE', S/2, 704);
 
-    // OD / OS row
+    // Divider
+    ctx.strokeStyle = 'rgba(212,160,23,0.28)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.25, 736); ctx.lineTo(S*0.75, 736); ctx.stroke();
+
+    // OD / OS
     const midX = S / 2;
-    // divider
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(midX, 510); ctx.lineTo(midX, 600); ctx.stroke();
-
-    const eyeLabel = (snellen, glasses, label) => snellen ? `${snellen}${glasses ? ' ✦' : ''}` : '—';
-
-    // OD
-    ctx.fillStyle = 'rgba(242,242,247,0.4)';
-    ctx.font = `18px -apple-system, system-ui, sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText('RIGHT EYE', midX - 40, 530);
-    ctx.fillStyle = '#f2f2f7';
-    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
-    ctx.fillText(eyeLabel(od?.snellen, state.glassesOD), midX - 40, 600);
-
-    // OS
-    ctx.fillStyle = 'rgba(242,242,247,0.4)';
-    ctx.font = `18px -apple-system, system-ui, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('LEFT EYE', midX + 40, 530);
-    ctx.fillStyle = '#f2f2f7';
-    ctx.font = `bold 56px 'Fraunces', Georgia, serif`;
-    ctx.fillText(eyeLabel(os?.snellen, state.glassesOS), midX + 40, 600);
-
-    // Glasses footnote
-    if (state.glassesOD || state.glassesOS) {
-      ctx.fillStyle = 'rgba(242,242,247,0.3)';
-      ctx.font = `18px -apple-system, system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('✦ with glasses or contacts', S/2, 648);
-    }
-
-    // Bottom rule
-    ctx.strokeStyle = 'rgba(212,160,23,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(S*0.1, 700); ctx.lineTo(S*0.9, 700); ctx.stroke();
-
-    // Branding row
-    ctx.fillStyle = '#D4A017';
-    ctx.font = `italic bold 32px 'Fraunces', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 762);
+    ctx.beginPath(); ctx.moveTo(midX, 758); ctx.lineTo(midX, 840); ctx.stroke();
 
     ctx.fillStyle = 'rgba(242,242,247,0.35)';
-    ctx.font = `22px -apple-system, system-ui, sans-serif`;
-    ctx.fillText('rjlcevans.com/visual-acuity  ·  Available on the App Store', S/2, 806);
-
-    // Date bottom right
-    ctx.fillStyle = 'rgba(242,242,247,0.2)';
     ctx.font = `18px -apple-system, system-ui, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), S/2, 870);
+    ctx.textAlign = 'right';
+    ctx.fillText('RIGHT (OD)', midX - 36, 774);
+    ctx.textAlign = 'left';
+    ctx.fillText('LEFT (OS)', midX + 36, 774);
 
+    ctx.fillStyle = 'rgba(242,242,247,0.90)';
+    ctx.font = `bold 54px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(od?.snellen || '—', midX - 36, 836);
+    ctx.textAlign = 'left';
+    ctx.fillText(os?.snellen || '—', midX + 36, 836);
+
+    // Bottom rule
+    ctx.strokeStyle = 'rgba(212,160,23,0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S*0.12, 880); ctx.lineTo(S*0.88, 880); ctx.stroke();
+
+    // Brand
+    ctx.fillStyle = '#D4A017';
+    ctx.font = `italic bold 30px 'Fraunces', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 932);
+
+    ctx.fillStyle = 'rgba(242,242,247,0.28)';
+    ctx.font = `20px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 968);
+
+    const title = `My vision: ${best.snellen} · Eye Chart Test`;
+    const imageData = canvas.toDataURL('image/png');
+
+    // Native share via WKScriptMessageHandler (injected by AppDelegate)
+    if (window.webkit?.messageHandlers?.nativeShare) {
+      window.webkit.messageHandlers.nativeShare.postMessage({ imageData, title });
+      return;
+    }
+
+    // Web fallback
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'acuity-results.png', { type: 'image/png' });
       try {
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'My Visual Acuity Results' });
+          await navigator.share({ files: [file], title });
         } else if (navigator.share) {
-          await navigator.share({ title: 'Visual Acuity Results', text: `OD ${od?.snellen || '—'} · OS ${os?.snellen || '—'} · rjlcevans.com/visual-acuity` });
+          await navigator.share({ title, text: `OD ${od?.snellen || '—'} · OS ${os?.snellen || '—'} · rjlcevans.com/eye-chart-test` });
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'acuity-results.png'; a.click();

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rectangular Complication – Layout Redesign</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', sans-serif;
+    gap: 48px;
+    color: #fff;
+  }
+
+  h2 { font-size: 11px; color: #8e8e93; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Watch frame */
+  .watch {
+    width: 210px; height: 256px;
+    background: #000;
+    border-radius: 58px;
+    border: 6px solid #2a2a2a;
+    box-shadow: 0 0 0 1px #444, 0 24px 48px rgba(0,0,0,0.9);
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden;
+  }
+  .w-inline { margin-top: 17px; font-size: 10px; font-weight: 600; color: #ff9f0a; display: flex; align-items: center; gap: 3px; }
+  .w-dot { width: 5px; height: 5px; border-radius: 50%; background: #ff9f0a; }
+  .w-time { font-size: 50px; font-weight: 200; color: #fff; letter-spacing: -2px; line-height: 1; margin-top: 4px; }
+  .w-date { font-size: 10px; color: #8e8e93; margin-top: 1px; }
+
+  /* ── BEFORE ── */
+  .rect-before {
+    width: 178px; margin-top: 9px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 11px; padding: 6px 9px;
+  }
+  .rb-header { display: flex; align-items: center; gap: 3px; margin-bottom: 1px; }
+  .rb-icon  { font-size: 9px; color: #ff9f0a; }
+  .rb-lbl   { font-size: 9px; font-weight: 600; color: #8e8e93; flex: 1; }
+  .rb-price { font-size: 24px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .rb-time  { font-size: 7.5px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+
+  /* ── AFTER ── */
+  .rect-after {
+    width: 178px; margin-top: 9px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 11px; padding: 6px 9px;
+  }
+  .ra-row1 { display: flex; align-items: center; gap: 5px; }
+  .ra-icon  { font-size: 9px; color: #ff9f0a; flex-shrink: 0; }
+  .ra-lbl   { font-size: 9px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px; flex-shrink: 0; }
+  .ra-price { font-size: 22px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.15;
+              font-variant-numeric: tabular-nums; flex: 1; text-align: right; }
+  .ra-time  { font-size: 7.5px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+
+  /* Close-up cards */
+  .cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 520px; }
+  .card {
+    background: #1c1c1e; border-radius: 18px; padding: 20px;
+    display: flex; flex-direction: column; gap: 12px; min-width: 200px;
+  }
+  .card-lbl { font-size: 10px; color: #8e8e93; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* Close-up BEFORE */
+  .cu-before {
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 9px 12px;
+  }
+  .cub-hdr { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+  .cub-icon { font-size: 11px; color: #ff9f0a; }
+  .cub-lbl  { font-size: 11px; font-weight: 600; color: #8e8e93; flex: 1; }
+  .cub-price { font-size: 28px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .cub-time  { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+
+  /* Close-up AFTER */
+  .cu-after {
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 9px 12px;
+  }
+  .cua-row1 { display: flex; align-items: center; gap: 6px; }
+  .cua-icon  { font-size: 11px; color: #ff9f0a; flex-shrink: 0; }
+  .cua-lbl   { font-size: 11px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px; flex-shrink: 0; }
+  .cua-price { font-size: 26px; font-weight: 700; color: #ff9f0a; letter-spacing: -0.5px; line-height: 1.2;
+               font-variant-numeric: tabular-nums; flex: 1; text-align: right; }
+  .cua-time  { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h2>Watch Face — Before vs After</h2>
+
+<div style="display:flex;gap:32px;align-items:flex-start">
+
+  <!-- BEFORE -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <h2>Before</h2>
+    <div class="watch">
+      <div class="w-inline"><div class="w-dot"></div>$104,382 · <span style="opacity:0.55">56s</span></div>
+      <div class="w-time">8:38</div>
+      <div class="w-date">THU 28</div>
+      <div class="rect-before">
+        <div class="rb-header">
+          <span class="rb-icon">₿</span>
+          <span class="rb-lbl">BITCOIN</span>
+        </div>
+        <div class="rb-price">$104,382</div>
+        <div class="rb-time">6 min ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <h2>After</h2>
+    <div class="watch">
+      <div class="w-inline"><div class="w-dot"></div>$104,382 · <span style="opacity:0.55">56s</span></div>
+      <div class="w-time">8:38</div>
+      <div class="w-date">THU 28</div>
+      <div class="rect-after">
+        <div class="ra-row1">
+          <span class="ra-icon">₿</span>
+          <span class="ra-lbl">BITCOIN</span>
+          <span class="ra-price">$104,382</span>
+        </div>
+        <div class="ra-time">6 min ago</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Close-up cards -->
+<h2>Close-ups</h2>
+<div class="cards">
+
+  <div class="card">
+    <div class="card-lbl">Before</div>
+    <div class="cu-before">
+      <div class="cub-hdr">
+        <span class="cub-icon">₿</span>
+        <span class="cub-lbl">BITCOIN</span>
+      </div>
+      <div class="cub-price">$104,382</div>
+      <div class="cub-time">6 min ago</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-lbl">After</div>
+    <div class="cu-after">
+      <div class="cua-row1">
+        <span class="cua-icon">₿</span>
+        <span class="cua-lbl">BITCOIN</span>
+        <span class="cua-price">$104,382</span>
+      </div>
+      <div class="cua-time">6 min ago</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

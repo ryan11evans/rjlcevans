@@ -1,0 +1,110 @@
+name: BitcoinWatch
+options:
+  bundleIdPrefix: com.rjlcevans
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+schemes:
+  BitcoinWatch:
+    build:
+      targets:
+        BitcoinWatch: all
+    run:
+      config: Debug
+      executable: BitcoinWatch
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "2.5"
+    CURRENT_PROJECT_VERSION: "16"
+    DEVELOPMENT_TEAM: "9B9PTBR9A2"
+
+targets:
+
+  # ── iPhone App ──────────────────────────────────────────────────────────────
+  BitcoinWatch:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: BitcoinWatch
+      - path: Shared
+    resources:
+      - path: BitcoinWatch/AlternateIcons
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch
+        INFOPLIST_FILE: BitcoinWatch/App/Info.plist
+    entitlements:
+      path: BitcoinWatch/BitcoinWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjlcevans.bitcoinwatch
+    dependencies:
+      - target: BitcoinWatchWidget
+      - target: BitcoinWatchWatchApp
+
+  # ── iPhone Widget Extension ──────────────────────────────────────────────────
+  BitcoinWatchWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: BitcoinWatchWidget
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.widget
+        INFOPLIST_FILE: BitcoinWatchWidget/Info.plist
+    entitlements:
+      path: BitcoinWatchWidget/BitcoinWatchWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjlcevans.bitcoinwatch
+
+  # ── Watch App ────────────────────────────────────────────────────────────────
+  BitcoinWatchWatchApp:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: WatchApp
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.watch
+        INFOPLIST_FILE: WatchApp/App/Info.plist
+    entitlements:
+      path: WatchApp/WatchApp.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjlcevans.bitcoinwatch
+    dependencies:
+      - target: BTCWatchComplication
+
+  # ── Watch Complication (WidgetKit, watchOS 10+) ──────────────────────────────
+  BTCWatchComplication:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: WatchComplication
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.rjlbtcwatch.watch.price
+        INFOPLIST_FILE: WatchComplication/Info.plist
+    entitlements:
+      path: WatchComplication/BTCWatchComplication.entitlements

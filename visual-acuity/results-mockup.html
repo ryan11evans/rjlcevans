@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Results Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper:   #0a0a0a;
+    --paper-2: #1c1c1e;
+    --paper-3: #2c2c2e;
+    --ink:     #f2f2f7;
+    --ink-soft: rgba(242,242,247,0.65);
+    --ink-mute: rgba(242,242,247,0.35);
+    --line:    rgba(255,255,255,0.10);
+    --gold:    #D4A017;
+    --gold-dim: rgba(212,160,23,0.18);
+    --green:   #30d158;
+    --green-dim: rgba(48,209,88,0.12);
+    --amber:   #ff9f0a;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── SWITCHER ── */
+  .switcher {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,10,0.92); backdrop-filter: blur(12px);
+    padding: 12px 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--line);
+  }
+  .switcher button {
+    padding: 7px 16px; border-radius: 20px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink-soft); font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+  .switcher button.active { background: var(--gold); color: #111; border-color: var(--gold); font-weight: 600; }
+
+  /* ── SCENARIOS ── */
+  .scenario { display: none; padding: 60px 0 40px; }
+  .scenario.active { display: block; }
+
+  /* ── RESULTS PAGE ── */
+  .results-page {
+    max-width: 430px; margin: 0 auto; padding: 0 20px 40px;
+  }
+
+  /* Big score hero */
+  .score-hero {
+    text-align: center;
+    padding: 36px 24px 28px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(48,209,88,0.12) 0%, transparent 70%);
+    border: 1px solid rgba(48,209,88,0.18);
+    border-radius: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .score-hero.warn {
+    background: radial-gradient(ellipse at 50% 0%, rgba(212,160,23,0.14) 0%, transparent 70%);
+    border-color: rgba(212,160,23,0.22);
+  }
+  .score-hero.needs-exam {
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,159,10,0.14) 0%, transparent 70%);
+    border-color: rgba(255,159,10,0.22);
+  }
+
+  /* Faint chart watermark */
+  .score-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 28px,
+      rgba(255,255,255,0.025) 28px,
+      rgba(255,255,255,0.025) 29px
+    );
+    pointer-events: none;
+  }
+
+  .score-eyebrow {
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 8px;
+  }
+
+  .score-number {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 96px;
+    line-height: 1;
+    color: var(--green);
+    letter-spacing: -0.03em;
+    position: relative;
+  }
+  .score-number.warn { color: var(--gold); }
+  .score-number.needs-exam { color: var(--amber); }
+  .score-number em { font-style: italic; font-weight: 400; opacity: 0.7; font-size: 0.8em; }
+
+  .score-logmar {
+    font-family: 'Fraunces', serif; font-style: italic;
+    color: var(--ink-mute); font-size: 14px; margin-top: 4px;
+  }
+
+  /* Acuity spectrum bar */
+  .spectrum-wrap { margin: 20px 0 4px; }
+  .spectrum-bar {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(to right, #ff3b30 0%, #ff9f0a 25%, #D4A017 45%, #30d158 65%, #30d158 100%);
+    position: relative;
+  }
+  .spectrum-marker {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 3px var(--green), 0 2px 8px rgba(0,0,0,0.5);
+    transition: left 0.4s ease;
+  }
+  .spectrum-marker.warn { box-shadow: 0 0 0 3px var(--gold), 0 2px 8px rgba(0,0,0,0.5); }
+  .spectrum-marker.needs-exam { box-shadow: 0 0 0 3px var(--amber), 0 2px 8px rgba(0,0,0,0.5); }
+  .spectrum-labels {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--ink-mute); margin-top: 6px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  .score-interp {
+    font-size: 14px; color: var(--ink-soft); margin-top: 16px;
+    line-height: 1.6; max-width: 32ch; margin-left: auto; margin-right: auto;
+  }
+
+  /* Eye cards */
+  .eye-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .eye-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .eye-card-icon { font-size: 22px; margin-bottom: 6px; }
+  .eye-card-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 10px;
+  }
+  .eye-card-score {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: 34px; color: var(--ink); line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .eye-card-correction {
+    font-size: 11px; color: var(--ink-mute); margin-top: 6px; font-style: italic;
+  }
+
+  /* Referral banner */
+  .referral-banner {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 16px; border-radius: 14px; margin-bottom: 16px;
+    background: rgba(212,160,23,0.10);
+    border: 1px solid rgba(212,160,23,0.28);
+  }
+  .referral-banner .rb-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .referral-banner .rb-text { font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+  .referral-banner .rb-text strong { color: var(--gold); display: block; margin-bottom: 3px; font-size: 15px; }
+
+  /* Share preview card inline */
+  .share-preview-wrap { margin-bottom: 16px; }
+  .share-preview-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 10px; padding-left: 2px;
+  }
+  .share-card-preview {
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line);
+    aspect-ratio: 1;
+    background: #0a0a0a;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0;
+    padding: 28px 24px;
+  }
+
+  /* Mini chart rows (decorative) */
+  .mini-chart {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 16px 20px 0;
+    opacity: 0.08;
+    font-family: 'Fraunces', serif;
+    color: var(--gold);
+    line-height: 1.1;
+    pointer-events: none;
+  }
+  .mini-chart div { letter-spacing: 0.25em; text-align: center; }
+
+  .sc-eyebrow {
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(212,160,23,0.6); margin-bottom: 6px; position: relative;
+  }
+  .sc-score {
+    font-family: 'Fraunces', serif; font-weight: 700;
+    font-size: clamp(52px, 16vw, 80px);
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    position: relative;
+    text-shadow: 0 0 40px rgba(212,160,23,0.5);
+  }
+  .sc-score em { opacity: 0.65; font-style: italic; font-weight: 400; }
+  .sc-label {
+    font-size: 10px; color: rgba(242,242,247,0.4); margin-top: 4px;
+    letter-spacing: 0.08em; text-transform: uppercase; position: relative;
+  }
+  .sc-divider {
+    width: 60%; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(212,160,23,0.3), transparent);
+    margin: 14px 0; position: relative;
+  }
+  .sc-eyes {
+    display: flex; gap: 24px; position: relative;
+  }
+  .sc-eye { text-align: center; }
+  .sc-eye-label { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(242,242,247,0.35); margin-bottom: 4px; }
+  .sc-eye-val { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; color: rgba(242,242,247,0.9); }
+  .sc-eye-sep { width: 1px; background: rgba(255,255,255,0.1); align-self: stretch; }
+  .sc-brand {
+    position: relative; margin-top: 14px; text-align: center;
+  }
+  .sc-brand-name {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+    font-size: 13px; color: var(--gold);
+  }
+  .sc-brand-url { font-size: 10px; color: rgba(242,242,247,0.3); margin-top: 3px; letter-spacing: 0.04em; }
+
+  /* Actions */
+  .share-btn-big {
+    width: 100%; padding: 18px;
+    background: var(--gold);
+    color: #111; font-weight: 700; font-size: 17px;
+    border: none; border-radius: 14px; cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 24px rgba(212,160,23,0.35);
+  }
+  .share-btn-big:active { opacity: 0.85; transform: scale(0.98); }
+  .secondary-row { display: flex; gap: 10px; }
+  .ghost-btn {
+    flex: 1; padding: 14px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink-soft); font-size: 15px;
+    border-radius: 14px; cursor: pointer; font-family: inherit;
+  }
+
+  /* disclaimer */
+  .disclaimer {
+    margin-top: 20px; padding: 14px 16px;
+    background: rgba(138,51,36,0.07); border-left: 3px solid rgba(212,160,23,0.4);
+    border-radius: 0 10px 10px 0; font-size: 12px; color: var(--ink-mute); line-height: 1.6;
+  }
+  .disclaimer strong { color: var(--gold); }
+
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="show('good')">20/20 (great)</button>
+  <button onclick="show('ok')">20/40 (mild)</button>
+  <button onclick="show('warn')">20/80 (refer)</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- SCENARIO: 20/20 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="scenario active" id="s-good">
+<div class="results-page">
+
+  <div class="score-hero">
+    <div class="score-eyebrow">Visual acuity · best eye</div>
+    <div class="score-number">20<em>/</em>20</div>
+    <div class="score-logmar">logMAR 0.00</div>
+
+    <div class="spectrum-wrap">
+      <div class="spectrum-bar">
+        <div class="spectrum-marker" style="left:65%"></div>
+      </div>
+      <div class="spectrum-labels">
+        <span>20/200</span><span>20/100</span><span>20/40</span><span>20/20</span><span>20/10</span>
+      </div>
+    </div>
+
+    <div class="score-interp">Normal — the standard for good vision.</div>
+  </div>
+
+  <div class="eye-row">
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Right eye (OD)</div>
+      <div class="eye-card-score">20/20</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Left eye (OS)</div>
+      <div class="eye-card-score">20/20</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+  </div>
+
+  <button class="share-btn-big">↑ Share your results</button>
+  <div class="secondary-row">
+    <button class="ghost-btn">Test again</button>
+    <button class="ghost-btn">Compare with glasses →</button>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. If you notice any change in vision, schedule an exam with a licensed eye care provider.
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- SCENARIO: 20/40 mild -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="scenario" id="s-ok">
+<div class="results-page">
+
+  <div class="score-hero warn">
+    <div class="score-eyebrow">Visual acuity · best eye</div>
+    <div class="score-number warn">20<em>/</em>40</div>
+    <div class="score-logmar">logMAR 0.30</div>
+
+    <div class="spectrum-wrap">
+      <div class="spectrum-bar">
+        <div class="spectrum-marker warn" style="left:44%"></div>
+      </div>
+      <div class="spectrum-labels">
+        <span>20/200</span><span>20/100</span><span>20/40</span><span>20/20</span><span>20/10</span>
+      </div>
+    </div>
+
+    <div class="score-interp">Reduced — you may benefit from glasses, especially for driving.</div>
+  </div>
+
+  <div class="eye-row">
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Right eye (OD)</div>
+      <div class="eye-card-score">20/40</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Left eye (OS)</div>
+      <div class="eye-card-score">20/50</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+  </div>
+
+  <button class="share-btn-big">↑ Share your results</button>
+  <div class="secondary-row">
+    <button class="ghost-btn">Test again</button>
+    <button class="ghost-btn">Compare with glasses →</button>
+  </div>
+
+  <div class="referral-banner">
+    <div class="rb-icon">👁</div>
+    <div class="rb-text">
+      <strong>Eye exam recommended</strong>
+      We suggest scheduling a comprehensive eye exam with your local optometrist to check your prescription.
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. If you notice any change in vision, schedule an exam with a licensed eye care provider.
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- SCENARIO: 20/80 refer -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="scenario" id="s-warn">
+<div class="results-page">
+
+  <div class="score-hero needs-exam">
+    <div class="score-eyebrow">Visual acuity · best eye</div>
+    <div class="score-number needs-exam">20<em>/</em>80</div>
+    <div class="score-logmar">logMAR 0.60</div>
+
+    <div class="spectrum-wrap">
+      <div class="spectrum-bar">
+        <div class="spectrum-marker needs-exam" style="left:24%"></div>
+      </div>
+      <div class="spectrum-labels">
+        <span>20/200</span><span>20/100</span><span>20/40</span><span>20/20</span><span>20/10</span>
+      </div>
+    </div>
+
+    <div class="score-interp">Significantly reduced — most daily tasks will require correction.</div>
+  </div>
+
+  <div class="eye-row">
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Right eye (OD)</div>
+      <div class="eye-card-score">20/80</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+    <div class="eye-card">
+      <div class="eye-card-icon">👁</div>
+      <div class="eye-card-label">Left eye (OS)</div>
+      <div class="eye-card-score">20/100</div>
+      <div class="eye-card-correction">without correction</div>
+    </div>
+  </div>
+
+  <button class="share-btn-big">↑ Share your results</button>
+  <div class="secondary-row">
+    <button class="ghost-btn">Test again</button>
+  </div>
+
+  <div class="referral-banner">
+    <div class="rb-icon">👁</div>
+    <div class="rb-text">
+      <strong>Eye exam recommended</strong>
+      We suggest scheduling a comprehensive eye exam with your local optometrist to take a closer look.
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Educational use only.</strong> This screening is not a substitute for a comprehensive eye examination. If you notice any change in vision, schedule an exam with a licensed eye care provider.
+  </div>
+
+</div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.scenario').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

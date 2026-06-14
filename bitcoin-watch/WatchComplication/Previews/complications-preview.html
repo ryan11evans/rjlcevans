@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Watch Complications Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: -apple-system, "SF Pro Rounded", "SF Pro Display", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    gap: 48px;
+    color: #fff;
+  }
+  h1 { font-size: 18px; font-weight: 600; color: #aaa; letter-spacing: 0.04em; text-transform: uppercase; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 32px;
+    width: 100%;
+    max-width: 720px;
+  }
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .family-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #666;
+  }
+  .desc {
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+  }
+
+  /* ── Watch face backdrops ── */
+  .face {
+    background: radial-gradient(ellipse at 40% 35%, #1c1c1e, #000);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* ── Circular ── */
+  .face-circular {
+    width: 120px; height: 120px;
+  }
+  .comp-circular {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .comp-circular:hover { background: rgba(255,255,255,0.14); }
+  .comp-circular .icon {
+    font-size: 9px;
+    color: #F7931A;
+  }
+  .comp-circular .price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #F7931A;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  /* ── Rectangular ── */
+  .face-rectangular {
+    width: 280px; height: 100px;
+    border-radius: 16px;
+  }
+  .comp-rectangular {
+    width: 200px; height: 58px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6px 10px;
+    gap: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .comp-rectangular:hover { background: rgba(255,255,255,0.12); }
+  .comp-rectangular .header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .comp-rectangular .header .icon { font-size: 10px; color: #F7931A; }
+  .comp-rectangular .header .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #888;
+    text-transform: uppercase;
+  }
+  .comp-rectangular .header .refresh {
+    margin-left: auto;
+    font-size: 8px;
+    color: #444;
+  }
+  .comp-rectangular .big-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #F7931A;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+  }
+  .comp-rectangular .ago {
+    font-size: 9px;
+    color: #555;
+  }
+
+  /* ── Inline ── */
+  .face-inline {
+    width: 280px; height: 80px;
+    border-radius: 16px;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .watch-time-inline {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+  .comp-inline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    opacity: 0.9;
+  }
+  .comp-inline:hover { opacity: 1; }
+  .comp-inline .icon { font-size: 12px; color: #F7931A; }
+  .comp-inline .text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #ddd;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Corner ── */
+  .face-corner {
+    width: 200px; height: 200px;
+    border-radius: 56px;
+  }
+  .watch-time-corner {
+    font-size: 44px;
+    font-weight: 200;
+    letter-spacing: -0.06em;
+    color: #fff;
+  }
+  .comp-corner {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .comp-corner:hover { background: rgba(255,255,255,0.08); }
+  .comp-corner .corner-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #F7931A;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .comp-corner .corner-label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .comp-corner .corner-label .icon { font-size: 9px; color: #F7931A; }
+  .comp-corner .corner-label .text {
+    font-size: 9px;
+    font-weight: 600;
+    color: #F7931A;
+    letter-spacing: 0.05em;
+  }
+
+  .tap-hint {
+    font-size: 11px;
+    color: #444;
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* bottom note */
+  .note {
+    max-width: 480px;
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+    line-height: 1.7;
+    border-top: 1px solid #222;
+    padding-top: 24px;
+  }
+  .note code {
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    background: #222;
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+
+<h1>BTC Watch Complications</h1>
+
+<div class="grid">
+
+  <!-- CIRCULAR -->
+  <div class="card">
+    <div class="family-label">.accessoryCircular</div>
+    <div class="face face-circular">
+      <div class="comp-circular">
+        <span class="icon">₿</span>
+        <span class="price">$98.2K</span>
+      </div>
+    </div>
+    <div class="desc">Modular / Infograph<br>Circular complication slot</div>
+  </div>
+
+  <!-- RECTANGULAR -->
+  <div class="card">
+    <div class="family-label">.accessoryRectangular</div>
+    <div class="face face-rectangular">
+      <div class="comp-rectangular">
+        <div class="header">
+          <span class="icon">₿</span>
+          <span class="label">Bitcoin</span>
+          <span class="refresh">↻</span>
+        </div>
+        <div class="big-price">$98,245</div>
+        <div class="ago">3 min ago</div>
+      </div>
+    </div>
+    <div class="desc">Infograph / Modular Large<br>Widest available slot</div>
+  </div>
+
+  <!-- INLINE -->
+  <div class="card">
+    <div class="family-label">.accessoryInline</div>
+    <div class="face face-inline">
+      <div class="watch-time-inline">10:09</div>
+      <div class="comp-inline">
+        <span class="icon">₿</span>
+        <span class="text">BTC $98.2K</span>
+      </div>
+    </div>
+    <div class="desc">Single text line above<br>or below the watch time</div>
+  </div>
+
+  <!-- CORNER -->
+  <div class="card">
+    <div class="family-label">.accessoryCorner</div>
+    <div class="face face-corner">
+      <div class="watch-time-corner">10:09</div>
+      <div class="comp-corner">
+        <div class="corner-price">$98.2K</div>
+        <div class="corner-label">
+          <span class="icon">₿</span>
+          <span class="text">BTC</span>
+        </div>
+      </div>
+    </div>
+    <div class="desc">Corner of Infograph Modular<br>or Infograph face</div>
+  </div>
+
+</div>
+
+<p class="tap-hint">Hover the complications above — the entire area is the tap target.</p>
+
+<p class="note">
+  All four families share the same <code>Button(intent: RefreshBTCIntent())</code> wrapper.
+  Tap anywhere on the complication → price fetches in background, complication
+  reloads in ~1–2 s. The orange tint is automatic from <code>.widgetAccentable()</code>
+  and matches whatever accent color the user picks for their watch face.
+</p>
+
+</body>
+</html>
