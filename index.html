@@ -45,12 +45,12 @@
   </script>
   <style>
     :root {
-      --bg: #ececec;
-      --card-bg: #f7f7f7;
+      --bg: #e0dbd3;
+      --card-bg: #ffffff;
       --text: #1f1f1f;
       --muted: #6b6b6b;
       --radius: 16px;
-      --shadow: 0 6px 20px rgba(0,0,0,.08);
+      --shadow: 0 4px 18px rgba(0,0,0,.07);
       --maxw: 960px;
 
 
@@ -67,7 +67,7 @@ html, body { height: 100%; margin: 0; }
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: linear-gradient(160deg, #eae5dd 0%, #dbd5cc 100%) fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
@@ -140,14 +140,14 @@ body.night #theme-toggle:hover { background: rgba(255,255,255,.08); }
 main {
   width: 100%;
   max-width: var(--maxw);
-  padding: 0 18px 28px;
+  padding: 24px 18px 52px;
 }
 .card {
   background: var(--card-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  margin: 20px 0;
+  margin: 24px 0;
 }
 .photo img {
   display: block;
@@ -177,7 +177,7 @@ footer .footer-copy a:hover { color: var(--text); }
   width: 100%;
   max-width: var(--maxw);
   padding: 0 18px;
-  margin: 8px 0 20px;
+  margin: 24px 0;
 }
 .tools-card {
   background-color: #0f1620;
@@ -267,42 +267,12 @@ footer .footer-copy a:hover { color: var(--text); }
   font-style: italic;
 }
 
-/* ===== Widgets ===== */
-.widgets {
-  width: 100%;
-  max-width: var(--maxw);
-  padding: 0 18px;
-  margin: 20px 0;
-}
-.widget-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-.widget-card {
-  flex: 1 1 280px;
-  min-width: 260px;
-  padding: 24px 20px 22px;
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(0,0,0,.05);
-  position: relative;
-}
-.widget-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0,0,0,.12);
-}
-.widget-card h3 {
-  margin: 0 0 10px;
-  font-size: 1.25rem;
-  color: var(--muted);
-}
+/* ===== Eye Fact card ===== */
 .fact-card {
-  background: linear-gradient(145deg, #eef2ff, #f7f7f7);
+  background: linear-gradient(145deg, #eef2ff, #ffffff);
   border-top: 3px solid #6366f1;
 }
-.fact-card h3 { color: #4338ca; }
+.fact-card h3 { color: #4338ca; margin: 0 0 10px; }
 .fact-text { font-size: 1rem; line-height: 1.65; color: var(--text); padding: 0 4px; }
 body.night .fact-card    { background: linear-gradient(145deg, #14122e, #1e2533); border-top-color: #818cf8; }
 body.night .fact-card h3 { color: #a5b4fc; }
@@ -310,7 +280,7 @@ body.night .fact-card h3 { color: #a5b4fc; }
 /* ===== Our Apps Showcase ===== */
 .apps-section {
   width: 100%; max-width: var(--maxw);
-  padding: 0 18px; margin: 8px 0 20px;
+  padding: 0 18px; margin: 24px 0;
 }
 .apps-header { text-align: center; margin-bottom: 18px; }
 .apps-eyebrow {
@@ -393,7 +363,7 @@ body.night .app-browser-link:hover { background: var(--text); color: var(--bg); 
 .carousel-dot.active { background: #fff; transform: scale(1.4); }
 
 /* ===== Shared info cards ===== */
-.info-card { padding: 24px 20px 26px; text-align: center; }
+.info-card { padding: 32px 28px 34px; text-align: center; }
 .info-card h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.35rem; }
 .info-card > p { color: var(--muted); line-height: 1.6; margin: 0; }
 .card-eyebrow {
@@ -403,14 +373,14 @@ body.night .app-browser-link:hover { background: var(--text); color: var(--bg); 
 
 /* About card */
 .about-card {
-  background: linear-gradient(145deg, #fffaf4, #f7f7f7);
+  background: linear-gradient(145deg, #fffaf4, #ffffff);
   border-top: 3px solid #f59e0b;
 }
 .about-card .card-eyebrow { color: #d97706; }
 
 /* This Week card */
 .week-card {
-  background: linear-gradient(145deg, #f0f7ff, #f7f7f7);
+  background: linear-gradient(145deg, #f0f7ff, #ffffff);
   border-top: 3px solid #3b82f6;
 }
 .week-card .card-eyebrow {
@@ -449,11 +419,11 @@ body.night .app-browser-link:hover { background: var(--text); color: var(--bg); 
 /* ===== App icon strip ===== */
 .app-strip {
   display: flex; justify-content: center; align-items: flex-start;
-  gap: 32px; padding: 22px 20px;
+  gap: 32px; padding: 28px 20px;
   background: var(--card-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  margin: 20px 0;
+  margin: 24px 0;
 }
 .app-strip-item {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -523,12 +493,11 @@ body.night {
   --card-bg: #1e2533;
   --text: #f1f5f9;
   --muted: #94a3b8;
-  --shadow: 0 6px 20px rgba(0,0,0,.35);
+  --shadow: 0 4px 18px rgba(0,0,0,.32);
+  background: linear-gradient(160deg, #141e2e 0%, #0e1520 100%) fixed;
 }
 body.night .contact a { background: #d97706; }
 body.night .contact a:hover { opacity: 0.85; }
-
-body.night .widget-card { border-color: rgba(255,255,255,.06); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -642,14 +611,10 @@ body.night .widget-card { border-color: rgba(255,255,255,.06); }
   </div>
 </section>
 
-<!-- Eye Fact widget -->
-<section class="widgets reveal">
-  <div class="widget-grid">
-    <div class="card widget-card fact-card">
-      <h3>👁️ Eye Fact of the Day</h3>
-      <div id="eye-fact" class="fact-text">Loading today's fact...</div>
-    </div>
-  </div>
+<!-- Eye Fact -->
+<section class="card info-card fact-card reveal">
+  <h3>👁️ Eye Fact of the Day</h3>
+  <div id="eye-fact" class="fact-text"></div>
 </section>
 
 <!-- ===== OUR APPS SHOWCASE ===== -->
