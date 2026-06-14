@@ -3289,6 +3289,14 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, cssW, cssH);
     }
+    // Permanent screen-edge vignette — adds depth and focus
+    {
+      const vig = ctx.createRadialGradient(cssW/2, cssH/2, cssH * 0.22, cssW/2, cssH/2, cssH * 0.92);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.40)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
     ctx.restore();
   }
 
@@ -3339,6 +3347,80 @@
     ctx.restore();
   }
 
+  function drawMidLayer() {
+    // Mid-ground parallax (0.28x) — theme-specific silhouettes
+    const theme = game.levelConfig.theme;
+    const parallax = 0.28;
+    const camX = game.cameraX * parallax;
+    const spacing = 170;
+    const start = Math.floor(camX / spacing) - 1;
+    const end = Math.floor((camX + cssW) / spacing) + 2;
+    ctx.save();
+
+    if (theme === 'office' || theme === 'waiting' || theme === 'dispensary' || theme === 'examroom') {
+      ctx.globalAlpha = 0.14;
+      ctx.fillStyle = theme === 'examroom' ? 'rgba(15,25,50,1)' : 'rgba(25,35,70,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 2654435761);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const s2 = (((seed * 9876543) ^ ((seed * 9876543) >>> 11)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 70;
+        const bW = 26 + s1 * 48;
+        const bH = cssH * (0.10 + s2 * 0.30);
+        ctx.fillRect(x, cssH - bH, bW, bH);
+      }
+    } else if (theme === 'brain') {
+      ctx.globalAlpha = 0.09;
+      ctx.fillStyle = 'rgba(230,90,140,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 3456789);
+        const s1 = ((seed ^ (seed >>> 15)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 100;
+        const rad = 45 + s1 * 75;
+        ctx.beginPath();
+        ctx.arc(x, cssH * 0.45, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (theme === 'opticnerve') {
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = 'rgba(210,70,190,1)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 1122334);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 90;
+        ctx.beginPath();
+        ctx.moveTo(x, cssH);
+        ctx.bezierCurveTo(x + s1 * 80 - 40, cssH * 0.55, x - s1 * 50 + 25, cssH * 0.25, x + s1 * 90 - 45, 0);
+        ctx.stroke();
+      }
+    } else if (theme === 'lair') {
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = 'rgba(45,0,70,1)';
+      const pillarSpacing = 200;
+      const pStart = Math.floor(camX / pillarSpacing) - 1;
+      const pEnd = pStart + Math.ceil(cssW / pillarSpacing) + 2;
+      for (let i = pStart; i <= pEnd; i++) {
+        const px = i * pillarSpacing - camX;
+        ctx.fillRect(px - 10, 0, 20, cssH);
+      }
+    } else if (theme === 'lasik') {
+      ctx.globalAlpha = 0.10;
+      ctx.fillStyle = 'rgba(140,20,20,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 4567890);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 60;
+        const bW = 18 + s1 * 28;
+        const bH = cssH * (0.18 + s1 * 0.32);
+        ctx.fillRect(x, cssH - bH, bW, bH);
+      }
+    }
+
+    ctx.restore();
+  }
+
   function drawThemedBackground() {
     const cfg = game.levelConfig;
     const grad = ctx.createLinearGradient(0, 0, 0, cssH);
@@ -3348,7 +3430,17 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, cssW, cssH);
 
+    // Subtle slow sky shimmer — horizontal light sweep
+    const shimT = (Math.sin(performance.now() / 9000) + 1) * 0.5;
+    const shimGrad = ctx.createLinearGradient(cssW * shimT * 0.2, 0, cssW * (0.3 + shimT * 0.7), cssH * 0.6);
+    shimGrad.addColorStop(0, 'rgba(255,255,255,0)');
+    shimGrad.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+    shimGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shimGrad;
+    ctx.fillRect(0, 0, cssW, cssH * 0.7);
+
     drawFarLayer();
+    drawMidLayer();
 
     // Theme-specific background details
     if (cfg.theme === 'office') {
@@ -3636,6 +3728,7 @@
   // Pseudo-static clouds at fixed world positions, scrolling with light parallax
   function drawClouds() {
     ctx.save();
+    // Far clouds — slow, large
     ctx.fillStyle = 'rgba(255,255,255,0.95)';
     const parallax = 0.3;
     const camX = game.cameraX * parallax;
@@ -3648,6 +3741,20 @@
       const y = 60 + rand * (cssH * 0.3);
       const x = i * cloudSpacing - camX + (rand * 80);
       drawCloud(x, y, 28 + rand * 20);
+    }
+    // Near clouds — faster parallax, smaller, more transparent
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    const parallax2 = 0.52;
+    const camX2 = game.cameraX * parallax2;
+    const spacing2 = 210;
+    const start2 = Math.floor(camX2 / spacing2) - 1;
+    const end2 = Math.floor((camX2 + cssW) / spacing2) + 2;
+    for (let i = start2; i <= end2; i++) {
+      const seed2 = i * 987654321 + 77;
+      const rand2 = ((seed2 ^ (seed2 >>> 17)) >>> 0) / 4294967295;
+      const y2 = cssH * 0.04 + rand2 * cssH * 0.18;
+      const x2 = i * spacing2 - camX2 + rand2 * 55;
+      drawCloud(x2, y2, 13 + rand2 * 15);
     }
     ctx.restore();
   }
@@ -3981,10 +4088,16 @@
       // Eyeball coin: white sclera, blue iris, black pupil
       ctx.save();
       ctx.translate(sx, sy);
-      // Glow
-      ctx.fillStyle = 'rgba(252, 212, 68, 0.3)';
+      // Pulsing glow — outer soft ring + inner tight ring
+      const now = performance.now() / 1000;
+      const pulse = 0.22 + 0.10 * Math.sin(now * 3.2 + c.x * 0.04);
+      ctx.fillStyle = `rgba(252,212,68,${pulse})`;
       ctx.beginPath();
-      ctx.arc(0, 0, c.r * 1.6, 0, Math.PI * 2);
+      ctx.arc(0, 0, c.r * 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,245,180,0.38)';
+      ctx.beginPath();
+      ctx.arc(0, 0, c.r * 1.5, 0, Math.PI * 2);
       ctx.fill();
       // Sclera
       ctx.fillStyle = '#ffffff';
@@ -4036,7 +4149,8 @@
     for (const en of game.enemies) {
       if (!en.alive) continue;
       const sx = en.x - game.cameraX;
-      const sy = en.y;
+      const idleBob = en.squashed ? 0 : Math.sin(performance.now() / 520 + en.x * 0.025) * 2.5;
+      const sy = en.y + idleBob;
       const w = en.w, h = en.h;
       ctx.save();
       ctx.translate(sx, sy);
@@ -4481,6 +4595,18 @@
       ctx.fillRect(sx - 20, sy - 20, p.w + 40, p.h + 40);
     }
 
+    // Warm ambient light halo around the player
+    if (!p.stunned && !p.doorEnter) {
+      const lightGrad = ctx.createRadialGradient(
+        sx + p.w / 2, sy + p.h * 0.4, 0,
+        sx + p.w / 2, sy + p.h * 0.4, p.h * 2.4
+      );
+      lightGrad.addColorStop(0, 'rgba(255,240,200,0.13)');
+      lightGrad.addColorStop(1, 'rgba(255,240,200,0)');
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(sx - p.h * 2.5, sy - p.h * 2, p.w + p.h * 5, p.h * 5.5);
+    }
+
     // Animation: bob up and down a few pixels with run frame
     let bob = p.onGround ? Math.sin(p.runFrame) * 1.5 : 0;
     let facing = p.wallVaultRecovery > 0 ? -1 : 1;
@@ -4491,6 +4617,23 @@
     if (p.victory > 0) {
       bob = -Math.abs(Math.sin((1.4 - p.victory) * Math.PI * 3)) * 14;
       facing = 1;
+    }
+
+    // Speed trail — ghost silhouettes when sprinting
+    if (Math.abs(p.vx) > 175 && !p.stunned && !p.doorEnter) {
+      const trailDir = p.vx > 0 ? -1 : 1;
+      for (let t = 3; t >= 1; t--) {
+        const alpha = 0.06 * t / 3;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ffffff';
+        ctx.translate(sx + p.w / 2 + trailDir * t * 10, sy + p.h * 0.45 + bob);
+        ctx.scale(facing, 1);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.w * 0.27, p.h * 0.44, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     ctx.save();
