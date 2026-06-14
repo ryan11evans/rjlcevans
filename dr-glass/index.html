@@ -1854,6 +1854,7 @@
       particles: [],
       shake: 0,      // screen-shake magnitude, decays each frame
       stompFlash: 0, // 0..1 white flash intensity after stomping an enemy
+      hitFlash: 0,   // 0..1 chromatic aberration intensity when taking damage
       deathTimer: 0, // seconds elapsed in current death animation
       deathVy: 0,    // vertical velocity during death float
       airPuffs: [],  // {x, y, vx, r, phase} — tonometer air puffs to dodge
@@ -2093,8 +2094,35 @@
     game.levelTime += dt;
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 60);
     if (game.stompFlash > 0) game.stompFlash = Math.max(0, game.stompFlash - dt * 5);
+    if (game.hitFlash > 0) game.hitFlash = Math.max(0, game.hitFlash - dt * 4);
     const p = game.player;
     if (p.squashTime > 0) p.squashTime = Math.max(0, p.squashTime - dt * 8);
+
+    // Ambient theme particles — drifting specks, dust motes, embers
+    if (Math.random() < dt * 18) {
+      const theme = game.levelConfig.theme;
+      const camX = game.cameraX;
+      const px = camX + Math.random() * cssW;
+      const py = Math.random() * cssH * 0.85;
+      const configs = {
+        office:     { color: 'rgba(220,210,190,0.55)', vx: -8, vy: -12, size: 1.5, life: 2.2 },
+        waiting:    { color: 'rgba(255,230,180,0.45)', vx: -5, vy: -8,  size: 2,   life: 2.5 },
+        dispensary: { color: 'rgba(200,230,255,0.40)', vx: -6, vy: -10, size: 1.5, life: 2.0 },
+        examroom:   { color: 'rgba(180,200,255,0.35)', vx: -4, vy: -6,  size: 1.5, life: 2.8 },
+        opticnerve: { color: 'rgba(220,120,240,0.50)', vx: -10, vy:-14, size: 2,   life: 1.8 },
+        lasik:      { color: 'rgba(255,100,80,0.45)',  vx: -12, vy:-18, size: 1.5, life: 1.5 },
+        brain:      { color: 'rgba(255,180,210,0.45)', vx: -6,  vy:-10, size: 2,   life: 2.0 },
+        lair:       { color: 'rgba(160,80,240,0.45)',  vx: -8,  vy:-12, size: 2,   life: 2.2 },
+      };
+      const cfg = configs[theme] || configs.office;
+      game.particles.push({
+        x: px, y: py,
+        vx: cfg.vx + (Math.random() - 0.5) * 10,
+        vy: cfg.vy + (Math.random() - 0.5) * 8,
+        life: cfg.life, maxLife: cfg.life,
+        color: cfg.color, size: cfg.size + Math.random(),
+      });
+    }
 
     updatePlatforms(dt);
     updatePlayer(dt);
@@ -2676,7 +2704,13 @@
         game.stomps++;
         sfx.stomp();
         game.stompFlash = 0.45;
-        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 10);
+        const _sc = enemyColor(en.type), _sx = en.x + en.w/2, _sy = en.y + en.h/2;
+        for (let _i = 0; _i < 18; _i++) {
+          const _a = (_i / 18) * Math.PI * 2;
+          const _spd = 100 + Math.random() * 200;
+          game.particles.push({ x: _sx, y: _sy, vx: Math.cos(_a)*_spd, vy: Math.sin(_a)*_spd - 80,
+            life: 0.55, maxLife: 0.55, color: _i % 2 === 0 ? _sc : '#ffffff', size: 3 + Math.random() * 4 });
+        }
         if (p.airStomps >= 2) {
           const labels = ['', '', 'Double Stomp!', 'Triple Stomp!', 'QUAD STOMP!!', 'PENTA STOMP!!!'];
           const label = labels[Math.min(p.airStomps, 5)];
@@ -2694,7 +2728,13 @@
         game.stomps++;
         sfx.stomp();
         game.stompFlash = 0.35;
-        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 12);
+        const _sc2 = enemyColor(en.type), _sx2 = en.x + en.w/2, _sy2 = en.y + en.h/2;
+        for (let _i2 = 0; _i2 < 14; _i2++) {
+          const _a2 = (_i2 / 14) * Math.PI * 2;
+          const _spd2 = 90 + Math.random() * 160;
+          game.particles.push({ x: _sx2, y: _sy2, vx: Math.cos(_a2)*_spd2, vy: Math.sin(_a2)*_spd2 - 60,
+            life: 0.5, maxLife: 0.5, color: _i2 % 2 === 0 ? _sc2 : '#a8e6ff', size: 3 + Math.random() * 3 });
+        }
         spawnFloatText(en.x + en.w/2, en.y - 8, 'CRUSHED! +150', '#a8e6ff');
       } else {
         loseLife(enemyHitMessage(en.type));
@@ -3085,7 +3125,15 @@
         game.coinsCollected++;
         game.score += 25;
         sfx.coin();
-        spawnParticles(c.x, c.y, '#fcd444', 8);
+        // Ring burst on collection
+        for (let _ci = 0; _ci < 10; _ci++) {
+          const _ca = (_ci / 10) * Math.PI * 2;
+          const _cs = 70 + Math.random() * 80;
+          game.particles.push({ x: c.x, y: c.y, vx: Math.cos(_ca)*_cs, vy: Math.sin(_ca)*_cs,
+            life: 0.32, maxLife: 0.32, color: _ci % 2 === 0 ? '#fcd444' : '#ffffff', size: 2 + Math.random() * 2 });
+        }
+        // Brief white flash at coin position
+        game.particles.push({ x: c.x, y: c.y, vx: 0, vy: 0, life: 0.1, maxLife: 0.1, color: '#ffffff', size: c.r * 2.8 });
         spawnFloatText(c.x, c.y - TILE * 0.3, '+25', '#fcd444');
       }
     }
@@ -3295,6 +3343,30 @@
       vig.addColorStop(0, 'rgba(0,0,0,0)');
       vig.addColorStop(1, 'rgba(0,0,0,0.40)');
       ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
+    // Permanent chromatic aberration lens fringe at screen edges
+    {
+      const caL = ctx.createLinearGradient(0, 0, cssW * 0.09, 0);
+      caL.addColorStop(0, 'rgba(200,0,0,0.07)');
+      caL.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = caL;
+      ctx.fillRect(0, 0, cssW * 0.09, cssH);
+      const caR = ctx.createLinearGradient(cssW, 0, cssW * 0.91, 0);
+      caR.addColorStop(0, 'rgba(0,80,220,0.07)');
+      caR.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = caR;
+      ctx.fillRect(cssW * 0.91, 0, cssW * 0.09, cssH);
+    }
+    // Chromatic aberration flash on hit — red left / cyan right split
+    if (game.hitFlash > 0) {
+      const t = game.hitFlash;
+      const caHit = ctx.createLinearGradient(0, 0, cssW, 0);
+      caHit.addColorStop(0,    `rgba(220,0,0,${t * 0.30})`);
+      caHit.addColorStop(0.18, `rgba(220,0,0,0)`);
+      caHit.addColorStop(0.82, `rgba(0,0,0,0)`);
+      caHit.addColorStop(1,    `rgba(0,180,220,${t * 0.30})`);
+      ctx.fillStyle = caHit;
       ctx.fillRect(0, 0, cssW, cssH);
     }
     ctx.restore();
@@ -3781,6 +3853,19 @@
         const x = c * TILE - game.cameraX;
         const y = r * TILE;
         drawTile(ch, x, y);
+        // Per-tile subtle tint variation to break up the grid
+        if (ch !== 'X' && ch !== 'S' && ch !== 'Q') {
+          const ts = Math.abs(c * 2654435761 + r * 1234567);
+          const tint = ((ts ^ (ts >>> 13)) >>> 0) / 4294967295;
+          const tintA = (tint * 0.08).toFixed(3);
+          ctx.fillStyle = tint > 0.5 ? `rgba(255,255,255,${tintA})` : `rgba(0,0,0,${tintA})`;
+          ctx.fillRect(x, y, TILE, TILE);
+        }
+        // Ambient occlusion — darken top of tiles that have a solid tile above
+        if (r > 0 && tileAt(game.level, c, r - 1) !== '.') {
+          ctx.fillStyle = 'rgba(0,0,0,0.16)';
+          ctx.fillRect(x, y, TILE, TILE * 0.28);
+        }
       }
     }
   }
@@ -4571,11 +4656,14 @@
     const sx = p.x - game.cameraX;
     const sy = p.y;
 
-    // Drop shadow
-    if (p.onGround) {
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    // Dynamic shadow — fades and spreads when airborne
+    {
+      const shadowAlpha = p.onGround ? 0.28 : Math.max(0.06, 0.18 - Math.abs(p.vy) * 0.0002);
+      const shadowRx = p.onGround ? p.w * 0.55 : p.w * 0.72;
+      const shadowRy = p.onGround ? 4 : 2.5;
+      ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(sx + p.w/2, sy + p.h + 2, p.w * 0.55, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(sx + p.w/2, sy + p.h + 2, shadowRx, shadowRy, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -5307,6 +5395,7 @@
     game.lives--;
     game.deaths++;
     addShake(12);
+    game.hitFlash = 1;
     game.player.stunned = 1.2;   // trigger stunned spin animation
     // Death animation state
     game.deathTimer = 0;
