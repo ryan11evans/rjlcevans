@@ -58,7 +58,9 @@ class ShareSchemeHandler: NSObject, WKURLSchemeHandler {
             urlSchemeTask.didFailWithError(NSError(domain: "ShareScheme", code: 1, userInfo: nil))
             return
         }
-        let response = URLResponse(url: url, mimeType: "text/plain", expectedContentLength: 0, textEncodingName: nil)
+        // CORS header required: web content at capacitor://localhost is cross-origin to nativeshare://
+        let headers = ["Access-Control-Allow-Origin": "*", "Content-Type": "text/plain"]
+        guard let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers) else { return }
         urlSchemeTask.didReceive(response)
         urlSchemeTask.didReceive(Data())
         urlSchemeTask.didFinish()
