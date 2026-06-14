@@ -2018,10 +2018,21 @@
     const title = `My vision: ${best.snellen} · Eye Chart Test`;
     const imageData = canvas.toDataURL('image/png');
 
-    // Native share via WKScriptMessageHandler (injected by AppDelegate)
+    // Native share via WKScriptMessageHandler
     if (window.webkit?.messageHandlers?.nativeShare) {
       window.webkit.messageHandlers.nativeShare.postMessage({ imageData, title });
       return;
+    }
+
+    // Native share via URL scheme handler (bypasses userContentController entirely)
+    if (window.Capacitor) {
+      try {
+        window._shareData = { imageData, title };
+        await fetch('nativeshare://trigger');
+        return;
+      } catch(e) {
+        window._shareData = null;
+      }
     }
 
     // Web fallback
