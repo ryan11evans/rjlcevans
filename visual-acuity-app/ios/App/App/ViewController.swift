@@ -1,28 +1,13 @@
 import UIKit
 import Capacitor
+import WebKit
 
 class ViewController: CAPBridgeViewController {
     private let shareHandler = ShareCardHandler()
-    private var handlerRegistered = false
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        registerShareHandler()
-    }
-
-    override func capacitorDidLoad() {
-        registerShareHandler()
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        registerShareHandler()
-    }
-
-    private func registerShareHandler() {
-        guard !handlerRegistered, let wv = webView else { return }
+    override func webView(with frame: CGRect, configuration: WKWebViewConfiguration) -> WKWebView {
         shareHandler.viewController = self
-        wv.configuration.userContentController.add(shareHandler, name: "nativeShare")
-        handlerRegistered = true
+        configuration.userContentController.add(shareHandler, name: "nativeShare")
+        return super.webView(with: frame, configuration: configuration)
     }
 }
