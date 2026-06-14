@@ -1854,6 +1854,7 @@
       particles: [],
       shake: 0,      // screen-shake magnitude, decays each frame
       stompFlash: 0, // 0..1 white flash intensity after stomping an enemy
+      hitFlash: 0,   // 0..1 chromatic aberration intensity when taking damage
       deathTimer: 0, // seconds elapsed in current death animation
       deathVy: 0,    // vertical velocity during death float
       airPuffs: [],  // {x, y, vx, r, phase} — tonometer air puffs to dodge
@@ -2093,8 +2094,35 @@
     game.levelTime += dt;
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 60);
     if (game.stompFlash > 0) game.stompFlash = Math.max(0, game.stompFlash - dt * 5);
+    if (game.hitFlash > 0) game.hitFlash = Math.max(0, game.hitFlash - dt * 4);
     const p = game.player;
     if (p.squashTime > 0) p.squashTime = Math.max(0, p.squashTime - dt * 8);
+
+    // Ambient theme particles — drifting specks, dust motes, embers
+    if (Math.random() < dt * 18) {
+      const theme = game.levelConfig.theme;
+      const camX = game.cameraX;
+      const px = camX + Math.random() * cssW;
+      const py = Math.random() * cssH * 0.85;
+      const configs = {
+        office:     { color: 'rgba(220,210,190,0.55)', vx: -8, vy: -12, size: 1.5, life: 2.2 },
+        waiting:    { color: 'rgba(255,230,180,0.45)', vx: -5, vy: -8,  size: 2,   life: 2.5 },
+        dispensary: { color: 'rgba(200,230,255,0.40)', vx: -6, vy: -10, size: 1.5, life: 2.0 },
+        examroom:   { color: 'rgba(180,200,255,0.35)', vx: -4, vy: -6,  size: 1.5, life: 2.8 },
+        opticnerve: { color: 'rgba(220,120,240,0.50)', vx: -10, vy:-14, size: 2,   life: 1.8 },
+        lasik:      { color: 'rgba(255,100,80,0.45)',  vx: -12, vy:-18, size: 1.5, life: 1.5 },
+        brain:      { color: 'rgba(255,180,210,0.45)', vx: -6,  vy:-10, size: 2,   life: 2.0 },
+        lair:       { color: 'rgba(160,80,240,0.45)',  vx: -8,  vy:-12, size: 2,   life: 2.2 },
+      };
+      const cfg = configs[theme] || configs.office;
+      game.particles.push({
+        x: px, y: py,
+        vx: cfg.vx + (Math.random() - 0.5) * 10,
+        vy: cfg.vy + (Math.random() - 0.5) * 8,
+        life: cfg.life, maxLife: cfg.life,
+        color: cfg.color, size: cfg.size + Math.random(),
+      });
+    }
 
     updatePlatforms(dt);
     updatePlayer(dt);
@@ -2676,7 +2704,13 @@
         game.stomps++;
         sfx.stomp();
         game.stompFlash = 0.45;
-        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 10);
+        const _sc = enemyColor(en.type), _sx = en.x + en.w/2, _sy = en.y + en.h/2;
+        for (let _i = 0; _i < 18; _i++) {
+          const _a = (_i / 18) * Math.PI * 2;
+          const _spd = 100 + Math.random() * 200;
+          game.particles.push({ x: _sx, y: _sy, vx: Math.cos(_a)*_spd, vy: Math.sin(_a)*_spd - 80,
+            life: 0.55, maxLife: 0.55, color: _i % 2 === 0 ? _sc : '#ffffff', size: 3 + Math.random() * 4 });
+        }
         if (p.airStomps >= 2) {
           const labels = ['', '', 'Double Stomp!', 'Triple Stomp!', 'QUAD STOMP!!', 'PENTA STOMP!!!'];
           const label = labels[Math.min(p.airStomps, 5)];
@@ -2694,7 +2728,13 @@
         game.stomps++;
         sfx.stomp();
         game.stompFlash = 0.35;
-        spawnParticles(en.x + en.w/2, en.y + en.h/2, enemyColor(en.type), 12);
+        const _sc2 = enemyColor(en.type), _sx2 = en.x + en.w/2, _sy2 = en.y + en.h/2;
+        for (let _i2 = 0; _i2 < 14; _i2++) {
+          const _a2 = (_i2 / 14) * Math.PI * 2;
+          const _spd2 = 90 + Math.random() * 160;
+          game.particles.push({ x: _sx2, y: _sy2, vx: Math.cos(_a2)*_spd2, vy: Math.sin(_a2)*_spd2 - 60,
+            life: 0.5, maxLife: 0.5, color: _i2 % 2 === 0 ? _sc2 : '#a8e6ff', size: 3 + Math.random() * 3 });
+        }
         spawnFloatText(en.x + en.w/2, en.y - 8, 'CRUSHED! +150', '#a8e6ff');
       } else {
         loseLife(enemyHitMessage(en.type));
@@ -3085,7 +3125,15 @@
         game.coinsCollected++;
         game.score += 25;
         sfx.coin();
-        spawnParticles(c.x, c.y, '#fcd444', 8);
+        // Ring burst on collection
+        for (let _ci = 0; _ci < 10; _ci++) {
+          const _ca = (_ci / 10) * Math.PI * 2;
+          const _cs = 70 + Math.random() * 80;
+          game.particles.push({ x: c.x, y: c.y, vx: Math.cos(_ca)*_cs, vy: Math.sin(_ca)*_cs,
+            life: 0.32, maxLife: 0.32, color: _ci % 2 === 0 ? '#fcd444' : '#ffffff', size: 2 + Math.random() * 2 });
+        }
+        // Brief white flash at coin position
+        game.particles.push({ x: c.x, y: c.y, vx: 0, vy: 0, life: 0.1, maxLife: 0.1, color: '#ffffff', size: c.r * 2.8 });
         spawnFloatText(c.x, c.y - TILE * 0.3, '+25', '#fcd444');
       }
     }
@@ -3289,6 +3337,38 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, cssW, cssH);
     }
+    // Permanent screen-edge vignette — adds depth and focus
+    {
+      const vig = ctx.createRadialGradient(cssW/2, cssH/2, cssH * 0.22, cssW/2, cssH/2, cssH * 0.92);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.40)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
+    // Permanent chromatic aberration lens fringe at screen edges
+    {
+      const caL = ctx.createLinearGradient(0, 0, cssW * 0.09, 0);
+      caL.addColorStop(0, 'rgba(200,0,0,0.07)');
+      caL.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = caL;
+      ctx.fillRect(0, 0, cssW * 0.09, cssH);
+      const caR = ctx.createLinearGradient(cssW, 0, cssW * 0.91, 0);
+      caR.addColorStop(0, 'rgba(0,80,220,0.07)');
+      caR.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = caR;
+      ctx.fillRect(cssW * 0.91, 0, cssW * 0.09, cssH);
+    }
+    // Chromatic aberration flash on hit — red left / cyan right split
+    if (game.hitFlash > 0) {
+      const t = game.hitFlash;
+      const caHit = ctx.createLinearGradient(0, 0, cssW, 0);
+      caHit.addColorStop(0,    `rgba(220,0,0,${t * 0.30})`);
+      caHit.addColorStop(0.18, `rgba(220,0,0,0)`);
+      caHit.addColorStop(0.82, `rgba(0,0,0,0)`);
+      caHit.addColorStop(1,    `rgba(0,180,220,${t * 0.30})`);
+      ctx.fillStyle = caHit;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
     ctx.restore();
   }
 
@@ -3339,6 +3419,80 @@
     ctx.restore();
   }
 
+  function drawMidLayer() {
+    // Mid-ground parallax (0.28x) — theme-specific silhouettes
+    const theme = game.levelConfig.theme;
+    const parallax = 0.28;
+    const camX = game.cameraX * parallax;
+    const spacing = 170;
+    const start = Math.floor(camX / spacing) - 1;
+    const end = Math.floor((camX + cssW) / spacing) + 2;
+    ctx.save();
+
+    if (theme === 'office' || theme === 'waiting' || theme === 'dispensary' || theme === 'examroom') {
+      ctx.globalAlpha = 0.14;
+      ctx.fillStyle = theme === 'examroom' ? 'rgba(15,25,50,1)' : 'rgba(25,35,70,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 2654435761);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const s2 = (((seed * 9876543) ^ ((seed * 9876543) >>> 11)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 70;
+        const bW = 26 + s1 * 48;
+        const bH = cssH * (0.10 + s2 * 0.30);
+        ctx.fillRect(x, cssH - bH, bW, bH);
+      }
+    } else if (theme === 'brain') {
+      ctx.globalAlpha = 0.09;
+      ctx.fillStyle = 'rgba(230,90,140,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 3456789);
+        const s1 = ((seed ^ (seed >>> 15)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 100;
+        const rad = 45 + s1 * 75;
+        ctx.beginPath();
+        ctx.arc(x, cssH * 0.45, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (theme === 'opticnerve') {
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = 'rgba(210,70,190,1)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 1122334);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 90;
+        ctx.beginPath();
+        ctx.moveTo(x, cssH);
+        ctx.bezierCurveTo(x + s1 * 80 - 40, cssH * 0.55, x - s1 * 50 + 25, cssH * 0.25, x + s1 * 90 - 45, 0);
+        ctx.stroke();
+      }
+    } else if (theme === 'lair') {
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = 'rgba(45,0,70,1)';
+      const pillarSpacing = 200;
+      const pStart = Math.floor(camX / pillarSpacing) - 1;
+      const pEnd = pStart + Math.ceil(cssW / pillarSpacing) + 2;
+      for (let i = pStart; i <= pEnd; i++) {
+        const px = i * pillarSpacing - camX;
+        ctx.fillRect(px - 10, 0, 20, cssH);
+      }
+    } else if (theme === 'lasik') {
+      ctx.globalAlpha = 0.10;
+      ctx.fillStyle = 'rgba(140,20,20,1)';
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 4567890);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 60;
+        const bW = 18 + s1 * 28;
+        const bH = cssH * (0.18 + s1 * 0.32);
+        ctx.fillRect(x, cssH - bH, bW, bH);
+      }
+    }
+
+    ctx.restore();
+  }
+
   function drawThemedBackground() {
     const cfg = game.levelConfig;
     const grad = ctx.createLinearGradient(0, 0, 0, cssH);
@@ -3348,7 +3502,17 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, cssW, cssH);
 
+    // Subtle slow sky shimmer — horizontal light sweep
+    const shimT = (Math.sin(performance.now() / 9000) + 1) * 0.5;
+    const shimGrad = ctx.createLinearGradient(cssW * shimT * 0.2, 0, cssW * (0.3 + shimT * 0.7), cssH * 0.6);
+    shimGrad.addColorStop(0, 'rgba(255,255,255,0)');
+    shimGrad.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+    shimGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shimGrad;
+    ctx.fillRect(0, 0, cssW, cssH * 0.7);
+
     drawFarLayer();
+    drawMidLayer();
 
     // Theme-specific background details
     if (cfg.theme === 'office') {
@@ -3636,6 +3800,7 @@
   // Pseudo-static clouds at fixed world positions, scrolling with light parallax
   function drawClouds() {
     ctx.save();
+    // Far clouds — slow, large
     ctx.fillStyle = 'rgba(255,255,255,0.95)';
     const parallax = 0.3;
     const camX = game.cameraX * parallax;
@@ -3648,6 +3813,20 @@
       const y = 60 + rand * (cssH * 0.3);
       const x = i * cloudSpacing - camX + (rand * 80);
       drawCloud(x, y, 28 + rand * 20);
+    }
+    // Near clouds — faster parallax, smaller, more transparent
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    const parallax2 = 0.52;
+    const camX2 = game.cameraX * parallax2;
+    const spacing2 = 210;
+    const start2 = Math.floor(camX2 / spacing2) - 1;
+    const end2 = Math.floor((camX2 + cssW) / spacing2) + 2;
+    for (let i = start2; i <= end2; i++) {
+      const seed2 = i * 987654321 + 77;
+      const rand2 = ((seed2 ^ (seed2 >>> 17)) >>> 0) / 4294967295;
+      const y2 = cssH * 0.04 + rand2 * cssH * 0.18;
+      const x2 = i * spacing2 - camX2 + rand2 * 55;
+      drawCloud(x2, y2, 13 + rand2 * 15);
     }
     ctx.restore();
   }
@@ -3674,6 +3853,19 @@
         const x = c * TILE - game.cameraX;
         const y = r * TILE;
         drawTile(ch, x, y);
+        // Per-tile subtle tint variation to break up the grid
+        if (ch !== 'X' && ch !== 'S' && ch !== 'Q') {
+          const ts = Math.abs(c * 2654435761 + r * 1234567);
+          const tint = ((ts ^ (ts >>> 13)) >>> 0) / 4294967295;
+          const tintA = (tint * 0.08).toFixed(3);
+          ctx.fillStyle = tint > 0.5 ? `rgba(255,255,255,${tintA})` : `rgba(0,0,0,${tintA})`;
+          ctx.fillRect(x, y, TILE, TILE);
+        }
+        // Ambient occlusion — darken top of tiles that have a solid tile above
+        if (r > 0 && tileAt(game.level, c, r - 1) !== '.') {
+          ctx.fillStyle = 'rgba(0,0,0,0.16)';
+          ctx.fillRect(x, y, TILE, TILE * 0.28);
+        }
       }
     }
   }
@@ -3981,10 +4173,15 @@
       // Eyeball coin: white sclera, blue iris, black pupil
       ctx.save();
       ctx.translate(sx, sy);
-      // Glow
-      ctx.fillStyle = 'rgba(252, 212, 68, 0.3)';
+      // Pulsing glow — outer soft ring + inner tight ring
+      const pulse = 0.22 + 0.10 * Math.sin(performance.now() / 1000 * 3.2 + c.x * 0.04);
+      ctx.fillStyle = `rgba(252,212,68,${pulse})`;
       ctx.beginPath();
-      ctx.arc(0, 0, c.r * 1.6, 0, Math.PI * 2);
+      ctx.arc(0, 0, c.r * 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,245,180,0.38)';
+      ctx.beginPath();
+      ctx.arc(0, 0, c.r * 1.5, 0, Math.PI * 2);
       ctx.fill();
       // Sclera
       ctx.fillStyle = '#ffffff';
@@ -4036,7 +4233,8 @@
     for (const en of game.enemies) {
       if (!en.alive) continue;
       const sx = en.x - game.cameraX;
-      const sy = en.y;
+      const idleBob = en.squashed ? 0 : Math.sin(performance.now() / 520 + en.x * 0.025) * 2.5;
+      const sy = en.y + idleBob;
       const w = en.w, h = en.h;
       ctx.save();
       ctx.translate(sx, sy);
@@ -4458,11 +4656,14 @@
     const sx = p.x - game.cameraX;
     const sy = p.y;
 
-    // Drop shadow
-    if (p.onGround) {
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    // Dynamic shadow — fades and spreads when airborne
+    {
+      const shadowAlpha = p.onGround ? 0.28 : Math.max(0.06, 0.18 - Math.abs(p.vy) * 0.0002);
+      const shadowRx = p.onGround ? p.w * 0.55 : p.w * 0.72;
+      const shadowRy = p.onGround ? 4 : 2.5;
+      ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(sx + p.w/2, sy + p.h + 2, p.w * 0.55, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(sx + p.w/2, sy + p.h + 2, shadowRx, shadowRy, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -4481,6 +4682,18 @@
       ctx.fillRect(sx - 20, sy - 20, p.w + 40, p.h + 40);
     }
 
+    // Warm ambient light halo around the player
+    if (!p.stunned && !p.doorEnter) {
+      const lightGrad = ctx.createRadialGradient(
+        sx + p.w / 2, sy + p.h * 0.4, 0,
+        sx + p.w / 2, sy + p.h * 0.4, p.h * 2.4
+      );
+      lightGrad.addColorStop(0, 'rgba(255,240,200,0.13)');
+      lightGrad.addColorStop(1, 'rgba(255,240,200,0)');
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(sx - p.h * 2.5, sy - p.h * 2, p.w + p.h * 5, p.h * 5.5);
+    }
+
     // Animation: bob up and down a few pixels with run frame
     let bob = p.onGround ? Math.sin(p.runFrame) * 1.5 : 0;
     let facing = p.wallVaultRecovery > 0 ? -1 : 1;
@@ -4491,6 +4704,23 @@
     if (p.victory > 0) {
       bob = -Math.abs(Math.sin((1.4 - p.victory) * Math.PI * 3)) * 14;
       facing = 1;
+    }
+
+    // Speed trail — ghost silhouettes when sprinting
+    if (Math.abs(p.vx) > 175 && !p.stunned && !p.doorEnter) {
+      const trailDir = p.vx > 0 ? -1 : 1;
+      for (let t = 3; t >= 1; t--) {
+        const alpha = 0.06 * t / 3;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ffffff';
+        ctx.translate(sx + p.w / 2 + trailDir * t * 10, sy + p.h * 0.45 + bob);
+        ctx.scale(facing, 1);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.w * 0.27, p.h * 0.44, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     ctx.save();
@@ -5165,6 +5395,7 @@
     game.lives--;
     game.deaths++;
     addShake(12);
+    game.hitFlash = 1;
     game.player.stunned = 1.2;   // trigger stunned spin animation
     // Death animation state
     game.deathTimer = 0;
