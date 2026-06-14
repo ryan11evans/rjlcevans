@@ -2018,15 +2018,7 @@
     const title = `My vision: ${best.snellen} · Eye Chart Test`;
     const imageData = canvas.toDataURL('image/png');
 
-    // Capacitor native plugin — auto-discovered, produces tappable iMessage link
-    if (window.Capacitor?.isNativePlatform?.()) {
-      try {
-        await window.Capacitor.Plugins.SharePlugin.shareResult({ imageData, title });
-        return;
-      } catch(e) { /* fall through */ }
-    }
-
-    // WKScriptMessageHandler backup
+    // Native share via WKScriptMessageHandler (injected by AppDelegate)
     if (window.webkit?.messageHandlers?.nativeShare) {
       window.webkit.messageHandlers.nativeShare.postMessage({ imageData, title });
       return;
