@@ -1778,14 +1778,6 @@
     const od = state.results.OD;
     const os = state.results.OS;
 
-    // Debug: show whether native share handler is wired up
-    const shareBtn = document.getElementById('shareResults');
-    if (shareBtn) {
-      shareBtn.textContent = window.webkit?.messageHandlers?.nativeShare
-        ? '↑ Share your results (native ✓)'
-        : '↑ Share your results';
-    }
-
     document.getElementById('odResult').textContent = od ? od.snellen : '—';
     document.getElementById('osResult').textContent = os ? os.snellen : '—';
     document.getElementById('odCorrection').textContent = od ? (state.glassesOD ? 'with correction' : 'without correction') : '';
@@ -2024,14 +2016,23 @@
     ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 968);
 
     const title = `My vision: ${best.snellen} · Eye Chart Test`;
+    const imageData = canvas.toDataURL('image/png');
 
-    // Native iOS share (Capacitor) — produces a tappable rich preview linking to the website
+    // Capacitor native plugin — auto-discovered, produces tappable iMessage link
+    if (window.Capacitor?.isNativePlatform?.()) {
+      try {
+        await window.Capacitor.Plugins.SharePlugin.shareResult({ imageData, title });
+        return;
+      } catch(e) { /* fall through */ }
+    }
+
+    // WKScriptMessageHandler backup
     if (window.webkit?.messageHandlers?.nativeShare) {
-      const imageData = canvas.toDataURL('image/png');
       window.webkit.messageHandlers.nativeShare.postMessage({ imageData, title });
       return;
     }
 
+    // Web fallback
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'acuity-results.png', { type: 'image/png' });
       try {
