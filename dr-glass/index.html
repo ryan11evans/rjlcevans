@@ -4089,8 +4089,7 @@
       ctx.save();
       ctx.translate(sx, sy);
       // Pulsing glow — outer soft ring + inner tight ring
-      const now = performance.now() / 1000;
-      const pulse = 0.22 + 0.10 * Math.sin(now * 3.2 + c.x * 0.04);
+      const pulse = 0.22 + 0.10 * Math.sin(performance.now() / 1000 * 3.2 + c.x * 0.04);
       ctx.fillStyle = `rgba(252,212,68,${pulse})`;
       ctx.beginPath();
       ctx.arc(0, 0, c.r * 2.4, 0, Math.PI * 2);
