@@ -1930,7 +1930,7 @@
 
     // Descending chart watermark rows
     ctx.save();
-    ctx.globalAlpha = 0.055;
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = '#D4A017';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -2015,13 +2015,22 @@
     ctx.font = `20px -apple-system, system-ui, sans-serif`;
     ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 968);
 
+    const title = `My vision: ${best.snellen} · Eye Chart Test`;
+
+    // Native iOS share (Capacitor) — produces a tappable rich preview linking to the website
+    if (window.webkit?.messageHandlers?.nativeShare) {
+      const imageData = canvas.toDataURL('image/png');
+      window.webkit.messageHandlers.nativeShare.postMessage({ imageData, title });
+      return;
+    }
+
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'acuity-results.png', { type: 'image/png' });
       try {
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'My Visual Acuity Results' });
+          await navigator.share({ files: [file], title });
         } else if (navigator.share) {
-          await navigator.share({ title: 'Visual Acuity Results', text: `OD ${od?.snellen || '—'} · OS ${os?.snellen || '—'} · rjlcevans.com/visual-acuity` });
+          await navigator.share({ title, text: `OD ${od?.snellen || '—'} · OS ${os?.snellen || '—'} · rjlcevans.com/eye-chart-test` });
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'acuity-results.png'; a.click();
