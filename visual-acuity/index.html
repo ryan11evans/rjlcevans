@@ -1954,66 +1954,66 @@
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('EYE CHART TEST  ·  DR. EVANS, OD', S/2, 448);
 
-    // Big score with glow
+    // Big score with glow — shifted up 35px
     ctx.save();
     ctx.filter = 'blur(28px)';
     ctx.fillStyle = 'rgba(212,160,23,0.55)';
     ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(best.snellen, S/2, 660);
+    ctx.fillText(best.snellen, S/2, 625);
     ctx.restore();
 
     ctx.fillStyle = '#D4A017';
     ctx.font = `bold 210px 'Fraunces', Georgia, serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(best.snellen, S/2, 660);
+    ctx.fillText(best.snellen, S/2, 625);
 
-    // Sub-label
-    ctx.fillStyle = 'rgba(242,242,247,0.38)';
-    ctx.font = `20px -apple-system, system-ui, sans-serif`;
-    ctx.fillText('VISUAL ACUITY  ·  BEST EYE', S/2, 704);
+    // Sub-label — larger (26px)
+    ctx.fillStyle = 'rgba(242,242,247,0.42)';
+    ctx.font = `500 26px -apple-system, system-ui, sans-serif`;
+    ctx.fillText('VISUAL ACUITY  ·  BEST EYE', S/2, 672);
 
     // Divider
     ctx.strokeStyle = 'rgba(212,160,23,0.28)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(S*0.25, 736); ctx.lineTo(S*0.75, 736); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(S*0.25, 706); ctx.lineTo(S*0.75, 706); ctx.stroke();
 
-    // OD / OS
+    // OD / OS — larger scores (82px, was 54px)
     const midX = S / 2;
     ctx.strokeStyle = 'rgba(255,255,255,0.10)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(midX, 758); ctx.lineTo(midX, 840); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(midX, 726); ctx.lineTo(midX, 858); ctx.stroke();
 
-    ctx.fillStyle = 'rgba(242,242,247,0.35)';
-    ctx.font = `18px -apple-system, system-ui, sans-serif`;
+    ctx.fillStyle = 'rgba(242,242,247,0.38)';
+    ctx.font = `500 22px -apple-system, system-ui, sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText('RIGHT (OD)', midX - 36, 774);
+    ctx.fillText('RIGHT EYE', midX - 36, 748);
     ctx.textAlign = 'left';
-    ctx.fillText('LEFT (OS)', midX + 36, 774);
+    ctx.fillText('LEFT EYE', midX + 36, 748);
 
-    ctx.fillStyle = 'rgba(242,242,247,0.90)';
-    ctx.font = `bold 54px 'Fraunces', Georgia, serif`;
+    ctx.fillStyle = 'rgba(242,242,247,0.92)';
+    ctx.font = `bold 82px 'Fraunces', Georgia, serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(od?.snellen || '—', midX - 36, 836);
+    ctx.fillText(od?.snellen || '—', midX - 36, 848);
     ctx.textAlign = 'left';
-    ctx.fillText(os?.snellen || '—', midX + 36, 836);
+    ctx.fillText(os?.snellen || '—', midX + 36, 848);
 
     // Bottom rule
     ctx.strokeStyle = 'rgba(212,160,23,0.22)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(S*0.12, 880); ctx.lineTo(S*0.88, 880); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(S*0.12, 892); ctx.lineTo(S*0.88, 892); ctx.stroke();
 
     // Brand
     ctx.fillStyle = '#D4A017';
     ctx.font = `italic bold 30px 'Fraunces', Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 932);
+    ctx.fillText('Eye Chart Test by Dr. Evans, OD', S/2, 938);
 
-    ctx.fillStyle = 'rgba(242,242,247,0.28)';
+    ctx.fillStyle = 'rgba(242,242,247,0.32)';
     ctx.font = `20px -apple-system, system-ui, sans-serif`;
-    ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 968);
+    ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', S/2, 976);
 
     const title = `My vision: ${best.snellen} · Eye Chart Test`;
     const imageData = canvas.toDataURL('image/png');
