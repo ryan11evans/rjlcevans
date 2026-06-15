@@ -21,8 +21,10 @@ struct BitcoinWatchApp: App {
             switch phase {
             case .active:
                 priceService.startForegroundRefresh()
+                StatsService.shared.startAutoRefresh()
             case .background:
                 priceService.stopForegroundRefresh()
+                StatsService.shared.stopAutoRefresh()
                 BackgroundRefresh.schedule()
             default:
                 break
