@@ -19,7 +19,7 @@ struct PriceAlertView: View {
                 } else {
                     List {
                         ForEach(service.alerts) { alert in
-                            AlertRow(alert: alert)
+                            AlertRow(alert: alert, currentBTCPrice: currentBTCPrice)
                                 .listRowBackground(Color.white.opacity(0.05))
                                 .listRowSeparatorTint(.white.opacity(0.07))
                         }
@@ -82,7 +82,9 @@ struct PriceAlertView: View {
 
 private struct AlertRow: View {
     let alert: PriceAlert
+    let currentBTCPrice: Double
     @ObservedObject private var service = AlertService.shared
+    @State private var showEdit = false
 
     private var color: Color {
         alert.direction == .above
@@ -92,44 +94,55 @@ private struct AlertRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 40, height: 40)
-                Image(systemName: alert.direction == .above ? "arrow.up" : "arrow.down")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(color)
-            }
+            // Tappable area: icon + labels + chevron
+            Button { showEdit = true } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle().fill(color.opacity(0.15)).frame(width: 40, height: 40)
+                        Image(systemName: alert.direction == .above ? "arrow.up" : "arrow.down")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(color)
+                    }
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(BitcoinPrice(usd: alert.targetPrice, timestamp: .now).formatted)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(alert.isEnabled ? .white : .secondary)
-                    Text(alert.direction == .above ? "or higher" : "or lower")
-                        .font(.system(size: 12))
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(BitcoinPrice(usd: alert.targetPrice, timestamp: .now).formatted)
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(alert.isEnabled ? .white : .secondary)
+                            Text(alert.direction == .above ? "or higher" : "or lower")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.tertiary)
+                        }
+                        HStack(spacing: 6) {
+                            if !alert.label.isEmpty {
+                                Text(alert.label)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            if alert.isRepeating {
+                                Label("Repeat", systemImage: "repeat")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.orange)
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(Capsule().fill(Color.orange.opacity(0.15)))
+                            }
+                            if let fired = alert.lastFiredAt {
+                                Text("Fired \(fired, style: .relative) ago")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
-                HStack(spacing: 6) {
-                    if !alert.label.isEmpty {
-                        Text(alert.label)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    if alert.isRepeating {
-                        Label("Repeat", systemImage: "repeat")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.orange)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.orange.opacity(0.15)))
-                    }
-                    if let fired = alert.lastFiredAt {
-                        Text("Fired \(fired, style: .relative) ago")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.tertiary)
-                    }
-                }
+                .contentShape(Rectangle())
             }
-
-            Spacer()
+            .buttonStyle(.plain)
 
             Toggle("", isOn: Binding(
                 get: { alert.isEnabled },
@@ -141,13 +154,18 @@ private struct AlertRow: View {
         .padding(.vertical, 4)
         .opacity(alert.isEnabled ? 1 : 0.45)
         .animation(.easeInOut(duration: 0.2), value: alert.isEnabled)
+        .sheet(isPresented: $showEdit) {
+            AddAlertView(currentBTCPrice: currentBTCPrice, editingAlert: alert)
+        }
     }
 }
 
-// MARK: - Add Alert Sheet
+// MARK: - Add / Edit Alert Sheet
 
 struct AddAlertView: View {
     let currentBTCPrice: Double
+    var editingAlert: PriceAlert? = nil
+
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = AlertService.shared
 
@@ -156,6 +174,8 @@ struct AddAlertView: View {
     @State private var labelText = ""
     @State private var isRepeating = false
     @FocusState private var priceFocused: Bool
+
+    private var isEditing: Bool { editingAlert != nil }
 
     private var targetPrice: Double? {
         Double(targetText.replacingOccurrences(of: ",", with: ""))
@@ -249,14 +269,22 @@ struct AddAlertView: View {
                         .padding(.horizontal, 16).padding(.vertical, 14)
                         .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
 
-                        // Add button
+                        // Save / Add button
                         Button {
                             guard let price = targetPrice else { return }
-                            service.add(PriceAlert(label: labelText, targetPrice: price,
-                                                   direction: direction, isRepeating: isRepeating))
+                            if isEditing, var updated = editingAlert {
+                                updated.direction = direction
+                                updated.targetPrice = price
+                                updated.label = labelText
+                                updated.isRepeating = isRepeating
+                                service.update(updated)
+                            } else {
+                                service.add(PriceAlert(label: labelText, targetPrice: price,
+                                                       direction: direction, isRepeating: isRepeating))
+                            }
                             dismiss()
                         } label: {
-                            Text("Add Alert")
+                            Text(isEditing ? "Save Changes" : "Add Alert")
                                 .font(.system(size: 16, weight: .bold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 15)
@@ -269,7 +297,7 @@ struct AddAlertView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Alert")
+            .navigationTitle(isEditing ? "Edit Alert" : "New Alert")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
@@ -277,7 +305,16 @@ struct AddAlertView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .onAppear { priceFocused = true }
+            .onAppear {
+                if let a = editingAlert {
+                    direction = a.direction
+                    targetText = "\(Int(a.targetPrice))"
+                    labelText = a.label
+                    isRepeating = a.isRepeating
+                } else {
+                    priceFocused = true
+                }
+            }
         }
         .preferredColorScheme(.dark)
     }
@@ -307,7 +344,6 @@ struct AddAlertView: View {
         .animation(.easeInOut(duration: 0.15), value: direction)
     }
 
-    // Rounded to nearest $1K for clean chips
     private var suggestions: [(label: String, price: Double)] {
         let p = currentBTCPrice
         return [
