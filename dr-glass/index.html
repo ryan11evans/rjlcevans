@@ -1247,7 +1247,7 @@
   // ============================================================
   // BONUS LEVEL CONSTANTS
   // ============================================================
-  const MAIN_LEVEL_COUNT = 8;       // levels 0-7 are the main game
+  const MAIN_LEVEL_COUNT = 10;      // levels 0-9 are the main game
   const BONUS_COIN_THRESHOLD = 100; // coinBank needed to unlock the bonus level
 
   // ----- LEVEL 9: The Coin Vault (secret bonus level) -----
@@ -1303,6 +1303,103 @@
     { type: 'gremlin', col: 125, min: 122, max: 128 },
     { type: 'hopper',  col: 143, min: 140, max: 146 },
     { type: 'gremlin', col: 161, min: 158, max: 164 },
+  ];
+
+  // ----- LEVEL 10: The Cornea (ice crystal platforms, snow, astigmatism + diplopia) -----
+  const LEVEL_10_TILES = [
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '......IIII............IIII..............IIII..............IIII..............IIII..............IIII..............IIII..............IIII................IIII..............IIII.......................',
+    '...................................................................................................................................................................................................',
+    '.......QQ..................QQ................QQ................QQ................QQ................QQ..................QQ................QQ........................................................',
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '..............II.................II.................II................II................II.................II.................II.................II................II..............................',
+    '......................................................................................................................................................................................X............',
+    'IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII....IIIIIIIIIIIIIIII....IIIIIIIIIIIIIIIIIIIIIII....IIIIIIIIIIIIIIIIIIIIIIIIII....IIIIIIIIIIIIIIIIIIIIIIIIIII....IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII',
+    'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+  ];
+  const LEVEL_10_COINS = [
+    [2,6],[2,7],[2,8],[2,9], [2,22],[2,23],[2,24],[2,25],
+    [2,40],[2,41],[2,42],[2,43], [2,58],[2,59],[2,60],[2,61],
+    [2,76],[2,77],[2,78],[2,79], [2,94],[2,95],[2,96],[2,97],
+    [2,112],[2,113],[2,114],[2,115], [2,130],[2,131],[2,132],[2,133],
+    [2,150],[2,151],[2,152],[2,153], [2,168],[2,169],[2,170],[2,171],
+    [5,8],[5,9],[5,28],[5,29],[5,46],[5,47],[5,64],[5,65],
+    [5,82],[5,83],[5,100],[5,101],[5,120],[5,121],[5,138],[5,139],
+    [9,8],[9,11],[9,14],[9,17],[9,20],[9,23],[9,26],[9,29],[9,32],
+    [9,35],[9,38],[9,41],[9,44],[9,47],[9,50],[9,53],[9,56],[9,59],
+    [9,62],[9,65],[9,68],[9,71],[9,74],[9,77],[9,80],[9,83],[9,86],
+    [9,89],[9,92],[9,95],[9,98],[9,101],[9,104],[9,107],[9,110],[9,113],
+    [9,116],[9,119],[9,122],[9,125],[9,128],[9,131],[9,134],[9,137],[9,140],
+    [9,143],[9,146],[9,149],[9,152],[9,155],[9,158],[9,161],[9,164],[9,167],
+    [9,170],[9,173],[9,176],[9,179],
+  ];
+  const LEVEL_10_ENEMIES = [
+    { type: 'astigmatism', col: 18,  min: 16,  max: 21  },
+    { type: 'diplopia',    col: 36,  min: 34,  max: 39  },
+    { type: 'diplopia',    col: 38,  min: 34,  max: 39  },
+    { type: 'flyer',       col: 55,  min: 53,  max: 58  },
+    { type: 'astigmatism', col: 60,  min: 58,  max: 63  },
+    { type: 'astigmatism', col: 72,  min: 70,  max: 75  },
+    { type: 'cataract',    col: 90,  min: 88,  max: 95  },
+    { type: 'flyer',       col: 110, min: 108, max: 113 },
+    { type: 'astigmatism', col: 128, min: 126, max: 131 },
+    { type: 'diplopia',    col: 148, min: 146, max: 151 },
+    { type: 'diplopia',    col: 150, min: 146, max: 151 },
+    { type: 'cataract',    col: 165, min: 163, max: 170 },
+    { type: 'flyer',       col: 178, min: 176, max: 181 },
+  ];
+
+  // ----- LEVEL 11: The Retina (dark red, photoreceptors, intense enemies) -----
+  const LEVEL_11_TILES = [
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '...................................................................................................................................................................................................',
+    '........RRRR..............RRRR................RRRR...............RRRR.................RRRR..................RRRR..................RRRR....................RRRR..............RRRR...................',
+    '...................................................................................................................................................................................................',
+    '...QQ............RR................RRRR................QQ.................RRRR................QQ...................RRRR...................QQ.....................RRRR..............................',
+    '...................................................................................................................................................................................................',
+    '..............RRR...............RRR................RRR.................RRR.................RRR...................RRR....................RRR....................RRR.................................',
+    '...................................................................................................................................................................................................',
+    '.......................................................................................................................................................................................X...........',
+    'RRRRRRRRRRRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRRRRRR....RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
+    'DDDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDD....DDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+  ];
+  const LEVEL_11_COINS = [
+    [2,8],[2,9],[2,10],[2,11], [2,26],[2,27],[2,28],[2,29],
+    [2,46],[2,47],[2,48],[2,49], [2,65],[2,66],[2,67],[2,68],
+    [2,86],[2,87],[2,88],[2,89], [2,108],[2,109],[2,110],[2,111],
+    [2,130],[2,131],[2,132],[2,133], [2,154],[2,155],[2,156],[2,157],
+    [2,172],[2,173],[2,174],[2,175],
+    [4,17],[4,35],[4,36],[4,37],[4,74],[4,75],[4,115],[4,116],[4,161],[4,162],
+    [6,14],[6,15],[6,16],[6,32],[6,33],[6,34],[6,51],[6,52],[6,53],
+    [6,71],[6,72],[6,73],[6,91],[6,92],[6,93],[6,113],[6,114],[6,115],
+    [6,136],[6,137],[6,138],[6,159],[6,160],[6,161],
+    [9,10],[9,14],[9,18],[9,22],[9,26],[9,30],[9,34],[9,38],[9,42],
+    [9,46],[9,50],[9,54],[9,58],[9,62],[9,66],[9,70],[9,74],[9,78],
+    [9,82],[9,86],[9,90],[9,94],[9,98],[9,102],[9,106],[9,110],[9,114],
+    [9,118],[9,122],[9,126],[9,130],[9,134],[9,138],[9,142],[9,146],[9,150],
+    [9,154],[9,158],[9,162],[9,166],[9,170],[9,174],[9,178],
+  ];
+  const LEVEL_11_ENEMIES = [
+    { type: 'glaucoma',    col: 20,  min: 18,  max: 23  },
+    { type: 'charger',     col: 40,  min: 36,  max: 44  },
+    { type: 'glaucoma',    col: 44,  min: 42,  max: 47  },
+    { type: 'diplopia',    col: 62,  min: 60,  max: 65  },
+    { type: 'diplopia',    col: 64,  min: 60,  max: 65  },
+    { type: 'flyer',       col: 76,  min: 74,  max: 79  },
+    { type: 'cataract',    col: 85,  min: 83,  max: 90  },
+    { type: 'glaucoma',    col: 105, min: 103, max: 108 },
+    { type: 'charger',     col: 128, min: 124, max: 132 },
+    { type: 'charger',     col: 142, min: 138, max: 146 },
+    { type: 'cataract',    col: 152, min: 150, max: 157 },
+    { type: 'diplopia',    col: 168, min: 166, max: 171 },
+    { type: 'diplopia',    col: 170, min: 166, max: 171 },
+    { type: 'flyer',       col: 180, min: 178, max: 183 },
   ];
 
   // Level definitions — pulled together
@@ -1389,6 +1486,28 @@
       theme: 'brain',
       gimmick: null,
       sky: ['#ff9ec8', '#ffb8d8', '#ffd0e0'],
+    },
+    {
+      name: 'The Cornea',
+      airPuffs: true,
+      puffZones: [ {from: 12, to: 22}, {from: 38, to: 48}, {from: 60, to: 70}, {from: 105, to: 115}, {from: 135, to: 145}, {from: 162, to: 172} ],
+      sub: 'Icy crystal platforms — mind the slipping',
+      story: "Dr. Glass enters the cornea: a frozen crystal kingdom where every surface sparkles.",
+      tiles: LEVEL_10_TILES, coins: LEVEL_10_COINS, enemies: LEVEL_10_ENEMIES,
+      theme: 'cornea',
+      gimmick: 'snow',
+      sky: ['#c8e8ff', '#dff4ff', '#f5fdff'],
+    },
+    {
+      name: 'The Retina',
+      airPuffs: true,
+      puffZones: [ {from: 14, to: 24}, {from: 38, to: 48}, {from: 65, to: 75}, {from: 108, to: 118}, {from: 140, to: 150}, {from: 165, to: 175} ],
+      sub: 'Dark, hot, and packed with enemies',
+      story: "The retina blazes with photoreceptors. Every enemy is supercharged by the raw signal.",
+      tiles: LEVEL_11_TILES, coins: LEVEL_11_COINS, enemies: LEVEL_11_ENEMIES,
+      theme: 'retina',
+      gimmick: 'retinalflash',
+      sky: ['#2a0808', '#480c0c', '#700c0c'],
     },
     {
       name: "Dr. Aberration's Lair",
@@ -1770,13 +1889,13 @@
   }
   function isSolid(ch) {
     return ch === 'G' || ch === 'D' || ch === 'B' || ch === 'Q' || ch === 'F' ||
-           ch === 'P' || ch === 'S' || ch === 'L' || ch === 'M' || ch === 'V' || ch === 'C';
+           ch === 'P' || ch === 'S' || ch === 'L' || ch === 'M' || ch === 'V' || ch === 'C' || ch === 'I' || ch === 'R';
   }
   function isWall(ch) {
     // Walls cause wall-vault (vertical solid surfaces).
     // Note: 'Q' (question/coin block) is intentionally excluded — bumping a coin
     // box should not trigger a backward wall-vault.
-    return ch === 'F' || ch === 'B' || ch === 'P' || ch === 'C' || ch === 'V';
+    return ch === 'F' || ch === 'B' || ch === 'P' || ch === 'C' || ch === 'V' || ch === 'R';
   }
   function isSpring(ch) { return ch === 'S'; }
   function isGoal(ch) { return ch === 'X'; }
@@ -2113,6 +2232,8 @@
         lasik:      { color: 'rgba(255,100,80,0.45)',  vx: -12, vy:-18, size: 1.5, life: 1.5 },
         brain:      { color: 'rgba(255,180,210,0.45)', vx: -6,  vy:-10, size: 2,   life: 2.0 },
         lair:       { color: 'rgba(160,80,240,0.45)',  vx: -8,  vy:-12, size: 2,   life: 2.2 },
+        cornea:     { color: 'rgba(200,240,255,0.60)', vx: -3,  vy:-6,  size: 2.5, life: 3.5 },
+        retina:     { color: 'rgba(255,80,80,0.50)',   vx: -8,  vy:-12, size: 1.5, life: 1.8 },
       };
       const cfg = configs[theme] || configs.office;
       game.particles.push({
@@ -2152,6 +2273,40 @@
   function updateGimmick(dt) {
     if (game.levelConfig.gimmick === 'flicker') {
       game.flickerPhase += dt;
+    }
+    if (game.levelConfig.gimmick === 'retinalflash') {
+      game.retinalFlashTimer = (game.retinalFlashTimer || 0) - dt;
+      if (game.retinalFlashTimer <= 0) {
+        game.retinalFlashActive = Math.random() < 0.3 ? 0.12 + Math.random() * 0.12 : 0;
+        game.retinalFlashTimer = 1.5 + Math.random() * 2.5;
+      }
+      if (game.retinalFlashActive > 0) game.retinalFlashActive = Math.max(0, game.retinalFlashActive - dt * 3);
+    }
+    if (game.levelConfig.gimmick === 'snow') {
+      game.snowTimer = (game.snowTimer || 0) - dt;
+      if (game.snowTimer <= 0) {
+        game.snowTimer = 0.08;
+        if (!game.snowflakes) game.snowflakes = [];
+        if (game.snowflakes.length < 60) {
+          game.snowflakes.push({
+            x: game.cameraX + Math.random() * cssW,
+            y: -10,
+            vx: -20 + Math.random() * 10,
+            vy: 30 + Math.random() * 40,
+            r: 2 + Math.random() * 3,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: 1 + Math.random() * 2,
+          });
+        }
+      }
+      if (game.snowflakes) {
+        for (const sf of game.snowflakes) {
+          sf.wobble += dt * sf.wobbleSpeed;
+          sf.x += sf.vx * dt + Math.sin(sf.wobble) * 0.5;
+          sf.y += sf.vy * dt;
+        }
+        game.snowflakes = game.snowflakes.filter(sf => sf.y < cssH + 20);
+      }
     }
   }
 
@@ -3323,6 +3478,15 @@
     if (game.levelConfig.gimmick === 'lasers') {
       drawLasers();
     }
+    // Snow gimmick — falling snowflakes
+    if (game.levelConfig.gimmick === 'snow' && game.snowflakes) {
+      drawSnowflakes();
+    }
+    // Retinal flash gimmick — periodic bright photoreceptor burst
+    if (game.levelConfig.gimmick === 'retinalflash' && game.retinalFlashActive > 0) {
+      ctx.fillStyle = `rgba(255,200,150,${game.retinalFlashActive})`;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
     // Stomp flash — brief white overlay when stomping an enemy
     if (game.stompFlash > 0) {
       ctx.fillStyle = `rgba(255,255,255,${game.stompFlash * 0.55})`;
@@ -3488,6 +3652,43 @@
         const bH = cssH * (0.18 + s1 * 0.32);
         ctx.fillRect(x, cssH - bH, bW, bH);
       }
+    } else if (theme === 'cornea') {
+      ctx.globalAlpha = 0.18;
+      for (let i = start; i <= end; i++) {
+        const seed = Math.abs(i * 3141592);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const s2 = (((seed * 2718281) ^ ((seed * 2718281) >>> 11)) >>> 0) / 4294967295;
+        const x = i * spacing - camX + s1 * 80;
+        const hexR = 20 + s2 * 35;
+        ctx.strokeStyle = 'rgba(180,230,255,1)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let a = 0; a < 6; a++) {
+          const ang = (a / 6) * Math.PI * 2;
+          const hx = x + Math.cos(ang) * hexR;
+          const hy = cssH * (0.2 + s2 * 0.5) + Math.sin(ang) * hexR;
+          if (a === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    } else if (theme === 'retina') {
+      ctx.globalAlpha = 0.14;
+      const rCamX = game.cameraX * 0.28;
+      const rStart = Math.floor(rCamX / 220) - 1;
+      const rEnd = rStart + Math.ceil(cssW / 220) + 2;
+      for (let i = rStart; i <= rEnd; i++) {
+        const seed = Math.abs(i * 1597463);
+        const s1 = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+        const x = i * 220 - rCamX + s1 * 100;
+        const y = cssH * (0.25 + s1 * 0.4);
+        ctx.strokeStyle = 'rgba(255,60,60,1)';
+        ctx.lineWidth = 2 + s1 * 3;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(x + 60, y - 20 + s1*40, x + 110, y + 30 - s1*40, x + 150, y + s1*20 - 10);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -3517,6 +3718,7 @@
     // Theme-specific background details
     if (cfg.theme === 'office') {
       drawClouds();
+      drawCityRain();
     } else if (cfg.theme === 'waiting') {
       drawBlinds();
     } else if (cfg.theme === 'dispensary') {
@@ -3531,6 +3733,10 @@
       drawBrainBackground();
     } else if (cfg.theme === 'lair') {
       drawLair();
+    } else if (cfg.theme === 'cornea') {
+      drawCorneaBackground();
+    } else if (cfg.theme === 'retina') {
+      drawRetinaBackground();
     }
   }
 
@@ -3638,6 +3844,151 @@
       ctx.fillStyle = `rgba(255, 230, 240, ${0.4 + pulse * 0.4})`;
       ctx.beginPath();
       ctx.arc(x, y, 3 + pulse * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawCityRain() {
+    ctx.save();
+    const t = performance.now() / 1000;
+    ctx.globalAlpha = 0.13;
+    ctx.strokeStyle = 'rgba(180,210,240,1)';
+    ctx.lineWidth = 1;
+    const rainSpeed = 280;
+    const rainSpacing = 14;
+    const angle = 0.25;
+    const camX = game.cameraX * 0.08;
+    const totalRainCols = Math.ceil(cssW / rainSpacing) + 4;
+    const offset = ((t * rainSpeed) % (cssH * 1.2));
+    for (let i = 0; i < totalRainCols; i++) {
+      const seed = (i * 1234567 + Math.floor(camX / rainSpacing)) % 999983;
+      const rand = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+      const rx = (i * rainSpacing - (camX % rainSpacing) + rand * 6);
+      const ry = (offset + rand * cssH * 1.2) % (cssH * 1.2) - cssH * 0.2;
+      const len = 8 + rand * 10;
+      ctx.beginPath();
+      ctx.moveTo(rx + angle * ry, ry);
+      ctx.lineTo(rx + angle * (ry + len), ry + len);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCorneaBackground() {
+    ctx.save();
+    const t = performance.now() / 1000;
+    const camX = game.cameraX * 0.35;
+    // Crystal hexagonal tile patterns
+    ctx.globalAlpha = 0.22;
+    const hexSize = 55;
+    const hexW = hexSize * 2;
+    const hexH = Math.sqrt(3) * hexSize;
+    const startHx = Math.floor(camX / hexW) - 1;
+    const endHx = startHx + Math.ceil(cssW / hexW) + 3;
+    for (let hxi = startHx; hxi <= endHx; hxi++) {
+      const rows = Math.ceil(cssH / hexH) + 2;
+      for (let hyi = -1; hyi < rows; hyi++) {
+        const xOffset = (hyi % 2 === 0) ? 0 : hexSize;
+        const hx = hxi * hexW + xOffset - (camX % hexW);
+        const hy = hyi * hexH;
+        const pulse = 0.5 + 0.5 * Math.sin(t * 0.8 + hxi * 0.7 + hyi * 0.5);
+        ctx.strokeStyle = `rgba(180,230,255,${0.15 + pulse * 0.12})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let a = 0; a < 6; a++) {
+          const ang = (a / 6) * Math.PI * 2 - Math.PI / 6;
+          const px = hx + Math.cos(ang) * hexSize * 0.85;
+          const py = hy + Math.sin(ang) * hexSize * 0.85;
+          if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+    // Refraction sparkle points
+    ctx.globalAlpha = 0.8;
+    for (let i = 0; i < 18; i++) {
+      const seed = i * 2345678;
+      const rand = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+      const rand2 = (((seed * 3456789) ^ ((seed * 3456789) >>> 13)) >>> 0) / 4294967295;
+      const sx = (rand * cssW * 2.5 - camX * 0.6) % cssW;
+      const sy = rand2 * cssH;
+      const sparkle = Math.sin(t * 4 + i * 1.4) * 0.5 + 0.5;
+      if (sparkle > 0.7) {
+        ctx.fillStyle = `rgba(255,255,255,${(sparkle - 0.7) * 3 * 0.9})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2 + sparkle * 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Cross sparkle ray
+        ctx.strokeStyle = `rgba(220,245,255,${(sparkle - 0.7) * 3 * 0.7})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sx - 6, sy); ctx.lineTo(sx + 6, sy);
+        ctx.moveTo(sx, sy - 6); ctx.lineTo(sx, sy + 6);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawRetinaBackground() {
+    ctx.save();
+    const t = performance.now() / 1000;
+    const camX = game.cameraX * 0.3;
+    // Radial blood vessel patterns from multiple disc locations
+    const discPositions = [0.2, 0.55, 0.88];
+    for (const discX of discPositions) {
+      const dx = discX * cssW * 1.8 - camX * 0.3;
+      const dy = cssH * 0.45;
+      // Optic disc glow
+      ctx.globalAlpha = 0.18;
+      const discGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, 90);
+      discGrad.addColorStop(0, 'rgba(255,200,100,0.8)');
+      discGrad.addColorStop(1, 'rgba(255,50,50,0)');
+      ctx.fillStyle = discGrad;
+      ctx.beginPath();
+      ctx.arc(dx, dy, 90, 0, Math.PI * 2);
+      ctx.fill();
+      // Branching blood vessels radiating outward
+      ctx.globalAlpha = 0.20;
+      ctx.lineWidth = 2;
+      for (let branch = 0; branch < 8; branch++) {
+        const angle = (branch / 8) * Math.PI * 2;
+        const pulse = 0.6 + 0.4 * Math.sin(t * 1.2 + branch * 0.8);
+        ctx.strokeStyle = `rgba(200,40,40,${pulse * 0.7})`;
+        ctx.beginPath();
+        ctx.moveTo(dx + Math.cos(angle) * 25, dy + Math.sin(angle) * 25);
+        const vLength = 60 + Math.sin(t * 0.5 + branch) * 20;
+        const mx = dx + Math.cos(angle) * vLength;
+        const my = dy + Math.sin(angle) * vLength;
+        const ex = dx + Math.cos(angle + 0.4) * (vLength + 40);
+        const ey = dy + Math.sin(angle + 0.4) * (vLength + 40);
+        ctx.bezierCurveTo(
+          dx + Math.cos(angle) * 60, dy + Math.sin(angle) * 60,
+          mx, my, ex, ey
+        );
+        ctx.stroke();
+        // Sub-branch
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx + Math.cos(angle - 0.6) * 30, my + Math.sin(angle - 0.6) * 30);
+        ctx.stroke();
+      }
+    }
+    // Photoreceptor dots (rods and cones)
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < 40; i++) {
+      const seed = i * 876543;
+      const rand = ((seed ^ (seed >>> 13)) >>> 0) / 4294967295;
+      const rand2 = (((seed * 654321) ^ ((seed * 654321) >>> 13)) >>> 0) / 4294967295;
+      const rx = (rand * cssW * 3 - camX * 0.7) % cssW;
+      const ry = rand2 * cssH;
+      const active = Math.sin(t * 3 + i * 0.9) > 0.5;
+      ctx.fillStyle = active ? 'rgba(255,150,50,1)' : 'rgba(180,30,30,1)';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 3 + rand * 3, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -3774,6 +4125,24 @@
     grad.addColorStop(1, `rgba(0,0,0,${intensity * 0.95})`);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, cssW, cssH);
+  }
+
+  function drawSnowflakes() {
+    if (!game.snowflakes) return;
+    ctx.save();
+    for (const sf of game.snowflakes) {
+      const sx = sf.x - game.cameraX;
+      const alpha = 0.5 + 0.5 * Math.sin(sf.wobble);
+      ctx.fillStyle = `rgba(255,255,255,${alpha * 0.85})`;
+      ctx.beginPath();
+      ctx.arc(sx, sf.y, sf.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(200,235,255,${alpha * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(sx, sf.y, sf.r * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function drawFogPatches() {
@@ -4077,8 +4446,66 @@
       ctx.bezierCurveTo(x + TILE * 0.6, y + TILE * 0.5, x + TILE * 0.4, y + TILE * 0.6, x + TILE * 0.3, y + TILE * 0.9);
       ctx.stroke();
       // Pulse glow
-      const pulse = Math.sin(performance.now() / 400 + x * 0.01) * 0.5 + 0.5;
-      ctx.fillStyle = `rgba(255, 100, 180, ${pulse * 0.15})`;
+      const veinPulse = Math.sin(performance.now() / 400 + x * 0.01) * 0.5 + 0.5;
+      ctx.fillStyle = `rgba(255, 100, 180, ${veinPulse * 0.15})`;
+      ctx.fillRect(x, y, TILE, TILE);
+    } else if (ch === 'I') {
+      // Ice crystal tile — translucent aqua with facet lines and sparkle
+      ctx.fillStyle = '#b8e8f8';
+      ctx.fillRect(x, y, TILE, TILE);
+      // Deeper tint at top edge
+      ctx.fillStyle = '#78c8e8';
+      ctx.fillRect(x, y, TILE, 4);
+      // Crystal facet lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + TILE * 0.3, y); ctx.lineTo(x + TILE * 0.1, y + TILE);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + TILE * 0.7, y); ctx.lineTo(x + TILE * 0.9, y + TILE);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y + TILE * 0.4); ctx.lineTo(x + TILE, y + TILE * 0.6);
+      ctx.stroke();
+      // Inner ice blue tint for depth
+      ctx.fillStyle = 'rgba(100,180,230,0.25)';
+      ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+      // Highlight shimmer
+      const iceShimmer = Math.sin(performance.now() / 600 + x * 0.05) * 0.5 + 0.5;
+      ctx.fillStyle = `rgba(255,255,255,${iceShimmer * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(x + TILE * 0.35, y + TILE * 0.35, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (ch === 'R') {
+      // Retinal tissue tile — dark red-orange with blood vessel micro-veins
+      ctx.fillStyle = '#8a1818';
+      ctx.fillRect(x, y, TILE, TILE);
+      ctx.fillStyle = '#6a0c0c';
+      ctx.fillRect(x, y, TILE, 3);
+      // Micro vessel lines
+      ctx.strokeStyle = 'rgba(255,80,60,0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 4, y + TILE * 0.3);
+      ctx.bezierCurveTo(x + TILE * 0.35, y + TILE * 0.2, x + TILE * 0.65, y + TILE * 0.5, x + TILE - 4, y + TILE * 0.4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + TILE * 0.2, y + TILE * 0.7);
+      ctx.bezierCurveTo(x + TILE * 0.4, y + TILE * 0.6, x + TILE * 0.7, y + TILE * 0.8, x + TILE * 0.85, y + TILE * 0.65);
+      ctx.stroke();
+      // Photoreceptor dots
+      ctx.fillStyle = 'rgba(255,140,60,0.4)';
+      for (let pi = 0; pi < 5; pi++) {
+        const px = x + 4 + (pi * 6);
+        const py = y + TILE * 0.5 + ((pi % 2) * 4 - 2);
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Pulse glow
+      const retPulse = Math.sin(performance.now() / 350 + x * 0.012) * 0.5 + 0.5;
+      ctx.fillStyle = `rgba(255, 60, 0, ${retPulse * 0.12})`;
       ctx.fillRect(x, y, TILE, TILE);
     }
     // Bevel: top/left highlight, bottom/right shadow
@@ -4173,16 +4600,26 @@
       // Eyeball coin: white sclera, blue iris, black pupil
       ctx.save();
       ctx.translate(sx, sy);
-      // Pulsing glow — outer soft ring + inner tight ring
-      const pulse = 0.22 + 0.10 * Math.sin(performance.now() / 1000 * 3.2 + c.x * 0.04);
-      ctx.fillStyle = `rgba(252,212,68,${pulse})`;
-      ctx.beginPath();
-      ctx.arc(0, 0, c.r * 2.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,245,180,0.38)';
-      ctx.beginPath();
-      ctx.arc(0, 0, c.r * 1.5, 0, Math.PI * 2);
-      ctx.fill();
+      // Large bloom glow — additive concentric rings create genuine luminous effect
+      const pulse = 0.18 + 0.12 * Math.sin(performance.now() / 1000 * 3.2 + c.x * 0.04);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      // Outermost halo (very faint)
+      ctx.fillStyle = `rgba(200,150,30,${pulse * 0.06})`;
+      ctx.beginPath(); ctx.arc(0, 0, c.r * 7.5, 0, Math.PI * 2); ctx.fill();
+      // Wide soft glow
+      ctx.fillStyle = `rgba(252,200,50,${pulse * 0.12})`;
+      ctx.beginPath(); ctx.arc(0, 0, c.r * 5, 0, Math.PI * 2); ctx.fill();
+      // Mid glow
+      ctx.fillStyle = `rgba(255,220,80,${pulse * 0.22})`;
+      ctx.beginPath(); ctx.arc(0, 0, c.r * 3.2, 0, Math.PI * 2); ctx.fill();
+      // Inner bright ring
+      ctx.fillStyle = `rgba(255,240,150,${pulse * 0.40})`;
+      ctx.beginPath(); ctx.arc(0, 0, c.r * 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      // Tight inner glow (normal mode, always visible)
+      ctx.fillStyle = `rgba(255,245,180,0.32)`;
+      ctx.beginPath(); ctx.arc(0, 0, c.r * 1.4, 0, Math.PI * 2); ctx.fill();
       // Sclera
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
@@ -5036,6 +5473,23 @@
       if (pu.collected) continue;
       const sx = pu.x - game.cameraX;
       const sy = pu.y + Math.sin(pu.phase) * 3;
+      // Additive bloom glow pass
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const puBloom = 0.18 + 0.12 * Math.sin(pu.phase * 2);
+      // Outermost halo
+      ctx.fillStyle = `rgba(50,180,255,${puBloom * 0.06})`;
+      ctx.beginPath(); ctx.arc(sx, sy, TILE * 2.2, 0, Math.PI * 2); ctx.fill();
+      // Wide glow
+      ctx.fillStyle = `rgba(100,210,255,${puBloom * 0.14})`;
+      ctx.beginPath(); ctx.arc(sx, sy, TILE * 1.5, 0, Math.PI * 2); ctx.fill();
+      // Mid glow
+      ctx.fillStyle = `rgba(168,230,255,${puBloom * 0.28})`;
+      ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.9, 0, Math.PI * 2); ctx.fill();
+      // Inner bright core
+      ctx.fillStyle = `rgba(220,248,255,${puBloom * 0.45})`;
+      ctx.beginPath(); ctx.arc(sx, sy, TILE * 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
       // Pulsing glow
       ctx.save();
       const glow = 0.4 + Math.sin(pu.phase * 2) * 0.2;
