@@ -106,10 +106,12 @@ private struct BTCOrbitLogo: View {
                 .foregroundStyle(Color(red: 0.10, green: 0.07, blue: 0.02))
             // Orbit arrows rotate around the outside
             OrbitArrows()
+                .frame(width: 100, height: 100)
                 .rotationEffect(.degrees(angle))
                 .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: angle)
                 .onAppear { angle = 360 }
         }
+        .drawingGroup()
     }
 }
 
