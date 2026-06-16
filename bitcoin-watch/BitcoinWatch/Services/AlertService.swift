@@ -46,6 +46,12 @@ class AlertService: ObservableObject {
         save()
     }
 
+    func update(_ alert: PriceAlert) {
+        guard let i = alerts.firstIndex(where: { $0.id == alert.id }) else { return }
+        alerts[i] = alert
+        save()
+    }
+
     func checkAndFire(currentPrice: Double) {
         var changed = false
         for i in alerts.indices {

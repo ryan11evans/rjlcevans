@@ -66,17 +66,18 @@ class PriceService: ObservableObject {
             // Tell WidgetKit to reload so the lock screen / home screen widget shows fresh data
             WidgetCenter.shared.reloadAllTimelines()
 
-            // Update Live Activity in Dynamic Island
-            LiveActivityManager.shared.update(price: price.usd)
+            // Keep chart right edge current on every price tick
+            StatsService.shared.updateLivePrice(price.usd)
 
-            // Subtle haptic on each successful refresh
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
-            // Fire price alert if threshold crossed
+            // Fire price alert if threshold crossed (works in foreground and background)
             AlertService.shared.checkAndFire(currentPrice: price.usd)
 
-            // Push to Watch if paired
-            ConnectivityManager.shared.send(price: price)
+            // Foreground-only side effects
+            if UIApplication.shared.applicationState == .active {
+                LiveActivityManager.shared.update(price: price.usd)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                ConnectivityManager.shared.send(price: price)
+            }
 
             return price
         } catch {

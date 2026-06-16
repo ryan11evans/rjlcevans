@@ -20,7 +20,7 @@
     <string>$(MARKETING_VERSION)</string>
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
-        <string>com.rjlcevans.rjlbtcwatch.refresh</string>
+        <string>com.rjlcevans.bitcoinwatch.refresh</string>
     </array>
     <key>UIBackgroundModes</key>
     <array>

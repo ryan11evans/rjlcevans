@@ -40,7 +40,34 @@ class StatsService: ObservableObject {
 
     private let geckoURL = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
     private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
-    private var lastChartFetch: Date? = nil
+    private var autoRefreshTask: Task<Void, Never>?
+
+    func startAutoRefresh() {
+        autoRefreshTask?.cancel()
+        autoRefreshTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5 * 60 * 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                await fetch()
+            }
+        }
+    }
+
+    func stopAutoRefresh() {
+        autoRefreshTask?.cancel()
+        autoRefreshTask = nil
+    }
+
+    // Called every 15s by PriceService to keep the chart's right edge current
+    func updateLivePrice(_ usd: Double) {
+        guard !chartData.isEmpty else { return }
+        let now = Date()
+        if let last = chartData.last, now.timeIntervalSince(last.date) < 300 {
+            chartData[chartData.count - 1] = ChartPoint(date: now, price: usd)
+        } else {
+            chartData.append(ChartPoint(date: now, price: usd))
+        }
+    }
 
     func fetch() async {
         async let market   = fetchMarket()
@@ -65,11 +92,7 @@ class StatsService: ObservableObject {
                              ath: m.ath, athDate: m.athDate,
                              change24h: m.change24h, blockHeight: b)
 
-        let needsChartRefresh = chartData.isEmpty || lastChartFetch.map { Date().timeIntervalSince($0) > 300 } ?? true
-        if needsChartRefresh {
-            lastChartFetch = Date()
-            await fetchChart(range: chartRange)
-        }
+        await fetchChart(range: chartRange)
     }
 
     func fetchChart(range: ChartRange) async {

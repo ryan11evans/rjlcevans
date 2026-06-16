@@ -21,7 +21,7 @@ enum BackgroundRefresh {
     private static func handle(task: BGAppRefreshTask) {
         schedule()  // Re-schedule immediately so chain continues
 
-        let fetchTask = Task {
+        let fetchTask = Task { @MainActor in
             await PriceService.shared.fetchPrice()
             task.setTaskCompleted(success: true)
         }
