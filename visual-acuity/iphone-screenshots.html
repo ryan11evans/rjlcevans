@@ -77,7 +77,7 @@ function caption(ctx, headline, sub) {
     ctx.fillStyle = INK_S;
     ctx.font = '400 56px -apple-system, sans-serif';
     const lastHL = topY + (hLines.length - 1) * lineH;
-    const subY = lastHL + 148;
+    const subY = lastHL + 88;
     const sw = sub.split(' ');
     let sl = [], sline = '';
     sw.forEach(w => {
@@ -168,22 +168,22 @@ function screen1(ctx) {
   rr(ctx, TX, 1340, TW, 420, 40); ctx.fill();
   ctx.strokeStyle = 'rgba(212,160,23,0.50)'; ctx.lineWidth = 3;
   rr(ctx, TX, 1340, TW, 420, 40); ctx.stroke();
-  ctx.fillStyle = GOLD; ctx.font = '600 58px -apple-system, sans-serif';
+  ctx.fillStyle = GOLD; ctx.font = '600 68px -apple-system, sans-serif';
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('🪞  Mirror Test', TX + 52, 1510);
-  ctx.fillStyle = INK_S; ctx.font = '400 42px -apple-system, sans-serif';
-  ctx.fillText('Stand 6 ft back — most accurate', TX + 52, 1576);
-  ctx.fillStyle = INK_M; ctx.font = '400 36px -apple-system, sans-serif';
-  ctx.fillText('Best for a real visual acuity score', TX + 52, 1640);
+  ctx.fillText('🪞  Mirror Test', TX + 52, 1470);
+  ctx.fillStyle = INK_S; ctx.font = '400 50px -apple-system, sans-serif';
+  ctx.fillText('Stand 6 ft back — most accurate', TX + 52, 1546);
+  ctx.fillStyle = INK_M; ctx.font = '400 44px -apple-system, sans-serif';
+  ctx.fillText('Best for a real visual acuity score', TX + 52, 1610);
 
   // Quick tile
   ctx.fillStyle = CARD;
   rr(ctx, TX, 1820, TW, 270, 40); ctx.fill();
-  ctx.fillStyle = INK; ctx.font = '600 54px -apple-system, sans-serif';
+  ctx.fillStyle = INK; ctx.font = '600 64px -apple-system, sans-serif';
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('📱  Quick Test', TX + 52, 1964);
-  ctx.fillStyle = INK_M; ctx.font = '400 40px -apple-system, sans-serif';
-  ctx.fillText('Arms length · instant result', TX + 52, 2026);
+  ctx.fillText('📱  Quick Test', TX + 52, 1922);
+  ctx.fillStyle = INK_M; ctx.font = '400 46px -apple-system, sans-serif';
+  ctx.fillText('Arms length · instant result', TX + 52, 1988);
 
   // Glasses toggle
   ctx.fillStyle = CARD;
