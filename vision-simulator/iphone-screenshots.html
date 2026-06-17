@@ -40,7 +40,7 @@ const IMG_SRC_W = 1260, IMG_SRC_H = 2736;
 const PHONE_W = 800;
 const PHONE_H = Math.round(PHONE_W * IMG_SRC_H / IMG_SRC_W); // ≈1733
 const PHONE_X = Math.round((W - PHONE_W) / 2);               // =260
-const PHONE_Y = 620;                                           // starts below sub-headline text
+// PHONE_Y is computed per-screen inside drawScreen (snaps to sub text height)
 
 const SCREENS = [
   {
@@ -181,6 +181,9 @@ function drawScreen(ctx, img, s) {
   const subTop = hBottom + 80;
   subLines.forEach((l, i) => ctx.fillText(l, W/2, subTop + i * 60));
 
+  // Phone starts 55px below last sub line; never above y=480 (keeps top padding)
+  const phoneY = Math.max(480, subTop + (subLines.length - 1) * 60 + 55);
+
   // ── PHONE IMAGE ────────────────────────────────────────────────────────────
   // Drop shadow (draw dark rounded rect slightly offset before image)
   ctx.save();
@@ -189,25 +192,25 @@ function drawScreen(ctx, img, s) {
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 16;
   ctx.fillStyle = '#000';
-  rr(ctx, PHONE_X, PHONE_Y, PHONE_W, PHONE_H, 44);
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 44);
   ctx.fill();
   ctx.restore();
 
   // Clip to rounded rect and draw screenshot
   ctx.save();
-  rr(ctx, PHONE_X, PHONE_Y, PHONE_W, PHONE_H, 44);
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 44);
   ctx.clip();
-  ctx.drawImage(img, PHONE_X, PHONE_Y, PHONE_W, PHONE_H);
+  ctx.drawImage(img, PHONE_X, phoneY, PHONE_W, PHONE_H);
   ctx.restore();
 
   // Subtle inner border
   ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 2;
-  rr(ctx, PHONE_X, PHONE_Y, PHONE_W, PHONE_H, 44);
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 44);
   ctx.stroke();
 
   // ── BULLETS ────────────────────────────────────────────────────────────────
-  const bulletTop = PHONE_Y + PHONE_H + 60;
+  const bulletTop = phoneY + PHONE_H + 60;
   ctx.font = '400 36px "Inter Tight", sans-serif';
   ctx.textAlign = 'left';
   s.bullets.forEach((b, i) => {
