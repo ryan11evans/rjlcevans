@@ -112,8 +112,8 @@
   .frame-main    { background: linear-gradient(165deg, #0f0b07 0%, #0c0905 60%, #080604 100%); }
   .frame-dca     { background: linear-gradient(165deg, #09100a 0%, #070c08 60%, #050804 100%); }
   .frame-dca::before { background: radial-gradient(circle, rgba(49,209,88,0.14) 0%, transparent 70%); }
-  .frame-whatif  { background: linear-gradient(165deg, #0a0a10 0%, #080810 60%, #060608 100%); }
-  .frame-whatif::before { background: radial-gradient(circle, rgba(120,100,249,0.16) 0%, transparent 70%); }
+  .frame-goal    { background: linear-gradient(165deg, #100c05 0%, #0c0a04 60%, #080703 100%); }
+  .frame-goal::before { background: radial-gradient(circle, rgba(249,180,22,0.18) 0%, transparent 70%); }
   .frame-alert   { background: linear-gradient(165deg, #100908 0%, #0c0706 60%, #080504 100%); }
   .frame-sats    { background: linear-gradient(165deg, #0d0c07 0%, #0a0905 60%, #070604 100%); }
   .frame-sats::before { background: radial-gradient(circle, rgba(255,214,0,0.12) 0%, transparent 70%); }
@@ -122,7 +122,7 @@
 
   /* Accent tag colors per screen */
   .frame-dca .tag     { color: #31D158; }
-  .frame-whatif .tag  { color: #BF86FF; }
+  .frame-goal .tag    { color: #FFB800; }
   .frame-sats .tag    { color: #FFD60A; }
   .frame-settings .tag { color: #64A8FF; }
 
@@ -135,7 +135,7 @@
     margin: 16px 0 0;
   }
   .frame-dca .divider      { background: #31D158; }
-  .frame-whatif .divider   { background: #BF86FF; }
+  .frame-goal .divider     { background: #FFB800; }
   .frame-sats .divider     { background: #FFD60A; }
   .frame-settings .divider { background: #64A8FF; }
 
@@ -190,22 +190,19 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
-     SCREENSHOT 3 — What If Calculator
-     Image file: screenshots/whatif.png
-     ⚠️  RETAKE THIS ONE: select 5Y so it shows a big gain,
-         not the 1Y which is currently showing a loss.
+     SCREENSHOT 3 — Goal Tracker
+     Image file: screenshots/goal.png
 ════════════════════════════════════════════════════════════ -->
-<div class="frame frame-whatif">
+<div class="frame frame-goal">
   <div class="top">
-    <div class="tag">What If?</div>
-    <div class="headline">See what you<br>could have<br>made.</div>
-    <div class="sub">Pick any amount, pick a date. Instantly see what that Bitcoin is worth today.</div>
+    <div class="tag">Goal Tracker</div>
+    <div class="headline">Watch your<br>stack grow.</div>
+    <div class="sub">Set a Bitcoin target, enter what you hold, and watch the ring fill up as you get closer.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
     <div class="phone">
-      <!-- ⚠️ Replace whatif.png with a 5Y screenshot showing a big gain -->
-      <img src="whatif.png" alt="What If Calculator">
+      <img src="goal.png" alt="Goal Tracker">
     </div>
   </div>
 </div>
