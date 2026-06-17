@@ -238,34 +238,34 @@ function screen2(ctx) {
     }
   }
 
-  // Mic circle (primary) — emoji renders ~10px high with 'middle' baseline, compensate
+  // Mic + keyboard circles — pushed down to give 90px breathing room below letter boxes
+  const circY = 1990;
   ctx.fillStyle = GOLD;
-  ctx.beginPath(); ctx.arc(W/2 - 230, 1908, 148, 0, Math.PI*2); ctx.fill();
-  ctx.font = '112px -apple-system, sans-serif';
+  ctx.beginPath(); ctx.arc(W/2 - 248, circY, 148, 0, Math.PI*2); ctx.fill();
+  ctx.font = '114px -apple-system, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🎤', W/2 - 230, 1918);
+  ctx.fillText('🎤', W/2 - 248, circY + 8);
 
-  // Keyboard circle (secondary)
   ctx.fillStyle = CARD2;
-  ctx.beginPath(); ctx.arc(W/2 + 230, 1908, 148, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(W/2 + 248, circY, 148, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = INK_S;
-  ctx.font = '100px -apple-system, sans-serif';
+  ctx.font = '108px -apple-system, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('⌨️', W/2 + 230, 1918);
+  ctx.fillText('⌨', W/2 + 248, circY + 8);
 
   ctx.fillStyle = INK; ctx.font = '500 46px -apple-system, sans-serif';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Speak', W/2 - 230, 2130);
-  ctx.fillText('Type', W/2 + 230, 2130);
+  ctx.fillText('Speak', W/2 - 248, circY + 218);
+  ctx.fillText('Type', W/2 + 248, circY + 218);
 
   ctx.fillStyle = GOLD; ctx.font = '400 40px -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Say all letters — or "can\'t see" to skip', W/2, 2236);
+  ctx.fillText('Say all letters — or "can\'t see" to skip', W/2, circY + 330);
 
   // Can't see / Submit
   const bBW = (W - PAD*2 - 60) / 2;
-  drawBtn(ctx, PAD, 2330, bBW, 138, "Can't see line", false);
-  drawBtn(ctx, PAD + bBW + 60, 2330, bBW, 138, 'Submit  →', false);
+  drawBtn(ctx, PAD, circY + 420, bBW, 138, "Can't see line", false);
+  drawBtn(ctx, PAD + bBW + 60, circY + 420, bBW, 138, 'Submit  →', false);
 
   bottomBar(ctx, 'Hands-free voice recognition built in');
 }
@@ -365,9 +365,9 @@ function screen4(ctx) {
   ctx.beginPath(); ctx.arc(avX, avY, 86, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = 'rgba(212,160,23,0.45)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(avX, avY, 86, 0, Math.PI*2); ctx.stroke();
-  ctx.font = '500 70px -apple-system, sans-serif';
+  ctx.font = '72px -apple-system, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('👨‍⚕️', avX, avY);
+  ctx.fillText('👨‍⚕️', avX, avY + 6);
 
   // Dr info
   ctx.fillStyle = GOLD; ctx.font = '700 52px -apple-system, sans-serif';
@@ -436,53 +436,53 @@ function screen5(ctx) {
   });
   ctx.restore();
 
-  // Eyebrow
+  // Eyebrow — shifted up 110px so score lands in visual centre of card
   ctx.fillStyle = 'rgba(212,160,23,0.62)';
   ctx.font = '500 30px -apple-system, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('EYE CHART TEST  ·  DR. EVANS, OD', W/2, cY + 410);
+  ctx.fillText('EYE CHART TEST  ·  DR. EVANS, OD', W/2, cY + 300);
 
   // Big score
   ctx.fillStyle = GOLD; ctx.font = "bold 220px 'Fraunces', Georgia, serif";
-  ctx.fillText('20/20', W/2, cY + 680);
+  ctx.fillText('20/20', W/2, cY + 570);
 
   // Sub label
   ctx.fillStyle = 'rgba(242,242,247,0.40)';
   ctx.font = '500 32px -apple-system, sans-serif';
-  ctx.fillText('VISUAL ACUITY  ·  BEST EYE', W/2, cY + 734);
+  ctx.fillText('VISUAL ACUITY  ·  BEST EYE', W/2, cY + 624);
 
   // Divider
   ctx.strokeStyle = 'rgba(212,160,23,0.26)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(W*0.26, cY+786); ctx.lineTo(W*0.74, cY+786); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W*0.26, cY+676); ctx.lineTo(W*0.74, cY+676); ctx.stroke();
 
   // OD / OS row
   const midX = W / 2;
   ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(midX, cY+806); ctx.lineTo(midX, cY+1042); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(midX, cY+696); ctx.lineTo(midX, cY+932); ctx.stroke();
 
   ctx.fillStyle = 'rgba(242,242,247,0.36)';
   ctx.font = '500 28px -apple-system, sans-serif';
-  ctx.textAlign = 'right'; ctx.fillText('RIGHT EYE', midX - 40, cY + 850);
-  ctx.textAlign = 'left';  ctx.fillText('LEFT EYE',  midX + 40, cY + 850);
+  ctx.textAlign = 'right'; ctx.fillText('RIGHT EYE', midX - 40, cY + 740);
+  ctx.textAlign = 'left';  ctx.fillText('LEFT EYE',  midX + 40, cY + 740);
 
   ctx.fillStyle = 'rgba(242,242,247,0.92)';
   ctx.font = "bold 108px 'Fraunces', Georgia, serif";
-  ctx.textAlign = 'right'; ctx.fillText('20/20', midX - 40, cY + 1020);
-  ctx.textAlign = 'left';  ctx.fillText('20/25', midX + 40, cY + 1020);
+  ctx.textAlign = 'right'; ctx.fillText('20/20', midX - 40, cY + 910);
+  ctx.textAlign = 'left';  ctx.fillText('20/25', midX + 40, cY + 910);
 
   // Bottom rule
   ctx.strokeStyle = 'rgba(212,160,23,0.20)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(W*0.1, cY+1100); ctx.lineTo(W*0.9, cY+1100); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W*0.1, cY+990); ctx.lineTo(W*0.9, cY+990); ctx.stroke();
 
   // Brand
   ctx.fillStyle = GOLD;
   ctx.font = "italic bold 38px 'Fraunces', Georgia, serif";
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Eye Chart Test by Dr. Evans, OD', W/2, cY + 1210);
+  ctx.fillText('Eye Chart Test by Dr. Evans, OD', W/2, cY + 1100);
 
   ctx.fillStyle = 'rgba(242,242,247,0.28)';
   ctx.font = '26px -apple-system, sans-serif';
-  ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', W/2, cY + 1272);
+  ctx.fillText('rjlcevans.com/eye-chart-test  ·  App Store', W/2, cY + 1162);
 
   // Privacy bullets (below card)
   const pvY = cY + cH + 88;
