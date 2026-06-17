@@ -206,7 +206,7 @@ function screen1(ctx) {
 // Caption ends ~490. Big letters from ~780 to ~1340. Rest fills down to ~2460.
 function screen2(ctx) {
   bg(ctx);
-  caption(ctx, 'Test at a distance using mirror mode to mimic a real exam.',
+  caption(ctx, 'Test at Distance, Like a Real Exam.',
     'Mirror mode · Most accurate at-home method');
 
   // BIG Sloan letters — hero of the screen
@@ -311,8 +311,8 @@ function screen3(ctx) {
   rr(ctx, TX, 1832, TW, 148, 36); ctx.fill();
   ctx.strokeStyle = 'rgba(212,160,23,0.28)'; ctx.lineWidth = 2;
   rr(ctx, TX, 1832, TW, 148, 36); ctx.stroke();
-  ctx.fillStyle = GOLD; ctx.font = '400 38px -apple-system, sans-serif';
-  ctx.textBaseline = 'middle';
+  ctx.fillStyle = GOLD; ctx.font = '400 32px -apple-system, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('👁️  Eye exam recommended with your optometrist', W/2, 1906);
 
   // Share button
