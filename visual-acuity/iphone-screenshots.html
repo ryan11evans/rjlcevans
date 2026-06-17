@@ -507,10 +507,17 @@ function makeCard(s) {
   document.getElementById('cards').appendChild(div);
 }
 
+let rendered = false;
+function render() {
+  if (rendered) return;
+  rendered = true;
+  screens.forEach(makeCard);
+}
 const sloan = new FontFace('Sloan', 'url(Sloan.otf)');
 sloan.load()
-  .then(f => { document.fonts.add(f); screens.forEach(makeCard); })
-  .catch(() => screens.forEach(makeCard));
+  .then(f => { document.fonts.add(f); render(); })
+  .catch(render);
+setTimeout(render, 1500);
 </script>
 </body>
 </html>
