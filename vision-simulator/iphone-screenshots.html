@@ -20,11 +20,11 @@
 </head>
 <body>
 <h1>Vision Simulator — App Store Screenshots</h1>
-<p class="sub">5 screenshots · 1290 × 2796 · iPhone 6.7"</p>
+<p class="sub">5 screenshots · 1320 × 2868 · iPhone 6.9"</p>
 <div class="row" id="cards"></div>
 
 <script>
-const W = 1290, H = 2796;
+const W = 1320, H = 2868;
 const BG      = '#0f1620';
 const ACCENT  = '#d4a574';
 const INK     = '#eef2f7';
@@ -35,11 +35,12 @@ const PAD     = 80;
 // Screenshot image dimensions (all 1260×2736)
 const IMG_SRC_W = 1260, IMG_SRC_H = 2736;
 
-// Phone image display — scale to 880px wide, centered
-const PHONE_W = 880;
-const PHONE_H = Math.round(PHONE_W * IMG_SRC_H / IMG_SRC_W); // ≈1908
-const PHONE_X = Math.round((W - PHONE_W) / 2);               // ≈205
-const PHONE_Y = 740;                                           // starts below headline
+// Phone image: 800px wide keeps everything on-canvas
+// Top text ~600px + phone 1733px + bullets 280px + bar 180px = 2793 < 2868
+const PHONE_W = 800;
+const PHONE_H = Math.round(PHONE_W * IMG_SRC_H / IMG_SRC_W); // ≈1733
+const PHONE_X = Math.round((W - PHONE_W) / 2);               // =260
+const PHONE_Y = 620;                                           // starts below sub-headline text
 
 const SCREENS = [
   {
@@ -166,19 +167,19 @@ function drawScreen(ctx, img, s) {
 
   // ── HEADLINE ───────────────────────────────────────────────────────────────
   ctx.fillStyle = INK;
-  ctx.font = '500 116px "Fraunces", serif';
-  const hLines = wrapLines(s.headline, 22);
-  const hLineH = 136;
-  const hTop = 210;
+  ctx.font = '500 96px "Fraunces", serif';
+  const hLines = wrapLines(s.headline, 24);
+  const hLineH = 112;
+  const hTop = 200;
   hLines.forEach((l, i) => ctx.fillText(l, W/2, hTop + i * hLineH));
   const hBottom = hTop + (hLines.length - 1) * hLineH;
 
   // ── SUB ────────────────────────────────────────────────────────────────────
   ctx.fillStyle = INK_D;
-  ctx.font = '400 46px "Inter Tight", sans-serif';
-  const subLines = wrapLines(s.sub, 34);
-  const subTop = hBottom + 90;
-  subLines.forEach((l, i) => ctx.fillText(l, W/2, subTop + i * 64));
+  ctx.font = '400 44px "Inter Tight", sans-serif';
+  const subLines = wrapLines(s.sub, 40);
+  const subTop = hBottom + 80;
+  subLines.forEach((l, i) => ctx.fillText(l, W/2, subTop + i * 60));
 
   // ── PHONE IMAGE ────────────────────────────────────────────────────────────
   // Drop shadow (draw dark rounded rect slightly offset before image)
@@ -206,12 +207,12 @@ function drawScreen(ctx, img, s) {
   ctx.stroke();
 
   // ── BULLETS ────────────────────────────────────────────────────────────────
-  const bulletTop = PHONE_Y + PHONE_H + 72;
-  ctx.font = '400 38px "Inter Tight", sans-serif';
+  const bulletTop = PHONE_Y + PHONE_H + 60;
+  ctx.font = '400 36px "Inter Tight", sans-serif';
   ctx.textAlign = 'left';
   s.bullets.forEach((b, i) => {
     ctx.fillStyle = i === 0 ? INK : INK_D;
-    ctx.fillText(b, PAD, bulletTop + i * 88);
+    ctx.fillText(b, PAD, bulletTop + i * 80);
   });
 
   // ── BOTTOM BAR ─────────────────────────────────────────────────────────────
