@@ -213,8 +213,8 @@ function screen2(ctx) {
   ctx.fillStyle = '#ffffff';
   ctx.font = "normal 480px 'Sloan', monospace";
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('D', W/2 - 240, 1080);
-  ctx.fillText('K', W/2 + 240, 1080);
+  ctx.fillText('D', W/2 - 306, 1080);
+  ctx.fillText('K', W/2 + 306, 1080);
 
   // Progress dots
   const dR = 24, dSp = 120;
@@ -238,18 +238,20 @@ function screen2(ctx) {
     }
   }
 
-  // Mic circle (primary)
+  // Mic circle (primary) — emoji renders ~10px high with 'middle' baseline, compensate
   ctx.fillStyle = GOLD;
   ctx.beginPath(); ctx.arc(W/2 - 230, 1908, 148, 0, Math.PI*2); ctx.fill();
-  ctx.font = '500 106px -apple-system, sans-serif';
+  ctx.font = '112px -apple-system, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🎙️', W/2 - 230, 1908);
+  ctx.fillText('🎤', W/2 - 230, 1918);
 
   // Keyboard circle (secondary)
   ctx.fillStyle = CARD2;
   ctx.beginPath(); ctx.arc(W/2 + 230, 1908, 148, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = INK_S; ctx.font = '500 96px -apple-system, sans-serif';
-  ctx.fillText('⌨️', W/2 + 230, 1908);
+  ctx.fillStyle = INK_S;
+  ctx.font = '100px -apple-system, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('⌨️', W/2 + 230, 1918);
 
   ctx.fillStyle = INK; ctx.font = '500 46px -apple-system, sans-serif';
   ctx.textBaseline = 'alphabetic';
@@ -290,9 +292,9 @@ function screen3(ctx) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('RIGHT EYE (OD)', W/2, 860);
   ctx.fillStyle = GOLD; ctx.font = "bold 230px 'Fraunces', Georgia, serif";
-  ctx.fillText('20/20', W/2, 1158);
+  ctx.fillText('20/20', W/2, 1106);
   ctx.fillStyle = INK_S; ctx.font = '400 40px -apple-system, sans-serif';
-  ctx.fillText('Normal vision', W/2, 1210);
+  ctx.fillText('Normal vision', W/2, 1212);
 
   // OS card
   ctx.fillStyle = CARD; rr(ctx, TX, 1322, TW, 450, 44); ctx.fill();
@@ -300,9 +302,9 @@ function screen3(ctx) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('LEFT EYE (OS)', W/2, 1406);
   ctx.fillStyle = INK; ctx.font = "bold 230px 'Fraunces', Georgia, serif";
-  ctx.fillText('20/40', W/2, 1696);
+  ctx.fillText('20/40', W/2, 1644);
   ctx.fillStyle = INK_S; ctx.font = '400 40px -apple-system, sans-serif';
-  ctx.fillText('Mild blur — glasses may help', W/2, 1748);
+  ctx.fillText('Mild blur — glasses may help', W/2, 1752);
 
   // Referral note
   ctx.fillStyle = 'rgba(212,160,23,0.08)';
