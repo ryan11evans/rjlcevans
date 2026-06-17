@@ -359,8 +359,8 @@ function screen4(ctx) {
   ctx.strokeStyle = 'rgba(212,160,23,0.38)'; ctx.lineWidth = 2;
   rr(ctx, TX, 1110, TW, 350, 44); ctx.stroke();
 
-  // Avatar — centered in card (1110+175=1285)
-  const avX = TX + 96, avY = 1285;
+  // Avatar — shifted right to balance card space
+  const avX = TX + 240, avY = 1285;
   ctx.fillStyle = 'rgba(212,160,23,0.18)';
   ctx.beginPath(); ctx.arc(avX, avY, 86, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = 'rgba(212,160,23,0.45)'; ctx.lineWidth = 2;
@@ -370,15 +370,15 @@ function screen4(ctx) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('OD', avX, avY);
 
-  // Dr info — text block vertically centred with avatar
+  // Dr info
   ctx.fillStyle = GOLD; ctx.font = '700 52px -apple-system, sans-serif';
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Dr. Ryan Evans, OD', TX + 216, 1249);
+  ctx.fillText('Dr. Ryan Evans, OD', TX + 360, 1249);
   ctx.fillStyle = INK_S; ctx.font = '400 38px -apple-system, sans-serif';
   [
     "Calibrates to your screen's pixel density",
     "the same way we do it in a real exam room.",
-  ].forEach((l, i) => ctx.fillText(l, TX + 216, 1307 + i * 52));
+  ].forEach((l, i) => ctx.fillText(l, TX + 360, 1307 + i * 52));
 
   // Feature bullets: 5 rows, h=158, gap=20 → total 5*158+4*20=870
   // Start 1610, end 1610+870=2480
