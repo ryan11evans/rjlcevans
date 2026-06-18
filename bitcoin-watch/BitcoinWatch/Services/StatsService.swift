@@ -40,7 +40,36 @@ class StatsService: ObservableObject {
 
     private let geckoURL = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
     private let blockURL = URL(string: "https://blockstream.info/api/blocks/tip/height")!
-    private var lastChartFetch: Date? = nil
+    private var autoRefreshTask: Task<Void, Never>?
+
+    func startAutoRefresh() {
+        autoRefreshTask?.cancel()
+        autoRefreshTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5 * 60 * 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                await fetch()
+            }
+        }
+    }
+
+    func stopAutoRefresh() {
+        autoRefreshTask?.cancel()
+        autoRefreshTask = nil
+    }
+
+    // Called every 15s by PriceService to keep the chart's right edge current.
+    // Uses a 10-minute window so we always UPDATE the last CoinGecko point
+    // rather than appending a new one (which would cause a visible price spike).
+    func updateLivePrice(_ usd: Double) {
+        guard !chartData.isEmpty else { return }
+        let now = Date()
+        if let last = chartData.last, now.timeIntervalSince(last.date) < 600 {
+            chartData[chartData.count - 1] = ChartPoint(date: now, price: usd)
+        } else {
+            chartData.append(ChartPoint(date: now, price: usd))
+        }
+    }
 
     func fetch() async {
         async let market   = fetchMarket()
@@ -65,11 +94,7 @@ class StatsService: ObservableObject {
                              ath: m.ath, athDate: m.athDate,
                              change24h: m.change24h, blockHeight: b)
 
-        let needsChartRefresh = chartData.isEmpty || lastChartFetch.map { Date().timeIntervalSince($0) > 300 } ?? true
-        if needsChartRefresh {
-            lastChartFetch = Date()
-            await fetchChart(range: chartRange)
-        }
+        await fetchChart(range: chartRange)
     }
 
     func fetchChart(range: ChartRange) async {
@@ -77,12 +102,8 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        var points = r.prices.map { pair in
+        let points = r.prices.map { pair in
             ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
-        }
-        // Pin the right edge to the live price so the chart is always current
-        if let live = stats?.currentPrice {
-            points.append(ChartPoint(date: Date(), price: live))
         }
         chartData = points
         chartRange = range
