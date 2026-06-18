@@ -116,6 +116,9 @@ struct BTCChartView: View {
                 .chartXSelection(value: $selectedDate)
                 .frame(height: 140)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .onChange(of: statsService.chartData.last?.id) { _, _ in
+                    selectedDate = nil
+                }
             }
         }
         .padding(.horizontal, 14)
