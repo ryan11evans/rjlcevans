@@ -102,10 +102,15 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        // Drop the last point — CoinGecko's final entry is a raw spot snapshot,
-        // not a smoothed interval average, which creates a visible spike vs the trend.
-        let points = r.prices.dropLast().map { pair in
-            ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
+        // Exclude data from the last 30 minutes — CoinGecko's trailing entries are
+        // live spot snapshots rather than settled interval averages, and even after
+        // dropLast() the second-to-last point can still be an outlier that creates
+        // a visible spike at the right edge of the chart.
+        let cutoff = Date().addingTimeInterval(-30 * 60)
+        let points = r.prices.compactMap { pair -> ChartPoint? in
+            let date = Date(timeIntervalSince1970: pair[0] / 1000)
+            guard date <= cutoff else { return nil }
+            return ChartPoint(date: date, price: pair[1])
         }
         chartData = points
         chartRange = range

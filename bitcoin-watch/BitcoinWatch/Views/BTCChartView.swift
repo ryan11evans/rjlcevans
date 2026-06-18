@@ -111,6 +111,7 @@ struct BTCChartView: View {
                     }
                 }
                 .chartYScale(domain: minPrice...maxPrice)
+                .chartXScale(domain: (data.first?.date ?? Date())...(data.last?.date ?? Date()))
                 .chartXAxis(.hidden)
                 .chartYAxis(.hidden)
                 .chartXSelection(value: $selectedDate)
