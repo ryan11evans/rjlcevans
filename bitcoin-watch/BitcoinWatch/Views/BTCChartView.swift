@@ -80,7 +80,7 @@ struct BTCChartView: View {
                             y: .value("Price", point.price)
                         )
                         .foregroundStyle(lineColor)
-                        .interpolationMethod(.catmullRom)
+                        .interpolationMethod(.monotone)
 
                         AreaMark(
                             x: .value("Time", point.date),
@@ -94,7 +94,7 @@ struct BTCChartView: View {
                                 endPoint: .bottom
                             )
                         )
-                        .interpolationMethod(.catmullRom)
+                        .interpolationMethod(.monotone)
                     }
 
                     if let selected = selectedPoint {
