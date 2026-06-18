@@ -102,18 +102,27 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        // Exclude data from the last 30 minutes — CoinGecko's trailing entries are
-        // live spot snapshots rather than settled interval averages, and even after
-        // dropLast() the second-to-last point can still be an outlier that creates
-        // a visible spike at the right edge of the chart.
-        let cutoff = Date().addingTimeInterval(-30 * 60)
-        let points = r.prices.compactMap { pair -> ChartPoint? in
-            let date = Date(timeIntervalSince1970: pair[0] / 1000)
-            guard date <= cutoff else { return nil }
-            return ChartPoint(date: date, price: pair[1])
+        let points = r.prices.dropLast().map { pair in
+            ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
         }
         chartData = points
         chartRange = range
+
+        // After chart data is loaded, refine the 24h low/high using actual chart prices
+        // so the stat tiles are consistent with what the chart shows.
+        if let current = stats?.currentPrice,
+           let chartMin = points.map(\.price).min(),
+           let chartMax = points.map(\.price).max() {
+            stats = BitcoinStats(
+                currentPrice: current,
+                high24h: max(stats?.high24h ?? chartMax, chartMax),
+                low24h:  min(stats?.low24h  ?? chartMin, chartMin),
+                ath:     stats?.ath     ?? 0,
+                athDate: stats?.athDate ?? Date(),
+                change24h: stats?.change24h ?? 0,
+                blockHeight: stats?.blockHeight ?? 0
+            )
+        }
     }
 
     private struct MarketResult {
