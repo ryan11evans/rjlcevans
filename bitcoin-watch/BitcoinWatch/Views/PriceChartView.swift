@@ -90,7 +90,7 @@ private struct BTCOrbitLogo: View {
                 .fill(.orange.opacity(0.15))
                 .blur(radius: 20)
                 .scaleEffect(1.3)
-            // Orange coin background
+            // Orange coin — explicitly smaller so the orbit sits outside it
             Circle()
                 .fill(
                     LinearGradient(colors: [
@@ -100,18 +100,18 @@ private struct BTCOrbitLogo: View {
                     ], startPoint: .top, endPoint: .bottom)
                 )
                 .overlay(Circle().strokeBorder(Color(red: 0.79, green: 0.43, blue: 0.02).opacity(0.6), lineWidth: 2))
+                .frame(width: 84, height: 84)
             // ₿ as text so it sits cleanly on top of the orange coin
             Text("₿")
                 .font(.system(size: 45, weight: .bold))
                 .foregroundStyle(Color(red: 0.10, green: 0.07, blue: 0.02))
-            // Orbit arrows rotate around the outside
+            // Orbit arrows fill the full 100×100 frame so arcs draw outside the 84pt coin
             OrbitArrows()
                 .frame(width: 100, height: 100)
                 .rotationEffect(.degrees(angle))
                 .animation(.linear(duration: 6).repeatForever(autoreverses: false), value: angle)
                 .onAppear { angle = 360 }
         }
-        .drawingGroup()
     }
 }
 
