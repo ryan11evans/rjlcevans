@@ -8,7 +8,7 @@ struct CalculatorsView: View {
     @State private var tab = 0
     @Environment(\.dismiss) private var dismiss
 
-    private let titles = ["DCA Calculator", "What If?", "Goal Tracker"]
+    private let titles = ["DCA Calculator", "Goal Tracker"]
 
     var body: some View {
         NavigationStack {
@@ -23,8 +23,7 @@ struct CalculatorsView: View {
                 VStack(spacing: 0) {
                     Picker("", selection: $tab) {
                         Text("DCA").tag(0)
-                        Text("What If").tag(1)
-                        Text("Goal").tag(2)
+                        Text("Goal").tag(1)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 20)
@@ -33,8 +32,7 @@ struct CalculatorsView: View {
 
                     TabView(selection: $tab) {
                         DCATab(currentPrice: currentPrice).tag(0)
-                        WhatIfTab(currentPrice: currentPrice).tag(1)
-                        GoalTab(currentPrice: currentPrice).tag(2)
+                        GoalTab(currentPrice: currentPrice).tag(1)
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
                 }
@@ -226,189 +224,6 @@ private struct DCATab: View {
     }
 }
 
-// MARK: - What If Tab
-
-private struct WhatIfTab: View {
-    let currentPrice: Double?
-    @State private var amountText = "1000"
-    @State private var period: Period = .oneYear
-    @State private var result: WIResult? = nil
-    @State private var loading = false
-    @State private var errMsg: String? = nil
-
-    enum Period: String, CaseIterable {
-        case oneMonth = "1M", threeMonths = "3M", sixMonths = "6M"
-        case oneYear = "1Y", twoYears = "2Y", fiveYears = "5Y"
-        var days: Int { switch self { case .oneMonth: 30; case .threeMonths: 90; case .sixMonths: 180; case .oneYear: 365; case .twoYears: 730; case .fiveYears: 1825 } }
-        var longLabel: String { switch self { case .oneMonth: "1 month"; case .threeMonths: "3 months"; case .sixMonths: "6 months"; case .oneYear: "1 year"; case .twoYears: "2 years"; case .fiveYears: "5 years" } }
-    }
-
-    struct WIResult {
-        let invested, histPrice, nowPrice: Double
-        let period: Period
-        var btc: Double   { invested / histPrice }
-        var value: Double { btc * nowPrice }
-        var gain: Double  { value - invested }
-        var gainPct: Double { gain / invested * 100 }
-    }
-
-    private var amount: Double { Double(amountText.filter { $0.isNumber || $0 == "." }) ?? 0 }
-    private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
-    private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Amount
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("IF I HAD INVESTED")
-                    HStack(spacing: 8) {
-                        Text("$").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                        TextField("1000", text: $amountText)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .keyboardType(.decimalPad).foregroundStyle(.white)
-                            .onChange(of: amountText) { _, _ in result = nil }
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 12)
-                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
-                }
-
-                HStack(spacing: 8) {
-                    ForEach(["100", "500", "1000", "5000"], id: \.self) { v in
-                        chip(v, active: amountText == v) { amountText = v; result = nil }
-                    }
-                }
-
-                // Period picker
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("HOW LONG AGO")
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                        ForEach(Period.allCases, id: \.rawValue) { p in
-                            Button(p.rawValue) { withAnimation(.easeInOut(duration: 0.15)) { period = p; result = nil } }
-                                .font(.system(size: 15, weight: period == p ? .semibold : .regular))
-                                .foregroundStyle(period == p ? .orange : .secondary)
-                                .frame(maxWidth: .infinity).padding(.vertical, 10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(period == p ? Color.orange.opacity(0.15) : Color.white.opacity(0.06))
-                                )
-                        }
-                    }
-                }
-
-                Button { Task { await fetch() } } label: {
-                    Label(loading ? "Fetching..." : "Calculate", systemImage: "arrow.right.circle.fill")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.black)
-                        .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .background(amount > 0 && !loading ? Color.orange : Color.gray,
-                                    in: RoundedRectangle(cornerRadius: 12))
-                }
-                .disabled(amount <= 0 || loading)
-
-                if loading { ProgressView().tint(.orange).padding() }
-                if let e = errMsg { Text(e).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center) }
-                if let r = result { resultView(r) }
-
-                Spacer(minLength: 40)
-            }
-            .padding(.top, 20).padding(.horizontal, 20)
-        }
-    }
-
-    @ViewBuilder
-    private func resultView(_ r: WIResult) -> some View {
-        let isGain = r.gain >= 0
-        let color = isGain ? upColor : downColor
-
-        VStack(spacing: 12) {
-            // Headline card
-            VStack(spacing: 6) {
-                Text("$\(Int(r.invested).formatted()) → $\(Int(r.value).formatted())")
-                    .font(.system(size: 26, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white).minimumScaleFactor(0.5).lineLimit(1)
-                HStack(spacing: 4) {
-                    Image(systemName: isGain ? "arrow.up.right" : "arrow.down.right")
-                        .font(.system(size: 11, weight: .bold))
-                    Text(String(format: "%+.1f%% · %@$%@",
-                                r.gainPct, isGain ? "+" : "",
-                                abs(Int(r.gain)).formatted()))
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                .foregroundStyle(color)
-                .padding(.horizontal, 12).padding(.vertical, 5)
-                .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .frame(maxWidth: .infinity).padding(16)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
-
-            // Detail table
-            VStack(spacing: 0) {
-                wiRow("Invested", "$\(Int(r.invested).formatted())", .secondary)
-                wiRow("BTC price \(r.period.longLabel) ago", BitcoinPrice(usd: r.histPrice, timestamp: Date()).formatted, .secondary)
-                wiRow("BTC acquired", r.btc.btcFormatted, .orange)
-                wiRow("Value today", "$\(Int(r.value).formatted())", color)
-            }
-            .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-
-            Button { doShare(r) } label: {
-                Label("Share Result", systemImage: "square.and.arrow.up")
-                    .font(.system(size: 15, weight: .semibold)).foregroundStyle(.black)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(Color.orange, in: RoundedRectangle(cornerRadius: 12))
-            }
-        }
-    }
-
-    private func wiRow(_ lbl: String, _ val: String, _ c: Color) -> some View {
-        HStack {
-            Text(lbl).font(.system(size: 13)).foregroundStyle(.secondary)
-            Spacer()
-            Text(val).font(.system(size: 13, weight: .semibold)).foregroundStyle(c)
-        }
-        .padding(.horizontal, 16).padding(.vertical, 11)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 16)
-        }
-    }
-
-    private func fetch() async {
-        guard let now = currentPrice, amount > 0 else { return }
-        loading = true; errMsg = nil; result = nil
-        let date = Calendar.current.date(byAdding: .day, value: -period.days, to: Date()) ?? Date()
-        let df = DateFormatter(); df.dateFormat = "dd-MM-yyyy"
-        let urlStr = "https://api.coingecko.com/api/v3/coins/bitcoin/history?date=\(df.string(from: date))&localization=false"
-        guard let url = URL(string: urlStr),
-              let (data, _) = try? await URLSession.shared.data(from: url) else {
-            errMsg = "Couldn't fetch historical price. Try again."
-            loading = false; return
-        }
-        struct R: Decodable {
-            struct MD: Decodable { struct P: Decodable { let usd: Double }; let current_price: P }
-            let market_data: MD?
-        }
-        guard let r = try? JSONDecoder().decode(R.self, from: data),
-              let hist = r.market_data?.current_price.usd else {
-            errMsg = "No price data available for that period."
-            loading = false; return
-        }
-        result = WIResult(invested: amount, histPrice: hist, nowPrice: now, period: period)
-        loading = false
-    }
-
-    @MainActor private func doShare(_ r: WIResult) {
-        let card = WhatIfShareCard(result: r).environment(\.colorScheme, .dark)
-        let renderer = ImageRenderer(content: card); renderer.scale = 3
-        guard let img = renderer.uiImage else { return }
-        let meta = LPLinkMetadata()
-        meta.url = URL(string: "https://rjlcevans.com/tapbtc")
-        meta.title = String(format: "$%.0f invested %@ ago is worth $%.0f today — TapBTC",
-                            r.invested, r.period.longLabel, r.value)
-        meta.imageProvider = NSItemProvider(object: img)
-        presentShare(BTCShareItem(metadata: meta))
-    }
-}
-
 // MARK: - Goal Tracker Tab
 
 private struct GoalTab: View {
@@ -586,86 +401,6 @@ fileprivate struct DCAShareCard: View {
             }
         }
         .frame(width: 375, height: 290)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-    }
-}
-
-// MARK: - What If Share Card
-
-fileprivate struct WhatIfShareCard: View {
-    let result: WhatIfTab.WIResult
-
-    private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
-    private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
-    private var isGain: Bool { result.gain >= 0 }
-    private var color: Color { isGain ? upColor : downColor }
-
-    var body: some View {
-        ZStack(alignment: .leading) {
-            LinearGradient(colors: [Color(red: 0.15, green: 0.14, blue: 0.13),
-                                    Color(red: 0.03, green: 0.02, blue: 0.02)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            Rectangle()
-                .fill(LinearGradient(colors: [color, color.opacity(0.3)], startPoint: .top, endPoint: .bottom))
-                .frame(width: 3).padding(.vertical, 16)
-
-            VStack(spacing: 0) {
-                HStack {
-                    HStack(spacing: 6) {
-                        Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(.orange).font(.system(size: 13))
-                        Text("WHAT IF?").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).tracking(0.5)
-                    }
-                    Spacer()
-                    Text("TapBTC").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                }
-                .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 10)
-
-                Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 20)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("If I bought \(result.period.longLabel) ago")
-                        .font(.system(size: 12)).foregroundStyle(.secondary)
-                    Text("$\(Int(result.invested).formatted()) → $\(Int(result.value).formatted())")
-                        .font(.system(size: 32, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white).minimumScaleFactor(0.6).lineLimit(1)
-                    HStack(spacing: 4) {
-                        Image(systemName: isGain ? "arrow.up.right" : "arrow.down.right")
-                            .font(.system(size: 11, weight: .bold))
-                        Text(String(format: "%+.1f%%  ·  %@$%@",
-                                    result.gainPct, isGain ? "+" : "",
-                                    abs(Int(result.gain)).formatted()))
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundStyle(color)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 7))
-                }
-                .padding(.horizontal, 20).padding(.vertical, 14)
-
-                Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 20)
-
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("THEN").font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary).tracking(0.5)
-                        Text(BitcoinPrice(usd: result.histPrice, timestamp: Date()).formatted)
-                            .font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.right").foregroundStyle(.secondary).font(.system(size: 12))
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 3) {
-                        Text("NOW").font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary).tracking(0.5)
-                        Text(BitcoinPrice(usd: result.nowPrice, timestamp: Date()).formatted)
-                            .font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(color)
-                    }
-                }
-                .padding(.horizontal, 20).padding(.vertical, 10)
-
-                Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 20)
-                appStoreBadgeRow(label: result.btc.btcFormatted + " BTC")
-            }
-        }
-        .frame(width: 375, height: 270)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 }

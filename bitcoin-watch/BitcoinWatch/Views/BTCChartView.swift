@@ -16,8 +16,8 @@ struct BTCChartView: View {
         isUp ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23)
     }
 
-    private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.9995 }
-    private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.0005 }
+    private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.998 }
+    private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.002 }
 
     private var selectedPoint: StatsService.ChartPoint? {
         guard let selectedDate else { return nil }
@@ -80,21 +80,8 @@ struct BTCChartView: View {
                             y: .value("Price", point.price)
                         )
                         .foregroundStyle(lineColor)
-                        .interpolationMethod(.catmullRom)
-
-                        AreaMark(
-                            x: .value("Time", point.date),
-                            yStart: .value("Base", minPrice),
-                            yEnd: .value("Price", point.price)
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [lineColor.opacity(0.25), lineColor.opacity(0.0)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .interpolationMethod(.catmullRom)
+                        .interpolationMethod(.monotone)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
                     }
 
                     if let selected = selectedPoint {
@@ -116,6 +103,9 @@ struct BTCChartView: View {
                 .chartXSelection(value: $selectedDate)
                 .frame(height: 140)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .onChange(of: statsService.chartData.last?.id) { _, _ in
+                    selectedDate = nil
+                }
             }
         }
         .padding(.horizontal, 14)
