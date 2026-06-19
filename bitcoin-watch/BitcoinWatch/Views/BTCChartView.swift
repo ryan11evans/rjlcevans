@@ -75,6 +75,14 @@ struct BTCChartView: View {
             } else {
                 Chart {
                     ForEach(data) { point in
+                        AreaMark(
+                            x: .value("Time", point.date),
+                            yStart: .value("Base", minPrice),
+                            yEnd: .value("Price", point.price)
+                        )
+                        .foregroundStyle(lineColor.opacity(0.12))
+                        .interpolationMethod(.monotone)
+
                         LineMark(
                             x: .value("Time", point.date),
                             y: .value("Price", point.price)
