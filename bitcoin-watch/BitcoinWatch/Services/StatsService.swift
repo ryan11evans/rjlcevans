@@ -102,7 +102,7 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        let points = r.prices.dropLast().map { pair in
+        let points = r.prices.map { pair in
             ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
         }
         chartData = points
