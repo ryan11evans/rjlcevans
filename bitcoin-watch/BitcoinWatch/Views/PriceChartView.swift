@@ -3,6 +3,8 @@ import SwiftUI
 struct BitcoinInfoView: View {
     let stats: BitcoinStats?
     let currentPrice: Double?
+    var chartLow: Double? = nil
+    var chartHigh: Double? = nil
     var fearGreed: StatsService.FearGreedData? = nil
 
     var body: some View {
@@ -47,8 +49,12 @@ struct BitcoinInfoView: View {
         .padding(.top, 4)
     }
 
-    private func high24h(_ s: BitcoinStats) -> Double { max(s.high24h, currentPrice ?? s.high24h) }
-    private func low24h(_ s: BitcoinStats) -> Double  { min(s.low24h,  currentPrice ?? s.low24h) }
+    private func high24h(_ s: BitcoinStats) -> Double {
+        [s.high24h, currentPrice, chartHigh].compactMap { $0 }.max() ?? s.high24h
+    }
+    private func low24h(_ s: BitcoinStats) -> Double {
+        [s.low24h, currentPrice, chartLow].compactMap { $0 }.min() ?? s.low24h
+    }
 
     private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
 

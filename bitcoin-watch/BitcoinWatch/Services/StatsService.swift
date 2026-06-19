@@ -107,22 +107,6 @@ class StatsService: ObservableObject {
         }
         chartData = points
         chartRange = range
-
-        // After chart data is loaded, refine the 24h low/high using actual chart prices
-        // so the stat tiles are consistent with what the chart shows.
-        if let current = stats?.currentPrice,
-           let chartMin = points.map(\.price).min(),
-           let chartMax = points.map(\.price).max() {
-            stats = BitcoinStats(
-                currentPrice: current,
-                high24h: max(stats?.high24h ?? chartMax, chartMax),
-                low24h:  min(stats?.low24h  ?? chartMin, chartMin),
-                ath:     stats?.ath     ?? 0,
-                athDate: stats?.athDate ?? Date(),
-                change24h: stats?.change24h ?? 0,
-                blockHeight: stats?.blockHeight ?? 0
-            )
-        }
     }
 
     private struct MarketResult {
