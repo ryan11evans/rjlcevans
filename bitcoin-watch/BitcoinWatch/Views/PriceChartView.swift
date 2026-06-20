@@ -50,10 +50,10 @@ struct BitcoinInfoView: View {
     }
 
     private func high24h(_ s: BitcoinStats) -> Double {
-        [s.high24h, currentPrice, chartHigh].compactMap { $0 }.max() ?? s.high24h
+        [currentPrice, chartHigh].compactMap { $0 }.max() ?? s.high24h
     }
     private func low24h(_ s: BitcoinStats) -> Double {
-        [s.low24h, currentPrice, chartLow].compactMap { $0 }.min() ?? s.low24h
+        [currentPrice, chartLow].compactMap { $0 }.min() ?? s.low24h
     }
 
     private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
