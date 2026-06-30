@@ -11,7 +11,7 @@ final class PushService: ObservableObject {
 
     // ⚠️ Set this to your deployed Worker URL (see push-server/README.md).
     // Until it's set, background alerts won't work but the app is otherwise fine.
-    private let serverURL = URL(string: "https://tapbtc-push.REPLACE-ME.workers.dev")!
+    private let serverURL = URL(string: "https://tapbtc-push.ryan11evans.workers.dev")!
 
     private let tokenKey = "apnsDeviceToken"
 
