@@ -11,7 +11,7 @@ crons = ["* * * * *"]
 #   npx wrangler kv namespace create ALERTS
 [[kv_namespaces]]
 binding = "ALERTS"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "f1077054acc64381a2441679fa30e5e5"
 
 # Non-secret config. The three APNS_* secrets are set via `wrangler secret put`
 # (see README) and must NOT be committed here.
