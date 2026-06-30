@@ -39,7 +39,7 @@ struct PriceAlertView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Task {
-                            if await service.requestPermission() { showAdd = true }
+                            if await PushService.shared.enable() { showAdd = true }
                             else { permissionDenied = true }
                         }
                     } label: { Image(systemName: "plus") }

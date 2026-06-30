@@ -1,8 +1,10 @@
 import SwiftUI
+import UIKit
 import UserNotifications
 
 @main
 struct BitcoinWatchApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var priceService = PriceService.shared
 
@@ -28,6 +30,26 @@ struct BitcoinWatchApp: App {
                 break
             }
         }
+    }
+}
+
+// Receives the APNs device token and forwards it to PushService so the backend
+// can send price-alert pushes while the app is closed.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        PushService.shared.registerIfAuthorized()
+        return true
+    }
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Task { @MainActor in PushService.shared.setDeviceToken(deviceToken) }
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // No-op: background pushes simply stay off until registration succeeds.
     }
 }
 

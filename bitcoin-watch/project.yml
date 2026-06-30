@@ -50,8 +50,11 @@ targets:
     entitlements:
       path: BitcoinWatch/BitcoinWatch.entitlements
       properties:
+        aps-environment: development
         com.apple.security.application-groups:
           - group.com.rjlcevans.bitcoinwatch
+        com.apple.developer.associated-domains:
+          - applinks:rjlcevans.com
     dependencies:
       - target: BitcoinWatchWidget
       - target: BitcoinWatchWatchApp
