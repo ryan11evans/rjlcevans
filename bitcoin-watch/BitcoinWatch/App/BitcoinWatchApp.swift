@@ -23,8 +23,12 @@ struct BitcoinWatchApp: App {
             switch phase {
             case .active:
                 priceService.startForegroundRefresh()
+                // Keep the chart + stats fresh: refresh now, then every 5 min.
+                StatsService.shared.startAutoRefresh()
+                Task { await StatsService.shared.fetch() }
             case .background:
                 priceService.stopForegroundRefresh()
+                StatsService.shared.stopAutoRefresh()
                 BackgroundRefresh.schedule()
             default:
                 break

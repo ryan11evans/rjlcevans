@@ -7,11 +7,17 @@
 //
 // This is what makes alerts fire when the app is closed or force-quit: the
 // monitoring happens here, on an always-on server, not on the phone.
+//
+// All devices live under a single KV key (DEVICES_KEY) so the cron does one
+// read per tick instead of a KV list() — list() every minute would exceed the
+// free tier's 1,000-list/day limit.
 
 const COINBASE_URL = "https://api.coinbase.com/v2/prices/BTC-USD/spot";
 const APNS_HOST_PROD = "https://api.push.apple.com";
 const APNS_HOST_SANDBOX = "https://api.sandbox.push.apple.com";
 const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour, matches the in-app cooldown
+const DEVICES_KEY = "devices";
+const JWT_KEY = "apns:jwt";
 
 export default {
   async fetch(request, env) {
@@ -45,10 +51,6 @@ async function handleRegister(request, env) {
     return json({ error: "invalid token" }, 400);
   }
 
-  const key = `device:${token}`;
-  const existing = (await env.ALERTS.get(key, "json")) || { fired: {} };
-  const prevFired = existing.fired || {};
-
   const cleanAlerts = (Array.isArray(alerts) ? alerts : []).filter(
     (a) =>
       a &&
@@ -57,16 +59,17 @@ async function handleRegister(request, env) {
       (a.direction === "above" || a.direction === "below"),
   );
 
+  const devices = (await env.ALERTS.get(DEVICES_KEY, "json")) || {};
+  const prevFired = devices[token]?.fired || {};
+
   // Carry forward fired-state only for alerts that still exist.
   const fired = {};
   for (const a of cleanAlerts) {
     if (prevFired[a.id] != null) fired[a.id] = prevFired[a.id];
   }
 
-  await env.ALERTS.put(
-    key,
-    JSON.stringify({ token, alerts: cleanAlerts, fired, updatedAt: Date.now() }),
-  );
+  devices[token] = { alerts: cleanAlerts, fired, updatedAt: Date.now() };
+  await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
 
   // Echo fired-state back so the client can mark those alerts fired/disabled
   // and avoid double-firing them in the foreground.
@@ -76,53 +79,47 @@ async function handleRegister(request, env) {
 // ── Cron: price check + push ─────────────────────────────────────────────────
 
 async function checkAndFire(env) {
+  const devices = await env.ALERTS.get(DEVICES_KEY, "json");
+  if (!devices || Object.keys(devices).length === 0) return;
+
   const price = await fetchPrice();
   if (price == null) return;
 
-  const jwt = await getApnsJwt(env);
-  let cursor;
+  let jwt = null; // fetched lazily, only if something actually needs sending
+  let changed = false;
 
-  do {
-    const list = await env.ALERTS.list({ prefix: "device:", cursor });
-    cursor = list.list_complete ? null : list.cursor;
+  for (const token of Object.keys(devices)) {
+    const record = devices[token];
+    if (!record || !Array.isArray(record.alerts)) continue;
 
-    for (const entry of list.keys) {
-      const record = await env.ALERTS.get(entry.name, "json");
-      if (!record || !Array.isArray(record.alerts)) continue;
+    for (const alert of record.alerts) {
+      if (alert.enabled === false) continue;
 
-      let changed = false;
-      let dropped = false;
+      const crossed =
+        alert.direction === "above"
+          ? price >= alert.targetPrice
+          : price <= alert.targetPrice;
+      if (!crossed) continue;
 
-      for (const alert of record.alerts) {
-        if (alert.enabled === false) continue;
+      const last = record.fired[alert.id];
+      if (last && !alert.repeating) continue; // one-shot already fired
+      if (last && Date.now() - last < COOLDOWN_MS) continue; // cooldown
 
-        const crossed =
-          alert.direction === "above"
-            ? price >= alert.targetPrice
-            : price <= alert.targetPrice;
-        if (!crossed) continue;
-
-        const last = record.fired[alert.id];
-        if (last && !alert.repeating) continue; // one-shot already fired
-        if (last && Date.now() - last < COOLDOWN_MS) continue; // cooldown
-
-        const result = await sendPush(env, jwt, record.token, alert, price);
-        if (result === "unregistered") {
-          await env.ALERTS.delete(entry.name);
-          dropped = true;
-          break;
-        }
-        if (result === true) {
-          record.fired[alert.id] = Date.now();
-          changed = true;
-        }
+      if (!jwt) jwt = await getApnsJwt(env);
+      const result = await sendPush(env, jwt, token, alert, price);
+      if (result === "unregistered") {
+        delete devices[token];
+        changed = true;
+        break;
       }
-
-      if (changed && !dropped) {
-        await env.ALERTS.put(entry.name, JSON.stringify(record));
+      if (result === true) {
+        record.fired[alert.id] = Date.now();
+        changed = true;
       }
     }
-  } while (cursor);
+  }
+
+  if (changed) await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
 }
 
 async function fetchPrice() {
@@ -188,7 +185,7 @@ async function sendPush(env, jwt, token, alert, price) {
 // APNs provider tokens may be reused for up to an hour and must not be
 // regenerated too often, so cache the signed JWT in KV.
 async function getApnsJwt(env) {
-  const cached = await env.ALERTS.get("apns:jwt", "json");
+  const cached = await env.ALERTS.get(JWT_KEY, "json");
   if (cached && Date.now() - cached.iat < 30 * 60 * 1000) return cached.jwt;
 
   const header = { alg: "ES256", kid: env.APNS_KEY_ID };
@@ -204,7 +201,7 @@ async function getApnsJwt(env) {
   );
 
   const jwt = `${signingInput}.${base64url(new Uint8Array(sig))}`;
-  await env.ALERTS.put("apns:jwt", JSON.stringify({ jwt, iat: Date.now() }), {
+  await env.ALERTS.put(JWT_KEY, JSON.stringify({ jwt, iat: Date.now() }), {
     expirationTtl: 3600,
   });
   return jwt;
