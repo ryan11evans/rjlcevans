@@ -22,7 +22,12 @@ struct BitcoinWatchApp: App {
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active:
-                priceService.startForegroundRefresh()
+                // Pull the server's fired-state FIRST so an alert already sent as
+                // a push while closed isn't re-fired by the foreground check.
+                Task {
+                    await PushService.shared.sync()
+                    priceService.startForegroundRefresh()
+                }
                 // Keep the chart + stats fresh: refresh now, then every 5 min.
                 StatsService.shared.startAutoRefresh()
                 Task { await StatsService.shared.fetch() }

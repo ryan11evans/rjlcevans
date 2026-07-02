@@ -59,8 +59,12 @@ class AlertService: ObservableObject {
         for (idString, ts) in fired {
             guard let id = UUID(uuidString: idString),
                   let i = alerts.firstIndex(where: { $0.id == id }) else { continue }
-            if alerts[i].lastFiredAt == nil {
-                alerts[i].lastFiredAt = Date(timeIntervalSince1970: ts)
+            // Adopt the server's fire time if it's newer than ours, so the local
+            // cooldown reflects a push that went out while the app was closed and
+            // the foreground check doesn't re-fire it.
+            let serverDate = Date(timeIntervalSince1970: ts)
+            if alerts[i].lastFiredAt == nil || serverDate > alerts[i].lastFiredAt! {
+                alerts[i].lastFiredAt = serverDate
                 changed = true
             }
             if !alerts[i].isRepeating && alerts[i].isEnabled {
