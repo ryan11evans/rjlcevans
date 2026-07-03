@@ -24,6 +24,16 @@ struct BTCChartView: View {
 
     private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
 
+    // Shift the label inward when its point sits near the chart's left/right
+    // edge, so the text isn't clipped by the chart frame.
+    private func edgeAwarePosition(for date: Date, vertical: AnnotationPosition) -> AnnotationPosition {
+        guard let first = data.first?.date, let last = data.last?.date, last > first else { return vertical }
+        let f = date.timeIntervalSince(first) / last.timeIntervalSince(first)
+        if f > 0.85 { return vertical == .top ? .topLeading : .bottomLeading }
+        if f < 0.15 { return vertical == .top ? .topTrailing : .bottomTrailing }
+        return vertical
+    }
+
     private var selectedPoint: StatsService.ChartPoint? {
         guard let selectedDate else { return nil }
         return data.min(by: {
@@ -105,7 +115,7 @@ struct BTCChartView: View {
                         )
                         .foregroundStyle(.white.opacity(0.6))
                         .symbolSize(18)
-                        .annotation(position: .top, spacing: 2,
+                        .annotation(position: edgeAwarePosition(for: high.date, vertical: .top), spacing: 2,
                                     overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                             Text(shortPrice(high.price))
                                 .font(.system(size: 9, weight: .semibold, design: .rounded))
@@ -119,7 +129,7 @@ struct BTCChartView: View {
                         )
                         .foregroundStyle(.white.opacity(0.6))
                         .symbolSize(18)
-                        .annotation(position: .bottom, spacing: 2,
+                        .annotation(position: edgeAwarePosition(for: low.date, vertical: .bottom), spacing: 2,
                                     overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                             Text(shortPrice(low.price))
                                 .font(.system(size: 9, weight: .semibold, design: .rounded))
