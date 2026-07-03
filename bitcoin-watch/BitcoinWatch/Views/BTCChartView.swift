@@ -19,6 +19,11 @@ struct BTCChartView: View {
     private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.998 }
     private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.002 }
 
+    private var highPoint: StatsService.ChartPoint? { data.max(by: { $0.price < $1.price }) }
+    private var lowPoint: StatsService.ChartPoint? { data.min(by: { $0.price < $1.price }) }
+
+    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
+
     private var selectedPoint: StatsService.ChartPoint? {
         guard let selectedDate else { return nil }
         return data.min(by: {
@@ -90,6 +95,36 @@ struct BTCChartView: View {
                         .foregroundStyle(lineColor)
                         .interpolationMethod(.monotone)
                         .lineStyle(StrokeStyle(lineWidth: 2))
+                    }
+
+                    // Subtle high/low markers so the chart is readable at a glance
+                    if let high = highPoint {
+                        PointMark(
+                            x: .value("Time", high.date),
+                            y: .value("Price", high.price)
+                        )
+                        .foregroundStyle(.white.opacity(0.6))
+                        .symbolSize(18)
+                        .annotation(position: .top, spacing: 2,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
+                            Text(shortPrice(high.price))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
+                    }
+                    if let low = lowPoint {
+                        PointMark(
+                            x: .value("Time", low.date),
+                            y: .value("Price", low.price)
+                        )
+                        .foregroundStyle(.white.opacity(0.6))
+                        .symbolSize(18)
+                        .annotation(position: .bottom, spacing: 2,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
+                            Text(shortPrice(low.price))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
                     }
 
                     if let selected = selectedPoint {
