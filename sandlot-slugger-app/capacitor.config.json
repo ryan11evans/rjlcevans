@@ -1,0 +1,18 @@
+{
+  "appId": "com.rjlcevans.sandlotslugger",
+  "appName": "Sandlot Slugger",
+  "webDir": "../sandlot-slugger",
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0b1f14",
+      "overlaysWebView": false
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#0b1f14",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    }
+  }
+}
