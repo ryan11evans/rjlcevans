@@ -7,9 +7,13 @@ const PITCHER_SPOT = { x: 400, y: 130 };
 const BATTER_SPOT = { x: 400, y: 480 };
 
 // t is 0 (pitch released) -> 1 (ball reaches the plate). The swing must
-// land inside this window of t to make contact.
-const ZONE_CENTER = 0.885;
-const ZONE_WIDTH = 0.16;
+// land inside this window of t to make contact. The meter bar below the
+// plate telegraphs this window so hitting it is about reading the meter,
+// not guessing the ball's speed.
+const ZONE_CENTER = 0.8;
+const ZONE_WIDTH = 0.3;
+
+const METER = { x: 150, y: 566, width: 500, height: 16 };
 
 class PlayScene extends Phaser.Scene {
   constructor() {
@@ -18,15 +22,14 @@ class PlayScene extends Phaser.Scene {
 
   create() {
     this.drawField();
+    this.drawBatter();
+    this.drawMeter();
 
     this.pitcher = this.add.circle(PITCHER_SPOT.x, PITCHER_SPOT.y, 14, 0xffffff)
-      .setStrokeStyle(2, 0x222222);
-    this.add.rectangle(BATTER_SPOT.x, BATTER_SPOT.y - 10, 30, 60, 0x2b3a67);
-    this.bat = this.add.rectangle(BATTER_SPOT.x + 22, BATTER_SPOT.y - 25, 6, 50, 0x8a5a2b)
-      .setOrigin(0.5, 1)
-      .setAngle(25);
+      .setStrokeStyle(2, 0x333333);
 
-    this.ball = this.add.circle(PITCHER_SPOT.x, PITCHER_SPOT.y, 6, 0xffffff)
+    this.ballShadow = this.add.ellipse(BATTER_SPOT.x, BATTER_SPOT.y + 8, 26, 10, 0x000000, 0.25);
+    this.ball = this.add.circle(PITCHER_SPOT.x, PITCHER_SPOT.y, 7, 0xffffff)
       .setStrokeStyle(1, 0x333333)
       .setVisible(false);
     this.physics.add.existing(this.ball);
@@ -40,14 +43,12 @@ class PlayScene extends Phaser.Scene {
     this.pitchActive = false;
     this.resultActive = false;
 
-    const textStyle = { fontFamily: 'Menlo, monospace', fontSize: '20px', color: '#ffffff' };
-    this.scoreText = this.add.text(16, 14, '', textStyle);
-    this.strikeText = this.add.text(16, 42, '', textStyle);
-    this.hintText = this.add.text(FIELD.width / 2, FIELD.height - 30, 'TAP or SPACE to swing', {
-      ...textStyle,
-      fontSize: '16px',
-      color: '#cfd8dc',
-    }).setOrigin(0.5);
+    this.hudPanel = this.add.rectangle(8, 8, 236, 62, 0x0a1b12, 0.55)
+      .setOrigin(0, 0)
+      .setStrokeStyle(1, 0xffffff, 0.15);
+    const textStyle = { fontFamily: 'Menlo, monospace', fontSize: '18px', color: '#ffffff' };
+    this.scoreText = this.add.text(18, 16, '', textStyle);
+    this.strikeText = this.add.text(18, 42, '', textStyle);
     this.messageText = this.add.text(FIELD.width / 2, 300, '', {
       fontFamily: 'Menlo, monospace',
       fontSize: '40px',
@@ -67,10 +68,23 @@ class PlayScene extends Phaser.Scene {
 
   drawField() {
     const g = this.add.graphics();
-    g.fillStyle(0x8fd3ff, 1).fillRect(0, 0, FIELD.width, 170);
-    g.fillStyle(0x2e8b4f, 1).fillRect(0, 170, FIELD.width, FIELD.height - 170);
-    g.fillStyle(0x6b4a2f, 1).fillEllipse(PITCHER_SPOT.x, PITCHER_SPOT.y + 20, 90, 40);
-    g.fillStyle(0x6b4a2f, 1).fillEllipse(BATTER_SPOT.x, BATTER_SPOT.y + 40, 220, 110);
+
+    g.fillGradientStyle(0x8fd3ff, 0x8fd3ff, 0xd8ecff, 0xd8ecff, 1);
+    g.fillRect(0, 0, FIELD.width, 170);
+
+    const stripes = 7;
+    const stripeH = (FIELD.height - 170) / stripes;
+    for (let i = 0; i < stripes; i++) {
+      g.fillStyle(i % 2 === 0 ? 0x2e8b4f : 0x2a9954, 1);
+      g.fillRect(0, 170 + i * stripeH, FIELD.width, stripeH + 1);
+    }
+
+    g.fillStyle(0x7a5636, 1).fillEllipse(PITCHER_SPOT.x, PITCHER_SPOT.y + 20, 100, 44);
+    g.fillStyle(0x8a6440, 1).fillEllipse(PITCHER_SPOT.x, PITCHER_SPOT.y + 16, 80, 32);
+
+    g.fillStyle(0x7a5636, 1).fillEllipse(BATTER_SPOT.x, BATTER_SPOT.y + 45, 260, 130);
+    g.fillStyle(0x8a6440, 1).fillEllipse(BATTER_SPOT.x, BATTER_SPOT.y + 40, 230, 108);
+
     g.fillStyle(0xf5f5f5, 1);
     g.fillPoints([
       { x: BATTER_SPOT.x - 12, y: BATTER_SPOT.y + 55 },
@@ -81,15 +95,56 @@ class PlayScene extends Phaser.Scene {
     ], true);
   }
 
+  drawBatter() {
+    const x = BATTER_SPOT.x;
+    const groundY = BATTER_SPOT.y;
+
+    this.add.rectangle(x - 9, groundY - 15, 9, 32, 0x1c2541);
+    this.add.rectangle(x + 9, groundY - 15, 9, 32, 0x1c2541);
+    this.add.rectangle(x, groundY - 55, 34, 46, 0xd7263d).setStrokeStyle(2, 0xa81a2c);
+    this.add.circle(x, groundY - 86, 14, 0xf0c090).setStrokeStyle(1, 0xc99a68);
+    this.add.rectangle(x - 1, groundY - 97, 28, 11, 0x1c2541).setOrigin(0.5, 0.5);
+    this.add.rectangle(x + 12, groundY - 96, 12, 5, 0x1c2541);
+
+    this.bat = this.add.rectangle(x + 20, groundY - 68, 6, 46, 0x9c6b3a)
+      .setOrigin(0.5, 1)
+      .setAngle(30);
+  }
+
+  drawMeter() {
+    const { x, y, width, height } = METER;
+    const label = this.add.text(x + width / 2, y - 22, 'SWING WHEN THE MARKER HITS GOLD', {
+      fontFamily: 'Menlo, monospace',
+      fontSize: '12px',
+      color: '#f2f6f8',
+    }).setOrigin(0.5);
+    this.add.rectangle(label.x, label.y, label.width + 14, label.height + 8, 0x0a1b12, 0.75);
+    this.children.bringToTop(label);
+
+    this.add.rectangle(x + width / 2, y, width, height, 0x0a1b12, 0.85)
+      .setStrokeStyle(2, 0xffffff, 0.4);
+
+    const zoneStart = ZONE_CENTER - ZONE_WIDTH / 2;
+    const zoneW = ZONE_WIDTH * width;
+    this.add.rectangle(x + zoneStart * width + zoneW / 2, y, zoneW, height, 0xffd23f, 0.9)
+      .setStrokeStyle(1, 0x8a6d1f);
+
+    this.meterMarker = this.add.rectangle(x, y, 5, height + 12, 0xffffff)
+      .setStrokeStyle(1, 0x000000)
+      .setVisible(false);
+  }
+
   startPitch() {
     if (this.resultActive) return;
     this.pitchActive = true;
     this.ball.setVisible(true);
     this.ball.setPosition(PITCHER_SPOT.x, PITCHER_SPOT.y);
     this.ball.setScale(0.4);
+    this.meterMarker.setVisible(true);
+    this.meterMarker.setPosition(METER.x, METER.y);
 
-    const duration = Phaser.Math.Between(650, 950);
-    const curve = Phaser.Math.Between(-40, 40);
+    const duration = Phaser.Math.Between(1000, 1400);
+    const curve = Phaser.Math.Between(-35, 35);
     this.pitchT = { t: 0 };
     this.pitchTween = this.tweens.add({
       targets: this.pitchT,
@@ -102,6 +157,7 @@ class PlayScene extends Phaser.Scene {
         const y = Phaser.Math.Linear(PITCHER_SPOT.y, BATTER_SPOT.y, t);
         this.ball.setPosition(x, y);
         this.ball.setScale(Phaser.Math.Linear(0.4, 1.3, t));
+        this.meterMarker.x = METER.x + t * METER.width;
       },
       onComplete: () => {
         if (this.pitchActive) this.resolvePitch(1, false);
@@ -111,13 +167,14 @@ class PlayScene extends Phaser.Scene {
 
   handleSwing() {
     if (!this.pitchActive || this.resultActive) return;
-    this.tweens.add({ targets: this.bat, angle: -70, duration: 90, yoyo: true, ease: 'Quad.Out' });
+    this.tweens.add({ targets: this.bat, angle: -95, duration: 110, yoyo: true, ease: 'Quad.Out' });
     this.resolvePitch(this.pitchT.t, true);
   }
 
   resolvePitch(t, swung) {
     this.pitchActive = false;
     this.pitchTween.stop();
+    this.meterMarker.setVisible(false);
     const inZone = swung && Math.abs(t - ZONE_CENTER) <= ZONE_WIDTH / 2;
     if (inZone) {
       const accuracy = 1 - Math.abs(t - ZONE_CENTER) / (ZONE_WIDTH / 2);
@@ -132,13 +189,13 @@ class PlayScene extends Phaser.Scene {
     this.ball.body.setAllowGravity(true);
 
     let label, color, scoreAdd;
-    if (accuracy > 0.75) {
+    if (accuracy > 0.7) {
       label = 'HOME RUN!';
       color = '#ffd23f';
       scoreAdd = 4;
       this.ball.body.setVelocity(Phaser.Math.Between(-60, 60), -650);
       this.cameras.main.shake(220, 0.01);
-    } else if (accuracy > 0.35) {
+    } else if (accuracy > 0.3) {
       label = 'BASE HIT!';
       color = '#7cfc9a';
       scoreAdd = 1;
@@ -190,8 +247,8 @@ class PlayScene extends Phaser.Scene {
   }
 
   updateHud() {
-    this.scoreText.setText(`SCORE ${this.score}   HITS ${this.hits}   OUTS ${this.outsTotal}`);
-    this.strikeText.setText(`STRIKES: ${'●'.repeat(this.strikes)}${'○'.repeat(3 - this.strikes)}`);
+    this.scoreText.setText(`SCORE ${this.score}   HITS ${this.hits}`);
+    this.strikeText.setText(`OUTS ${this.outsTotal}   ${'●'.repeat(this.strikes)}${'○'.repeat(3 - this.strikes)}`);
   }
 }
 
