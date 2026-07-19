@@ -6,7 +6,9 @@ struct PriceAlertView: View {
     let currentBTCPrice: Double
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = AlertService.shared
+    @ObservedObject private var pro = ProService.shared
     @State private var showAdd = false
+    @State private var showPaywall = false
     @State private var permissionDenied = false
 
     var body: some View {
@@ -38,6 +40,11 @@ struct PriceAlertView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        // Free tier: up to ProService.freeAlertLimit alerts.
+                        if !pro.isPro && service.alerts.count >= ProService.freeAlertLimit {
+                            showPaywall = true
+                            return
+                        }
                         Task {
                             if await PushService.shared.enable() { showAdd = true }
                             else { permissionDenied = true }
@@ -47,6 +54,9 @@ struct PriceAlertView: View {
             }
             .sheet(isPresented: $showAdd) {
                 AddAlertView(currentBTCPrice: currentBTCPrice)
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
             }
             .alert("Notifications Disabled", isPresented: $permissionDenied) {
                 Button("Open Settings") {

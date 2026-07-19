@@ -13,6 +13,8 @@ struct SettingsView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
+                        ProSection()
+                        NotificationsSection()
                         IconPickerSection()
                         SiriShortcutsSection()
                     }
@@ -24,6 +26,125 @@ struct SettingsView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
         }
+    }
+}
+
+// MARK: - Pro
+
+private struct ProSection: View {
+    @ObservedObject private var pro = ProService.shared
+    @State private var showPaywall = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("TapBTC Pro")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .padding(.horizontal, 24)
+
+            Group {
+                if pro.isPro {
+                    HStack(spacing: 14) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.orange)
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Pro Unlocked")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Unlimited alerts — thanks for the support!")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                } else {
+                    Button { showPaywall = true } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(.orange)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Unlock Pro")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                Text("Unlimited price alerts · one-time \(pro.priceText)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
+            .padding(.horizontal, 24)
+        }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+}
+
+// MARK: - Notifications
+
+private struct NotificationsSection: View {
+    @AppStorage("athAlertEnabled", store: .shared) private var athAlert = true
+    @AppStorage("milestoneAlertEnabled", store: .shared) private var milestoneAlert = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Notifications")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .padding(.horizontal, 24)
+
+            VStack(spacing: 0) {
+                toggleRow(icon: "rocket.fill", tint: .orange,
+                          title: "All-Time High Alerts",
+                          subtitle: "Get a push when BTC sets a new record",
+                          isOn: $athAlert)
+                Divider().padding(.leading, 60)
+                toggleRow(icon: "hourglass", tint: .purple,
+                          title: "Halving Milestones",
+                          subtitle: "Countdown alerts as the halving approaches",
+                          isOn: $milestoneAlert)
+            }
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
+            .padding(.horizontal, 24)
+        }
+        .onChange(of: athAlert) { _, _ in Task { await PushService.shared.sync() } }
+        .onChange(of: milestoneAlert) { _, _ in Task { await PushService.shared.sync() } }
+    }
+
+    private func toggleRow(icon: String, tint: Color, title: String,
+                           subtitle: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Toggle("", isOn: isOn).labelsHidden().tint(.orange)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 

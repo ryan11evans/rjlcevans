@@ -1,9 +1,11 @@
 // TapBTC push backend — Cloudflare Worker
 //
-// Two jobs:
-//   1. POST /register  — a device uploads its APNs token + current alert list
-//   2. cron (1/min)    — fetch the BTC price and send an APNs push for any
-//                        alert whose threshold has been crossed
+// Jobs:
+//   1. POST /register  — a device uploads its APNs token + alerts + preferences
+//   2. cron (1/min)    — fetch BTC price + block height, then send APNs pushes:
+//        - custom price alerts (per-device thresholds)
+//        - new all-time high alerts (global)
+//        - halving countdown / block milestone alerts (global)
 //
 // This is what makes alerts fire when the app is closed or force-quit: the
 // monitoring happens here, on an always-on server, not on the phone.
@@ -13,11 +15,24 @@
 // free tier's 1,000-list/day limit.
 
 const COINBASE_URL = "https://api.coinbase.com/v2/prices/BTC-USD/spot";
+const BLOCK_URL = "https://blockstream.info/api/blocks/tip/height";
 const APNS_HOST_PROD = "https://api.push.apple.com";
 const APNS_HOST_SANDBOX = "https://api.sandbox.push.apple.com";
 const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour, matches the in-app cooldown
 const DEVICES_KEY = "devices";
 const JWT_KEY = "apns:jwt";
+const ATH_KEY = "global:ath";
+const MILESTONES_KEY = "global:milestones";
+
+// Seed so a fresh deploy doesn't false-alert; client registrations bump this
+// with the real ATH from CoinGecko.
+const ATH_SEED = 126080;
+
+const HALVING_INTERVAL = 210000;
+// Alert when this many blocks remain until the halving (0 = the halving itself)
+const HALVING_STEPS = [100000, 75000, 50000, 25000, 10000, 5000, 1000, 0];
+// Round-number block heights worth celebrating
+const ROUND_BLOCKS = [1000000];
 
 export default {
   async fetch(request, env) {
@@ -32,7 +47,7 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(checkAndFire(env));
+    ctx.waitUntil(tick(env));
   },
 };
 
@@ -46,7 +61,7 @@ async function handleRegister(request, env) {
     return json({ error: "bad json" }, 400);
   }
 
-  const { token, alerts } = body;
+  const { token, alerts, athAlert, milestoneAlert, knownATH } = body;
   if (typeof token !== "string" || !/^[0-9a-fA-F]{8,}$/.test(token)) {
     return json({ error: "invalid token" }, 400);
   }
@@ -68,28 +83,57 @@ async function handleRegister(request, env) {
     if (prevFired[a.id] != null) fired[a.id] = prevFired[a.id];
   }
 
-  devices[token] = { alerts: cleanAlerts, fired, updatedAt: Date.now() };
+  devices[token] = {
+    alerts: cleanAlerts,
+    fired,
+    athAlert: athAlert !== false,
+    milestoneAlert: milestoneAlert !== false,
+    updatedAt: Date.now(),
+  };
   await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
+
+  // Let clients teach the server the real ATH (from CoinGecko).
+  if (typeof knownATH === "number" && knownATH > 0) {
+    const ath = (await env.ALERTS.get(ATH_KEY, "json")) || { value: ATH_SEED };
+    if (knownATH > ath.value) {
+      ath.value = knownATH;
+      await env.ALERTS.put(ATH_KEY, JSON.stringify(ath));
+    }
+  }
 
   // Echo fired-state back so the client can mark those alerts fired/disabled
   // and avoid double-firing them in the foreground.
   return json({ fired });
 }
 
-// ── Cron: price check + push ─────────────────────────────────────────────────
+// ── Cron tick ────────────────────────────────────────────────────────────────
 
-async function checkAndFire(env) {
+async function tick(env) {
   const devices = await env.ALERTS.get(DEVICES_KEY, "json");
   if (!devices || Object.keys(devices).length === 0) return;
 
   const price = await fetchPrice();
-  if (price == null) return;
 
-  let jwt = null; // fetched lazily, only if something actually needs sending
-  let changed = false;
+  const state = { env, devices, jwt: null, devicesChanged: false };
 
-  for (const token of Object.keys(devices)) {
-    const record = devices[token];
+  if (price != null) {
+    await checkPriceAlerts(state, price);
+    await checkATH(state, price);
+  }
+  await checkMilestones(state);
+
+  if (state.devicesChanged) {
+    await env.ALERTS.put(DEVICES_KEY, JSON.stringify(state.devices));
+  }
+}
+
+// ── Custom price alerts ──────────────────────────────────────────────────────
+
+async function checkPriceAlerts(state, price) {
+  const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
+
+  for (const token of Object.keys(state.devices)) {
+    const record = state.devices[token];
     if (!record || !Array.isArray(record.alerts)) continue;
 
     for (const alert of record.alerts) {
@@ -105,22 +149,112 @@ async function checkAndFire(env) {
       if (last && !alert.repeating) continue; // one-shot already fired
       if (last && Date.now() - last < COOLDOWN_MS) continue; // cooldown
 
-      if (!jwt) jwt = await getApnsJwt(env);
-      const result = await sendPush(env, jwt, token, alert, price);
-      if (result === "unregistered") {
-        delete devices[token];
-        changed = true;
-        break;
-      }
+      const title =
+        alert.label && alert.label.length ? alert.label : "Bitcoin Price Alert";
+      const dir = alert.direction === "above" ? "above" : "below";
+      const body = `BTC is now ${fmt(price)} — ${dir} your target of ${fmt(alert.targetPrice)}`;
+
+      const result = await deliver(state, token, title, body);
+      if (result === "unregistered") break; // device deleted; skip its remaining alerts
       if (result === true) {
         record.fired[alert.id] = Date.now();
-        changed = true;
+        state.devicesChanged = true;
       }
     }
   }
-
-  if (changed) await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
 }
+
+// ── All-time high alerts (global) ────────────────────────────────────────────
+
+async function checkATH(state, price) {
+  const ath = (await state.env.ALERTS.get(ATH_KEY, "json")) || {
+    value: ATH_SEED,
+    lastAlert: 0,
+  };
+  if (price <= ath.value) return;
+
+  const fmt = "$" + Math.round(price).toLocaleString("en-US");
+  const shouldAlert = Date.now() - (ath.lastAlert || 0) > COOLDOWN_MS;
+
+  if (shouldAlert) {
+    for (const token of Object.keys(state.devices)) {
+      if (state.devices[token]?.athAlert === false) continue;
+      await deliver(
+        state,
+        token,
+        "New All-Time High 🚀",
+        `Bitcoin just hit ${fmt} — a new all-time high!`,
+      );
+    }
+    ath.lastAlert = Date.now();
+  }
+
+  // Track the new high even when inside the alert cooldown.
+  ath.value = price;
+  await state.env.ALERTS.put(ATH_KEY, JSON.stringify(ath));
+}
+
+// ── Halving countdown / block milestones (global) ────────────────────────────
+
+async function checkMilestones(state) {
+  const height = await fetchBlockHeight();
+  if (height == null) return;
+
+  const nextHalving = Math.ceil(height / HALVING_INTERVAL) * HALVING_INTERVAL;
+  const remaining = nextHalving - height;
+
+  // Build the currently-satisfied milestone keys.
+  const satisfied = [];
+  for (const step of HALVING_STEPS) {
+    if (remaining <= step) {
+      satisfied.push({
+        key: `h${nextHalving}-${step}`,
+        title: step === 0 ? "The Bitcoin Halving 🟠" : "Halving Countdown ⛏️",
+        body:
+          step === 0
+            ? `The halving is here — block ${nextHalving.toLocaleString("en-US")} reached. New era begins.`
+            : `${step.toLocaleString("en-US")} blocks until the next Bitcoin halving.`,
+      });
+    }
+  }
+  for (const round of ROUND_BLOCKS) {
+    if (height >= round) {
+      satisfied.push({
+        key: `b${round}`,
+        title: "Bitcoin Milestone 🎉",
+        body: `Bitcoin just reached block ${round.toLocaleString("en-US")}.`,
+      });
+    }
+  }
+
+  let stored = await state.env.ALERTS.get(MILESTONES_KEY, "json");
+
+  // First run: mark everything already passed as fired WITHOUT pushing, so a
+  // fresh deploy doesn't spam historical milestones.
+  if (!stored) {
+    const fired = {};
+    for (const m of satisfied) fired[m.key] = Date.now();
+    await state.env.ALERTS.put(MILESTONES_KEY, JSON.stringify({ fired }));
+    return;
+  }
+
+  let changed = false;
+  for (const m of satisfied) {
+    if (stored.fired[m.key]) continue;
+
+    for (const token of Object.keys(state.devices)) {
+      if (state.devices[token]?.milestoneAlert === false) continue;
+      await deliver(state, token, m.title, m.body);
+    }
+    stored.fired[m.key] = Date.now();
+    changed = true;
+  }
+  if (changed) {
+    await state.env.ALERTS.put(MILESTONES_KEY, JSON.stringify(stored));
+  }
+}
+
+// ── Data sources ─────────────────────────────────────────────────────────────
 
 async function fetchPrice() {
   try {
@@ -133,15 +267,31 @@ async function fetchPrice() {
   }
 }
 
-// ── APNs ─────────────────────────────────────────────────────────────────────
+async function fetchBlockHeight() {
+  try {
+    const res = await fetch(BLOCK_URL, { cf: { cacheTtl: 30 } });
+    const text = await res.text();
+    const h = parseInt(text.trim(), 10);
+    return Number.isFinite(h) ? h : null;
+  } catch {
+    return null;
+  }
+}
 
-async function sendPush(env, jwt, token, alert, price) {
-  const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
-  const dir = alert.direction === "above" ? "above" : "below";
-  const title =
-    alert.label && alert.label.length ? alert.label : "Bitcoin Price Alert";
-  const bodyText = `BTC is now ${fmt(price)} — ${dir} your target of ${fmt(alert.targetPrice)}`;
+// ── APNs delivery ────────────────────────────────────────────────────────────
 
+// Sends one push. Lazily signs the JWT, and deletes dead devices in place.
+async function deliver(state, token, title, body) {
+  if (!state.jwt) state.jwt = await getApnsJwt(state.env);
+  const result = await sendPush(state.env, state.jwt, token, title, body);
+  if (result === "unregistered") {
+    delete state.devices[token];
+    state.devicesChanged = true;
+  }
+  return result;
+}
+
+async function sendPush(env, jwt, token, title, bodyText) {
   const payload = JSON.stringify({
     aps: { alert: { title, body: bodyText }, sound: "default" },
   });
