@@ -33,8 +33,11 @@ final class ProService: ObservableObject {
     /// Returns true if the purchase completed.
     @discardableResult
     func purchase() async -> Bool {
-        guard let product = product ?? (try? await Product.products(for: [Self.productID]).first)
-        else { return false }
+        var product = self.product
+        if product == nil {
+            product = try? await Product.products(for: [Self.productID]).first
+        }
+        guard let product else { return false }
         guard let result = try? await product.purchase() else { return false }
         switch result {
         case .success(let verification):
