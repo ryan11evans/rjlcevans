@@ -59,7 +59,16 @@ final class PushService: ObservableObject {
             ]
         }
 
-        let payload: [String: Any] = ["token": token, "alerts": alerts]
+        var payload: [String: Any] = [
+            "token": token,
+            "alerts": alerts,
+            "athAlert": UserDefaults.shared.object(forKey: "athAlertEnabled") as? Bool ?? true,
+            "milestoneAlert": UserDefaults.shared.object(forKey: "milestoneAlertEnabled") as? Bool ?? true,
+        ]
+        // Teach the server the real ATH so its new-high detection is accurate.
+        if let ath = StatsService.shared.stats?.ath {
+            payload["knownATH"] = ath
+        }
         guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return }
 
         var req = URLRequest(url: serverURL.appendingPathComponent("register"))

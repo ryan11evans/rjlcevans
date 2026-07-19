@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var showCalculator = false
     @State private var showDCA = false
     @State private var showSettings = false
+    @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -76,6 +77,12 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView {
+                    UserDefaults.shared.set(true, forKey: "hasSeenOnboarding")
+                    showOnboarding = false
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
