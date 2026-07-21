@@ -1,8 +1,10 @@
 import SwiftUI
+import UIKit
 import UserNotifications
 
 @main
 struct BitcoinWatchApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var priceService = PriceService.shared
 
@@ -20,8 +22,15 @@ struct BitcoinWatchApp: App {
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active:
-                priceService.startForegroundRefresh()
+                // Pull the server's fired-state FIRST so an alert already sent as
+                // a push while closed isn't re-fired by the foreground check.
+                Task {
+                    await PushService.shared.sync()
+                    priceService.startForegroundRefresh()
+                }
+                // Keep the chart + stats fresh: refresh now, then every 5 min.
                 StatsService.shared.startAutoRefresh()
+                Task { await StatsService.shared.fetch() }
             case .background:
                 priceService.stopForegroundRefresh()
                 StatsService.shared.stopAutoRefresh()
@@ -30,6 +39,26 @@ struct BitcoinWatchApp: App {
                 break
             }
         }
+    }
+}
+
+// Receives the APNs device token and forwards it to PushService so the backend
+// can send price-alert pushes while the app is closed.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        PushService.shared.registerIfAuthorized()
+        return true
+    }
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Task { @MainActor in PushService.shared.setDeviceToken(deviceToken) }
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // No-op: background pushes simply stay off until registration succeeds.
     }
 }
 

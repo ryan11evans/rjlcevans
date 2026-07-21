@@ -58,11 +58,13 @@ class StatsService: ObservableObject {
         autoRefreshTask = nil
     }
 
-    // Called every 15s by PriceService to keep the chart's right edge current
+    // Called every 15s by PriceService to keep the chart's right edge current.
+    // Uses a 10-minute window so we always UPDATE the last CoinGecko point
+    // rather than appending a new one (which would cause a visible price spike).
     func updateLivePrice(_ usd: Double) {
         guard !chartData.isEmpty else { return }
         let now = Date()
-        if let last = chartData.last, now.timeIntervalSince(last.date) < 300 {
+        if let last = chartData.last, now.timeIntervalSince(last.date) < 600 {
             chartData[chartData.count - 1] = ChartPoint(date: now, price: usd)
         } else {
             chartData.append(ChartPoint(date: now, price: usd))
@@ -100,12 +102,8 @@ class StatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        var points = r.prices.map { pair in
+        let points = r.prices.map { pair in
             ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
-        }
-        // Pin the right edge to the live price so the chart is always current
-        if let live = stats?.currentPrice {
-            points.append(ChartPoint(date: Date(), price: live))
         }
         chartData = points
         chartRange = range

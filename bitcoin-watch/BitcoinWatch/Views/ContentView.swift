@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var showCalculator = false
     @State private var showDCA = false
     @State private var showSettings = false
+    @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -32,7 +33,13 @@ struct ContentView: View {
 
                         VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
-                            BitcoinInfoView(stats: statsService.stats, currentPrice: service.currentPrice?.usd, fearGreed: statsService.fearGreed)
+                            BitcoinInfoView(
+                                stats: statsService.stats,
+                                currentPrice: service.currentPrice?.usd,
+                                chartLow: statsService.chartData.map(\.price).min(),
+                                chartHigh: statsService.chartData.map(\.price).max(),
+                                fearGreed: statsService.fearGreed
+                            )
                         }
                         .padding(.horizontal)
 
@@ -70,6 +77,12 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView {
+                    UserDefaults.shared.set(true, forKey: "hasSeenOnboarding")
+                    showOnboarding = false
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

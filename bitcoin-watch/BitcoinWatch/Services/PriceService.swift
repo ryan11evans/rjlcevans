@@ -66,9 +66,6 @@ class PriceService: ObservableObject {
             // Tell WidgetKit to reload so the lock screen / home screen widget shows fresh data
             WidgetCenter.shared.reloadAllTimelines()
 
-            // Keep chart right edge current on every price tick
-            StatsService.shared.updateLivePrice(price.usd)
-
             // Fire price alert if threshold crossed (works in foreground and background)
             AlertService.shared.checkAndFire(currentPrice: price.usd)
 

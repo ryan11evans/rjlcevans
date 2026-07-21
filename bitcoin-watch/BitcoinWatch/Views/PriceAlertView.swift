@@ -6,7 +6,9 @@ struct PriceAlertView: View {
     let currentBTCPrice: Double
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = AlertService.shared
+    @ObservedObject private var pro = ProService.shared
     @State private var showAdd = false
+    @State private var showPaywall = false
     @State private var permissionDenied = false
 
     var body: some View {
@@ -38,8 +40,13 @@ struct PriceAlertView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        // Free tier: up to ProService.freeAlertLimit alerts.
+                        if !pro.isPro && service.alerts.count >= ProService.freeAlertLimit {
+                            showPaywall = true
+                            return
+                        }
                         Task {
-                            if await service.requestPermission() { showAdd = true }
+                            if await PushService.shared.enable() { showAdd = true }
                             else { permissionDenied = true }
                         }
                     } label: { Image(systemName: "plus") }
@@ -47,6 +54,9 @@ struct PriceAlertView: View {
             }
             .sheet(isPresented: $showAdd) {
                 AddAlertView(currentBTCPrice: currentBTCPrice)
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
             }
             .alert("Notifications Disabled", isPresented: $permissionDenied) {
                 Button("Open Settings") {
@@ -268,34 +278,40 @@ struct AddAlertView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14)
                         .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
-
-                        // Save / Add button
-                        Button {
-                            guard let price = targetPrice else { return }
-                            if isEditing, var updated = editingAlert {
-                                updated.direction = direction
-                                updated.targetPrice = price
-                                updated.label = labelText
-                                updated.isRepeating = isRepeating
-                                service.update(updated)
-                            } else {
-                                service.add(PriceAlert(label: labelText, targetPrice: price,
-                                                       direction: direction, isRepeating: isRepeating))
-                            }
-                            dismiss()
-                        } label: {
-                            Text(isEditing ? "Save Changes" : "Add Alert")
-                                .font(.system(size: 16, weight: .bold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(RoundedRectangle(cornerRadius: 14)
-                                    .fill(targetPrice == nil ? Color.orange.opacity(0.4) : .orange))
-                                .foregroundStyle(.black)
-                        }
-                        .disabled(targetPrice == nil)
                     }
                     .padding(20)
                 }
+            }
+            // Pinned to the bottom of the sheet; slides up above the keyboard
+            // so it's always tappable while typing.
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    guard let price = targetPrice else { return }
+                    if isEditing, var updated = editingAlert {
+                        updated.direction = direction
+                        updated.targetPrice = price
+                        updated.label = labelText
+                        updated.isRepeating = isRepeating
+                        service.update(updated)
+                    } else {
+                        service.add(PriceAlert(label: labelText, targetPrice: price,
+                                               direction: direction, isRepeating: isRepeating))
+                    }
+                    dismiss()
+                } label: {
+                    Text(isEditing ? "Save Changes" : "Add Alert")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(RoundedRectangle(cornerRadius: 14)
+                            .fill(targetPrice == nil ? Color.orange.opacity(0.4) : .orange))
+                        .foregroundStyle(.black)
+                }
+                .disabled(targetPrice == nil)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+                .background(.ultraThinMaterial)
             }
             .navigationTitle(isEditing ? "Edit Alert" : "New Alert")
             .navigationBarTitleDisplayMode(.inline)

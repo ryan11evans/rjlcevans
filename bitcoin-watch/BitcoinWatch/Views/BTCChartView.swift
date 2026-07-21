@@ -16,8 +16,23 @@ struct BTCChartView: View {
         isUp ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23)
     }
 
-    private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.9995 }
-    private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.0005 }
+    private var minPrice: Double { (data.map(\.price).min() ?? 0) * 0.998 }
+    private var maxPrice: Double { (data.map(\.price).max() ?? 100_000) * 1.002 }
+
+    private var highPoint: StatsService.ChartPoint? { data.max(by: { $0.price < $1.price }) }
+    private var lowPoint: StatsService.ChartPoint? { data.min(by: { $0.price < $1.price }) }
+
+    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
+
+    // Shift the label inward when its point sits near the chart's left/right
+    // edge, so the text isn't clipped by the chart frame.
+    private func edgeAwarePosition(for date: Date, vertical: AnnotationPosition) -> AnnotationPosition {
+        guard let first = data.first?.date, let last = data.last?.date, last > first else { return vertical }
+        let f = date.timeIntervalSince(first) / last.timeIntervalSince(first)
+        if f > 0.85 { return vertical == .top ? .topLeading : .bottomLeading }
+        if f < 0.15 { return vertical == .top ? .topTrailing : .bottomTrailing }
+        return vertical
+    }
 
     private var selectedPoint: StatsService.ChartPoint? {
         guard let selectedDate else { return nil }
@@ -75,26 +90,51 @@ struct BTCChartView: View {
             } else {
                 Chart {
                     ForEach(data) { point in
-                        LineMark(
-                            x: .value("Time", point.date),
-                            y: .value("Price", point.price)
-                        )
-                        .foregroundStyle(lineColor)
-                        .interpolationMethod(.catmullRom)
-
                         AreaMark(
                             x: .value("Time", point.date),
                             yStart: .value("Base", minPrice),
                             yEnd: .value("Price", point.price)
                         )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [lineColor.opacity(0.25), lineColor.opacity(0.0)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
+                        .foregroundStyle(lineColor.opacity(0.12))
+                        .interpolationMethod(.monotone)
+
+                        LineMark(
+                            x: .value("Time", point.date),
+                            y: .value("Price", point.price)
                         )
-                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(lineColor)
+                        .interpolationMethod(.monotone)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+                    }
+
+                    // Subtle high/low markers so the chart is readable at a glance
+                    if let high = highPoint {
+                        PointMark(
+                            x: .value("Time", high.date),
+                            y: .value("Price", high.price)
+                        )
+                        .foregroundStyle(.white.opacity(0.6))
+                        .symbolSize(18)
+                        .annotation(position: edgeAwarePosition(for: high.date, vertical: .top), spacing: 2,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
+                            Text(shortPrice(high.price))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
+                    }
+                    if let low = lowPoint {
+                        PointMark(
+                            x: .value("Time", low.date),
+                            y: .value("Price", low.price)
+                        )
+                        .foregroundStyle(.white.opacity(0.6))
+                        .symbolSize(18)
+                        .annotation(position: edgeAwarePosition(for: low.date, vertical: .bottom), spacing: 2,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
+                            Text(shortPrice(low.price))
+                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
                     }
 
                     if let selected = selectedPoint {
@@ -116,6 +156,9 @@ struct BTCChartView: View {
                 .chartXSelection(value: $selectedDate)
                 .frame(height: 140)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .onChange(of: statsService.chartData.last?.id) { _, _ in
+                    selectedDate = nil
+                }
             }
         }
         .padding(.horizontal, 14)

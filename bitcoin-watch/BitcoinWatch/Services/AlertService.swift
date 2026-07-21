@@ -43,13 +43,50 @@ class AlertService: ObservableObject {
     func toggle(id: UUID) {
         guard let i = alerts.firstIndex(where: { $0.id == id }) else { return }
         alerts[i].isEnabled.toggle()
+        if alerts[i].isEnabled && alerts[i].lastFiredAt != nil {
+            // Re-arm: give the alert a fresh identity so the server forgets the
+            // old fired state — otherwise the next sync would disable it again.
+            alerts[i].id = UUID()
+            alerts[i].lastFiredAt = nil
+        }
         save()
     }
 
     func update(_ alert: PriceAlert) {
         guard let i = alerts.firstIndex(where: { $0.id == alert.id }) else { return }
-        alerts[i] = alert
+        var updated = alert
+        if updated.lastFiredAt != nil {
+            // Editing a fired alert re-arms it (fresh identity, see toggle).
+            updated.id = UUID()
+            updated.lastFiredAt = nil
+            updated.isEnabled = true
+        }
+        alerts[i] = updated
         save()
+    }
+
+    /// Merge fired-state reported by the push server so foreground checks and the
+    /// alert list stay consistent with pushes sent while the app was closed.
+    func applyServerFired(_ fired: [String: Double]) {
+        var changed = false
+        for (idString, ts) in fired {
+            guard let id = UUID(uuidString: idString),
+                  let i = alerts.firstIndex(where: { $0.id == id }) else { continue }
+            // Adopt the server's fire time if it's newer than ours, so the local
+            // cooldown reflects a push that went out while the app was closed and
+            // the foreground check doesn't re-fire it. Server timestamps are in
+            // milliseconds (JS Date.now()).
+            let serverDate = Date(timeIntervalSince1970: ts / 1000)
+            if alerts[i].lastFiredAt == nil || serverDate > alerts[i].lastFiredAt! {
+                alerts[i].lastFiredAt = serverDate
+                changed = true
+            }
+            if !alerts[i].isRepeating && alerts[i].isEnabled {
+                alerts[i].isEnabled = false
+                changed = true
+            }
+        }
+        if changed { persist() }  // persist only — avoid a sync loop
     }
 
     func checkAndFire(currentPrice: Double) {
@@ -91,16 +128,22 @@ class AlertService: ObservableObject {
         )
     }
 
-    private func save() {
+    private func persist() {
         guard let data = try? JSONEncoder().encode(alerts) else { return }
         defaults.set(data, forKey: storageKey)
+    }
+
+    private func save() {
+        persist()
+        // Push the updated alert list to the server so background pushes reflect it.
+        Task { await PushService.shared.sync() }
     }
 
     private func load() {
         // Migrate single legacy alert → new array format, one-time
         if let legacy = legacyAlert() {
             alerts = [legacy]
-            save()
+            persist()
             clearLegacy()
             return
         }

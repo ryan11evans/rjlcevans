@@ -1,0 +1,990 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01AA004893AD5433F807D0C7 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		084DEC2D6D928D2860222683 /* AppIcon-Gold@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 55554FE7BEF6158BD06EA356 /* AppIcon-Gold@3x.png */; };
+		0FD9CFDA40E4B76A7681AD3C /* BitcoinWatchWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AAB0284112FD7A8D04E026C /* BitcoinWatchWatchApp.swift */; };
+		1214C869D8370C974B4F96E4 /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
+		13C6CA2E261F7799C9B4F6C0 /* BitcoinWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		144A5AA686E6E14C9A1DF548 /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
+		14B7C57026D735EAFA1D52DA /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
+		1813E3536C75A46F09C38EB0 /* AppIcon-Gold-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 80715C6C024438F0C73A5E95 /* AppIcon-Gold-76@2x.png */; };
+		1FA88B4BC3A666A94C12E6C8 /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF1551661A68A7B563D2D09 /* AlertService.swift */; };
+		219C1809527B20E03FD01A2A /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
+		239D28A0B8C577A1A555EC18 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */; };
+		23C84858E3EE7424ED5D58D5 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
+		23F5599C6613C1069F1BF953 /* WatchStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */; };
+		2431240FE36C91B69E5FE82D /* BTCWatchComplication.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		27228CB5CA36FCFCC6865FA1 /* DCACalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF7154FB28587C537C907EE0 /* DCACalculatorView.swift */; };
+		29BDA483447ADFEAE76EFADD /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
+		2D0ECC60F9040EAD897827D5 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
+		33E30D7CD9F67589755FBAFD /* AppIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 47ABF64782E9AC08FE3C5DBD /* AppIcon@2x.png */; };
+		4088C1FB8302ABC256E51F6E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */; };
+		45DEE5AE9D88EAEBE4C6C32F /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		4C7FC623AE239A04CDB1B337 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */; };
+		4CA0C0096060A42ACD7B2120 /* BTCWatchComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = D479D6F84C6E4E884558AAED /* BTCWatchComplication.swift */; };
+		4D890446284CEC179FA8F745 /* AppIcon-Gold@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 2A58BCE402A9A818934FBCD0 /* AppIcon-Gold@2x.png */; };
+		5A2DB71711045AC4466488DA /* PriceAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BBB0E47753759C583C4774 /* PriceAlertView.swift */; };
+		627F4961EF4877C20B64E385 /* RoundNumberProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF29D32A239ABA6CBA42FF6E /* RoundNumberProgressView.swift */; };
+		65A97B25FE47367308C3204D /* ConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */; };
+		674B2A5FED39A8E18CE4971F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6679991C3BA5CC231D9C9A71 /* ContentView.swift */; };
+		6C43B2462D81150C49C2BF11 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
+		70AB9B5069814CD59168BE20 /* AppIcon-Midnight-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 164BB5922B7410E55C2BDA37 /* AppIcon-Midnight-83.5@2x.png */; };
+		7169E51C30A986F766A07179 /* AppIcon-Gold-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 884ECFF4DD0A65FD12706712 /* AppIcon-Gold-83.5@2x.png */; };
+		7173E5D6E50A983940596DA9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC958B17127DC41540B836E6 /* Assets.xcassets */; };
+		71E14A96EE407AC0D58858A4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6DE2D0B44966A2407E30A08A /* PrivacyInfo.xcprivacy */; };
+		740E930547ABBC992B018B0D /* PushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388C849C78D428C6F48A879B /* PushService.swift */; };
+		752156B1B23CBA7EDBB9DE53 /* BitcoinWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */; };
+		77DE522F11100BCCD59DA368 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		7A9CB6C47C696490E2C65EB1 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */; };
+		7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
+		8130DD0E1427539E0EEE30C8 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		837C906963F6D35B2C7B8A86 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */; };
+		84625F1B6CD89B197545AE0F /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
+		89592FE0403AA2B7D4B58035 /* AppIcon@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */; };
+		8C1D6CC1DDB682DF818CD378 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71B110B96E76243F0E8D0CE /* PaywallView.swift */; };
+		8D69B64BD3E8BE28BE4B88DF /* AppIcon-Midnight@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445C44B4F16C0A4CCE8EB46E /* AppIcon-Midnight@3x.png */; };
+		92B1AB3800BAEC51626F36BF /* complications-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = 6D0BEE1C4BEE3B1FEB743B9B /* complications-preview.html */; };
+		98BB19CF2ECA4DCC81F40C5D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 86236CBFE9D15F33C7BB79AB /* Assets.xcassets */; };
+		9B3AD5C2B8D2A1FC988E883F /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
+		9C5AF69271D9DB74699B94FB /* ProService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89369E4056C986B0123362 /* ProService.swift */; };
+		9CBBC7F2F1318D9BB7FD317B /* PriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019AB939EADD61F5E7723297 /* PriceService.swift */; };
+		A13B9DB9717C80270FDC91D3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */; };
+		A5842BE3EC07107F7CC978A0 /* BTCLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */; };
+		A72370E5B22CE1D0F7553794 /* BitcoinWatchWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AAFAF437905086E10D50EC8E /* SatoshiConverterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C103E080469D0C70036B988 /* SatoshiConverterView.swift */; };
+		AE45DA216DDA7BC82E485FF9 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */; };
+		B0678CB06DCDC9804B5347D4 /* AppIcon-Silver-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 105F3DDAF999A222E60A061A /* AppIcon-Silver-83.5@2x.png */; };
+		B21812DD83CA5F704763EE56 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */; };
+		B222117B7E3187C2CA099F9B /* PriceChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5F75E5632EE79637E7C994 /* PriceChartView.swift */; };
+		BBF3A4AF61778C3CD0DFDAFE /* AppIcon-Midnight@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F9391ABB865416492496ED8C /* AppIcon-Midnight@2x.png */; };
+		CD063B6A61E410BA9B8BBDA4 /* BTCComplicationPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */; };
+		D29C6B782805316FA9E04761 /* BitcoinWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F914EDBACCC70D2025834EE9 /* BitcoinWatchWidget.swift */; };
+		D7425202F737BA559CB2C09C /* ComplicationController.swift.retired in Resources */ = {isa = PBXBuildFile; fileRef = A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */; };
+		D7F9E4BA0DC460C468600334 /* AppIcon-Silver@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 97E64DD22F1DAD9ACF3C78CF /* AppIcon-Silver@3x.png */; };
+		DEB582DF34C0C6B5E4EA1D62 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EAAC69EDF3728A37E0542E /* SettingsView.swift */; };
+		E23CA444B6AFE0E7352E92F1 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E2FDD72CFDF0510FFB1B7A /* ReviewManager.swift */; };
+		E30D15FAE0951B0FDD007D34 /* WatchPriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32233F7B772DE5DBF7172F28 /* WatchPriceService.swift */; };
+		E35B2A5C85F527A40AC51CDB /* StatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F99F8A4EB5A94D87667B739 /* StatsService.swift */; };
+		EAEBF67D6E59ED05F4C833CF /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
+		EB3355E57BEF1E2B68B435D1 /* AppIcon-Silver-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 2A222D2C3C2D1A5DD15D7770 /* AppIcon-Silver-76@2x.png */; };
+		ECBF12BA4A5E63ABC166BFBA /* AppStoreScreenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = A53BEDEED300135875722269 /* AppStoreScreenshots.swift */; };
+		EE1F9917DAEE7B8BD43E392D /* AppIcon-Silver@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE1D287ED03EB2E29E7DF4B7 /* AppIcon-Silver@2x.png */; };
+		EFF8F1E01CC882DF19E25E9D /* AppIcon-Midnight-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A2CD2BA22AD52C421B100834 /* AppIcon-Midnight-76@2x.png */; };
+		F5C45470F9FE6210F8480AA8 /* BTCChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00F17F597850C90630FDBAE /* BTCChartView.swift */; };
+		FE3CE138F9EF82114DC9875B /* WatchConnectivityReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB55806C0F67C725D0D1BDE /* WatchConnectivityReceiver.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C76BE5271A922F53A9B4505A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12859A32CB35DE319E54522B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FEB28E5B35AC236E0B4B93E3;
+			remoteInfo = BitcoinWatchWatchApp;
+		};
+		EA6268BDA0C31E80A642FE5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12859A32CB35DE319E54522B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 49216607B96A05B4DDD5007A;
+			remoteInfo = BTCWatchComplication;
+		};
+		F0DF1C06989943D996284154 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12859A32CB35DE319E54522B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3077CE7A4DD11ED2A0445343;
+			remoteInfo = BitcoinWatchWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		05B8FE695446AB4596362CB0 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				A72370E5B22CE1D0F7553794 /* BitcoinWatchWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8609A52AB329F0A6DCC61530 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2431240FE36C91B69E5FE82D /* BTCWatchComplication.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		880150D8D88C73CB32F1932E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				13C6CA2E261F7799C9B4F6C0 /* BitcoinWatchWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BitcoinWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		019AB939EADD61F5E7723297 /* PriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceService.swift; sourceTree = "<group>"; };
+		06643E1B5EEC7D17D77FA47A /* BitcoinWatchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BitcoinWatchWidget.entitlements; sourceTree = "<group>"; };
+		0F99F8A4EB5A94D87667B739 /* StatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
+		105F3DDAF999A222E60A061A /* AppIcon-Silver-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver-83.5@2x.png"; sourceTree = "<group>"; };
+		13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinPrice.swift; sourceTree = "<group>"; };
+		164BB5922B7410E55C2BDA37 /* AppIcon-Midnight-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight-83.5@2x.png"; sourceTree = "<group>"; };
+		19BBB0E47753759C583C4774 /* PriceAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceAlertView.swift; sourceTree = "<group>"; };
+		1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
+		2A222D2C3C2D1A5DD15D7770 /* AppIcon-Silver-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver-76@2x.png"; sourceTree = "<group>"; };
+		2A58BCE402A9A818934FBCD0 /* AppIcon-Gold@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold@2x.png"; sourceTree = "<group>"; };
+		2B89369E4056C986B0123362 /* ProService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProService.swift; sourceTree = "<group>"; };
+		2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		32233F7B772DE5DBF7172F28 /* WatchPriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPriceService.swift; sourceTree = "<group>"; };
+		32EAAC69EDF3728A37E0542E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		388C849C78D428C6F48A879B /* PushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushService.swift; sourceTree = "<group>"; };
+		3AF1551661A68A7B563D2D09 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
+		445C44B4F16C0A4CCE8EB46E /* AppIcon-Midnight@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight@3x.png"; sourceTree = "<group>"; };
+		47ABF64782E9AC08FE3C5DBD /* AppIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@2x.png"; sourceTree = "<group>"; };
+		49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsService.swift; sourceTree = "<group>"; };
+		4C103E080469D0C70036B988 /* SatoshiConverterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatoshiConverterView.swift; sourceTree = "<group>"; };
+		55554FE7BEF6158BD06EA356 /* AppIcon-Gold@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold@3x.png"; sourceTree = "<group>"; };
+		5AAB0284112FD7A8D04E026C /* BitcoinWatchWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinWatchWatchApp.swift; sourceTree = "<group>"; };
+		6679991C3BA5CC231D9C9A71 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
+		6A218DADBC943B2C922DCC52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6CEDA9A264A2295E5F90DFFD /* BitcoinWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BitcoinWatch.entitlements; sourceTree = "<group>"; };
+		6D0BEE1C4BEE3B1FEB743B9B /* complications-preview.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "complications-preview.html"; sourceTree = "<group>"; };
+		6DE2D0B44966A2407E30A08A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCLiveActivity.swift; sourceTree = "<group>"; };
+		75F96420DA35FED114AC2F2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCComplicationPreviews.swift; sourceTree = "<group>"; };
+		80715C6C024438F0C73A5E95 /* AppIcon-Gold-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold-76@2x.png"; sourceTree = "<group>"; };
+		86236CBFE9D15F33C7BB79AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		884ECFF4DD0A65FD12706712 /* AppIcon-Gold-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold-83.5@2x.png"; sourceTree = "<group>"; };
+		8C0F251D23243D7E17FCE35A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8D5F75E5632EE79637E7C994 /* PriceChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceChartView.swift; sourceTree = "<group>"; };
+		8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BTCWatchComplication.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		94E2FDD72CFDF0510FFB1B7A /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
+		97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BitcoinWatchWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97E64DD22F1DAD9ACF3C78CF /* AppIcon-Silver@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver@3x.png"; sourceTree = "<group>"; };
+		A2CD2BA22AD52C421B100834 /* AppIcon-Midnight-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight-76@2x.png"; sourceTree = "<group>"; };
+		A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */ = {isa = PBXFileReference; path = ComplicationController.swift.retired; sourceTree = "<group>"; };
+		A53BEDEED300135875722269 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
+		A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
+		AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@3x.png"; sourceTree = "<group>"; };
+		B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityManager.swift; sourceTree = "<group>"; };
+		BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		C01E1D2B300EB67EDC226301 /* BTCWatchComplication.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BTCWatchComplication.entitlements; sourceTree = "<group>"; };
+		C3567CE079700FAFE0963A62 /* BitcoinWatch.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BitcoinWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C71B110B96E76243F0E8D0CE /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CC958B17127DC41540B836E6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshBTCIntent.swift; sourceTree = "<group>"; };
+		CF7154FB28587C537C907EE0 /* DCACalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DCACalculatorView.swift; sourceTree = "<group>"; };
+		D479D6F84C6E4E884558AAED /* BTCWatchComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCWatchComplication.swift; sourceTree = "<group>"; };
+		D4E5561CF3C731DA2D7A5AF7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinWatchApp.swift; sourceTree = "<group>"; };
+		DE1D287ED03EB2E29E7DF4B7 /* AppIcon-Silver@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver@2x.png"; sourceTree = "<group>"; };
+		E00F17F597850C90630FDBAE /* BTCChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCChartView.swift; sourceTree = "<group>"; };
+		E9F12D503540ABB6B52F2CE3 /* WatchApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WatchApp.entitlements; sourceTree = "<group>"; };
+		EF29D32A239ABA6CBA42FF6E /* RoundNumberProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundNumberProgressView.swift; sourceTree = "<group>"; };
+		F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCAppIntents.swift; sourceTree = "<group>"; };
+		F914EDBACCC70D2025834EE9 /* BitcoinWatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinWatchWidget.swift; sourceTree = "<group>"; };
+		F9391ABB865416492496ED8C /* AppIcon-Midnight@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight@2x.png"; sourceTree = "<group>"; };
+		FDB55806C0F67C725D0D1BDE /* WatchConnectivityReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityReceiver.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		137473D334F6EC7EEFFF4D58 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */,
+				D4E5561CF3C731DA2D7A5AF7 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		695C1B53B598D68ADCC5457E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				5AAB0284112FD7A8D04E026C /* BitcoinWatchWatchApp.swift */,
+				8C0F251D23243D7E17FCE35A /* Info.plist */,
+				FDB55806C0F67C725D0D1BDE /* WatchConnectivityReceiver.swift */,
+				32233F7B772DE5DBF7172F28 /* WatchPriceService.swift */,
+				49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		6A0F32863506C0EF1E6107E4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3AF1551661A68A7B563D2D09 /* AlertService.swift */,
+				A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */,
+				B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */,
+				BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */,
+				019AB939EADD61F5E7723297 /* PriceService.swift */,
+				2B89369E4056C986B0123362 /* ProService.swift */,
+				388C849C78D428C6F48A879B /* PushService.swift */,
+				94E2FDD72CFDF0510FFB1B7A /* ReviewManager.swift */,
+				0F99F8A4EB5A94D87667B739 /* StatsService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		757EE4536C4ED803A3C62DF9 /* Complications */ = {
+			isa = PBXGroup;
+			children = (
+				A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */,
+			);
+			path = Complications;
+			sourceTree = "<group>";
+		};
+		75F380BD043449DA79266E0B /* Previews */ = {
+			isa = PBXGroup;
+			children = (
+				7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */,
+				6D0BEE1C4BEE3B1FEB743B9B /* complications-preview.html */,
+			);
+			path = Previews;
+			sourceTree = "<group>";
+		};
+		792E0291B7F2F4DD41178CA7 /* BitcoinWatch */ = {
+			isa = PBXGroup;
+			children = (
+				CC958B17127DC41540B836E6 /* Assets.xcassets */,
+				6CEDA9A264A2295E5F90DFFD /* BitcoinWatch.entitlements */,
+				C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */,
+				B9391FB0E275E14858D06104 /* AlternateIcons */,
+				137473D334F6EC7EEFFF4D58 /* App */,
+				6A0F32863506C0EF1E6107E4 /* Services */,
+				9E61500880EDECD5419AD301 /* Views */,
+			);
+			path = BitcoinWatch;
+			sourceTree = "<group>";
+		};
+		91AD2AD243C1749F5BC0B812 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		92E01ED32B62592EAECC976B /* WatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				86236CBFE9D15F33C7BB79AB /* Assets.xcassets */,
+				C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */,
+				E9F12D503540ABB6B52F2CE3 /* WatchApp.entitlements */,
+				695C1B53B598D68ADCC5457E /* App */,
+				757EE4536C4ED803A3C62DF9 /* Complications */,
+				91AD2AD243C1749F5BC0B812 /* Views */,
+			);
+			path = WatchApp;
+			sourceTree = "<group>";
+		};
+		938CBB937489ADC40FA4990E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C3567CE079700FAFE0963A62 /* BitcoinWatch.app */,
+				97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */,
+				0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */,
+				8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9E61500880EDECD5419AD301 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A53BEDEED300135875722269 /* AppStoreScreenshots.swift */,
+				E00F17F597850C90630FDBAE /* BTCChartView.swift */,
+				6679991C3BA5CC231D9C9A71 /* ContentView.swift */,
+				CF7154FB28587C537C907EE0 /* DCACalculatorView.swift */,
+				1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */,
+				C71B110B96E76243F0E8D0CE /* PaywallView.swift */,
+				19BBB0E47753759C583C4774 /* PriceAlertView.swift */,
+				8D5F75E5632EE79637E7C994 /* PriceChartView.swift */,
+				EF29D32A239ABA6CBA42FF6E /* RoundNumberProgressView.swift */,
+				4C103E080469D0C70036B988 /* SatoshiConverterView.swift */,
+				32EAAC69EDF3728A37E0542E /* SettingsView.swift */,
+				686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AC9BFE2D0A7A65CBBFB0D77C /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */,
+				F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */,
+				2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */,
+				CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		B9391FB0E275E14858D06104 /* AlternateIcons */ = {
+			isa = PBXGroup;
+			children = (
+				80715C6C024438F0C73A5E95 /* AppIcon-Gold-76@2x.png */,
+				884ECFF4DD0A65FD12706712 /* AppIcon-Gold-83.5@2x.png */,
+				2A58BCE402A9A818934FBCD0 /* AppIcon-Gold@2x.png */,
+				55554FE7BEF6158BD06EA356 /* AppIcon-Gold@3x.png */,
+				A2CD2BA22AD52C421B100834 /* AppIcon-Midnight-76@2x.png */,
+				164BB5922B7410E55C2BDA37 /* AppIcon-Midnight-83.5@2x.png */,
+				F9391ABB865416492496ED8C /* AppIcon-Midnight@2x.png */,
+				445C44B4F16C0A4CCE8EB46E /* AppIcon-Midnight@3x.png */,
+				2A222D2C3C2D1A5DD15D7770 /* AppIcon-Silver-76@2x.png */,
+				105F3DDAF999A222E60A061A /* AppIcon-Silver-83.5@2x.png */,
+				DE1D287ED03EB2E29E7DF4B7 /* AppIcon-Silver@2x.png */,
+				97E64DD22F1DAD9ACF3C78CF /* AppIcon-Silver@3x.png */,
+				47ABF64782E9AC08FE3C5DBD /* AppIcon@2x.png */,
+				AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */,
+			);
+			path = AlternateIcons;
+			sourceTree = "<group>";
+		};
+		DD594E4D79D6C91854F56E09 = {
+			isa = PBXGroup;
+			children = (
+				792E0291B7F2F4DD41178CA7 /* BitcoinWatch */,
+				E04A99D3F2FB492BB9F735D6 /* BitcoinWatchWidget */,
+				AC9BFE2D0A7A65CBBFB0D77C /* Shared */,
+				92E01ED32B62592EAECC976B /* WatchApp */,
+				E589B143290135370CF095AD /* WatchComplication */,
+				938CBB937489ADC40FA4990E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E04A99D3F2FB492BB9F735D6 /* BitcoinWatchWidget */ = {
+			isa = PBXGroup;
+			children = (
+				06643E1B5EEC7D17D77FA47A /* BitcoinWatchWidget.entitlements */,
+				F914EDBACCC70D2025834EE9 /* BitcoinWatchWidget.swift */,
+				6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */,
+				6A218DADBC943B2C922DCC52 /* Info.plist */,
+				6DE2D0B44966A2407E30A08A /* PrivacyInfo.xcprivacy */,
+			);
+			path = BitcoinWatchWidget;
+			sourceTree = "<group>";
+		};
+		E589B143290135370CF095AD /* WatchComplication */ = {
+			isa = PBXGroup;
+			children = (
+				C01E1D2B300EB67EDC226301 /* BTCWatchComplication.entitlements */,
+				D479D6F84C6E4E884558AAED /* BTCWatchComplication.swift */,
+				75F96420DA35FED114AC2F2B /* Info.plist */,
+				AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */,
+				75F380BD043449DA79266E0B /* Previews */,
+			);
+			path = WatchComplication;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3077CE7A4DD11ED2A0445343 /* BitcoinWatchWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 42AC01B61A2A7AFD78A4FB29 /* Build configuration list for PBXNativeTarget "BitcoinWatchWidget" */;
+			buildPhases = (
+				6D9956B8EB4CD17E43B7F832 /* Sources */,
+				04822D8CBB3F4CEF56F687C7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BitcoinWatchWidget;
+			packageProductDependencies = (
+			);
+			productName = BitcoinWatchWidget;
+			productReference = 0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		49216607B96A05B4DDD5007A /* BTCWatchComplication */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 82D285B9EF7093C8F2F1D13D /* Build configuration list for PBXNativeTarget "BTCWatchComplication" */;
+			buildPhases = (
+				C5691B923F07FB3667FCC66F /* Sources */,
+				1A51AAC2952BFE2691AA3724 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BTCWatchComplication;
+			packageProductDependencies = (
+			);
+			productName = BTCWatchComplication;
+			productReference = 8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4E390020DA69CCBF7680FC9C /* BitcoinWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FFD41F60D25AC97D4C33E844 /* Build configuration list for PBXNativeTarget "BitcoinWatch" */;
+			buildPhases = (
+				58FB7CFAE8D2CFF6E59E2E84 /* Sources */,
+				CBAC517A4AF583A714B58590 /* Resources */,
+				880150D8D88C73CB32F1932E /* Embed Foundation Extensions */,
+				05B8FE695446AB4596362CB0 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				36CF8F429D3882FD8F36E0FA /* PBXTargetDependency */,
+				B86F17FC15870E0595148A94 /* PBXTargetDependency */,
+			);
+			name = BitcoinWatch;
+			packageProductDependencies = (
+			);
+			productName = BitcoinWatch;
+			productReference = C3567CE079700FAFE0963A62 /* BitcoinWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FEB28E5B35AC236E0B4B93E3 /* BitcoinWatchWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 181740FC135F587F783C912F /* Build configuration list for PBXNativeTarget "BitcoinWatchWatchApp" */;
+			buildPhases = (
+				AA70C2D9DF05AAA1E31C8BBE /* Sources */,
+				721E8A00C1C92BA26056CB8D /* Resources */,
+				8609A52AB329F0A6DCC61530 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C11065D155EFDA275CD3E35F /* PBXTargetDependency */,
+			);
+			name = BitcoinWatchWatchApp;
+			packageProductDependencies = (
+			);
+			productName = BitcoinWatchWatchApp;
+			productReference = 97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		12859A32CB35DE319E54522B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					3077CE7A4DD11ED2A0445343 = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+					49216607B96A05B4DDD5007A = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+					4E390020DA69CCBF7680FC9C = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+					FEB28E5B35AC236E0B4B93E3 = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+				};
+			};
+			buildConfigurationList = C0D84FCACD5DFCCD45B7E576 /* Build configuration list for PBXProject "BitcoinWatch" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = DD594E4D79D6C91854F56E09;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 938CBB937489ADC40FA4990E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				49216607B96A05B4DDD5007A /* BTCWatchComplication */,
+				4E390020DA69CCBF7680FC9C /* BitcoinWatch */,
+				FEB28E5B35AC236E0B4B93E3 /* BitcoinWatchWatchApp */,
+				3077CE7A4DD11ED2A0445343 /* BitcoinWatchWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		04822D8CBB3F4CEF56F687C7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71E14A96EE407AC0D58858A4 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1A51AAC2952BFE2691AA3724 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				837C906963F6D35B2C7B8A86 /* PrivacyInfo.xcprivacy in Resources */,
+				92B1AB3800BAEC51626F36BF /* complications-preview.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		721E8A00C1C92BA26056CB8D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				98BB19CF2ECA4DCC81F40C5D /* Assets.xcassets in Resources */,
+				D7425202F737BA559CB2C09C /* ComplicationController.swift.retired in Resources */,
+				4C7FC623AE239A04CDB1B337 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CBAC517A4AF583A714B58590 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1813E3536C75A46F09C38EB0 /* AppIcon-Gold-76@2x.png in Resources */,
+				7169E51C30A986F766A07179 /* AppIcon-Gold-83.5@2x.png in Resources */,
+				4D890446284CEC179FA8F745 /* AppIcon-Gold@2x.png in Resources */,
+				084DEC2D6D928D2860222683 /* AppIcon-Gold@3x.png in Resources */,
+				EFF8F1E01CC882DF19E25E9D /* AppIcon-Midnight-76@2x.png in Resources */,
+				70AB9B5069814CD59168BE20 /* AppIcon-Midnight-83.5@2x.png in Resources */,
+				BBF3A4AF61778C3CD0DFDAFE /* AppIcon-Midnight@2x.png in Resources */,
+				8D69B64BD3E8BE28BE4B88DF /* AppIcon-Midnight@3x.png in Resources */,
+				EB3355E57BEF1E2B68B435D1 /* AppIcon-Silver-76@2x.png in Resources */,
+				B0678CB06DCDC9804B5347D4 /* AppIcon-Silver-83.5@2x.png in Resources */,
+				EE1F9917DAEE7B8BD43E392D /* AppIcon-Silver@2x.png in Resources */,
+				D7F9E4BA0DC460C468600334 /* AppIcon-Silver@3x.png in Resources */,
+				33E30D7CD9F67589755FBAFD /* AppIcon@2x.png in Resources */,
+				89592FE0403AA2B7D4B58035 /* AppIcon@3x.png in Resources */,
+				7173E5D6E50A983940596DA9 /* Assets.xcassets in Resources */,
+				A13B9DB9717C80270FDC91D3 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		58FB7CFAE8D2CFF6E59E2E84 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FA88B4BC3A666A94C12E6C8 /* AlertService.swift in Sources */,
+				ECBF12BA4A5E63ABC166BFBA /* AppStoreScreenshots.swift in Sources */,
+				9B3AD5C2B8D2A1FC988E883F /* BTCAppIntents.swift in Sources */,
+				F5C45470F9FE6210F8480AA8 /* BTCChartView.swift in Sources */,
+				1214C869D8370C974B4F96E4 /* BTCLiveActivityAttributes.swift in Sources */,
+				AE45DA216DDA7BC82E485FF9 /* BackgroundRefresh.swift in Sources */,
+				8130DD0E1427539E0EEE30C8 /* BitcoinPrice.swift in Sources */,
+				752156B1B23CBA7EDBB9DE53 /* BitcoinWatchApp.swift in Sources */,
+				65A97B25FE47367308C3204D /* ConnectivityManager.swift in Sources */,
+				674B2A5FED39A8E18CE4971F /* ContentView.swift in Sources */,
+				27228CB5CA36FCFCC6865FA1 /* DCACalculatorView.swift in Sources */,
+				B21812DD83CA5F704763EE56 /* LiveActivityManager.swift in Sources */,
+				239D28A0B8C577A1A555EC18 /* OnboardingView.swift in Sources */,
+				8C1D6CC1DDB682DF818CD378 /* PaywallView.swift in Sources */,
+				5A2DB71711045AC4466488DA /* PriceAlertView.swift in Sources */,
+				B222117B7E3187C2CA099F9B /* PriceChartView.swift in Sources */,
+				9CBBC7F2F1318D9BB7FD317B /* PriceService.swift in Sources */,
+				9C5AF69271D9DB74699B94FB /* ProService.swift in Sources */,
+				740E930547ABBC992B018B0D /* PushService.swift in Sources */,
+				23C84858E3EE7424ED5D58D5 /* RefreshBTCIntent.swift in Sources */,
+				E23CA444B6AFE0E7352E92F1 /* ReviewManager.swift in Sources */,
+				627F4961EF4877C20B64E385 /* RoundNumberProgressView.swift in Sources */,
+				AAFAF437905086E10D50EC8E /* SatoshiConverterView.swift in Sources */,
+				DEB582DF34C0C6B5E4EA1D62 /* SettingsView.swift in Sources */,
+				4088C1FB8302ABC256E51F6E /* ShareCardView.swift in Sources */,
+				E35B2A5C85F527A40AC51CDB /* StatsService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6D9956B8EB4CD17E43B7F832 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14B7C57026D735EAFA1D52DA /* BTCAppIntents.swift in Sources */,
+				A5842BE3EC07107F7CC978A0 /* BTCLiveActivity.swift in Sources */,
+				29BDA483447ADFEAE76EFADD /* BTCLiveActivityAttributes.swift in Sources */,
+				77DE522F11100BCCD59DA368 /* BitcoinPrice.swift in Sources */,
+				D29C6B782805316FA9E04761 /* BitcoinWatchWidget.swift in Sources */,
+				84625F1B6CD89B197545AE0F /* RefreshBTCIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA70C2D9DF05AAA1E31C8BBE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EAEBF67D6E59ED05F4C833CF /* BTCAppIntents.swift in Sources */,
+				144A5AA686E6E14C9A1DF548 /* BTCLiveActivityAttributes.swift in Sources */,
+				01AA004893AD5433F807D0C7 /* BitcoinPrice.swift in Sources */,
+				0FD9CFDA40E4B76A7681AD3C /* BitcoinWatchWatchApp.swift in Sources */,
+				2D0ECC60F9040EAD897827D5 /* RefreshBTCIntent.swift in Sources */,
+				FE3CE138F9EF82114DC9875B /* WatchConnectivityReceiver.swift in Sources */,
+				7A9CB6C47C696490E2C65EB1 /* WatchContentView.swift in Sources */,
+				E30D15FAE0951B0FDD007D34 /* WatchPriceService.swift in Sources */,
+				23F5599C6613C1069F1BF953 /* WatchStatsService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5691B923F07FB3667FCC66F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */,
+				CD063B6A61E410BA9B8BBDA4 /* BTCComplicationPreviews.swift in Sources */,
+				219C1809527B20E03FD01A2A /* BTCLiveActivityAttributes.swift in Sources */,
+				4CA0C0096060A42ACD7B2120 /* BTCWatchComplication.swift in Sources */,
+				45DEE5AE9D88EAEBE4C6C32F /* BitcoinPrice.swift in Sources */,
+				6C43B2462D81150C49C2BF11 /* RefreshBTCIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		36CF8F429D3882FD8F36E0FA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3077CE7A4DD11ED2A0445343 /* BitcoinWatchWidget */;
+			targetProxy = F0DF1C06989943D996284154 /* PBXContainerItemProxy */;
+		};
+		B86F17FC15870E0595148A94 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FEB28E5B35AC236E0B4B93E3 /* BitcoinWatchWatchApp */;
+			targetProxy = C76BE5271A922F53A9B4505A /* PBXContainerItemProxy */;
+		};
+		C11065D155EFDA275CD3E35F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 49216607B96A05B4DDD5007A /* BTCWatchComplication */;
+			targetProxy = EA6268BDA0C31E80A642FE5B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1A5C0EFFE44EFDE3DAB0EA9F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BitcoinWatch/BitcoinWatch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = BitcoinWatch/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		1E23C3880CDC587172B0E2CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/WatchApp.entitlements;
+				INFOPLIST_FILE = WatchApp/App/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		36C8C6D887691E40E1284B34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 31;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9B9PTBR9A2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 3.0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		4DCAD6D9EAD4568B8F43AC01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/WatchApp.entitlements;
+				INFOPLIST_FILE = WatchApp/App/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		7BEC095D8F340EF37F7B75EF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BitcoinWatchWidget/BitcoinWatchWidget.entitlements;
+				INFOPLIST_FILE = BitcoinWatchWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B2FF2E47E20B2C9845E192EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WatchComplication/BTCWatchComplication.entitlements;
+				INFOPLIST_FILE = WatchComplication/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.watch.price;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		C3104439970DAEF68FCFDDD2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 31;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9B9PTBR9A2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 3.0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		D8E0F378EC73CC8252B9B929 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BitcoinWatchWidget/BitcoinWatchWidget.entitlements;
+				INFOPLIST_FILE = BitcoinWatchWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DA6E623031CB5CCAE031A581 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WatchComplication/BTCWatchComplication.entitlements;
+				INFOPLIST_FILE = WatchComplication/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch.watch.price;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		E0EA21F4156B9266AABB39D4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BitcoinWatch/BitcoinWatch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = BitcoinWatch/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.rjlbtcwatch;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		181740FC135F587F783C912F /* Build configuration list for PBXNativeTarget "BitcoinWatchWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DCAD6D9EAD4568B8F43AC01 /* Debug */,
+				1E23C3880CDC587172B0E2CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		42AC01B61A2A7AFD78A4FB29 /* Build configuration list for PBXNativeTarget "BitcoinWatchWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D8E0F378EC73CC8252B9B929 /* Debug */,
+				7BEC095D8F340EF37F7B75EF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		82D285B9EF7093C8F2F1D13D /* Build configuration list for PBXNativeTarget "BTCWatchComplication" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA6E623031CB5CCAE031A581 /* Debug */,
+				B2FF2E47E20B2C9845E192EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C0D84FCACD5DFCCD45B7E576 /* Build configuration list for PBXProject "BitcoinWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C3104439970DAEF68FCFDDD2 /* Debug */,
+				36C8C6D887691E40E1284B34 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FFD41F60D25AC97D4C33E844 /* Build configuration list for PBXNativeTarget "BitcoinWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E0EA21F4156B9266AABB39D4 /* Debug */,
+				1A5C0EFFE44EFDE3DAB0EA9F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 12859A32CB35DE319E54522B /* Project object */;
+}
