@@ -12,13 +12,14 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
-                        ProSection()
+                    VStack(alignment: .leading, spacing: 26) {
+                        ProCard()
                         NotificationsSection()
                         IconPickerSection()
-                        SiriShortcutsSection()
+                        VersionFooter()
                     }
-                    .padding(.top, 24)
+                    .padding(.top, 20)
+                    .padding(.bottom, 32)
                 }
             }
             .navigationTitle("Settings")
@@ -29,65 +30,139 @@ struct SettingsView: View {
     }
 }
 
+// MARK: - Shared styling
+
+private struct SectionHeader: View {
+    let title: String
+    var body: some View {
+        Text(title.uppercased())
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundStyle(.secondary)
+            .tracking(1.2)
+            .padding(.horizontal, 24)
+    }
+}
+
+// Colored icon chip, like iOS Settings rows
+private struct IconChip: View {
+    let systemName: String
+    let color: Color
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(color.opacity(0.18))
+            Image(systemName: systemName)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(color)
+        }
+        .frame(width: 30, height: 30)
+    }
+}
+
+private struct CardBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
+            .padding(.horizontal, 20)
+    }
+}
+
 // MARK: - Pro
 
-private struct ProSection: View {
+private struct ProCard: View {
     @ObservedObject private var pro = ProService.shared
     @State private var showPaywall = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("TapBTC Pro")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-                .padding(.horizontal, 24)
-
-            Group {
-                if pro.isPro {
-                    HStack(spacing: 14) {
+        Group {
+            if pro.isPro {
+                // Unlocked state: gold "thank you" card
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(.white.opacity(0.2))
+                            .frame(width: 44, height: 44)
                         Image(systemName: "bolt.fill")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.orange)
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Pro Unlocked")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text("Unlimited alerts — thanks for the support!")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text("TapBTC Pro")
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("UNLOCKED")
+                                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                .tracking(0.8)
+                                .foregroundStyle(.orange)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(.white))
+                        }
+                        Text("Unlimited alerts — thanks for the support 🧡")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    Spacer()
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(colors: [
+                                Color(red: 0.98, green: 0.62, blue: 0.15),
+                                Color(red: 0.85, green: 0.42, blue: 0.04)
+                            ], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                )
+                .padding(.horizontal, 20)
+            } else {
+                // Locked state: hero upsell card
+                Button { showPaywall = true } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(.white.opacity(0.2))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Unlock TapBTC Pro")
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("Unlimited price alerts · one-time \(pro.priceText)")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.85))
                         }
                         Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.7))
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                } else {
-                    Button { showPaywall = true } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(.orange)
-                                .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Unlock Pro")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                Text("Unlimited price alerts · one-time \(pro.priceText)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.tertiary)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(
+                                LinearGradient(colors: [
+                                    Color(red: 0.98, green: 0.62, blue: 0.15),
+                                    Color(red: 0.85, green: 0.42, blue: 0.04)
+                                ], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                    )
                 }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 20)
             }
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
-            .padding(.horizontal, 24)
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
     }
@@ -101,25 +176,22 @@ private struct NotificationsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Notifications")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-                .padding(.horizontal, 24)
+            SectionHeader(title: "Notifications")
 
             VStack(spacing: 0) {
                 toggleRow(icon: "rocket.fill", tint: .orange,
                           title: "All-Time High Alerts",
-                          subtitle: "Get a push when BTC sets a new record",
+                          subtitle: "When BTC sets a new record",
                           isOn: $athAlert)
-                Divider().padding(.leading, 60)
-                toggleRow(icon: "hourglass", tint: .purple,
+                Divider()
+                    .overlay(Color.white.opacity(0.06))
+                    .padding(.leading, 62)
+                toggleRow(icon: "hourglass", tint: Color(red: 0.75, green: 0.52, blue: 0.98),
                           title: "Halving Milestones",
-                          subtitle: "Countdown alerts as the halving approaches",
+                          subtitle: "Countdown alerts as the halving nears",
                           isOn: $milestoneAlert)
             }
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
-            .padding(.horizontal, 24)
+            .modifier(CardBackground())
         }
         .onChange(of: athAlert) { _, _ in Task { await PushService.shared.sync() } }
         .onChange(of: milestoneAlert) { _, _ in Task { await PushService.shared.sync() } }
@@ -128,23 +200,20 @@ private struct NotificationsSection: View {
     private func toggleRow(icon: String, tint: Color, title: String,
                            subtitle: String, isOn: Binding<Bool>) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 28)
+            IconChip(systemName: icon, color: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
             Toggle("", isOn: isOn).labelsHidden().tint(.orange)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 13)
     }
 }
 
@@ -197,11 +266,7 @@ private struct IconPickerSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("App Icon")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-                .padding(.horizontal, 24)
+            SectionHeader(title: "App Icon")
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
@@ -212,6 +277,7 @@ private struct IconPickerSection: View {
                     }
                 }
                 .padding(.horizontal, 24)
+                .padding(.vertical, 4)
             }
 
             if let msg = errorMessage {
@@ -281,7 +347,7 @@ private struct IconTile: View {
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .rounded))
                 .foregroundStyle(isSelected ? .orange : .secondary)
         }
         .onTapGesture(perform: onTap)
@@ -289,62 +355,29 @@ private struct IconTile: View {
     }
 }
 
-// MARK: - Siri Shortcuts promo row
+// MARK: - Footer
 
-private struct SiriShortcutsSection: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Siri")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-                .padding(.horizontal, 24)
-
-            VStack(spacing: 0) {
-                SiriRow(phrase: "\"What's Bitcoin at?\"",
-                        subtitle: "Get the current price",
-                        icon: "waveform")
-                Divider().padding(.leading, 60)
-                SiriRow(phrase: "\"Convert $100 to sats\"",
-                        subtitle: "Satoshi calculator",
-                        icon: "plusminus")
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.white.opacity(0.05))
-            )
-            .padding(.horizontal, 24)
-
-            Text("These phrases work in Siri, Spotlight, and the Shortcuts app.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 24)
-        }
+private struct VersionFooter: View {
+    private var versionText: String {
+        let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+        let b = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
+        return "TapBTC \(v) (\(b))"
     }
-}
-
-private struct SiriRow: View {
-    let phrase: String
-    let subtitle: String
-    let icon: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.orange)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(phrase)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(spacing: 4) {
+            Text("₿")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.orange.opacity(0.5))
+            Text(versionText)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.tertiary)
+            Text("No accounts. No ads. Just Bitcoin.")
+                .font(.system(size: 10))
+                .foregroundStyle(.quaternary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
     }
 }
 
