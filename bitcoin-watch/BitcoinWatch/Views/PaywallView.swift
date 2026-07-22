@@ -48,7 +48,7 @@ struct PaywallView: View {
                                 Divider().padding(.leading, 56)
                                 feature(icon: "bell.badge.fill",
                                         title: "Unlimited price alerts",
-                                        subtitle: "Free includes \(ProService.freeAlertLimit) — Pro removes the cap")
+                                        subtitle: "Free includes one alert — Pro removes the cap")
                                 Divider().padding(.leading, 56)
                                 feature(icon: "app.badge.fill",
                                         title: "Exclusive app icons",

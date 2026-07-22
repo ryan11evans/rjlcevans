@@ -8,10 +8,10 @@ struct BitcoinInfoView: View {
     var fearGreed: StatsService.FearGreedData? = nil
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             BTCHeroAnimation()
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 HStack(spacing: 10) {
                     StatTile(label: "24h High",
                              value: stats.map { shortPrice(high24h($0)) } ?? "—",
@@ -36,11 +36,13 @@ struct BitcoinInfoView: View {
                     StatTile(label: "Next Halving",
                              value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
                              subtitle: stats.map { halvingSubtitle($0.blockHeight) },
-                             color: .purple)
+                             color: .purple,
+                             compact: true)
                     StatTile(label: "Fear & Greed",
-                             value: fearGreed.map { "\($0.value)" } ?? "—",
-                             subtitle: fearGreed?.classification,
-                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray)
+                             value: fearGreed.map { "\($0.value) · \($0.classification)" } ?? "—",
+                             subtitle: nil,
+                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray,
+                             compact: true)
                 }
             }
             .padding(.horizontal)
@@ -123,7 +125,7 @@ private struct BTCHeroAnimation: View {
                     .rotationEffect(.degrees(t * 60))
             }
         }
-        .frame(height: 130)
+        .frame(height: 108)
         .frame(maxWidth: .infinity)
     }
 }
@@ -339,26 +341,35 @@ private struct StatTile: View {
     let value: String
     let subtitle: String?
     let color: Color
+    var compact: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: compact ? 1 : 3) {
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: compact ? 9 : 10, weight: .medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(0.3)
             Text(value)
-                .font(.system(.title3, design: .rounded, weight: .bold))
+                .font(compact
+                      ? .system(size: 16, weight: .bold, design: .rounded)
+                      : .system(.title3, design: .rounded, weight: .bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
-            Text(subtitle ?? " ")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: compact ? 9 : 11))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            } else if !compact {
+                Text(" ").font(.caption2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, compact ? 8 : 12)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(color.opacity(0.08))
