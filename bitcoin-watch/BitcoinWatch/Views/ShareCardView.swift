@@ -5,6 +5,7 @@ struct ShareCardView: View {
     let price: BitcoinPrice
     let change24h: Double?
     let chartPrices: [Double]
+    var holdingsGainPct: Double? = nil  // shown as a brag badge when set
 
     private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let downColor = Color(red: 1.00, green: 0.27, blue: 0.23)
@@ -40,7 +41,7 @@ struct ShareCardView: View {
                             Image(systemName: "bitcoinsign.circle.fill")
                                 .foregroundStyle(.orange)
                                 .font(.system(size: 12))
-                            Text("BTC / USD")
+                            Text("BTC / \(AppCurrency.current.code)")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
@@ -104,9 +105,19 @@ struct ShareCardView: View {
                             .foregroundStyle(.orange)
                     }
                     Spacer()
-                    Text(price.timestamp, style: .time)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                    if let pct = holdingsGainPct {
+                        let up = pct >= 0
+                        Text("My stack \(up ? "+" : "")\(String(format: "%.1f", pct * 100))% \(up ? "📈" : "📉")")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(up ? upColor : downColor)
+                            .padding(.horizontal, 9).padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 7)
+                                .fill((up ? upColor : downColor).opacity(0.15)))
+                    } else {
+                        Text(price.timestamp, style: .time)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)

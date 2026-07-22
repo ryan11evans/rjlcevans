@@ -34,21 +34,24 @@ class WatchStatsService: ObservableObject {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable {
             struct MD: Decodable {
-                struct V: Decodable { let usd: Double }
-                let high_24h: V; let low_24h: V; let ath: V
+                let high_24h: [String: Double]
+                let low_24h: [String: Double]
+                let ath: [String: Double]
                 let price_change_percentage_24h: Double
             }
             let market_data: MD
         }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
-        high24h   = r.market_data.high_24h.usd
-        low24h    = r.market_data.low_24h.usd
-        ath       = r.market_data.ath.usd
+        let cur = AppCurrency.current.rawValue
+        high24h   = r.market_data.high_24h[cur]
+        low24h    = r.market_data.low_24h[cur]
+        ath       = r.market_data.ath[cur]
         change24h = r.market_data.price_change_percentage_24h
     }
 
     private func fetchChart() async {
-        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1")!
+        let vs = AppCurrency.current.rawValue
+        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=\(vs)&days=1")!
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }

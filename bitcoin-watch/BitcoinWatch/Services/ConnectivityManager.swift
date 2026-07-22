@@ -31,7 +31,8 @@ class ConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
             WCMessageKey.price: price.usd,
             WCMessageKey.timestamp: price.timestamp.timeIntervalSince1970,
             WCMessageKey.holdings: UserDefaults.shared.double(forKey: "btcHoldings"),
-            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked")
+            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked"),
+            WCMessageKey.currency: AppCurrency.current.rawValue
         ]
 
         if session.isComplicationEnabled {
@@ -52,7 +53,8 @@ class ConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
         guard let session, session.activationState == .activated, session.isPaired else { return }
         let context: [String: Any] = [
             WCMessageKey.holdings: UserDefaults.shared.double(forKey: "btcHoldings"),
-            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked")
+            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked"),
+            WCMessageKey.currency: AppCurrency.current.rawValue
         ]
         try? session.updateApplicationContext(context)
     }

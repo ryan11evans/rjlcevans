@@ -58,7 +58,7 @@ private struct PricePage: View {
                 }
 
                 if let stack = service.holdingsValue {
-                    Text("Stack · $\(Int(stack).formatted())")
+                    Text("Stack · \(AppCurrency.current.format(stack))")
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.orange)
                         .minimumScaleFactor(0.6)
@@ -164,7 +164,7 @@ private struct StatsPage: View {
         VStack(spacing: 6) {
             if let stack = holdingsValue {
                 StatRow(label: "YOUR STACK",
-                        value: "$\(Int(stack).formatted())",
+                        value: AppCurrency.current.format(stack),
                         color: .orange)
             }
             StatRow(label: "24H HIGH",
@@ -196,7 +196,7 @@ private struct StatsPage: View {
     }
 
     private func shortPrice(_ v: Double) -> String {
-        "$\(Int(v).formatted())"
+        AppCurrency.current.format(v)
     }
 }
 

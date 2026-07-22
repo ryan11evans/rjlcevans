@@ -9,6 +9,7 @@ struct SatoshiConverterView: View {
 
     private enum Field { case usd, sat }
     private let satsPerBTC: Double = 100_000_000
+    private var cur: AppCurrency { AppCurrency.current }
 
     var body: some View {
         NavigationStack {
@@ -24,8 +25,8 @@ struct SatoshiConverterView: View {
                     VStack(spacing: 16) {
                         // ── USD field ─────────────────────────────
                         inputField(
-                            label: "US Dollars",
-                            prefix: "$",
+                            label: cur.displayName,
+                            prefix: cur.symbol,
                             placeholder: "0.00",
                             text: $usdText,
                             field: .usd
@@ -71,7 +72,7 @@ struct SatoshiConverterView: View {
                                         focus = nil
                                         recalcFromUSD(usdText)
                                     } label: {
-                                        Text("$\(amount)")
+                                        Text("\(cur.symbol)\(amount)")
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundStyle(.white)
                                             .padding(.horizontal, 14)
@@ -99,7 +100,7 @@ struct SatoshiConverterView: View {
                                 Text("Bitcoin price")
                                     .font(.system(size: 11))
                                     .foregroundStyle(.secondary)
-                                Text(formattedUSD(btcPrice))
+                                Text(cur.format(btcPrice))
                                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                             }
@@ -108,7 +109,7 @@ struct SatoshiConverterView: View {
                                 Text("1 sat equals")
                                     .font(.system(size: 11))
                                     .foregroundStyle(.secondary)
-                                Text(oneSatInUSD())
+                                Text(oneSatFormatted())
                                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.orange)
                             }
@@ -196,15 +197,9 @@ struct SatoshiConverterView: View {
         usdText = String(format: usd < 0.01 ? "%.6f" : "%.2f", usd)
     }
 
-    private func formattedUSD(_ v: Double) -> String {
-        let f = NumberFormatter(); f.numberStyle = .currency; f.currencySymbol = "$"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: v)) ?? "$\(Int(v))"
-    }
-
-    private func oneSatInUSD() -> String {
+    private func oneSatFormatted() -> String {
         let v = btcPrice / satsPerBTC
-        return String(format: "$%.6f", v)
+        return "\(cur.symbol)\(String(format: "%.6f", v))"
     }
 
     private var satFormatter: NumberFormatter {

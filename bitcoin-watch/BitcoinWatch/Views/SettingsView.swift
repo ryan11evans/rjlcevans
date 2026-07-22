@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 struct SettingsView: View {
     var body: some View {
@@ -15,6 +16,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 26) {
                         ProCard()
                         ProAlertsSection()
+                        DisplaySection()
                         NotificationsSection()
                         IconPickerSection()
                         VersionFooter()
@@ -288,6 +290,74 @@ private struct ProAlertsSection: View {
         let ampm = h < 12 ? "AM" : "PM"
         let display = h % 12 == 0 ? 12 : h % 12
         return "\(display) \(ampm)"
+    }
+}
+
+// MARK: - Display (currency + sats)
+
+private struct DisplaySection: View {
+    @AppStorage("displayCurrency", store: .shared) private var currency = "usd"
+    @AppStorage("denominateInSats", store: .shared) private var sats = false
+
+    private var selected: AppCurrency { AppCurrency(rawValue: currency) ?? .usd }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Display")
+
+            VStack(spacing: 0) {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "dollarsign.circle.fill", color: Color(red: 0.19, green: 0.82, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Currency")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Show prices in your local currency")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Menu {
+                        ForEach(AppCurrency.allCases, id: \.self) { c in
+                            Button("\(c.pickerLabel) · \(c.displayName)") { currency = c.rawValue }
+                        }
+                    } label: {
+                        Text(selected.pickerLabel)
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+
+                Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 62)
+
+                HStack(spacing: 14) {
+                    IconChip(systemName: "bitcoinsign.circle.fill", color: .orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Denominate in Sats")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Show holdings in satoshis instead of BTC")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $sats).labelsHidden().tint(.orange)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+            }
+            .modifier(CardBackground())
+        }
+        .onChange(of: currency) { _, _ in
+            Task {
+                await PriceService.shared.fetchPrice()
+                await StatsService.shared.fetch()
+                WidgetCenter.shared.reloadAllTimelines()
+                ConnectivityManager.shared.syncHoldings()
+                await PushService.shared.sync()
+            }
+        }
+        .onChange(of: sats) { _, _ in WidgetCenter.shared.reloadAllTimelines() }
     }
 }
 

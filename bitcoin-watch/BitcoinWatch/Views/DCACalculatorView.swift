@@ -116,7 +116,7 @@ private struct DCATab: View {
                 VStack(alignment: .leading, spacing: 8) {
                     lbl("INVEST PER PERIOD")
                     HStack(spacing: 8) {
-                        Text("$").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                        Text(AppCurrency.current.symbol).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(.orange)
                         TextField("100", text: $amountText)
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .keyboardType(.decimalPad).foregroundStyle(.white)
@@ -180,7 +180,7 @@ private struct DCATab: View {
                                     VStack(alignment: .trailing, spacing: 3) {
                                         Text(btc.btcFormatted)
                                             .font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                                        Text("$\(Int(inv).formatted()) in")
+                                        Text("\(AppCurrency.current.format(inv)) in")
                                             .font(.system(size: 11)).foregroundStyle(.secondary)
                                     }
                                 }
@@ -218,7 +218,7 @@ private struct DCATab: View {
         guard let img = r.uiImage else { return }
         let meta = LPLinkMetadata()
         meta.url = URL(string: "https://rjlcevans.com/tapbtc")
-        meta.title = String(format: "I stack $%.0f in Bitcoin every \(freq.perLabel) with TapBTC", amount)
+        meta.title = "I stack \(AppCurrency.current.symbol)\(Int(amount)) in Bitcoin every \(freq.perLabel) with TapBTC"
         meta.imageProvider = NSItemProvider(object: img)
         presentShare(BTCShareItem(metadata: meta))
     }
@@ -300,10 +300,10 @@ private struct GoalTab: View {
                         goalRow("Held", held.btcFormatted, .white)
                         goalRow("Still needed", remaining.btcFormatted, downColor)
                         if let price = currentPrice, remaining > 0 {
-                            goalRow("Cost to complete", "$\(Int(remaining * price).formatted())", .secondary)
+                            goalRow("Cost to complete", AppCurrency.current.format(remaining * price), .secondary)
                         }
                         if let price = currentPrice, held > 0 {
-                            goalRow("Holdings value", "$\(Int(held * price).formatted())", upColor)
+                            goalRow("Holdings value", AppCurrency.current.format(held * price), upColor)
                         }
                     }
                     .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
@@ -367,7 +367,7 @@ fileprivate struct DCAShareCard: View {
                 Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 20)
 
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text("$\(Int(amount))").font(.system(size: 38, weight: .heavy, design: .rounded)).foregroundStyle(.white)
+                    Text("\(AppCurrency.current.symbol)\(Int(amount))").font(.system(size: 38, weight: .heavy, design: .rounded)).foregroundStyle(.white)
                     Text("/ \(freqLabel)").font(.system(size: 18, weight: .medium, design: .rounded)).foregroundStyle(.secondary)
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
@@ -386,7 +386,7 @@ fileprivate struct DCAShareCard: View {
                                 .frame(width: 65, alignment: .leading)
                             Spacer()
                             Text(row.btc.btcFormatted).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                            Text("  ·  $\(Int(row.invested).formatted()) in").font(.system(size: 11)).foregroundStyle(.secondary)
+                            Text("  ·  \(AppCurrency.current.format(row.invested)) in").font(.system(size: 11)).foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 20).padding(.vertical, 7)
                         if idx < rows.count - 1 {

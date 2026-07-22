@@ -1,15 +1,13 @@
 import Foundation
 
 struct BitcoinPrice: Codable, Equatable {
+    // Historically USD; now holds the price in the user's selected display
+    // currency (see AppCurrency). Kept named `usd` to avoid a churny rename.
     let usd: Double
     let timestamp: Date
 
     var formatted: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: usd)) ?? "$\(Int(usd))"
+        AppCurrency.current.format(usd, fractionDigits: 0)
     }
 
     var circularFormatted: String {
@@ -22,12 +20,7 @@ struct BitcoinPrice: Codable, Equatable {
     }
 
     var shortFormatted: String {
-        if usd >= 1_000_000 {
-            return String(format: "$%.2fM", usd / 1_000_000)
-        } else if usd >= 1_000 {
-            return String(format: "$%.1fK", usd / 1_000)
-        }
-        return String(format: "$%.0f", usd)
+        AppCurrency.current.formatShort(usd)
     }
 }
 
@@ -56,4 +49,5 @@ enum WCMessageKey {
     static let timestamp = "btcTimestamp"
     static let holdings = "btcHoldings"
     static let isPro = "isPro"
+    static let currency = "displayCurrency"
 }

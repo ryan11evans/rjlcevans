@@ -19,6 +19,15 @@ const BLOCK_URL = "https://blockstream.info/api/blocks/tip/height";
 const GECKO_CHANGE_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true";
 const VOLATILITY_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12h between volatility pushes
+
+const CURRENCY_SYMBOLS = {
+  usd: "$", eur: "€", gbp: "£", cad: "$", aud: "$", jpy: "¥",
+};
+
+function fmtCur(value, currency) {
+  const sym = CURRENCY_SYMBOLS[currency] || "$";
+  return sym + Math.round(value).toLocaleString("en-US");
+}
 const APNS_HOST_PROD = "https://api.push.apple.com";
 const APNS_HOST_SANDBOX = "https://api.sandbox.push.apple.com";
 const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour, matches the in-app cooldown
@@ -65,7 +74,7 @@ async function handleRegister(request, env) {
   }
 
   const { token, alerts, athAlert, milestoneAlert, knownATH,
-          volatility, briefing, holdings } = body;
+          volatility, briefing, holdings, currency, invested, investedBTC } = body;
   if (typeof token !== "string" || !/^[0-9a-fA-F]{8,}$/.test(token)) {
     return json({ error: "invalid token" }, 400);
   }
@@ -104,9 +113,12 @@ async function handleRegister(request, env) {
     };
   }
 
+  const cur = typeof currency === "string" && CURRENCY_SYMBOLS[currency] ? currency : "usd";
+
   devices[token] = {
     alerts: cleanAlerts,
     fired,
+    currency: cur,
     athAlert: athAlert !== false,
     milestoneAlert: milestoneAlert !== false,
     volatility: vol,
@@ -114,6 +126,8 @@ async function handleRegister(request, env) {
     briefing: brief,
     lastBriefingDay: prev.lastBriefingDay || "",
     holdings: typeof holdings === "number" && holdings > 0 ? holdings : 0,
+    invested: typeof invested === "number" && invested > 0 ? invested : 0,
+    investedBTC: typeof investedBTC === "number" && investedBTC > 0 ? investedBTC : 0,
     updatedAt: Date.now(),
   };
   await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
@@ -138,9 +152,17 @@ async function tick(env) {
   const devices = await env.ALERTS.get(DEVICES_KEY, "json");
   if (!devices || Object.keys(devices).length === 0) return;
 
-  const price = await fetchPrice();
+  const price = await fetchPrice(); // USD base (used for ATH)
 
-  const state = { env, devices, jwt: null, devicesChanged: false };
+  // Fetch a price for each currency actually in use.
+  const priceByCur = { usd: price };
+  const inUse = new Set();
+  for (const d of Object.values(devices)) if (d && d.currency) inUse.add(d.currency);
+  for (const c of inUse) {
+    if (c !== "usd" && priceByCur[c] === undefined) priceByCur[c] = await fetchPriceFor(c);
+  }
+
+  const state = { env, devices, jwt: null, devicesChanged: false, priceByCur };
 
   // Only pay for the CoinGecko 24h-change call if some device needs it.
   const needsChange = Object.values(devices).some(
@@ -149,10 +171,10 @@ async function tick(env) {
   const change = needsChange ? await fetchChange24h() : null;
 
   if (price != null) {
-    await checkPriceAlerts(state, price);
+    await checkPriceAlerts(state);
     await checkATH(state, price);
-    if (change != null) await checkVolatility(state, price, change);
-    await checkBriefing(state, price, change);
+    if (change != null) await checkVolatility(state, change);
+    await checkBriefing(state, change);
   }
   await checkMilestones(state);
 
@@ -163,12 +185,15 @@ async function tick(env) {
 
 // ── Custom price alerts ──────────────────────────────────────────────────────
 
-async function checkPriceAlerts(state, price) {
-  const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
-
+async function checkPriceAlerts(state) {
   for (const token of Object.keys(state.devices)) {
     const record = state.devices[token];
     if (!record || !Array.isArray(record.alerts)) continue;
+
+    // Alert thresholds are entered in the device's display currency.
+    const cur = record.currency || "usd";
+    const price = state.priceByCur[cur];
+    if (price == null) continue;
 
     for (const alert of record.alerts) {
       if (alert.enabled === false) continue;
@@ -186,7 +211,7 @@ async function checkPriceAlerts(state, price) {
       const title =
         alert.label && alert.label.length ? alert.label : "Bitcoin Price Alert";
       const dir = alert.direction === "above" ? "above" : "below";
-      const body = `BTC is now ${fmt(price)} — ${dir} your target of ${fmt(alert.targetPrice)}`;
+      const body = `BTC is now ${fmtCur(price, cur)} — ${dir} your target of ${fmtCur(alert.targetPrice, cur)}`;
 
       const result = await deliver(state, token, title, body);
       if (result === "unregistered") break; // device deleted; skip its remaining alerts
@@ -290,13 +315,16 @@ async function checkMilestones(state) {
 
 // ── Volatility alerts (Pro, per-device) ──────────────────────────────────────
 
-async function checkVolatility(state, price, change) {
-  const fmtP = "$" + Math.round(price).toLocaleString("en-US");
+async function checkVolatility(state, change) {
   for (const token of Object.keys(state.devices)) {
     const d = state.devices[token];
     if (!d || !d.volatility || !d.volatility.enabled) continue;
     if (Math.abs(change) < d.volatility.threshold) continue;
     if (Date.now() - (d.volFired || 0) < VOLATILITY_COOLDOWN_MS) continue;
+
+    const cur = d.currency || "usd";
+    const price = state.priceByCur[cur];
+    if (price == null) continue;
 
     const dir = change >= 0 ? "up" : "down";
     const arrow = change >= 0 ? "📈" : "📉";
@@ -304,7 +332,7 @@ async function checkVolatility(state, price, change) {
       state,
       token,
       `Big Move ${arrow}`,
-      `Bitcoin is ${dir} ${Math.abs(change).toFixed(1)}% in 24h — now ${fmtP}.`,
+      `Bitcoin is ${dir} ${Math.abs(change).toFixed(1)}% in 24h — now ${fmtCur(price, cur)}.`,
     );
     if (result === "unregistered") continue;
     if (result === true) {
@@ -316,11 +344,14 @@ async function checkVolatility(state, price, change) {
 
 // ── Daily briefing (Pro, per-device, at the user's local hour) ────────────────
 
-async function checkBriefing(state, price, change) {
-  const fmtP = "$" + Math.round(price).toLocaleString("en-US");
+async function checkBriefing(state, change) {
   for (const token of Object.keys(state.devices)) {
     const d = state.devices[token];
     if (!d || !d.briefing || !d.briefing.enabled) continue;
+
+    const cur = d.currency || "usd";
+    const price = state.priceByCur[cur];
+    if (price == null) continue;
 
     // Convert now → the device's local wall clock via its stored tz offset.
     const local = new Date(Date.now() + d.briefing.tz * 60000);
@@ -330,11 +361,17 @@ async function checkBriefing(state, price, change) {
     if (localHour !== d.briefing.hour) continue;
     if (d.lastBriefingDay === localDay) continue; // already sent today
 
-    let body = `Bitcoin is ${fmtP}`;
+    let body = `Bitcoin is ${fmtCur(price, cur)}`;
     if (change != null) body += ` (${change >= 0 ? "+" : ""}${change.toFixed(1)}% 24h)`;
     if (d.holdings > 0) {
-      const stack = "$" + Math.round(d.holdings * price).toLocaleString("en-US");
-      body += `. Your ${trimAmount(d.holdings)} BTC is worth ${stack}.`;
+      const stack = fmtCur(d.holdings * price, cur);
+      body += `. Your ${trimAmount(d.holdings)} BTC is worth ${stack}`;
+      // Add P&L if we have a cost basis.
+      if (d.investedBTC > 0 && d.invested > 0) {
+        const pct = ((d.investedBTC * price) / d.invested - 1) * 100;
+        body += ` (${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%)`;
+      }
+      body += ".";
     } else {
       body += ".";
     }
@@ -358,6 +395,20 @@ function trimAmount(n) {
 async function fetchPrice() {
   try {
     const res = await fetch(COINBASE_URL, { cf: { cacheTtl: 0 } });
+    const data = await res.json();
+    const amount = parseFloat(data?.data?.amount);
+    return Number.isFinite(amount) ? amount : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchPriceFor(currency) {
+  try {
+    const code = currency.toUpperCase();
+    const res = await fetch(`https://api.coinbase.com/v2/prices/BTC-${code}/spot`, {
+      cf: { cacheTtl: 0 },
+    });
     const data = await res.json();
     const amount = parseFloat(data?.data?.amount);
     return Number.isFinite(amount) ? amount : null;

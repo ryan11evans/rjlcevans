@@ -65,6 +65,7 @@ final class PushService: ObservableObject {
         var payload: [String: Any] = [
             "token": token,
             "alerts": alerts,
+            "currency": AppCurrency.current.rawValue,
             "athAlert": defaults.object(forKey: "athAlertEnabled") as? Bool ?? true,
             "milestoneAlert": defaults.object(forKey: "milestoneAlertEnabled") as? Bool ?? true,
         ]
@@ -86,7 +87,9 @@ final class PushService: ObservableObject {
 
         // Only share holdings when the daily briefing needs it (privacy).
         if briefEnabled {
-            payload["holdings"] = HoldingsService.shared.amount
+            payload["holdings"] = HoldingsService.shared.totalAmount
+            payload["invested"] = HoldingsService.shared.totalInvested
+            payload["investedBTC"] = HoldingsService.shared.investedBTC
         }
         guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return }
 

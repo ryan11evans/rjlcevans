@@ -45,6 +45,9 @@ class WatchConnectivityReceiver: NSObject, WCSessionDelegate, ObservableObject {
     }
 
     private func applyHoldings(from payload: [String: Any]) {
+        if let currency = payload[WCMessageKey.currency] as? String {
+            UserDefaults.shared.set(currency, forKey: "displayCurrency")
+        }
         guard let amount = payload[WCMessageKey.holdings] as? Double,
               let isPro = payload[WCMessageKey.isPro] as? Bool else { return }
         Task { @MainActor in

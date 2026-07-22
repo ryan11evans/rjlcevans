@@ -22,7 +22,7 @@ struct BTCChartView: View {
     private var highPoint: StatsService.ChartPoint? { data.max(by: { $0.price < $1.price }) }
     private var lowPoint: StatsService.ChartPoint? { data.min(by: { $0.price < $1.price }) }
 
-    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
+    private func shortPrice(_ v: Double) -> String { AppCurrency.current.formatShort(v) }
 
     // Shift the label inward when its point sits near the chart's left/right
     // edge, so the text isn't clipped by the chart frame.
@@ -65,14 +65,14 @@ struct BTCChartView: View {
 
                 Spacer()
 
-                HStack(spacing: 2) {
+                HStack(spacing: 1) {
                     ForEach(StatsService.ChartRange.allCases, id: \.self) { range in
                         Button(range.rawValue) {
                             Task { await statsService.fetchChart(range: range) }
                         }
-                        .font(.system(size: 11, weight: statsService.chartRange == range ? .bold : .regular))
+                        .font(.system(size: 10, weight: statsService.chartRange == range ? .bold : .regular))
                         .foregroundStyle(statsService.chartRange == range ? .primary : .secondary)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 6)
                         .padding(.vertical, 4)
                         .background(
                             statsService.chartRange == range ?
