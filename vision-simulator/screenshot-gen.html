@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Store Screenshot Generator — Vision Impairment Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1620;
+    --panel: #161e2a;
+    --panel-2: #1d2733;
+    --line: #2a3543;
+    --ink: #eef2f7;
+    --ink-dim: #9aa7b8;
+    --ink-mute: #6b7888;
+    --accent: #d4a574;
+    --accent-2: #5a8fb8;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(90,143,184,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(212,165,116,0.06), transparent 60%);
+    background-repeat: no-repeat;
+    padding: 40px 24px 80px;
+  }
+  .page-header { text-align: center; margin-bottom: 40px; }
+  .page-eyebrow {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 12px;
+  }
+  .page-title {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 36px;
+    letter-spacing: -0.01em; color: var(--ink); margin-bottom: 8px;
+  }
+  .page-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 24px; }
+  .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 12px 24px; border-radius: 8px; font-family: inherit; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s ease;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--panel-2); }
+  .btn.primary { background: var(--accent); color: #1a1208; border-color: var(--accent); }
+  .btn.primary:hover { background: #e0b483; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .card canvas { display: block; width: 100%; height: auto; }
+  .card-label {
+    padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--ink-dim);
+    border-top: 1px solid var(--line); display: flex; justify-content: space-between;
+    align-items: center;
+  }
+  .card-label .size { font-size: 11px; color: var(--ink-mute); }
+  .card:hover .card-label { color: var(--ink); }
+
+  .status {
+    text-align: center; color: var(--ink-dim); font-size: 13px;
+    margin: 16px 0; min-height: 20px;
+  }
+  .status.active { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Hidden SVG CVD filters — same matrices as index.html -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="cvd-protan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-deutan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-tritan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="page-header">
+  <p class="page-eyebrow">Vision Impairment Simulator · Dr. Ryan Evans, OD</p>
+  <h1 class="page-title">App Store Screenshot Generator</h1>
+  <p class="page-sub">1290 × 2796 px · iPhone 6.7" required size · Click any screenshot to download</p>
+  <div class="btn-row">
+    <button class="btn primary" id="btnAll">Download All (6)</button>
+    <button class="btn" id="btnRegen">Regenerate</button>
+  </div>
+</div>
+
+<p class="status" id="status">Generating screenshots…</p>
+
+<div class="grid" id="grid"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ─── Canvas dimensions ────────────────────────────────────────────────────
+  const OUT_W = 1290, OUT_H = 2796;
+  const IMG_Y = 200, IMG_H = 1100;          // image area within the output
+  const PANEL_Y = IMG_Y + IMG_H;            // = 1300
+  const WORK_W = 1290, WORK_H = IMG_H;      // work canvas size
+
+  // ─── Scenarios ───────────────────────────────────────────────────────────
+  const SCENARIOS = [
+    {
+      id: 'amd-compare',
+      label: 'AMD Compare',
+      sample: 'face',
+      filter: 'amd',
+      filterArgs: [35],
+      compare: true, splitPct: 0.5,
+      compareLabel: 'AMD',
+      headline: 'See Through Their Eyes',
+      sub: 'Compare normal vision side-by-side with 11 conditions',
+      bullets: [
+        '· Live camera or upload any image',
+        '· Drag the divider to reveal the difference',
+        '· Built by Dr. Ryan Evans, OD',
+      ]
+    },
+    {
+      id: 'cataract-night',
+      label: 'Cataract Night',
+      sample: 'street',
+      filter: 'cataract',
+      filterArgs: [0.78],
+      compare: false,
+      headline: 'Explain Cataracts in Seconds',
+      sub: 'Blur · yellow tint · contrast loss · glare',
+      bullets: [
+        '· Nuclear sclerotic cataract simulation',
+        '· Ideal for pre-op patient education',
+        '· Real-time camera mode',
+      ]
+    },
+    {
+      id: 'glaucoma-chart',
+      label: 'Glaucoma Eye Chart',
+      sample: 'chart',
+      filter: 'glaucoma',
+      filterArgs: [3],
+      compare: false,
+      headline: '11 Clinically-Informed Conditions',
+      sub: 'Myopia · Astigmatism · Cataract · Glaucoma · AMD · Diabetic Retinopathy · Color Blindness · Floaters · RP · Presbyopia',
+      bullets: [
+        '· Evidence-based visual simulations',
+        '· Stage-based severity controls',
+        '· Clinician-written descriptions',
+      ]
+    },
+    {
+      id: 'colorblind-compare',
+      label: 'Color Blindness Compare',
+      sample: 'garden',
+      filter: 'colorblind',
+      filterArgs: ['protan'],
+      compare: true, splitPct: 0.5,
+      compareLabel: 'Protan',
+      headline: 'Color Vision Deficiency',
+      sub: 'Protan · Deutan · Tritan',
+      bullets: [
+        '· Affects ~8% of men',
+        '· See the world through red-green and blue-yellow deficiency',
+        '· Great for patient empathy',
+      ]
+    },
+    {
+      id: 'rp-garden',
+      label: 'Retinitis Pigmentosa',
+      sample: 'garden',
+      filter: 'rp',
+      filterArgs: [2],
+      compare: false,
+      headline: 'Retinitis Pigmentosa',
+      sub: 'Irregular scalloped tunnel with bone spicule deposits',
+      bullets: [
+        '· Distinct from glaucoma\'s smooth gradient',
+        '· Simulates night-vision loss',
+        '· Early, Moderate, Advanced, End-stage',
+      ]
+    },
+    {
+      id: 'presbyopia-reading',
+      label: 'Presbyopia Reading',
+      sample: 'reading',
+      filter: 'presbyopia',
+      filterArgs: [3],
+      compare: false,
+      headline: 'Presbyopia Simulation',
+      sub: 'Show patients what near vision loss feels like at reading distance',
+      bullets: [
+        '· Most common vision change after age 45',
+        '· Perfect for pre-fitting patient education',
+        '· Stage presets from early to advanced',
+      ]
+    },
+  ];
+
+  // ─── Sample image generators (ported from index.html makeSample) ──────────
+  function makeSample(kind) {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 900;
+    const g = c.getContext('2d');
+
+    if (kind === 'chart') {
+      g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const rows = [
+        { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
+        { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
+      ];
+      let y = 130;
+      rows.forEach(r => {
+        g.font = `700 ${r.s}px Arial, sans-serif`;
+        g.fillText(r.t, c.width / 2, y);
+        y += r.s * 0.95 + 24;
+      });
+
+    } else if (kind === 'grid') {
+      g.fillStyle = '#0b0b0b'; g.fillRect(0, 0, c.width, c.height);
+      g.strokeStyle = '#ffffff'; g.lineWidth = 2;
+      const step = 40, ox = (c.width % step) / 2, oy = (c.height % step) / 2;
+      g.beginPath();
+      for (let x = ox; x <= c.width; x += step) { g.moveTo(x, 0); g.lineTo(x, c.height); }
+      for (let y2 = oy; y2 <= c.height; y2 += step) { g.moveTo(0, y2); g.lineTo(c.width, y2); }
+      g.stroke();
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.arc(c.width / 2, c.height / 2, 9, 0, Math.PI * 2); g.fill();
+
+    } else if (kind === 'street') {
+      const sky = g.createLinearGradient(0, 0, 0, c.height);
+      sky.addColorStop(0, '#070b14'); sky.addColorStop(0.6, '#0d1422'); sky.addColorStop(1, '#161b24');
+      g.fillStyle = sky; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#1b1f27'; g.beginPath();
+      g.moveTo(c.width*0.42, c.height*0.55); g.lineTo(c.width*0.58, c.height*0.55);
+      g.lineTo(c.width*0.95, c.height); g.lineTo(c.width*0.05, c.height); g.closePath(); g.fill();
+      g.strokeStyle = '#c9b15a'; g.lineWidth = 6; g.setLineDash([26, 30]);
+      g.beginPath(); g.moveTo(c.width/2, c.height*0.56); g.lineTo(c.width/2, c.height); g.stroke();
+      g.setLineDash([]);
+      const lights = [
+        [c.width*0.46, c.height*0.62, 26], [c.width*0.54, c.height*0.62, 26],
+        [c.width*0.2, c.height*0.3, 16],   [c.width*0.8, c.height*0.28, 18]
+      ];
+      lights.forEach(([x,y,r]) => {
+        const gr = g.createRadialGradient(x,y,0,x,y,r*6);
+        gr.addColorStop(0,'rgba(255,250,220,0.95)'); gr.addColorStop(0.3,'rgba(255,240,180,0.5)'); gr.addColorStop(1,'rgba(255,240,180,0)');
+        g.fillStyle = gr; g.fillRect(x-r*6,y-r*6,r*12,r*12);
+        g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
+      });
+
+    } else if (kind === 'face') {
+      c.width = 900; c.height = 1100;
+      g.fillStyle = '#cfc4b4'; g.fillRect(0, 0, c.width, c.height);
+      const bgg = g.createRadialGradient(c.width/2, c.height*0.38, 0, c.width/2, c.height*0.38, c.width*0.9);
+      bgg.addColorStop(0, 'rgba(255,248,240,0.55)'); bgg.addColorStop(1, 'rgba(158,146,132,0.38)');
+      g.fillStyle = bgg; g.fillRect(0, 0, c.width, c.height);
+      const cx = c.width/2, hy = c.height*0.42;
+      g.fillStyle = '#e8b080';
+      g.beginPath(); g.roundRect(cx-75, hy+235, 150, 220, 8); g.fill();
+      g.fillStyle = '#f2c085';
+      g.beginPath(); g.ellipse(cx, hy, 210, 260, 0, 0, Math.PI*2); g.fill();
+      g.fillStyle = '#5c3a1e';
+      g.beginPath(); g.ellipse(cx, hy-130, 225, 155, 0, Math.PI, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx-200, hy+15, 35, 120, -0.25, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+200, hy+15, 35, 120, 0.25, 0, Math.PI*2); g.fill();
+      g.fillStyle = '#e0a870';
+      g.beginPath(); g.ellipse(cx-208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      g.strokeStyle='#4a2e18'; g.lineWidth=9; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-95, hy-64); g.quadraticCurveTo(cx-58, hy-80, cx-18, hy-68); g.stroke();
+      g.beginPath(); g.moveTo(cx+18, hy-68); g.quadraticCurveTo(cx+58, hy-80, cx+95, hy-64); g.stroke();
+      g.fillStyle='#fff';
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      g.fillStyle='#3d6e8e';
+      g.beginPath(); g.arc(cx-62, hy-18, 15, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 15, 0, Math.PI*2); g.fill();
+      g.fillStyle='#160e0a';
+      g.beginPath(); g.arc(cx-62, hy-18, 7, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 7, 0, Math.PI*2); g.fill();
+      g.fillStyle='rgba(255,255,255,0.82)';
+      g.beginPath(); g.arc(cx-57, hy-24, 4, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+67, hy-24, 4, 0, Math.PI*2); g.fill();
+      g.strokeStyle='#1e1008'; g.lineWidth=3;
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      g.strokeStyle='#c47e50'; g.lineWidth=3.5; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-10,hy-8); g.lineTo(cx-18,hy+62); g.quadraticCurveTo(cx-32,hy+72,cx-28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx+10,hy-8); g.lineTo(cx+18,hy+62); g.quadraticCurveTo(cx+32,hy+72,cx+28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx-28,hy+82); g.quadraticCurveTo(cx,hy+92,cx+28,hy+82); g.stroke();
+      g.fillStyle='#cc7060';
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx-24,hy+112,cx,hy+115); g.quadraticCurveTo(cx+24,hy+112,cx+48,hy+122); g.quadraticCurveTo(cx+30,hy+148,cx,hy+152); g.quadraticCurveTo(cx-30,hy+148,cx-48,hy+122); g.closePath(); g.fill();
+      g.strokeStyle='#a85045'; g.lineWidth=2;
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx,hy+132,cx+48,hy+122); g.stroke();
+      g.fillStyle='#2e4f7a';
+      g.beginPath(); g.moveTo(0,c.height); g.lineTo(0,hy+360); g.quadraticCurveTo(cx-280,hy+290,cx-90,hy+240); g.lineTo(cx-78,hy+232); g.lineTo(cx+78,hy+232); g.lineTo(cx+90,hy+240); g.quadraticCurveTo(cx+280,hy+290,c.width,hy+360); g.lineTo(c.width,c.height); g.closePath(); g.fill();
+
+    } else if (kind === 'reading') {
+      c.width = 900; c.height = 1200;
+      g.fillStyle = '#fdfaf4'; g.fillRect(0, 0, c.width, c.height);
+      g.strokeStyle = '#e8e2d4'; g.lineWidth = 1;
+      g.strokeRect(48, 48, c.width-96, c.height-96);
+      g.textAlign = 'left'; g.textBaseline = 'top';
+      g.fillStyle = '#14142a';
+      g.font = '700 48px Georgia, serif'; g.fillText('Physician Referral Note', 70, 72);
+      g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
+      let ry = 152;
+      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
+        g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
+        g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
+        ry += 38;
+      });
+      ry += 10;
+      g.strokeStyle = '#d8d0c0'; g.lineWidth = 1; g.beginPath(); g.moveTo(70,ry); g.lineTo(c.width-70,ry); g.stroke(); ry += 20;
+      const paras = [
+        { text: 'Rx: Progressive addition lenses. Distance: +0.25 −0.50 × 095 / +0.50 −0.25 × 085. Add: +2.25 OU. PD: 63/61.', size: 23 },
+        { text: 'Instructions: Wear full time. Avoid progressives while driving until adapted (allow 2–3 weeks). Return visit in 6 weeks.', size: 19 },
+        { text: 'The patient reports increasing difficulty reading small print and near tasks over the past 18 months. Best corrected visual acuity is 20/20 OD and 20/20 OS at distance. Near acuity without correction is J5 at 40 cm bilaterally.', size: 15 },
+        { text: 'Side effects may include: dizziness, peripheral distortion, and difficulty with stairs during adaptation. If symptoms persist beyond two weeks, contact our office at (555) 867-5309. Do not adjust the frame yourself.', size: 12 },
+        { text: 'This prescription is valid for 24 months from the date of examination. Frame selection, lens material, coatings, and fitting are the responsibility of the dispensing optician. Insurance benefits apply subject to plan limitations and co-pay is due at time of dispensing. Lens prescription is not transferable.', size: 9 },
+        { text: 'Fine print: Warranty covers manufacturing defects only and does not include scratches, breakage, or loss. Anti-reflective coating void if cleaned with abrasive materials. Progressive lens designs may vary by manufacturer. All measurements are in millimetres unless otherwise stated. Patient acknowledges receipt of this prescription.', size: 7 },
+      ];
+      paras.forEach(p => {
+        g.font = `400 ${p.size}px Georgia, serif`; g.fillStyle = '#1a1a2a';
+        const maxW = c.width - 140; let line = '';
+        p.text.split(' ').forEach(word => {
+          const test = line + (line ? ' ' : '') + word;
+          if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += p.size*1.65; line = word; }
+          else line = test;
+        });
+        if (line) { g.fillText(line, 70, ry); ry += p.size*1.65; }
+        ry += p.size * 1.2;
+      });
+
+    } else if (kind === 'garden') {
+      g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
+      g.fillStyle = '#6fae54'; g.fillRect(0, c.height*0.62, c.width, c.height*0.38);
+      const cols = ['#e0473e','#e8913a','#f0d33b','#d94f8a','#7d4fc0','#ffffff'];
+      // Use deterministic positions so screenshots are consistent
+      const rng = (() => { let s=42; return () => { s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; }; })();
+      for (let i=0;i<70;i++){
+        const x=rng()*c.width, y=c.height*0.62+rng()*c.height*0.36;
+        const col=cols[(rng()*cols.length)|0], pr=10+rng()*16;
+        g.strokeStyle='#3f7d36'; g.lineWidth=3; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+18+rng()*20); g.stroke();
+        for(let p=0;p<6;p++){const a=p/6*Math.PI*2;g.fillStyle=col;g.beginPath();g.ellipse(x+Math.cos(a)*pr*0.6,y+Math.sin(a)*pr*0.6,pr*0.5,pr*0.32,a,0,Math.PI*2);g.fill();}
+        g.fillStyle='#f5d23b'; g.beginPath(); g.arc(x,y,pr*0.4,0,Math.PI*2); g.fill();
+      }
+    }
+    return c;
+  }
+
+  // ─── Cover-fill: draw srcCanvas into dstCanvas at (dx,dy,dw,dh), cover-fill ─
+  function drawCoverFill(srcCanvas, dstCtx, dx, dy, dw, dh) {
+    const sw = srcCanvas.width, sh = srcCanvas.height;
+    const dstRatio = dw / dh;
+    const srcRatio = sw / sh;
+    let cropW, cropH, cropX, cropY;
+    if (srcRatio > dstRatio) {
+      cropH = sh; cropW = sh * dstRatio; cropX = (sw - cropW) / 2; cropY = 0;
+    } else {
+      cropW = sw; cropH = sw / dstRatio; cropX = 0; cropY = (sh - cropH) / 2;
+    }
+    dstCtx.drawImage(srcCanvas, cropX, cropY, cropW, cropH, dx, dy, dw, dh);
+  }
+
+  // ─── Filter functions ─────────────────────────────────────────────────────
+
+  function filterBlur(srcCanvas, dstCtx, sigma) {
+    const w = dstCtx.canvas.width, h = dstCtx.canvas.height;
+    if (sigma <= 0) { dstCtx.drawImage(srcCanvas, 0, 0); return; }
+    const scale = Math.max(0.04, Math.min(1, 1/(sigma*0.6+1)));
+    const sw = Math.max(2, Math.round(w*scale)), sh = Math.max(2, Math.round(h*scale));
+    const tmp = document.createElement('canvas'); tmp.width=sw; tmp.height=sh;
+    const tCtx = tmp.getContext('2d');
+    tCtx.imageSmoothingEnabled=true; tCtx.imageSmoothingQuality='high';
+    tCtx.drawImage(srcCanvas, 0, 0, sw, sh);
+    const tmp2 = document.createElement('canvas'); tmp2.width=sw; tmp2.height=sh;
+    const t2 = tmp2.getContext('2d');
+    t2.imageSmoothingEnabled=true; t2.imageSmoothingQuality='high';
+    t2.drawImage(tmp, 0, 0);
+    dstCtx.imageSmoothingEnabled=true; dstCtx.imageSmoothingQuality='high';
+    dstCtx.drawImage(tmp2, 0, 0, sw, sh, 0, 0, w, h);
+  }
+
+  function filterCataract(srcCanvas, dstCtx, severity) {
+    const s = severity, w = dstCtx.canvas.width, h = dstCtx.canvas.height;
+    dstCtx.filter = `blur(${2+s*7}px) contrast(${1-s*0.35}) brightness(${1+s*0.05})`;
+    dstCtx.drawImage(srcCanvas, 0, 0);
+    dstCtx.filter = 'none';
+    dstCtx.globalCompositeOperation='multiply';
+    dstCtx.fillStyle=`rgba(${Math.round(255-s*10)},${Math.round(230-s*30)},${Math.round(170-s*90)},${0.25+s*0.45})`;
+    dstCtx.fillRect(0,0,w,h);
+    dstCtx.globalCompositeOperation='screen';
+    const grad=dstCtx.createRadialGradient(w/2,h*0.45,0,w/2,h*0.45,Math.max(w,h)*0.7);
+    grad.addColorStop(0,`rgba(255,245,220,${0.15+s*0.35})`); grad.addColorStop(1,'rgba(255,255,255,0)');
+    dstCtx.fillStyle=grad; dstCtx.fillRect(0,0,w,h);
+    dstCtx.globalCompositeOperation='source-over';
+  }
+
+  function filterGlaucoma(srcCanvas, dstCtx, stage) {
+    const w=dstCtx.canvas.width, h=dstCtx.canvas.height;
+    dstCtx.filter=`blur(${0.5+stage*0.3}px)`; dstCtx.drawImage(srcCanvas,0,0); dstCtx.filter='none';
+    const half=Math.hypot(w,h)/2, cx=w/2, cy=h/2;
+    const cfg=({1:{c:0.78,f:0.95},2:{c:0.55,f:0.78},3:{c:0.32,f:0.55},4:{c:0.15,f:0.32}})[stage]||{c:0.55,f:0.78};
+    const grad=dstCtx.createRadialGradient(cx,cy,half*cfg.c,cx,cy,half*cfg.f);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(1,'rgba(0,0,0,1)');
+    dstCtx.fillStyle=grad; dstCtx.fillRect(0,0,w,h);
+    dstCtx.save(); dstCtx.beginPath(); dstCtx.rect(0,0,w,h);
+    dstCtx.arc(cx,cy,half*cfg.f,0,Math.PI*2,true);
+    dstCtx.fillStyle='#000'; dstCtx.fill('evenodd'); dstCtx.restore();
+  }
+
+  function filterAMD(srcCanvas, dstCtx, sizePct) {
+    const w=dstCtx.canvas.width, h=dstCtx.canvas.height;
+    dstCtx.drawImage(srcCanvas,0,0);
+    const cx=w/2, cy=h/2, scotomaR=Math.min(w,h)*(sizePct/100);
+    const grad=dstCtx.createRadialGradient(cx,cy,scotomaR*0.2,cx,cy,scotomaR);
+    grad.addColorStop(0,'rgba(20,20,25,0.96)'); grad.addColorStop(0.7,'rgba(20,20,25,0.85)'); grad.addColorStop(1,'rgba(20,20,25,0)');
+    dstCtx.fillStyle=grad; dstCtx.fillRect(0,0,w,h);
+  }
+
+  function filterColorBlind(srcCanvas, dstCtx, type) {
+    const filterId = {protan:'cvd-protan',deutan:'cvd-deutan',tritan:'cvd-tritan'}[type]||'cvd-deutan';
+    dstCtx.filter = `url(#${filterId})`;
+    dstCtx.drawImage(srcCanvas, 0, 0);
+    dstCtx.filter = 'none';
+  }
+
+  function filterRP(srcCanvas, dstCtx, stage) {
+    const w=dstCtx.canvas.width, h=dstCtx.canvas.height, cx=w/2, cy=h/2, minDim=Math.min(w,h);
+    dstCtx.filter=`brightness(${0.88-stage*0.07}) saturate(0.82)`;
+    dstCtx.drawImage(srcCanvas,0,0); dstCtx.filter='none';
+    const n=28+stage*14;
+    for(let i=0;i<n;i++){
+      const angle=(i/n)*Math.PI*2+(Math.sin(i*7.3)-0.5)*0.5;
+      const rFrac=0.28+Math.abs(Math.sin(i*3.1))*0.18;
+      const r=minDim*(0.32-stage*0.04)*(0.88+rFrac);
+      const px=cx+Math.cos(angle)*r, py=cy+Math.sin(angle)*r;
+      const sz=(0.011+Math.abs(Math.sin(i*5.7))*0.018)*minDim;
+      const op=0.5+Math.abs(Math.sin(i*2.3))*0.42;
+      dstCtx.fillStyle=`rgba(0,0,0,${op})`;
+      dstCtx.beginPath(); dstCtx.ellipse(px,py,sz,sz*0.5,angle+0.4,0,Math.PI*2); dstCtx.fill();
+    }
+    const halfDiag=Math.hypot(w,h)/2;
+    const cfg=({1:{c:0.56,e:0.73},2:{c:0.41,e:0.58},3:{c:0.26,e:0.42},4:{c:0.11,e:0.22}})[stage]||{c:0.41,e:0.58};
+    const grad=dstCtx.createRadialGradient(cx,cy,halfDiag*cfg.c,cx,cy,halfDiag*cfg.e);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(1,'rgba(0,0,0,1)');
+    dstCtx.fillStyle=grad; dstCtx.fillRect(0,0,w,h);
+    const perimR=halfDiag*cfg.e;
+    dstCtx.save(); dstCtx.beginPath(); dstCtx.rect(0,0,w,h);
+    const steps=52;
+    for(let i=0;i<=steps;i++){
+      const a=(i/steps)*Math.PI*2;
+      const noise=1+Math.sin(a*7+2.3)*0.07+Math.sin(a*13+1.1)*0.04+Math.sin(a*3+3.7)*0.09;
+      const px2=cx+Math.cos(a)*perimR*noise, py2=cy+Math.sin(a)*perimR*noise;
+      if(i===0)dstCtx.moveTo(px2,py2); else dstCtx.lineTo(px2,py2);
+    }
+    dstCtx.closePath(); dstCtx.fillStyle='#000'; dstCtx.fill('evenodd'); dstCtx.restore();
+  }
+
+  function filterPresbyopia(srcCanvas, dstCtx, stage) {
+    const sigmas = [0, 4, 11, 22];
+    filterBlur(srcCanvas, dstCtx, sigmas[stage] || 11);
+  }
+
+  // ─── Dispatch filter by name ───────────────────────────────────────────────
+  function applyFilter(filterName, filterArgs, srcCanvas, dstCtx) {
+    switch (filterName) {
+      case 'blur':       filterBlur(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'cataract':   filterCataract(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'glaucoma':   filterGlaucoma(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'amd':        filterAMD(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'colorblind': filterColorBlind(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'rp':         filterRP(srcCanvas, dstCtx, filterArgs[0]); break;
+      case 'presbyopia': filterPresbyopia(srcCanvas, dstCtx, filterArgs[0]); break;
+      default:           dstCtx.drawImage(srcCanvas, 0, 0);
+    }
+  }
+
+  // ─── Draw compare divider on workCtx ──────────────────────────────────────
+  function drawDivider(workCtx, splitX, condLabel) {
+    const w = workCtx.canvas.width, h = workCtx.canvas.height;
+    const midY = h / 2;
+
+    // Vertical line
+    workCtx.save();
+    workCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+    workCtx.lineWidth = 2;
+    workCtx.shadowColor = 'rgba(0,0,0,0.6)';
+    workCtx.shadowBlur = 8;
+    workCtx.beginPath();
+    workCtx.moveTo(splitX, 0);
+    workCtx.lineTo(splitX, h);
+    workCtx.stroke();
+    workCtx.restore();
+
+    // Circle handle
+    const hRadius = 28;
+    workCtx.save();
+    workCtx.shadowColor = 'rgba(0,0,0,0.5)';
+    workCtx.shadowBlur = 10;
+    workCtx.fillStyle = 'rgba(255,255,255,0.95)';
+    workCtx.beginPath();
+    workCtx.arc(splitX, midY, hRadius, 0, Math.PI * 2);
+    workCtx.fill();
+    workCtx.restore();
+
+    // Arrow text inside handle
+    workCtx.save();
+    workCtx.font = 'bold 22px Arial, sans-serif';
+    workCtx.fillStyle = '#0f1620';
+    workCtx.textAlign = 'center';
+    workCtx.textBaseline = 'middle';
+    workCtx.fillText('◁▷', splitX, midY);
+    workCtx.restore();
+
+    // Pill labels
+    const labelY = 20;
+    const labelH = 32;
+    const labelPadX = 16;
+    const labelFontSize = 18;
+
+    function drawPill(text, anchorX, side) {
+      workCtx.save();
+      workCtx.font = `600 ${labelFontSize}px "Inter Tight", sans-serif`;
+      workCtx.textBaseline = 'middle';
+      const tw = workCtx.measureText(text).width;
+      const pillW = tw + labelPadX * 2;
+      const pillX = side === 'left' ? anchorX + 14 : anchorX - 14 - pillW;
+      const pillY = labelY;
+
+      // Pill background
+      workCtx.fillStyle = 'rgba(0,0,0,0.58)';
+      workCtx.beginPath();
+      const r = labelH / 2;
+      workCtx.roundRect(pillX, pillY, pillW, labelH, r);
+      workCtx.fill();
+
+      // Text
+      workCtx.fillStyle = '#ffffff';
+      workCtx.textAlign = 'left';
+      workCtx.fillText(text, pillX + labelPadX, pillY + labelH / 2);
+      workCtx.restore();
+    }
+
+    drawPill('Normal', 0, 'left');
+    drawPill(condLabel, w, 'right');
+  }
+
+  // ─── Build the work canvas (1290×1100) for a scenario ────────────────────
+  function buildWorkCanvas(scenario) {
+    const srcCanvas = makeSample(scenario.sample);
+
+    // Create work canvas & src (both 1290×1100)
+    const workCanvas = document.createElement('canvas');
+    workCanvas.width = WORK_W; workCanvas.height = WORK_H;
+    const workCtx = workCanvas.getContext('2d');
+
+    // Normalised source canvas (cover-fill)
+    const normCanvas = document.createElement('canvas');
+    normCanvas.width = WORK_W; normCanvas.height = WORK_H;
+    const normCtx = normCanvas.getContext('2d');
+    normCtx.imageSmoothingEnabled = true;
+    normCtx.imageSmoothingQuality = 'high';
+    drawCoverFill(srcCanvas, normCtx, 0, 0, WORK_W, WORK_H);
+
+    if (scenario.compare) {
+      const splitX = Math.round(WORK_W * scenario.splitPct);
+
+      // Left half: normal
+      workCtx.save();
+      workCtx.beginPath();
+      workCtx.rect(0, 0, splitX, WORK_H);
+      workCtx.clip();
+      workCtx.drawImage(normCanvas, 0, 0);
+      workCtx.restore();
+
+      // Right half: filtered
+      const filtCanvas = document.createElement('canvas');
+      filtCanvas.width = WORK_W; filtCanvas.height = WORK_H;
+      const filtCtx = filtCanvas.getContext('2d');
+      applyFilter(scenario.filter, scenario.filterArgs, normCanvas, filtCtx);
+
+      workCtx.save();
+      workCtx.beginPath();
+      workCtx.rect(splitX, 0, WORK_W - splitX, WORK_H);
+      workCtx.clip();
+      workCtx.drawImage(filtCanvas, 0, 0);
+      workCtx.restore();
+
+      // Divider
+      drawDivider(workCtx, splitX, scenario.compareLabel);
+    } else {
+      applyFilter(scenario.filter, scenario.filterArgs, normCanvas, workCtx);
+    }
+
+    return workCanvas;
+  }
+
+  // ─── Compose the full 1290×2796 screenshot ───────────────────────────────
+  function composeScreenshot(scenario) {
+    const canvas = document.createElement('canvas');
+    canvas.width = OUT_W; canvas.height = OUT_H;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#0f1620';
+    ctx.fillRect(0, 0, OUT_W, OUT_H);
+
+    // Subtle radial gradients
+    const grad1 = ctx.createRadialGradient(OUT_W*0.85, -OUT_H*0.05, 0, OUT_W*0.85, -OUT_H*0.05, OUT_W*1.2);
+    grad1.addColorStop(0, 'rgba(90,143,184,0.10)');
+    grad1.addColorStop(1, 'rgba(90,143,184,0)');
+    ctx.fillStyle = grad1;
+    ctx.fillRect(0, 0, OUT_W, OUT_H);
+
+    const grad2 = ctx.createRadialGradient(-OUT_W*0.1, OUT_H*1.05, 0, -OUT_W*0.1, OUT_H*1.05, OUT_W*1.1);
+    grad2.addColorStop(0, 'rgba(212,165,116,0.08)');
+    grad2.addColorStop(1, 'rgba(212,165,116,0)');
+    ctx.fillStyle = grad2;
+    ctx.fillRect(0, 0, OUT_W, OUT_H);
+
+    // ── Branding bar (0–200px) ───────────────────────────────────────────────
+    // Eyebrow
+    ctx.save();
+    ctx.font = '500 28px "Inter Tight", sans-serif';
+    ctx.fillStyle = '#6b7888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.letterSpacing = '0.16em';
+    // Canvas letterSpacing not universally supported; use regular spacing
+    ctx.font = '500 26px "Inter Tight", sans-serif';
+    ctx.fillText('VISION IMPAIRMENT SIMULATOR', OUT_W / 2, 66);
+
+    // Title
+    ctx.font = '500 52px "Fraunces", serif';
+    ctx.fillStyle = '#d4a574';
+    ctx.fillText('Dr. Ryan Evans, OD', OUT_W / 2, 138);
+    ctx.restore();
+
+    // Thin separator below branding
+    ctx.fillStyle = 'rgba(42,53,67,0.8)';
+    ctx.fillRect(0, 196, OUT_W, 2);
+
+    // ── Image area (200–1300px) ───────────────────────────────────────────────
+    const workCanvas = buildWorkCanvas(scenario);
+    ctx.drawImage(workCanvas, 0, IMG_Y, WORK_W, WORK_H);
+
+    // ── Bottom panel (1300–2796px) ────────────────────────────────────────────
+    // Gold separator line at y=1300
+    ctx.fillStyle = '#d4a574';
+    ctx.fillRect(0, PANEL_Y, OUT_W, 1);
+
+    const padX = 88; // left/right padding for text
+
+    // Headline (~90px Fraunces)
+    ctx.save();
+    ctx.font = '500 90px "Fraunces", serif';
+    ctx.fillStyle = '#eef2f7';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    // Wrap headline if needed
+    wrapText(ctx, scenario.headline, padX, 1370, OUT_W - padX * 2, 100);
+    ctx.restore();
+
+    // Subtext (~40px Inter Tight)
+    ctx.save();
+    ctx.font = '400 38px "Inter Tight", sans-serif';
+    ctx.fillStyle = '#9aa7b8';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    wrapText(ctx, scenario.sub, padX, 1530, OUT_W - padX * 2, 46);
+    ctx.restore();
+
+    // Bullets (~32px, starting at y=1700, each 90px apart)
+    ctx.save();
+    ctx.font = '400 34px "Inter Tight", sans-serif';
+    ctx.fillStyle = '#eef2f7';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    let bulletY = 1700;
+    scenario.bullets.forEach(bullet => {
+      ctx.fillText(bullet, padX, bulletY);
+      bulletY += 90;
+    });
+    ctx.restore();
+
+    // Small credit line at y=2680
+    ctx.save();
+    ctx.font = '400 28px "Inter Tight", sans-serif';
+    ctx.fillStyle = '#6b7888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Dr. Ryan Evans, OD  ·  rjlcevans.com', OUT_W / 2, 2700);
+    ctx.restore();
+
+    // App Store badge area — simple decorative pill
+    ctx.save();
+    ctx.strokeStyle = 'rgba(42,53,67,0.7)';
+    ctx.lineWidth = 2;
+    const pillW = 280, pillH = 56, pillX = (OUT_W - pillW) / 2, pillY = 2730;
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 28);
+    ctx.stroke();
+    ctx.font = '500 22px "Inter Tight", sans-serif';
+    ctx.fillStyle = '#6b7888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Available on the App Store', OUT_W / 2, pillY + pillH / 2);
+    ctx.restore();
+
+    return canvas;
+  }
+
+  // ─── Text wrapping helper ─────────────────────────────────────────────────
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+    words.forEach((word, i) => {
+      const test = line + (line ? ' ' : '') + word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        ctx.fillText(line, x, currentY);
+        currentY += lineHeight;
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) ctx.fillText(line, x, currentY);
+  }
+
+  // ─── Download helper ──────────────────────────────────────────────────────
+  function downloadCanvas(canvas, filename) {
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  }
+
+  // ─── Build the UI ─────────────────────────────────────────────────────────
+  const grid = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+  const btnAll = document.getElementById('btnAll');
+  const btnRegen = document.getElementById('btnRegen');
+
+  // Store generated canvases
+  const generatedCanvases = [];
+
+  function setStatus(msg, active = false) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status' + (active ? ' active' : '');
+  }
+
+  function buildGrid() {
+    grid.innerHTML = '';
+    generatedCanvases.length = 0;
+    btnAll.disabled = true;
+    btnRegen.disabled = true;
+    setStatus('Generating screenshots…', true);
+
+    // Use setTimeout chaining so the browser can paint between renders
+    let idx = 0;
+    function renderNext() {
+      if (idx >= SCENARIOS.length) {
+        setStatus(`${SCENARIOS.length} screenshots ready. Click any to download.`);
+        btnAll.disabled = false;
+        btnRegen.disabled = false;
+        return;
+      }
+      const scenario = SCENARIOS[idx];
+      setStatus(`Rendering ${idx + 1} / ${SCENARIOS.length}: ${scenario.label}…`, true);
+
+      setTimeout(() => {
+        try {
+          const fullCanvas = composeScreenshot(scenario);
+          generatedCanvases.push({ canvas: fullCanvas, scenario });
+
+          // Preview card
+          const card = document.createElement('div');
+          card.className = 'card';
+
+          // Scale-down preview canvas
+          const preview = document.createElement('canvas');
+          const previewW = 400;
+          const previewH = Math.round(OUT_H * (previewW / OUT_W));
+          preview.width = previewW;
+          preview.height = previewH;
+          const pCtx = preview.getContext('2d');
+          pCtx.imageSmoothingEnabled = true;
+          pCtx.imageSmoothingQuality = 'high';
+          pCtx.drawImage(fullCanvas, 0, 0, previewW, previewH);
+
+          const label = document.createElement('div');
+          label.className = 'card-label';
+          label.innerHTML = `<span>${scenario.label}</span><span class="size">1290 × 2796</span>`;
+
+          card.appendChild(preview);
+          card.appendChild(label);
+          card.title = `Click to download ${scenario.id}.png`;
+          card.addEventListener('click', () => {
+            downloadCanvas(fullCanvas, `vision-sim-screenshot-${scenario.id}.png`);
+          });
+          grid.appendChild(card);
+
+        } catch (err) {
+          console.error('Error rendering', scenario.id, err);
+          setStatus(`Error on ${scenario.label}: ${err.message}`);
+        }
+
+        idx++;
+        renderNext();
+      }, 20);
+    }
+
+    renderNext();
+  }
+
+  btnAll.addEventListener('click', () => {
+    if (generatedCanvases.length === 0) return;
+    generatedCanvases.forEach(({ canvas, scenario }) => {
+      setTimeout(() => {
+        downloadCanvas(canvas, `vision-sim-screenshot-${scenario.id}.png`);
+      }, 150);
+    });
+  });
+
+  btnRegen.addEventListener('click', buildGrid);
+
+  // Kick off on load (after fonts)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(buildGrid);
+  } else {
+    setTimeout(buildGrid, 500);
+  }
+
+})();
+</script>
+</body>
+</html>
