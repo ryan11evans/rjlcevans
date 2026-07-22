@@ -31,6 +31,8 @@ struct BitcoinWatchApp: App {
                 // Keep the chart + stats fresh: refresh now, then every 5 min.
                 StatsService.shared.startAutoRefresh()
                 Task { await StatsService.shared.fetch() }
+                // Make sure the Watch has current holdings + Pro state.
+                ConnectivityManager.shared.syncHoldings()
             case .background:
                 priceService.stopForegroundRefresh()
                 StatsService.shared.stopAutoRefresh()

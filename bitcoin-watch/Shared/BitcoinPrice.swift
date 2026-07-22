@@ -54,4 +54,6 @@ extension UserDefaults {
 enum WCMessageKey {
     static let price = "btcPrice"
     static let timestamp = "btcTimestamp"
+    static let holdings = "btcHoldings"
+    static let isPro = "isPro"
 }

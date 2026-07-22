@@ -245,9 +245,17 @@ struct AccessoryWidgetView: View {
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
-                    Text(entry.price.timestamp, style: .relative)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    if let stack = entry.holdingsValue {
+                        Text("Stack $\(Int(stack).formatted())")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                    } else {
+                        Text(entry.price.timestamp, style: .relative)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }

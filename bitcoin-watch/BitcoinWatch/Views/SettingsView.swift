@@ -482,16 +482,21 @@ private struct IconTile: View {
                         )
                 )
 
-                // Pro lock overlay
+                // Pro lock — small corner badge so the icon stays visible
                 if locked {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(.black.opacity(0.45))
-                        .frame(width: 64, height: 64)
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.white)
+                    ZStack {
+                        Circle()
+                            .fill(.black.opacity(0.75))
+                            .frame(width: 22, height: 22)
+                            .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.orange)
+                    }
+                    .offset(x: 26, y: -26)
                 }
             }
+            .frame(width: 64, height: 64)
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
