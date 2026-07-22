@@ -18,6 +18,7 @@ struct SettingsView: View {
                         ProAlertsSection()
                         DisplaySection()
                         NotificationsSection()
+                        PrivacySection()
                         IconPickerSection()
                         VersionFooter()
                     }
@@ -407,6 +408,45 @@ private struct NotificationsSection: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
+    }
+}
+
+// MARK: - Privacy (Face ID lock)
+
+private struct PrivacySection: View {
+    @AppStorage("requireFaceID", store: .shared) private var requireFaceID = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Privacy")
+
+            VStack(spacing: 0) {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "faceid", color: Color(red: 0.19, green: 0.82, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Require Face ID")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Lock the app so only you can see your holdings")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $requireFaceID)
+                        .labelsHidden().tint(.orange)
+                        .disabled(!AppLockService.biometricsAvailable)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+            }
+            .modifier(CardBackground())
+
+            if !AppLockService.biometricsAvailable {
+                Text("Set up Face ID, Touch ID, or a passcode in iOS Settings to use this.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 24)
+            }
+        }
     }
 }
 
