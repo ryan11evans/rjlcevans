@@ -33,6 +33,10 @@ struct ContentView: View {
 
                         VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
+                            PortfolioCardView(
+                                currentPrice: service.currentPrice?.usd,
+                                change24h: statsService.stats?.change24h
+                            )
                             BitcoinInfoView(
                                 stats: statsService.stats,
                                 currentPrice: service.currentPrice?.usd,
