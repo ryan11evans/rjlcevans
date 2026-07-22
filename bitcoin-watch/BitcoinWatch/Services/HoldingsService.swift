@@ -23,6 +23,7 @@ final class HoldingsService: ObservableObject {
         amount = max(0, newValue)
         UserDefaults.shared.set(amount, forKey: key)
         WidgetCenter.shared.reloadAllTimelines()
+        ConnectivityManager.shared.syncHoldings()
         Task { await PushService.shared.sync() }
     }
 

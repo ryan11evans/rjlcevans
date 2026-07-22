@@ -8,6 +8,8 @@ class WatchPriceService: ObservableObject {
 
     @Published var currentPrice: BitcoinPrice?
     @Published var isLoading = false
+    @Published var holdingsAmount: Double = UserDefaults.shared.double(forKey: "btcHoldings")
+    @Published var isPro: Bool = UserDefaults.shared.bool(forKey: "isProUnlocked")
 
     private var refreshTask: Task<Void, Never>?
     private let foregroundInterval: TimeInterval = 10  // 10s while Watch app is open
@@ -16,10 +18,23 @@ class WatchPriceService: ObservableObject {
         currentPrice = UserDefaults.shared.loadPrice()
     }
 
+    /// Live portfolio value — Pro only, and only when holdings are set.
+    var holdingsValue: Double? {
+        guard isPro, holdingsAmount > 0, let p = currentPrice?.usd else { return nil }
+        return holdingsAmount * p
+    }
+
     func update(price: BitcoinPrice) {
         currentPrice = price
         UserDefaults.shared.savePrice(price)
         reloadComplications()
+    }
+
+    func updateHoldings(amount: Double, isPro: Bool) {
+        holdingsAmount = amount
+        self.isPro = isPro
+        UserDefaults.shared.set(amount, forKey: "btcHoldings")
+        UserDefaults.shared.set(isPro, forKey: "isProUnlocked")
     }
 
     func startForegroundRefresh() {

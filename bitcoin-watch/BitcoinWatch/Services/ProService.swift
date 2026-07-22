@@ -83,8 +83,9 @@ final class ProService: ObservableObject {
         isPro = value
         UserDefaults.shared.set(value, forKey: "isProUnlocked")
         if wasChanged {
-            // Widget can now show holdings; server needs updated Pro prefs.
+            // Widget can now show holdings; server + Watch need updated Pro state.
             WidgetCenter.shared.reloadAllTimelines()
+            ConnectivityManager.shared.syncHoldings()
             Task { await PushService.shared.sync() }
         }
     }
