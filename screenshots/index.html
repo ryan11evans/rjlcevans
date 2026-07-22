@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TapBTC — App Store Screenshots</title>
+<title>TapBTC — App Store Screenshots 3.3</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -16,12 +16,7 @@
     justify-content: center;
   }
 
-  /*
-    Each frame = 645 × 1398 CSS px.
-    On a Retina Mac (2× display) a CMD+SHIFT+4 screenshot = 1290 × 2796 px
-    which is exactly the App Store 6.7" required size.
-    Make sure your Mac display is set to "Default for display" (not scaled).
-  */
+  /* Each frame = 645 × 1398 CSS px → 1290 × 2796 at 2× (App Store 6.7"/6.9"). */
   .frame {
     width: 645px;
     height: 1398px;
@@ -35,7 +30,6 @@
     flex-shrink: 0;
   }
 
-  /* Glow blob top-right */
   .frame::before {
     content: '';
     position: absolute;
@@ -111,7 +105,6 @@
     object-position: top center;
   }
 
-  /* Divider line under text */
   .divider {
     width: 60px;
     height: 5px;
@@ -123,29 +116,26 @@
   /* ── Per-screen backgrounds & accents ── */
   .frame-main { background: linear-gradient(165deg, #0f0b07 0%, #0c0905 60%, #080604 100%); }
 
-  .frame-dca  { background: linear-gradient(165deg, #09100a 0%, #070c08 60%, #050804 100%); }
-  .frame-dca::before  { background: radial-gradient(circle, rgba(49,209,88,0.14) 0%, transparent 70%); }
-  .frame-dca .tag     { color: #31D158; }
-  .frame-dca .divider { background: #31D158; }
-
-  .frame-goal { background: linear-gradient(165deg, #100c05 0%, #0c0a04 60%, #080703 100%); }
-  .frame-goal::before { background: radial-gradient(circle, rgba(249,180,22,0.18) 0%, transparent 70%); }
-  .frame-goal .tag     { color: #FFB800; }
-  .frame-goal .divider { background: #FFB800; }
+  /* Portfolio = hero, orange */
+  .frame-portfolio { background: linear-gradient(165deg, #120c05 0%, #0e0904 60%, #090603 100%); }
+  .frame-portfolio::before { background: radial-gradient(circle, rgba(249,115,22,0.22) 0%, transparent 70%); }
 
   .frame-alert { background: linear-gradient(165deg, #100908 0%, #0c0706 60%, #080504 100%); }
 
-  .frame-sats { background: linear-gradient(165deg, #0d0c07 0%, #0a0905 60%, #070604 100%); }
-  .frame-sats::before { background: radial-gradient(circle, rgba(255,214,0,0.12) 0%, transparent 70%); }
-  .frame-sats .tag     { color: #FFD60A; }
-  .frame-sats .divider { background: #FFD60A; }
+  .frame-widgets { background: linear-gradient(165deg, #0f0b07 0%, #0b0805 60%, #080604 100%); }
 
-  .frame-settings { background: linear-gradient(165deg, #080b10 0%, #060810 60%, #050608 100%); }
-  .frame-settings::before { background: radial-gradient(circle, rgba(90,140,249,0.14) 0%, transparent 70%); }
-  .frame-settings .tag     { color: #64A8FF; }
-  .frame-settings .divider { background: #64A8FF; }
+  /* Briefing = warm gold */
+  .frame-briefing { background: linear-gradient(165deg, #100c05 0%, #0c0a04 60%, #080703 100%); }
+  .frame-briefing::before { background: radial-gradient(circle, rgba(249,180,22,0.18) 0%, transparent 70%); }
+  .frame-briefing .tag     { color: #FFB800; }
+  .frame-briefing .divider { background: #FFB800; }
 
-  /* ── Export instructions ── */
+  /* Privacy = green (Face ID) */
+  .frame-privacy { background: linear-gradient(165deg, #09100a 0%, #070c08 60%, #050804 100%); }
+  .frame-privacy::before { background: radial-gradient(circle, rgba(49,209,88,0.16) 0%, transparent 70%); }
+  .frame-privacy .tag     { color: #31D158; }
+  .frame-privacy .divider { background: #31D158; }
+
   .instructions {
     width: 100%;
     color: rgba(255,255,255,0.4);
@@ -166,12 +156,12 @@
 </head>
 <body>
 
-<!-- ══ 1 — Main Dashboard ══════════════════════════════════ -->
+<!-- ══ 1 — Main ════════════════════════════════════════════ -->
 <div class="frame frame-main">
   <div class="top">
-    <div class="tag">Live Price Tracker</div>
-    <div class="headline">Bitcoin price,<br>always live.</div>
-    <div class="sub">Refreshes every 15 seconds. Live chart, 24h range, ATH, block height &amp; Fear &amp; Greed — all on one screen.</div>
+    <div class="tag">Live Price</div>
+    <div class="headline">Bitcoin,<br>always one<br>tap away.</div>
+    <div class="sub">Live price, chart, and stats — refreshing every 15 seconds, in your local currency.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
@@ -179,79 +169,80 @@
   </div>
 </div>
 
-<!-- ══ 2 — DCA Calculator ══════════════════════════════════ -->
-<div class="frame frame-dca">
+<!-- ══ 2 — Portfolio & Profit (HERO) ══════════════════════ -->
+<div class="frame frame-portfolio">
   <div class="top">
-    <div class="tag">DCA Calculator</div>
-    <div class="headline">$100/week.<br>0.4 BTC<br>in 5 years.</div>
-    <div class="sub">See exactly how much Bitcoin your recurring buys will stack over time.</div>
+    <div class="tag">Portfolio</div>
+    <div class="headline">See your<br>Bitcoin's<br>profit.</div>
+    <div class="sub">Enter your holdings and buy price for live value and gain/loss — updated every second.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
-    <div class="phone"><img src="dca.png" alt="DCA Calculator"></div>
+    <div class="phone"><img src="portfolio.png" alt="Portfolio & profit"></div>
   </div>
 </div>
 
-<!-- ══ 3 — Goal Tracker ════════════════════════════════════ -->
-<div class="frame frame-goal">
-  <div class="top">
-    <div class="tag">Goal Tracker</div>
-    <div class="headline">Watch your<br>stack grow.</div>
-    <div class="sub">Set a Bitcoin target, enter what you hold, and watch the ring fill up as you get closer.</div>
-    <div class="divider"></div>
-  </div>
-  <div class="phone-area">
-    <div class="phone"><img src="goal.png" alt="Goal Tracker"></div>
-  </div>
-</div>
-
-<!-- ══ 4 — Price Alerts ════════════════════════════════════ -->
+<!-- ══ 3 — Alerts ══════════════════════════════════════════ -->
 <div class="frame frame-alert">
   <div class="top">
-    <div class="tag">Price Alerts</div>
-    <div class="headline">Never miss<br>a move.</div>
-    <div class="sub">Set custom price targets above or below. Get an instant notification the moment Bitcoin crosses your level.</div>
+    <div class="tag">Alerts</div>
+    <div class="headline">Alerts that<br>reach you.</div>
+    <div class="sub">Price, all-time high &amp; halving alerts — delivered even when the app is closed.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
-    <div class="phone"><img src="alert.png" alt="Price Alert"></div>
+    <div class="phone"><img src="alert.png" alt="Alerts"></div>
   </div>
 </div>
 
-<!-- ══ 5 — Satoshi Calculator ═════════════════════════════ -->
-<div class="frame frame-sats">
+<!-- ══ 4 — Widgets everywhere ═════════════════════════════ -->
+<div class="frame frame-widgets">
   <div class="top">
-    <div class="tag">Satoshi Converter</div>
-    <div class="headline">Dollars to sats,<br>in a tap.</div>
-    <div class="sub">Type any amount and instantly see the sats — or flip it and convert sats to USD at the live price.</div>
+    <div class="tag">Everywhere</div>
+    <div class="headline">Your stack<br>on every<br>screen.</div>
+    <div class="sub">Home Screen, Lock Screen, and Apple Watch widgets show your value at a glance.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
-    <div class="phone"><img src="sats.png" alt="Satoshi Calculator"></div>
+    <div class="phone"><img src="widgets.png" alt="Widgets"></div>
   </div>
 </div>
 
-<!-- ══ 6 — Settings / Icons / Siri ═══════════════════════ -->
-<div class="frame frame-settings">
+<!-- ══ 5 — Daily briefing ═════════════════════════════════ -->
+<div class="frame frame-briefing">
   <div class="top">
-    <div class="tag">Make It Yours</div>
-    <div class="headline">4 icons.<br>Siri shortcuts.<br>No account.</div>
-    <div class="sub">Pick your app icon, ask Siri for the price, convert to sats with your voice — zero sign-up required.</div>
+    <div class="tag">Daily Briefing</div>
+    <div class="headline">A briefing<br>every<br>morning.</div>
+    <div class="sub">One push with the price, the 24-hour move, and your portfolio — right when you wake up.</div>
     <div class="divider"></div>
   </div>
   <div class="phone-area">
-    <div class="phone"><img src="settings.png" alt="Settings"></div>
+    <div class="phone"><img src="briefing.png" alt="Daily briefing"></div>
+  </div>
+</div>
+
+<!-- ══ 6 — Privacy / Face ID ══════════════════════════════ -->
+<div class="frame frame-privacy">
+  <div class="top">
+    <div class="tag">Private</div>
+    <div class="headline">Private<br>by design.</div>
+    <div class="sub">Face ID lock keeps your holdings yours. No account. No ads. Ever.</div>
+    <div class="divider"></div>
+  </div>
+  <div class="phone-area">
+    <div class="phone"><img src="privacy.png" alt="Face ID lock"></div>
   </div>
 </div>
 
 <div class="instructions">
-  <strong>How to export at the right size (1290 × 2796 px = App Store 6.7")</strong><br><br>
-  1. Open this file in <strong>Chrome</strong> on your Mac<br>
-  2. Make sure your display is set to <strong>Default for display</strong> (System Settings → Displays → Resolution)<br>
-  3. Use <code>CMD+SHIFT+4</code> and drag exactly around each frame border<br>
-  4. Each screenshot will be <strong>1290 × 2796 px</strong> at Retina 2×<br><br>
-  Or: open in Chrome → zoom to 100% → right-click a frame → Inspect →
-  right-click the element → <strong>Capture node screenshot</strong> (exact pixels, no cropping needed)
+  <strong>Capture these phone screenshots on your device, drop them in this folder, then run <code>node gen.mjs</code></strong><br><br>
+  main.png — main screen (now shows the portfolio card)<br>
+  portfolio.png — the Holdings sheet showing value + profit/loss<br>
+  alert.png — the Price Alerts list<br>
+  widgets.png — Home Screen with the TapBTC widget (or the medium widget)<br>
+  briefing.png — a briefing/alert notification banner<br>
+  privacy.png — the Face ID lock screen<br><br>
+  gen.mjs renders each framed slide to <strong>1290 × 2796 px</strong> PNGs (1-main.png … 6-privacy.png).
 </div>
 
 </body>
