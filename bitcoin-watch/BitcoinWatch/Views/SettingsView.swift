@@ -179,14 +179,14 @@ private struct NotificationsSection: View {
             SectionHeader(title: "Notifications")
 
             VStack(spacing: 0) {
-                toggleRow(icon: "rocket.fill", tint: .orange,
+                toggleRow(icon: "trophy.fill", tint: Color(red: 1.0, green: 0.80, blue: 0.30),
                           title: "All-Time High Alerts",
                           subtitle: "When BTC sets a new record",
                           isOn: $athAlert)
                 Divider()
                     .overlay(Color.white.opacity(0.06))
                     .padding(.leading, 62)
-                toggleRow(icon: "hourglass", tint: Color(red: 0.75, green: 0.52, blue: 0.98),
+                toggleRow(icon: "divide.circle.fill", tint: Color(red: 0.40, green: 0.78, blue: 0.98),
                           title: "Halving Milestones",
                           subtitle: "Countdown alerts as the halving nears",
                           isOn: $milestoneAlert)
