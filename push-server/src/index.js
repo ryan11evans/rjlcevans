@@ -16,6 +16,9 @@
 
 const COINBASE_URL = "https://api.coinbase.com/v2/prices/BTC-USD/spot";
 const BLOCK_URL = "https://blockstream.info/api/blocks/tip/height";
+const GECKO_CHANGE_URL =
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true";
+const VOLATILITY_COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12h between volatility pushes
 const APNS_HOST_PROD = "https://api.push.apple.com";
 const APNS_HOST_SANDBOX = "https://api.sandbox.push.apple.com";
 const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour, matches the in-app cooldown
@@ -61,7 +64,8 @@ async function handleRegister(request, env) {
     return json({ error: "bad json" }, 400);
   }
 
-  const { token, alerts, athAlert, milestoneAlert, knownATH } = body;
+  const { token, alerts, athAlert, milestoneAlert, knownATH,
+          volatility, briefing, holdings } = body;
   if (typeof token !== "string" || !/^[0-9a-fA-F]{8,}$/.test(token)) {
     return json({ error: "invalid token" }, 400);
   }
@@ -75,7 +79,8 @@ async function handleRegister(request, env) {
   );
 
   const devices = (await env.ALERTS.get(DEVICES_KEY, "json")) || {};
-  const prevFired = devices[token]?.fired || {};
+  const prev = devices[token] || {};
+  const prevFired = prev.fired || {};
 
   // Carry forward fired-state only for alerts that still exist.
   const fired = {};
@@ -83,11 +88,32 @@ async function handleRegister(request, env) {
     if (prevFired[a.id] != null) fired[a.id] = prevFired[a.id];
   }
 
+  // Volatility (Pro): { enabled, threshold }
+  let vol = null;
+  if (volatility && volatility.enabled && typeof volatility.threshold === "number") {
+    vol = { enabled: true, threshold: Math.max(1, Math.min(50, volatility.threshold)) };
+  }
+  // Daily briefing (Pro): { enabled, hour, tz(minutes) }
+  let brief = null;
+  if (briefing && briefing.enabled &&
+      typeof briefing.hour === "number" && typeof briefing.tz === "number") {
+    brief = {
+      enabled: true,
+      hour: Math.max(0, Math.min(23, Math.round(briefing.hour))),
+      tz: Math.round(briefing.tz),
+    };
+  }
+
   devices[token] = {
     alerts: cleanAlerts,
     fired,
     athAlert: athAlert !== false,
     milestoneAlert: milestoneAlert !== false,
+    volatility: vol,
+    volFired: prev.volFired || 0,
+    briefing: brief,
+    lastBriefingDay: prev.lastBriefingDay || "",
+    holdings: typeof holdings === "number" && holdings > 0 ? holdings : 0,
     updatedAt: Date.now(),
   };
   await env.ALERTS.put(DEVICES_KEY, JSON.stringify(devices));
@@ -116,9 +142,17 @@ async function tick(env) {
 
   const state = { env, devices, jwt: null, devicesChanged: false };
 
+  // Only pay for the CoinGecko 24h-change call if some device needs it.
+  const needsChange = Object.values(devices).some(
+    (d) => d && ((d.volatility && d.volatility.enabled) || (d.briefing && d.briefing.enabled)),
+  );
+  const change = needsChange ? await fetchChange24h() : null;
+
   if (price != null) {
     await checkPriceAlerts(state, price);
     await checkATH(state, price);
+    if (change != null) await checkVolatility(state, price, change);
+    await checkBriefing(state, price, change);
   }
   await checkMilestones(state);
 
@@ -254,6 +288,71 @@ async function checkMilestones(state) {
   }
 }
 
+// ── Volatility alerts (Pro, per-device) ──────────────────────────────────────
+
+async function checkVolatility(state, price, change) {
+  const fmtP = "$" + Math.round(price).toLocaleString("en-US");
+  for (const token of Object.keys(state.devices)) {
+    const d = state.devices[token];
+    if (!d || !d.volatility || !d.volatility.enabled) continue;
+    if (Math.abs(change) < d.volatility.threshold) continue;
+    if (Date.now() - (d.volFired || 0) < VOLATILITY_COOLDOWN_MS) continue;
+
+    const dir = change >= 0 ? "up" : "down";
+    const arrow = change >= 0 ? "📈" : "📉";
+    const result = await deliver(
+      state,
+      token,
+      `Big Move ${arrow}`,
+      `Bitcoin is ${dir} ${Math.abs(change).toFixed(1)}% in 24h — now ${fmtP}.`,
+    );
+    if (result === "unregistered") continue;
+    if (result === true) {
+      d.volFired = Date.now();
+      state.devicesChanged = true;
+    }
+  }
+}
+
+// ── Daily briefing (Pro, per-device, at the user's local hour) ────────────────
+
+async function checkBriefing(state, price, change) {
+  const fmtP = "$" + Math.round(price).toLocaleString("en-US");
+  for (const token of Object.keys(state.devices)) {
+    const d = state.devices[token];
+    if (!d || !d.briefing || !d.briefing.enabled) continue;
+
+    // Convert now → the device's local wall clock via its stored tz offset.
+    const local = new Date(Date.now() + d.briefing.tz * 60000);
+    const localHour = local.getUTCHours();
+    const localDay = local.toISOString().slice(0, 10);
+
+    if (localHour !== d.briefing.hour) continue;
+    if (d.lastBriefingDay === localDay) continue; // already sent today
+
+    let body = `Bitcoin is ${fmtP}`;
+    if (change != null) body += ` (${change >= 0 ? "+" : ""}${change.toFixed(1)}% 24h)`;
+    if (d.holdings > 0) {
+      const stack = "$" + Math.round(d.holdings * price).toLocaleString("en-US");
+      body += `. Your ${trimAmount(d.holdings)} BTC is worth ${stack}.`;
+    } else {
+      body += ".";
+    }
+
+    const result = await deliver(state, token, "Your Bitcoin Briefing ☀️", body);
+    if (result === "unregistered") continue;
+    if (result === true) {
+      d.lastBriefingDay = localDay;
+      state.devicesChanged = true;
+    }
+  }
+}
+
+function trimAmount(n) {
+  // Up to 8 decimals, no trailing zeros.
+  return parseFloat(n.toFixed(8)).toString();
+}
+
 // ── Data sources ─────────────────────────────────────────────────────────────
 
 async function fetchPrice() {
@@ -262,6 +361,17 @@ async function fetchPrice() {
     const data = await res.json();
     const amount = parseFloat(data?.data?.amount);
     return Number.isFinite(amount) ? amount : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchChange24h() {
+  try {
+    const res = await fetch(GECKO_CHANGE_URL, { cf: { cacheTtl: 60 } });
+    const data = await res.json();
+    const c = data?.bitcoin?.usd_24h_change;
+    return Number.isFinite(c) ? c : null;
   } catch {
     return null;
   }

@@ -1,5 +1,6 @@
 import Foundation
 import StoreKit
+import WidgetKit
 
 // TapBTC Pro — one-time unlock via StoreKit 2.
 // Free tier: up to `freeAlertLimit` custom price alerts.
@@ -78,7 +79,13 @@ final class ProService: ObservableObject {
     }
 
     private func setPro(_ value: Bool) {
+        let wasChanged = isPro != value
         isPro = value
         UserDefaults.shared.set(value, forKey: "isProUnlocked")
+        if wasChanged {
+            // Widget can now show holdings; server needs updated Pro prefs.
+            WidgetCenter.shared.reloadAllTimelines()
+            Task { await PushService.shared.sync() }
+        }
     }
 }

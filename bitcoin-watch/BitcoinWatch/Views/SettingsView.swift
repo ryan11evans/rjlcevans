@@ -14,6 +14,7 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 26) {
                         ProCard()
+                        ProAlertsSection()
                         NotificationsSection()
                         IconPickerSection()
                         VersionFooter()
@@ -168,6 +169,128 @@ private struct ProCard: View {
     }
 }
 
+// MARK: - Pro Alerts (volatility + daily briefing)
+
+private struct ProAlertsSection: View {
+    @ObservedObject private var pro = ProService.shared
+    @AppStorage("volatilityAlertEnabled", store: .shared) private var volEnabled = false
+    @AppStorage("volatilityThreshold", store: .shared) private var volThreshold = 5.0
+    @AppStorage("dailyBriefingEnabled", store: .shared) private var briefEnabled = false
+    @AppStorage("dailyBriefingHour", store: .shared) private var briefHour = 8
+    @State private var showPaywall = false
+
+    private let thresholds = [3.0, 5.0, 10.0, 15.0]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader(title: "Pro Alerts")
+                Spacer()
+                if !pro.isPro {
+                    Text("PRO")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .tracking(0.8)
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(Capsule().fill(.orange))
+                        .padding(.trailing, 24)
+                }
+            }
+
+            VStack(spacing: 0) {
+                // Volatility
+                HStack(spacing: 14) {
+                    IconChip(systemName: "waveform.path.ecg", color: Color(red: 1.0, green: 0.45, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Volatility Alerts")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(pro.isPro
+                             ? "Push when BTC moves ±\(Int(volThreshold))% in 24h"
+                             : "Get pinged on big 24h swings")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if pro.isPro {
+                        if volEnabled {
+                            Menu {
+                                ForEach(thresholds, id: \.self) { t in
+                                    Button("±\(Int(t))%") { volThreshold = t }
+                                }
+                            } label: {
+                                Text("±\(Int(volThreshold))%")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.trailing, 4)
+                        }
+                        Toggle("", isOn: $volEnabled).labelsHidden().tint(.orange)
+                    } else {
+                        Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+                .contentShape(Rectangle())
+                .onTapGesture { if !pro.isPro { showPaywall = true } }
+
+                Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 62)
+
+                // Daily briefing
+                HStack(spacing: 14) {
+                    IconChip(systemName: "sun.max.fill", color: Color(red: 1.0, green: 0.78, blue: 0.25))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Briefing")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(pro.isPro
+                             ? "One push each morning with price & your stack"
+                             : "A morning summary, delivered daily")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if pro.isPro {
+                        if briefEnabled {
+                            Menu {
+                                ForEach(Array(stride(from: 5, through: 11, by: 1)), id: \.self) { h in
+                                    Button(hourLabel(h)) { briefHour = h }
+                                }
+                            } label: {
+                                Text(hourLabel(briefHour))
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.trailing, 4)
+                        }
+                        Toggle("", isOn: $briefEnabled).labelsHidden().tint(.orange)
+                    } else {
+                        Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+                .contentShape(Rectangle())
+                .onTapGesture { if !pro.isPro { showPaywall = true } }
+            }
+            .modifier(CardBackground())
+        }
+        .onChange(of: volEnabled) { _, _ in Task { await PushService.shared.sync() } }
+        .onChange(of: volThreshold) { _, _ in Task { await PushService.shared.sync() } }
+        .onChange(of: briefEnabled) { _, new in
+            if new { Task { _ = await PushService.shared.enable() } }
+            Task { await PushService.shared.sync() }
+        }
+        .onChange(of: briefHour) { _, _ in Task { await PushService.shared.sync() } }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+
+    private func hourLabel(_ h: Int) -> String {
+        let ampm = h < 12 ? "AM" : "PM"
+        let display = h % 12 == 0 ? 12 : h % 12
+        return "\(display) \(ampm)"
+    }
+}
+
 // MARK: - Notifications
 
 private struct NotificationsSection: View {
@@ -237,6 +360,9 @@ enum AppIcon: String, CaseIterable {
     // nil = primary icon (system requirement)
     var alternateIconName: String? { self == .default ? nil : rawValue }
 
+    // Gold & Midnight are Pro-exclusive; Default & Silver are free.
+    var isPro: Bool { self == .gold || self == .midnight }
+
     // Accent color for the rendered preview tile
     var accentColor: Color {
         switch self {
@@ -258,11 +384,13 @@ enum AppIcon: String, CaseIterable {
 }
 
 private struct IconPickerSection: View {
+    @ObservedObject private var pro = ProService.shared
     @State private var selected: AppIcon = {
         let name = UIApplication.shared.alternateIconName
         return AppIcon.allCases.first { $0.rawValue == name } ?? .default
     }()
     @State private var errorMessage: String? = nil
+    @State private var showPaywall = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -271,8 +399,14 @@ private struct IconPickerSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(AppIcon.allCases, id: \.rawValue) { icon in
-                        IconTile(icon: icon, isSelected: selected == icon) {
-                            applyIcon(icon)
+                        IconTile(icon: icon,
+                                 isSelected: selected == icon,
+                                 locked: icon.isPro && !pro.isPro) {
+                            if icon.isPro && !pro.isPro {
+                                showPaywall = true
+                            } else {
+                                applyIcon(icon)
+                            }
                         }
                     }
                 }
@@ -287,6 +421,7 @@ private struct IconPickerSection: View {
                     .padding(.horizontal, 24)
             }
         }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
     }
 
     private func applyIcon(_ icon: AppIcon) {
@@ -316,34 +451,47 @@ private func loadIconImage(_ name: String) -> UIImage? {
 private struct IconTile: View {
     let icon: AppIcon
     let isSelected: Bool
+    var locked: Bool = false
     let onTap: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
-            Group {
-                if let img = loadIconImage(icon.rawValue) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .interpolation(.high)
-                } else {
-                    // Fallback if image not found
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.white.opacity(0.08))
-                        Text("₿").font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(icon.accentColor)
+            ZStack {
+                Group {
+                    if let img = loadIconImage(icon.rawValue) {
+                        Image(uiImage: img)
+                            .resizable()
+                            .interpolation(.high)
+                    } else {
+                        // Fallback if image not found
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.white.opacity(0.08))
+                            Text("₿").font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(icon.accentColor)
+                        }
                     }
                 }
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(
+                            isSelected ? Color.orange : Color.white.opacity(0.08),
+                            lineWidth: isSelected ? 2.5 : 1
+                        )
+                )
+
+                // Pro lock overlay
+                if locked {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.black.opacity(0.45))
+                        .frame(width: 64, height: 64)
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                }
             }
-            .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? Color.orange : Color.white.opacity(0.08),
-                        lineWidth: isSelected ? 2.5 : 1
-                    )
-            )
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)

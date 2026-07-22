@@ -12,17 +12,27 @@ struct BitcoinProvider: TimelineProvider {
 
     func getSnapshot(in context: Context, completion: @escaping (PriceEntry) -> Void) {
         let price = UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 65000, timestamp: Date())
-        completion(PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h()))
+        completion(PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h(),
+                              holdingsValue: holdingsValue(at: price.usd)))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PriceEntry>) -> Void) {
         Task {
             let price = await fetchLatestPrice() ?? UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 0, timestamp: Date())
-            let entry = PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h())
+            let entry = PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h(),
+                                   holdingsValue: holdingsValue(at: price.usd))
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 10, to: Date())!
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }
+    }
+
+    // Portfolio value, only for Pro users who've entered holdings.
+    private func holdingsValue(at price: Double) -> Double? {
+        guard UserDefaults.shared.bool(forKey: "isProUnlocked") else { return nil }
+        let amount = UserDefaults.shared.double(forKey: "btcHoldings")
+        guard amount > 0, price > 0 else { return nil }
+        return amount * price
     }
 
     private func fetchLatestPrice() async -> BitcoinPrice? {
@@ -41,6 +51,7 @@ struct PriceEntry: TimelineEntry {
     let date: Date
     let price: BitcoinPrice
     let change24h: Double?
+    var holdingsValue: Double? = nil
 }
 
 struct BitcoinWidgetView: View {
@@ -124,9 +135,15 @@ struct MediumWidgetView: View {
                                 : Color(red: 1, green: 0.27, blue: 0.23))
                     }
                 }
-                Text(entry.price.timestamp, style: .relative)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if let stack = entry.holdingsValue {
+                    Text("Your stack · $\(Int(stack).formatted())")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.orange)
+                } else {
+                    Text(entry.price.timestamp, style: .relative)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Button(intent: RefreshBTCIntent()) {
@@ -173,6 +190,20 @@ struct LargeWidgetView: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 10).fill(changeColor.opacity(0.12)))
+                }
+            }
+            if let stack = entry.holdingsValue {
+                Spacer()
+                VStack(spacing: 2) {
+                    Text("YOUR STACK")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.5)
+                    Text("$\(Int(stack).formatted())")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(.orange)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
                 }
             }
             Spacer()
