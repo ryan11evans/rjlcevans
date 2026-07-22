@@ -57,7 +57,7 @@ struct BitcoinInfoView: View {
         [currentPrice, chartLow].compactMap { $0 }.min() ?? s.low24h
     }
 
-    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
+    private func shortPrice(_ v: Double) -> String { AppCurrency.current.format(v) }
 
     private func athDateString(_ d: Date) -> String {
         let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"; return f.string(from: d)

@@ -13,14 +13,16 @@ struct BitcoinProvider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (PriceEntry) -> Void) {
         let price = UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 65000, timestamp: Date())
         completion(PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h(),
-                              holdingsValue: holdingsValue(at: price.usd)))
+                              holdingsValue: holdingsValue(at: price.usd),
+                              holdingsGainPct: holdingsGainPct(at: price.usd)))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PriceEntry>) -> Void) {
         Task {
             let price = await fetchLatestPrice() ?? UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 0, timestamp: Date())
             let entry = PriceEntry(date: Date(), price: price, change24h: UserDefaults.shared.loadChange24h(),
-                                   holdingsValue: holdingsValue(at: price.usd))
+                                   holdingsValue: holdingsValue(at: price.usd),
+                                   holdingsGainPct: holdingsGainPct(at: price.usd))
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 10, to: Date())!
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
@@ -33,6 +35,15 @@ struct BitcoinProvider: TimelineProvider {
         let amount = UserDefaults.shared.double(forKey: "btcHoldings")
         guard amount > 0, price > 0 else { return nil }
         return amount * price
+    }
+
+    // All-time P&L percentage on the portion with a known cost.
+    private func holdingsGainPct(at price: Double) -> Double? {
+        guard UserDefaults.shared.bool(forKey: "isProUnlocked") else { return nil }
+        let investedBTC = UserDefaults.shared.double(forKey: "btcInvestedBTC")
+        let totalInvested = UserDefaults.shared.double(forKey: "btcTotalInvested")
+        guard investedBTC > 0, totalInvested > 0, price > 0 else { return nil }
+        return (investedBTC * price) / totalInvested - 1
     }
 
     private func fetchLatestPrice() async -> BitcoinPrice? {
@@ -52,6 +63,7 @@ struct PriceEntry: TimelineEntry {
     let price: BitcoinPrice
     let change24h: Double?
     var holdingsValue: Double? = nil
+    var holdingsGainPct: Double? = nil
 }
 
 struct BitcoinWidgetView: View {
@@ -136,7 +148,7 @@ struct MediumWidgetView: View {
                     }
                 }
                 if let stack = entry.holdingsValue {
-                    Text("Your stack · $\(Int(stack).formatted())")
+                    Text("Your stack · \(AppCurrency.current.format(stack))")
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.orange)
                 } else {
@@ -199,11 +211,18 @@ struct LargeWidgetView: View {
                         .font(.system(size: 10, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                         .tracking(0.5)
-                    Text("$\(Int(stack).formatted())")
+                    Text(AppCurrency.current.format(stack))
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.orange)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
+                    if let pct = entry.holdingsGainPct {
+                        Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% all-time")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(pct >= 0
+                                ? Color(red: 0.19, green: 0.82, blue: 0.35)
+                                : Color(red: 1, green: 0.27, blue: 0.23))
+                    }
                 }
             }
             Spacer()
@@ -246,7 +265,7 @@ struct AccessoryWidgetView: View {
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                     if let stack = entry.holdingsValue {
-                        Text("Stack $\(Int(stack).formatted())")
+                        Text("Stack \(AppCurrency.current.format(stack))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .minimumScaleFactor(0.7)

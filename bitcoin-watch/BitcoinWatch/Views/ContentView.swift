@@ -127,10 +127,15 @@ struct ContentView: View {
         let stats = statsService.stats
         Task { @MainActor in
             await Task.yield()
+            // Include the user's P&L brag on the card, Pro + cost basis only.
+            let gainPct: Double? = ProService.shared.isPro
+                ? HoldingsService.shared.gain(at: price.usd)?.pct
+                : nil
             let card = ShareCardView(
                 price: price,
                 change24h: stats?.change24h,
-                chartPrices: statsService.chartData.map { $0.price }
+                chartPrices: statsService.chartData.map { $0.price },
+                holdingsGainPct: gainPct
             )
             .environment(\.colorScheme, .dark)
             let renderer = ImageRenderer(content: card)

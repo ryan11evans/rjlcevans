@@ -33,8 +33,15 @@ class StatsService: ObservableObject {
         case day = "1D"
         case week = "7D"
         case month = "30D"
-        var days: Int {
-            switch self { case .day: return 1; case .week: return 7; case .month: return 30 }
+        case quarter = "90D"
+        case year = "1Y"
+        case all = "All"
+        // CoinGecko market_chart `days` param — "max" for all-time.
+        var daysParam: String {
+            switch self {
+            case .day: return "1"; case .week: return "7"; case .month: return "30"
+            case .quarter: return "90"; case .year: return "365"; case .all: return "max"
+            }
         }
     }
 
@@ -98,7 +105,8 @@ class StatsService: ObservableObject {
     }
 
     func fetchChart(range: ChartRange) async {
-        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=\(range.days)")!
+        let vs = AppCurrency.current.rawValue
+        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=\(vs)&days=\(range.daysParam)")!
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
@@ -116,25 +124,31 @@ class StatsService: ObservableObject {
 
     private func fetchMarket() async -> MarketResult? {
         guard let (data, _) = try? await URLSession.shared.data(from: geckoURL) else { return nil }
+        // CoinGecko returns each price field keyed by currency code, so decode
+        // dictionaries and pick the user's selected currency.
         struct R: Decodable {
             struct MD: Decodable {
-                struct V: Decodable { let usd: Double }
-                struct D: Decodable { let usd: String }
-                let current_price: V
-                let high_24h: V; let low_24h: V; let ath: V; let ath_date: D
+                let current_price: [String: Double]
+                let high_24h: [String: Double]
+                let low_24h: [String: Double]
+                let ath: [String: Double]
+                let ath_date: [String: String]
                 let price_change_percentage_24h: Double
             }
             let market_data: MD
         }
         guard let r = try? JSONDecoder().decode(R.self, from: data) else { return nil }
+        let cur = AppCurrency.current.rawValue
+        let md = r.market_data
+        guard let current = md.current_price[cur] else { return nil }
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let date = df.date(from: r.market_data.ath_date.usd) ?? Date()
-        return MarketResult(currentPrice: r.market_data.current_price.usd,
-                            high24h:      r.market_data.high_24h.usd,
-                            low24h:       r.market_data.low_24h.usd,
-                            ath:          r.market_data.ath.usd,
-                            change24h:    r.market_data.price_change_percentage_24h,
+        let date = df.date(from: md.ath_date[cur] ?? "") ?? Date()
+        return MarketResult(currentPrice: current,
+                            high24h:      md.high_24h[cur] ?? current,
+                            low24h:       md.low_24h[cur] ?? current,
+                            ath:          md.ath[cur] ?? current,
+                            change24h:    md.price_change_percentage_24h,
                             athDate:      date)
     }
 

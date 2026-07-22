@@ -16,8 +16,10 @@ class PriceService: ObservableObject {
     private var foregroundInterval: TimeInterval = 15  // 15 seconds when app is open
     private let maxHistoryCount = 288  // 24 hours at 5-min intervals
 
-    // Coinbase public API — no key required
-    private let priceURL = URL(string: "https://api.coinbase.com/v2/prices/BTC-USD/spot")!
+    // Coinbase public API — no key required. Currency-aware.
+    private var priceURL: URL {
+        URL(string: "https://api.coinbase.com/v2/prices/BTC-\(AppCurrency.current.code)/spot")!
+    }
 
     init() {
         // Restore last known price immediately so UI never shows blank

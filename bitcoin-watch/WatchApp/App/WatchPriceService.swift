@@ -56,7 +56,7 @@ class WatchPriceService: ObservableObject {
     func fetchDirect() async -> BitcoinPrice? {
         isLoading = true
         defer { isLoading = false }
-        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-USD/spot"),
+        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-\(AppCurrency.current.code)/spot"),
               let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
         struct R: Decodable { struct D: Decodable { let amount: String }; let data: D }
         guard let r = try? JSONDecoder().decode(R.self, from: data),
