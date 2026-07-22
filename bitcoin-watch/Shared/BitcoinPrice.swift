@@ -41,6 +41,22 @@ extension UserDefaults {
 
     func saveChange24h(_ change: Double) { set(change, forKey: "btcChange24h") }
     func loadChange24h() -> Double? { object(forKey: "btcChange24h") as? Double }
+
+    // Sparkline points for the widgets (downsampled 1D prices).
+    func saveSparkline(_ prices: [Double]) { set(prices, forKey: "btcSparkline") }
+    func loadSparkline() -> [Double] { array(forKey: "btcSparkline") as? [Double] ?? [] }
+
+    // Extra stats surfaced in the large widget.
+    func saveWidgetStats(high: Double, low: Double, ath: Double, fng: Int?) {
+        set(high, forKey: "wHigh24h"); set(low, forKey: "wLow24h"); set(ath, forKey: "wATH")
+        if let fng { set(fng, forKey: "wFNG") } else { removeObject(forKey: "wFNG") }
+    }
+    func loadWidgetStats() -> (high: Double, low: Double, ath: Double, fng: Int?)? {
+        guard let high = object(forKey: "wHigh24h") as? Double,
+              let low = object(forKey: "wLow24h") as? Double,
+              let ath = object(forKey: "wATH") as? Double else { return nil }
+        return (high, low, ath, object(forKey: "wFNG") as? Int)
+    }
 }
 
 // WatchConnectivity message keys

@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 @MainActor
 class StatsService: ObservableObject {
@@ -95,6 +96,7 @@ class StatsService: ObservableObject {
         let price = BitcoinPrice(usd: current, timestamp: Date())
         UserDefaults.shared.savePrice(price)
         UserDefaults.shared.saveChange24h(m.change24h)
+        UserDefaults.shared.saveWidgetStats(high: high, low: low, ath: m.ath, fng: fg?.value)
 
         stats = BitcoinStats(currentPrice: current,
                              high24h: high, low24h: low,
@@ -102,6 +104,23 @@ class StatsService: ObservableObject {
                              change24h: m.change24h, blockHeight: b)
 
         await fetchChart(range: chartRange)
+        await saveSparkline()
+    }
+
+    // Save a compact 1D price series for the widgets (always 1D so the widget
+    // trend is consistent regardless of the range the user is viewing).
+    private func saveSparkline() async {
+        let vs = AppCurrency.current.rawValue
+        guard let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=\(vs)&days=1"),
+              let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+        struct R: Decodable { let prices: [[Double]] }
+        guard let r = try? JSONDecoder().decode(R.self, from: data) else { return }
+        let prices = r.prices.map { $0[1] }
+        // Downsample to ~48 points to keep the widget entry small.
+        let step = max(1, prices.count / 48)
+        let sampled = stride(from: 0, to: prices.count, by: step).map { prices[$0] }
+        UserDefaults.shared.saveSparkline(sampled)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func fetchChart(range: ChartRange) async {
