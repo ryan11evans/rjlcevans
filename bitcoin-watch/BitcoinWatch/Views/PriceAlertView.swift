@@ -277,7 +277,7 @@ struct AddAlertView: View {
                             Toggle("", isOn: $isRepeating).labelsHidden().tint(.orange)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
+                        .glassCard(cornerRadius: 14, shadow: false)
                     }
                     .padding(20)
                 }

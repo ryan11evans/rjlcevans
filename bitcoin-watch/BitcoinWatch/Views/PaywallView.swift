@@ -54,7 +54,7 @@ struct PaywallView: View {
                                         title: "Exclusive app icons",
                                         subtitle: "Unlock the Gold and Midnight icons")
                             }
-                            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.05)))
+                            .glassCard(cornerRadius: 18)
                             .padding(.horizontal, 20)
                         }
                     }

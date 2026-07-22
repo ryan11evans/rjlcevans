@@ -56,11 +56,7 @@ struct PortfolioCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white.opacity(0.05))
-                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.white.opacity(0.08), lineWidth: 1))
-        )
+        .glassCard(cornerRadius: 14, shadow: false)
     }
 
     // Prefer all-time P&L (if cost basis is set); otherwise today's $ move.
@@ -184,7 +180,7 @@ struct HoldingsEntryView: View {
         }
         .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.05)))
+        .glassCard(cornerRadius: 18)
     }
 
     private func metric(_ label: String, _ value: String, _ color: Color) -> some View {
@@ -281,7 +277,7 @@ struct HoldingsEntryView: View {
                     }
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
+            .glassCard(cornerRadius: 14)
         }
     }
 
