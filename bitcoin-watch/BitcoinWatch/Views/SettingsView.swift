@@ -13,7 +13,7 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 26) {
+                    VStack(alignment: .leading, spacing: 22) {
                         ProCard()
                         ProAlertsSection()
                         DisplaySection()
@@ -22,12 +22,12 @@ struct SettingsView: View {
                         IconPickerSection()
                         VersionFooter()
                     }
-                    .padding(.top, 20)
+                    .padding(.top, 8)
                     .padding(.bottom, 32)
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
         }
@@ -40,41 +40,56 @@ private struct SectionHeader: View {
     let title: String
     var body: some View {
         Text(title.uppercased())
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
             .foregroundStyle(.secondary)
-            .tracking(1.2)
-            .padding(.horizontal, 24)
+            .tracking(0.8)
+            .padding(.horizontal, 26)
+            .padding(.bottom, 2)
     }
 }
 
-// Colored icon chip, like iOS Settings rows
+// Colored icon chip, like iOS Settings rows — with a soft glass sheen.
 private struct IconChip: View {
     let systemName: String
     let color: Color
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(color.gradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
+                )
+                .shadow(color: color.opacity(0.35), radius: 3, y: 1)
             Image(systemName: systemName)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(color)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
         }
         .frame(width: 30, height: 30)
     }
 }
 
+// Frosted "Liquid Glass" panel: a translucent material over the gradient
+// background with a bright top edge, mimicking iOS 26's glass surfaces.
 private struct CardBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.white.opacity(0.25), .white.opacity(0.05)],
+                            startPoint: .top, endPoint: .bottom
+                        ),
+                        lineWidth: 1
                     )
             )
+            .shadow(color: .black.opacity(0.28), radius: 12, y: 5)
             .padding(.horizontal, 20)
     }
 }
@@ -118,15 +133,7 @@ private struct ProCard: View {
                     Spacer()
                 }
                 .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(colors: [
-                                Color(red: 0.98, green: 0.62, blue: 0.15),
-                                Color(red: 0.85, green: 0.42, blue: 0.04)
-                            ], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                )
+                .background(proCardBackground)
                 .padding(.horizontal, 20)
             } else {
                 // Locked state: hero upsell card
@@ -154,21 +161,33 @@ private struct ProCard: View {
                             .foregroundStyle(.white.opacity(0.7))
                     }
                     .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(
-                                LinearGradient(colors: [
-                                    Color(red: 0.98, green: 0.62, blue: 0.15),
-                                    Color(red: 0.85, green: 0.42, blue: 0.04)
-                                ], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                    )
+                    .background(proCardBackground)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 20)
             }
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+
+    // Orange gradient with a glossy top highlight, rounded to match glass cards.
+    private var proCardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(
+                LinearGradient(colors: [
+                    Color(red: 0.98, green: 0.62, blue: 0.15),
+                    Color(red: 0.85, green: 0.42, blue: 0.04)
+                ], startPoint: .topLeading, endPoint: .bottomTrailing)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(colors: [.white.opacity(0.45), .white.opacity(0.05)],
+                                       startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color(red: 0.85, green: 0.42, blue: 0.04).opacity(0.4), radius: 12, y: 5)
     }
 }
 
