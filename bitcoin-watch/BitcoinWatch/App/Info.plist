@@ -27,6 +27,8 @@
         <string>fetch</string>
         <string>processing</string>
     </array>
+    <key>NSFaceIDUsageDescription</key>
+    <string>TapBTC uses Face ID to keep your Bitcoin holdings private.</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>

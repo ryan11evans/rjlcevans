@@ -7,6 +7,7 @@ struct BitcoinWatchApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var priceService = PriceService.shared
+    @StateObject private var appLock = AppLockService.shared
 
     init() {
         BackgroundRefresh.register()
@@ -18,10 +19,16 @@ struct BitcoinWatchApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(priceService)
+                // Privacy: cover the UI whenever locked (also hides holdings in
+                // the app switcher) and require auth to reveal it.
+                .overlay {
+                    if appLock.isLocked { LockView() }
+                }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active:
+                appLock.authenticate()
                 // Pull the server's fired-state FIRST so an alert already sent as
                 // a push while closed isn't re-fired by the foreground check.
                 Task {
@@ -31,6 +38,11 @@ struct BitcoinWatchApp: App {
                 // Keep the chart + stats fresh: refresh now, then every 5 min.
                 StatsService.shared.startAutoRefresh()
                 Task { await StatsService.shared.fetch() }
+                // Make sure the Watch has current holdings + Pro state.
+                ConnectivityManager.shared.syncHoldings()
+            case .inactive:
+                // Lock as we leave the foreground so the switcher snapshot is covered.
+                appLock.lockIfNeeded()
             case .background:
                 priceService.stopForegroundRefresh()
                 StatsService.shared.stopAutoRefresh()

@@ -52,7 +52,7 @@ struct RoundNumberProgressView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("$\(Int(away).formatted()) away")
+                    Text("\(AppCurrency.current.format(away)) away")
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.orange)
                 }
@@ -63,8 +63,9 @@ struct RoundNumberProgressView: View {
     }
 
     private func milestoneLabel(_ v: Double) -> String {
-        if v >= 1_000_000 { return "$\(Int(v / 1_000_000))M" }
-        return "$\(Int(v / 1_000))K"
+        let s = AppCurrency.current.symbol
+        if v >= 1_000_000 { return "\(s)\(Int(v / 1_000_000))M" }
+        return "\(s)\(Int(v / 1_000))K"
     }
 }
 

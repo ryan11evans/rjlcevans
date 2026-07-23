@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 struct SettingsView: View {
     var body: some View {
@@ -12,18 +13,21 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 26) {
+                    VStack(alignment: .leading, spacing: 22) {
                         ProCard()
+                        ProAlertsSection()
+                        DisplaySection()
                         NotificationsSection()
+                        PrivacySection()
                         IconPickerSection()
                         VersionFooter()
                     }
-                    .padding(.top, 20)
+                    .padding(.top, 8)
                     .padding(.bottom, 32)
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
         }
@@ -36,41 +40,42 @@ private struct SectionHeader: View {
     let title: String
     var body: some View {
         Text(title.uppercased())
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
             .foregroundStyle(.secondary)
-            .tracking(1.2)
-            .padding(.horizontal, 24)
+            .tracking(0.8)
+            .padding(.horizontal, 26)
+            .padding(.bottom, 2)
     }
 }
 
-// Colored icon chip, like iOS Settings rows
+// Colored icon chip, like iOS Settings rows — with a soft glass sheen.
 private struct IconChip: View {
     let systemName: String
     let color: Color
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(color.opacity(0.18))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(color.gradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
+                )
+                .shadow(color: color.opacity(0.35), radius: 3, y: 1)
             Image(systemName: systemName)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(color)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
         }
         .frame(width: 30, height: 30)
     }
 }
 
+// Frosted "Liquid Glass" panel: a translucent material over the gradient
+// background with a bright top edge, mimicking iOS 26's glass surfaces.
 private struct CardBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
+            .glassCard(cornerRadius: 20)
             .padding(.horizontal, 20)
     }
 }
@@ -114,15 +119,7 @@ private struct ProCard: View {
                     Spacer()
                 }
                 .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(colors: [
-                                Color(red: 0.98, green: 0.62, blue: 0.15),
-                                Color(red: 0.85, green: 0.42, blue: 0.04)
-                            ], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                )
+                .background(proCardBackground)
                 .padding(.horizontal, 20)
             } else {
                 // Locked state: hero upsell card
@@ -150,21 +147,223 @@ private struct ProCard: View {
                             .foregroundStyle(.white.opacity(0.7))
                     }
                     .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(
-                                LinearGradient(colors: [
-                                    Color(red: 0.98, green: 0.62, blue: 0.15),
-                                    Color(red: 0.85, green: 0.42, blue: 0.04)
-                                ], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                    )
+                    .background(proCardBackground)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 20)
             }
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+
+    // Orange gradient with a glossy top highlight, rounded to match glass cards.
+    private var proCardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(
+                LinearGradient(colors: [
+                    Color(red: 0.98, green: 0.62, blue: 0.15),
+                    Color(red: 0.85, green: 0.42, blue: 0.04)
+                ], startPoint: .topLeading, endPoint: .bottomTrailing)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(colors: [.white.opacity(0.45), .white.opacity(0.05)],
+                                       startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color(red: 0.85, green: 0.42, blue: 0.04).opacity(0.4), radius: 12, y: 5)
+    }
+}
+
+// MARK: - Pro Alerts (volatility + daily briefing)
+
+private struct ProAlertsSection: View {
+    @ObservedObject private var pro = ProService.shared
+    @AppStorage("volatilityAlertEnabled", store: .shared) private var volEnabled = false
+    @AppStorage("volatilityThreshold", store: .shared) private var volThreshold = 5.0
+    @AppStorage("dailyBriefingEnabled", store: .shared) private var briefEnabled = false
+    @AppStorage("dailyBriefingHour", store: .shared) private var briefHour = 8
+    @State private var showPaywall = false
+
+    private let thresholds = [3.0, 5.0, 10.0, 15.0]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader(title: "Pro Alerts")
+                Spacer()
+                if !pro.isPro {
+                    Text("PRO")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .tracking(0.8)
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(Capsule().fill(.orange))
+                        .padding(.trailing, 24)
+                }
+            }
+
+            VStack(spacing: 0) {
+                // Volatility
+                HStack(spacing: 14) {
+                    IconChip(systemName: "waveform.path.ecg", color: Color(red: 1.0, green: 0.45, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Volatility Alerts")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(pro.isPro
+                             ? "Push when BTC moves ±\(Int(volThreshold))% in 24h"
+                             : "Get pinged on big 24h swings")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if pro.isPro {
+                        if volEnabled {
+                            Menu {
+                                ForEach(thresholds, id: \.self) { t in
+                                    Button("±\(Int(t))%") { volThreshold = t }
+                                }
+                            } label: {
+                                Text("±\(Int(volThreshold))%")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.trailing, 4)
+                        }
+                        Toggle("", isOn: $volEnabled).labelsHidden().tint(.orange)
+                    } else {
+                        Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+                .contentShape(Rectangle())
+                .onTapGesture { if !pro.isPro { showPaywall = true } }
+
+                Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 62)
+
+                // Daily briefing
+                HStack(spacing: 14) {
+                    IconChip(systemName: "sun.max.fill", color: Color(red: 1.0, green: 0.78, blue: 0.25))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Briefing")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(pro.isPro
+                             ? "One push each morning with price & your stack"
+                             : "A morning summary, delivered daily")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if pro.isPro {
+                        if briefEnabled {
+                            Menu {
+                                ForEach(Array(stride(from: 5, through: 11, by: 1)), id: \.self) { h in
+                                    Button(hourLabel(h)) { briefHour = h }
+                                }
+                            } label: {
+                                Text(hourLabel(briefHour))
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.trailing, 4)
+                        }
+                        Toggle("", isOn: $briefEnabled).labelsHidden().tint(.orange)
+                    } else {
+                        Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+                .contentShape(Rectangle())
+                .onTapGesture { if !pro.isPro { showPaywall = true } }
+            }
+            .modifier(CardBackground())
+        }
+        .onChange(of: volEnabled) { _, _ in Task { await PushService.shared.sync() } }
+        .onChange(of: volThreshold) { _, _ in Task { await PushService.shared.sync() } }
+        .onChange(of: briefEnabled) { _, new in
+            if new { Task { _ = await PushService.shared.enable() } }
+            Task { await PushService.shared.sync() }
+        }
+        .onChange(of: briefHour) { _, _ in Task { await PushService.shared.sync() } }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+
+    private func hourLabel(_ h: Int) -> String {
+        let ampm = h < 12 ? "AM" : "PM"
+        let display = h % 12 == 0 ? 12 : h % 12
+        return "\(display) \(ampm)"
+    }
+}
+
+// MARK: - Display (currency + sats)
+
+private struct DisplaySection: View {
+    @AppStorage("displayCurrency", store: .shared) private var currency = "usd"
+    @AppStorage("denominateInSats", store: .shared) private var sats = false
+
+    private var selected: AppCurrency { AppCurrency(rawValue: currency) ?? .usd }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Display")
+
+            VStack(spacing: 0) {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "dollarsign.circle.fill", color: Color(red: 0.19, green: 0.82, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Currency")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Show prices in your local currency")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Menu {
+                        ForEach(AppCurrency.allCases, id: \.self) { c in
+                            Button("\(c.pickerLabel) · \(c.displayName)") { currency = c.rawValue }
+                        }
+                    } label: {
+                        Text(selected.pickerLabel)
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+
+                Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 62)
+
+                HStack(spacing: 14) {
+                    IconChip(systemName: "bitcoinsign.circle.fill", color: .orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Denominate in Sats")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Show holdings in satoshis instead of BTC")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $sats).labelsHidden().tint(.orange)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+            }
+            .modifier(CardBackground())
+        }
+        .onChange(of: currency) { _, _ in
+            Task {
+                await PriceService.shared.fetchPrice()
+                await StatsService.shared.fetch()
+                WidgetCenter.shared.reloadAllTimelines()
+                ConnectivityManager.shared.syncHoldings()
+                await PushService.shared.sync()
+            }
+        }
+        .onChange(of: sats) { _, _ in WidgetCenter.shared.reloadAllTimelines() }
     }
 }
 
@@ -179,14 +378,14 @@ private struct NotificationsSection: View {
             SectionHeader(title: "Notifications")
 
             VStack(spacing: 0) {
-                toggleRow(icon: "rocket.fill", tint: .orange,
+                toggleRow(icon: "trophy.fill", tint: Color(red: 1.0, green: 0.80, blue: 0.30),
                           title: "All-Time High Alerts",
                           subtitle: "When BTC sets a new record",
                           isOn: $athAlert)
                 Divider()
                     .overlay(Color.white.opacity(0.06))
                     .padding(.leading, 62)
-                toggleRow(icon: "hourglass", tint: Color(red: 0.75, green: 0.52, blue: 0.98),
+                toggleRow(icon: "divide.circle.fill", tint: Color(red: 0.40, green: 0.78, blue: 0.98),
                           title: "Halving Milestones",
                           subtitle: "Countdown alerts as the halving nears",
                           isOn: $milestoneAlert)
@@ -217,6 +416,45 @@ private struct NotificationsSection: View {
     }
 }
 
+// MARK: - Privacy (Face ID lock)
+
+private struct PrivacySection: View {
+    @AppStorage("requireFaceID", store: .shared) private var requireFaceID = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Privacy")
+
+            VStack(spacing: 0) {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "faceid", color: Color(red: 0.19, green: 0.82, blue: 0.35))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Require Face ID")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Lock the app so only you can see your holdings")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $requireFaceID)
+                        .labelsHidden().tint(.orange)
+                        .disabled(!AppLockService.biometricsAvailable)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+            }
+            .modifier(CardBackground())
+
+            if !AppLockService.biometricsAvailable {
+                Text("Set up Face ID, Touch ID, or a passcode in iOS Settings to use this.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 24)
+            }
+        }
+    }
+}
+
 // MARK: - App Icon Picker
 
 enum AppIcon: String, CaseIterable {
@@ -236,6 +474,9 @@ enum AppIcon: String, CaseIterable {
 
     // nil = primary icon (system requirement)
     var alternateIconName: String? { self == .default ? nil : rawValue }
+
+    // Gold & Midnight are Pro-exclusive; Default & Silver are free.
+    var isPro: Bool { self == .gold || self == .midnight }
 
     // Accent color for the rendered preview tile
     var accentColor: Color {
@@ -258,11 +499,13 @@ enum AppIcon: String, CaseIterable {
 }
 
 private struct IconPickerSection: View {
+    @ObservedObject private var pro = ProService.shared
     @State private var selected: AppIcon = {
         let name = UIApplication.shared.alternateIconName
         return AppIcon.allCases.first { $0.rawValue == name } ?? .default
     }()
     @State private var errorMessage: String? = nil
+    @State private var showPaywall = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -271,8 +514,14 @@ private struct IconPickerSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(AppIcon.allCases, id: \.rawValue) { icon in
-                        IconTile(icon: icon, isSelected: selected == icon) {
-                            applyIcon(icon)
+                        IconTile(icon: icon,
+                                 isSelected: selected == icon,
+                                 locked: icon.isPro && !pro.isPro) {
+                            if icon.isPro && !pro.isPro {
+                                showPaywall = true
+                            } else {
+                                applyIcon(icon)
+                            }
                         }
                     }
                 }
@@ -287,6 +536,7 @@ private struct IconPickerSection: View {
                     .padding(.horizontal, 24)
             }
         }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
     }
 
     private func applyIcon(_ icon: AppIcon) {
@@ -316,34 +566,52 @@ private func loadIconImage(_ name: String) -> UIImage? {
 private struct IconTile: View {
     let icon: AppIcon
     let isSelected: Bool
+    var locked: Bool = false
     let onTap: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
-            Group {
-                if let img = loadIconImage(icon.rawValue) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .interpolation(.high)
-                } else {
-                    // Fallback if image not found
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.white.opacity(0.08))
-                        Text("₿").font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(icon.accentColor)
+            ZStack {
+                Group {
+                    if let img = loadIconImage(icon.rawValue) {
+                        Image(uiImage: img)
+                            .resizable()
+                            .interpolation(.high)
+                    } else {
+                        // Fallback if image not found
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.white.opacity(0.08))
+                            Text("₿").font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(icon.accentColor)
+                        }
                     }
+                }
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(
+                            isSelected ? Color.orange : Color.white.opacity(0.08),
+                            lineWidth: isSelected ? 2.5 : 1
+                        )
+                )
+
+                // Pro lock — small corner badge so the icon stays visible
+                if locked {
+                    ZStack {
+                        Circle()
+                            .fill(.black.opacity(0.75))
+                            .frame(width: 22, height: 22)
+                            .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.orange)
+                    }
+                    .offset(x: 26, y: -26)
                 }
             }
             .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? Color.orange : Color.white.opacity(0.08),
-                        lineWidth: isSelected ? 2.5 : 1
-                    )
-            )
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)

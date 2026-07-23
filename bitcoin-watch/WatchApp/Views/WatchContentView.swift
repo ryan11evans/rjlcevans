@@ -10,7 +10,8 @@ struct WatchContentView: View {
         TabView {
             PricePage(service: service, change24h: stats.change24h)
             ChartPage(stats: stats, livePrice: service.currentPrice?.usd)
-            StatsPage(stats: stats, livePrice: service.currentPrice?.usd)
+            StatsPage(stats: stats, livePrice: service.currentPrice?.usd,
+                      holdingsValue: service.holdingsValue)
         }
         .tabViewStyle(.verticalPage)
         .task { await stats.fetchIfNeeded() }
@@ -56,9 +57,17 @@ private struct PricePage: View {
                             : Color(red: 1, green: 0.27, blue: 0.23))
                 }
 
-                Text(price.timestamp, style: .relative)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                if let stack = service.holdingsValue {
+                    Text("Stack · \(AppCurrency.current.format(stack))")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.orange)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                } else {
+                    Text(price.timestamp, style: .relative)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             } else if service.isLoading {
                 ProgressView()
             } else {
@@ -149,9 +158,15 @@ private struct ChartPage: View {
 private struct StatsPage: View {
     @ObservedObject var stats: WatchStatsService
     let livePrice: Double?
+    var holdingsValue: Double? = nil
 
     var body: some View {
         VStack(spacing: 6) {
+            if let stack = holdingsValue {
+                StatRow(label: "YOUR STACK",
+                        value: AppCurrency.current.format(stack),
+                        color: .orange)
+            }
             StatRow(label: "24H HIGH",
                     value: clampedHigh.map(shortPrice) ?? "—",
                     color: Color(red: 0.19, green: 0.82, blue: 0.35))
@@ -161,9 +176,11 @@ private struct StatsPage: View {
             StatRow(label: "ATH",
                     value: stats.ath.map(shortPrice) ?? "—",
                     color: .orange)
-            StatRow(label: "BLOCK",
-                    value: stats.blockHeight.map { "#\($0.formatted())" } ?? "—",
-                    color: .cyan)
+            if holdingsValue == nil {
+                StatRow(label: "BLOCK",
+                        value: stats.blockHeight.map { "#\($0.formatted())" } ?? "—",
+                        color: .cyan)
+            }
         }
         .padding(.horizontal, 4)
     }
@@ -179,7 +196,7 @@ private struct StatsPage: View {
     }
 
     private func shortPrice(_ v: Double) -> String {
-        "$\(Int(v).formatted())"
+        AppCurrency.current.format(v)
     }
 }
 

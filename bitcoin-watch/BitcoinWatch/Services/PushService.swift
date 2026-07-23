@@ -59,15 +59,37 @@ final class PushService: ObservableObject {
             ]
         }
 
+        let defaults = UserDefaults.shared
+        let isPro = defaults.bool(forKey: "isProUnlocked")
+
         var payload: [String: Any] = [
             "token": token,
             "alerts": alerts,
-            "athAlert": UserDefaults.shared.object(forKey: "athAlertEnabled") as? Bool ?? true,
-            "milestoneAlert": UserDefaults.shared.object(forKey: "milestoneAlertEnabled") as? Bool ?? true,
+            "currency": AppCurrency.current.rawValue,
+            "athAlert": defaults.object(forKey: "athAlertEnabled") as? Bool ?? true,
+            "milestoneAlert": defaults.object(forKey: "milestoneAlertEnabled") as? Bool ?? true,
         ]
         // Teach the server the real ATH so its new-high detection is accurate.
         if let ath = StatsService.shared.stats?.ath {
             payload["knownATH"] = ath
+        }
+
+        // Pro-only server features. Only mark enabled when the user is Pro so
+        // the server never fires them for a free device.
+        let volEnabled = isPro && defaults.bool(forKey: "volatilityAlertEnabled")
+        let threshold = defaults.object(forKey: "volatilityThreshold") as? Double ?? 5
+        payload["volatility"] = ["enabled": volEnabled, "threshold": threshold]
+
+        let briefEnabled = isPro && defaults.bool(forKey: "dailyBriefingEnabled")
+        let hour = defaults.object(forKey: "dailyBriefingHour") as? Int ?? 8
+        let tz = TimeZone.current.secondsFromGMT() / 60
+        payload["briefing"] = ["enabled": briefEnabled, "hour": hour, "tz": tz]
+
+        // Only share holdings when the daily briefing needs it (privacy).
+        if briefEnabled {
+            payload["holdings"] = HoldingsService.shared.totalAmount
+            payload["invested"] = HoldingsService.shared.totalInvested
+            payload["investedBTC"] = HoldingsService.shared.investedBTC
         }
         guard let body = try? JSONSerialization.data(withJSONObject: payload) else { return }
 

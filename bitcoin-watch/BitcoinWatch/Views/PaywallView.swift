@@ -34,19 +34,27 @@ struct PaywallView: View {
 
                             // Features
                             VStack(spacing: 0) {
+                                feature(icon: "chart.pie.fill",
+                                        title: "Portfolio on your Home Screen",
+                                        subtitle: "Your Bitcoin's live value on the widget, Watch & Lock Screen")
+                                Divider().padding(.leading, 56)
+                                feature(icon: "waveform.path.ecg",
+                                        title: "Volatility alerts",
+                                        subtitle: "Get pinged when BTC makes a big move in a day")
+                                Divider().padding(.leading, 56)
+                                feature(icon: "sun.max.fill",
+                                        title: "Daily briefing",
+                                        subtitle: "One morning push: price, 24h move & your stack")
+                                Divider().padding(.leading, 56)
                                 feature(icon: "bell.badge.fill",
                                         title: "Unlimited price alerts",
-                                        subtitle: "Free includes \(ProService.freeAlertLimit) — Pro removes the cap")
+                                        subtitle: "Free includes one alert — Pro removes the cap")
                                 Divider().padding(.leading, 56)
-                                feature(icon: "arrow.up.heart.fill",
-                                        title: "Support development",
-                                        subtitle: "Keeps the alert server running — no ads, no accounts, ever")
-                                Divider().padding(.leading, 56)
-                                feature(icon: "sparkles",
-                                        title: "All future Pro features",
-                                        subtitle: "Every Pro feature we add is included")
+                                feature(icon: "app.badge.fill",
+                                        title: "Exclusive app icons",
+                                        subtitle: "Unlock the Gold and Midnight icons")
                             }
-                            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.05)))
+                            .glassCard(cornerRadius: 18)
                             .padding(.horizontal, 20)
                         }
                     }

@@ -29,7 +29,10 @@ class ConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
 
         let payload: [String: Any] = [
             WCMessageKey.price: price.usd,
-            WCMessageKey.timestamp: price.timestamp.timeIntervalSince1970
+            WCMessageKey.timestamp: price.timestamp.timeIntervalSince1970,
+            WCMessageKey.holdings: UserDefaults.shared.double(forKey: "btcHoldings"),
+            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked"),
+            WCMessageKey.currency: AppCurrency.current.rawValue
         ]
 
         if session.isComplicationEnabled {
@@ -42,6 +45,18 @@ class ConnectivityManager: NSObject, WCSessionDelegate, ObservableObject {
             // Background transfer — arrives when Watch wakes
             session.transferUserInfo(payload)
         }
+    }
+
+    /// Push holdings + Pro state to the Watch immediately (used when they change
+    /// while the price is static, so the price-piggyback path wouldn't fire).
+    func syncHoldings() {
+        guard let session, session.activationState == .activated, session.isPaired else { return }
+        let context: [String: Any] = [
+            WCMessageKey.holdings: UserDefaults.shared.double(forKey: "btcHoldings"),
+            WCMessageKey.isPro: UserDefaults.shared.bool(forKey: "isProUnlocked"),
+            WCMessageKey.currency: AppCurrency.current.rawValue
+        ]
+        try? session.updateApplicationContext(context)
     }
 
     // MARK: - WCSessionDelegate (required)

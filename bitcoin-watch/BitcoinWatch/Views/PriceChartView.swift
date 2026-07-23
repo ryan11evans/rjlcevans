@@ -8,10 +8,10 @@ struct BitcoinInfoView: View {
     var fearGreed: StatsService.FearGreedData? = nil
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             BTCHeroAnimation()
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 HStack(spacing: 10) {
                     StatTile(label: "24h High",
                              value: stats.map { shortPrice(high24h($0)) } ?? "—",
@@ -36,11 +36,13 @@ struct BitcoinInfoView: View {
                     StatTile(label: "Next Halving",
                              value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
                              subtitle: stats.map { halvingSubtitle($0.blockHeight) },
-                             color: .purple)
+                             color: .purple,
+                             compact: true)
                     StatTile(label: "Fear & Greed",
-                             value: fearGreed.map { "\($0.value)" } ?? "—",
-                             subtitle: fearGreed?.classification,
-                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray)
+                             value: fearGreed.map { "\($0.value) · \($0.classification)" } ?? "—",
+                             subtitle: nil,
+                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray,
+                             compact: true)
                 }
             }
             .padding(.horizontal)
@@ -55,7 +57,7 @@ struct BitcoinInfoView: View {
         [currentPrice, chartLow].compactMap { $0 }.min() ?? s.low24h
     }
 
-    private func shortPrice(_ v: Double) -> String { "$\(Int(v).formatted())" }
+    private func shortPrice(_ v: Double) -> String { AppCurrency.current.format(v) }
 
     private func athDateString(_ d: Date) -> String {
         let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"; return f.string(from: d)
@@ -123,7 +125,7 @@ private struct BTCHeroAnimation: View {
                     .rotationEffect(.degrees(t * 60))
             }
         }
-        .frame(height: 130)
+        .frame(height: 108)
         .frame(maxWidth: .infinity)
     }
 }
@@ -201,45 +203,70 @@ private struct SatsField: View {
     }
 }
 
+// Two comet trails chasing each other around the coin: each arc fades from a
+// transparent tail up to a bright glowing head, with a soft under-glow so the
+// ring feels lit rather than drawn.
 private struct OrbitArrows: View {
     var body: some View {
         ZStack {
-            ArcArrow(startAngle: -60, endAngle: 60)
-                .stroke(Color.orange, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-            ArcArrowhead(angle: 60)
-                .fill(.orange)
-            ArcArrow(startAngle: 120, endAngle: 240)
-                .stroke(Color.orange, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-            ArcArrowhead(angle: 240)
-                .fill(.orange)
+            comet
+            comet.rotationEffect(.degrees(180))
         }
     }
-}
 
-private struct ArcArrow: Shape {
-    let startAngle, endAngle: Double
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.addArc(center: CGPoint(x: rect.midX, y: rect.midY),
-                 radius: rect.width / 2,
-                 startAngle: .degrees(startAngle), endAngle: .degrees(endAngle),
-                 clockwise: false)
-        return p
+    // One comet: trail from 0°(clear) → 140°(bright), head dot at 140°.
+    private var comet: some View {
+        ZStack {
+            // Under-glow (wider, blurred)
+            trailArc
+                .stroke(
+                    trailGradient(maxOpacity: 0.55),
+                    style: StrokeStyle(lineWidth: 7, lineCap: .round)
+                )
+                .blur(radius: 4)
+
+            // Core trail
+            trailArc
+                .stroke(
+                    trailGradient(maxOpacity: 1.0),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+
+            // Glowing head
+            ZStack {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 9, height: 9)
+                    .blur(radius: 4)
+                Circle()
+                    .fill(
+                        RadialGradient(colors: [
+                            Color(red: 1.0, green: 0.92, blue: 0.75),
+                            Color(red: 0.98, green: 0.65, blue: 0.15)
+                        ], center: .center, startRadius: 0, endRadius: 3.5)
+                    )
+                    .frame(width: 6.5, height: 6.5)
+            }
+            .offset(x: 50)                    // radius of the 100pt frame
+            .rotationEffect(.degrees(140))    // sit at the arc's bright end
+        }
     }
-}
 
-private struct ArcArrowhead: Shape {
-    let angle: Double
-    func path(in rect: CGRect) -> Path {
-        let r = rect.width / 2
-        let rad = angle * .pi / 180
-        let tip  = CGPoint(x: rect.midX + r * cos(rad), y: rect.midY + r * sin(rad))
-        let tang = rad + .pi / 2
-        let size: CGFloat = 8
-        let l = CGPoint(x: tip.x + size * cos(tang - 0.5), y: tip.y + size * sin(tang - 0.5))
-        let ri = CGPoint(x: tip.x + size * cos(tang + 0.5), y: tip.y + size * sin(tang + 0.5))
-        var p = Path(); p.move(to: tip); p.addLine(to: l); p.addLine(to: ri); p.closeSubpath()
-        return p
+    // Arc covering 0°→140°, matching the gradient sweep below.
+    private var trailArc: some Shape {
+        Circle().trim(from: 0, to: 140.0 / 360.0)
+    }
+
+    private func trailGradient(maxOpacity: Double) -> AngularGradient {
+        AngularGradient(
+            gradient: Gradient(stops: [
+                .init(color: .orange.opacity(0), location: 0),
+                .init(color: .orange.opacity(0.30 * maxOpacity), location: 0.20),
+                .init(color: .orange.opacity(maxOpacity), location: 140.0 / 360.0),
+                .init(color: .orange.opacity(0), location: 0.40),
+            ]),
+            center: .center
+        )
     }
 }
 
@@ -314,26 +341,35 @@ private struct StatTile: View {
     let value: String
     let subtitle: String?
     let color: Color
+    var compact: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: compact ? 1 : 3) {
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: compact ? 9 : 10, weight: .medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(0.3)
             Text(value)
-                .font(.system(.title3, design: .rounded, weight: .bold))
+                .font(compact
+                      ? .system(size: 16, weight: .bold, design: .rounded)
+                      : .system(.title3, design: .rounded, weight: .bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
-            Text(subtitle ?? " ")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: compact ? 9 : 11))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            } else if !compact {
+                Text(" ").font(.caption2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, compact ? 8 : 12)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(color.opacity(0.08))

@@ -6,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject var service: PriceService
     @StateObject private var statsService = StatsService.shared
     @ObservedObject private var alertService = AlertService.shared
+    @ObservedObject private var reviewManager = ReviewManager.shared
     @State private var showAlertSheet = false
     @State private var showCalculator = false
     @State private var showDCA = false
@@ -33,6 +34,10 @@ struct ContentView: View {
 
                         VStack(spacing: 8) {
                             BTCChartView(statsService: statsService)
+                            PortfolioCardView(
+                                currentPrice: service.currentPrice?.usd,
+                                change24h: statsService.stats?.change24h
+                            )
                             BitcoinInfoView(
                                 stats: statsService.stats,
                                 currentPrice: service.currentPrice?.usd,
@@ -61,9 +66,21 @@ struct ContentView: View {
             .task {
                 await statsService.fetch()
                 ReviewManager.shared.recordOpen()
-                if ReviewManager.shared.shouldRequestReview {
-                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                // Good moment: opening to a meaningful profit. Fallback after
+                // enough opens so we still ask people who never hit one.
+                if let price = service.currentPrice?.usd,
+                   let gain = HoldingsService.shared.gain(at: price), gain.pct >= 0.05 {
+                    ReviewManager.shared.markGoodMoment()
+                } else if ReviewManager.shared.openCount == 10 {
+                    ReviewManager.shared.markGoodMoment()
+                }
+            }
+            .onChange(of: reviewManager.shouldPrompt) { _, prompt in
+                guard prompt else { return }
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
                     requestReview()
+                    reviewManager.shouldPrompt = false
                 }
             }
             .sheet(isPresented: $showAlertSheet) {
@@ -123,10 +140,15 @@ struct ContentView: View {
         let stats = statsService.stats
         Task { @MainActor in
             await Task.yield()
+            // Include the user's P&L brag on the card, Pro + cost basis only.
+            let gainPct: Double? = ProService.shared.isPro
+                ? HoldingsService.shared.gain(at: price.usd)?.pct
+                : nil
             let card = ShareCardView(
                 price: price,
                 change24h: stats?.change24h,
-                chartPrices: statsService.chartData.map { $0.price }
+                chartPrices: statsService.chartData.map { $0.price },
+                holdingsGainPct: gainPct
             )
             .environment(\.colorScheme, .dark)
             let renderer = ImageRenderer(content: card)

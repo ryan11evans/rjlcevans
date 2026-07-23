@@ -211,7 +211,7 @@ struct AddAlertView: View {
                         // Target price
                         field("Target Price") {
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text("$")
+                                Text(AppCurrency.current.symbol)
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
                                     .foregroundStyle(.secondary)
                                 TextField("0", text: $targetText)
@@ -241,7 +241,7 @@ struct AddAlertView: View {
                                                 VStack(spacing: 2) {
                                                     Text(s.label)
                                                         .font(.system(size: 13, weight: .semibold))
-                                                    Text("$\(Int(s.price).formatted())")
+                                                    Text(AppCurrency.current.format(s.price))
                                                         .font(.system(size: 11))
                                                         .foregroundStyle(.secondary)
                                                 }
@@ -277,7 +277,7 @@ struct AddAlertView: View {
                             Toggle("", isOn: $isRepeating).labelsHidden().tint(.orange)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
+                        .glassCard(cornerRadius: 14, shadow: false)
                     }
                     .padding(20)
                 }

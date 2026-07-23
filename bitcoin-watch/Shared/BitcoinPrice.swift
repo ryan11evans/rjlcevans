@@ -1,15 +1,13 @@
 import Foundation
 
 struct BitcoinPrice: Codable, Equatable {
+    // Historically USD; now holds the price in the user's selected display
+    // currency (see AppCurrency). Kept named `usd` to avoid a churny rename.
     let usd: Double
     let timestamp: Date
 
     var formatted: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: usd)) ?? "$\(Int(usd))"
+        AppCurrency.current.format(usd, fractionDigits: 0)
     }
 
     var circularFormatted: String {
@@ -22,12 +20,7 @@ struct BitcoinPrice: Codable, Equatable {
     }
 
     var shortFormatted: String {
-        if usd >= 1_000_000 {
-            return String(format: "$%.2fM", usd / 1_000_000)
-        } else if usd >= 1_000 {
-            return String(format: "$%.1fK", usd / 1_000)
-        }
-        return String(format: "$%.0f", usd)
+        AppCurrency.current.formatShort(usd)
     }
 }
 
@@ -48,10 +41,29 @@ extension UserDefaults {
 
     func saveChange24h(_ change: Double) { set(change, forKey: "btcChange24h") }
     func loadChange24h() -> Double? { object(forKey: "btcChange24h") as? Double }
+
+    // Sparkline points for the widgets (downsampled 1D prices).
+    func saveSparkline(_ prices: [Double]) { set(prices, forKey: "btcSparkline") }
+    func loadSparkline() -> [Double] { array(forKey: "btcSparkline") as? [Double] ?? [] }
+
+    // Extra stats surfaced in the large widget.
+    func saveWidgetStats(high: Double, low: Double, ath: Double, fng: Int?) {
+        set(high, forKey: "wHigh24h"); set(low, forKey: "wLow24h"); set(ath, forKey: "wATH")
+        if let fng { set(fng, forKey: "wFNG") } else { removeObject(forKey: "wFNG") }
+    }
+    func loadWidgetStats() -> (high: Double, low: Double, ath: Double, fng: Int?)? {
+        guard let high = object(forKey: "wHigh24h") as? Double,
+              let low = object(forKey: "wLow24h") as? Double,
+              let ath = object(forKey: "wATH") as? Double else { return nil }
+        return (high, low, ath, object(forKey: "wFNG") as? Int)
+    }
 }
 
 // WatchConnectivity message keys
 enum WCMessageKey {
     static let price = "btcPrice"
     static let timestamp = "btcTimestamp"
+    static let holdings = "btcHoldings"
+    static let isPro = "isPro"
+    static let currency = "displayCurrency"
 }

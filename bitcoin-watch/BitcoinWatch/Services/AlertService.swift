@@ -105,6 +105,10 @@ class AlertService: ObservableObject {
             alerts[i].lastFiredAt = Date()
             if !alerts[i].isRepeating { alerts[i].isEnabled = false }
             changed = true
+            // A hit alert while the app is open is a delightful moment.
+            if UIApplication.shared.applicationState == .active {
+                ReviewManager.shared.markGoodMoment()
+            }
         }
         if changed { save() }
     }
