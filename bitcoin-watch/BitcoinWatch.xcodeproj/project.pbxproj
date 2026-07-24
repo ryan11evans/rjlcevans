@@ -22,19 +22,23 @@
 		23F5599C6613C1069F1BF953 /* WatchStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */; };
 		2431240FE36C91B69E5FE82D /* BTCWatchComplication.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		27228CB5CA36FCFCC6865FA1 /* DCACalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF7154FB28587C537C907EE0 /* DCACalculatorView.swift */; };
+		29A263A69137C04FB5D49F92 /* HoldingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469F78F4E466CF251828F929 /* HoldingsService.swift */; };
 		29BDA483447ADFEAE76EFADD /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
 		2D0ECC60F9040EAD897827D5 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
 		33E30D7CD9F67589755FBAFD /* AppIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 47ABF64782E9AC08FE3C5DBD /* AppIcon@2x.png */; };
 		4088C1FB8302ABC256E51F6E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */; };
 		45DEE5AE9D88EAEBE4C6C32F /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		4B19C858D6B0BCEEA53AC6C3 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BCC10C53920AC2AFE27574 /* AppLockService.swift */; };
 		4C7FC623AE239A04CDB1B337 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */; };
 		4CA0C0096060A42ACD7B2120 /* BTCWatchComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = D479D6F84C6E4E884558AAED /* BTCWatchComplication.swift */; };
 		4D890446284CEC179FA8F745 /* AppIcon-Gold@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 2A58BCE402A9A818934FBCD0 /* AppIcon-Gold@2x.png */; };
+		53D45D7EC329F3C337C3456D /* AppCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */; };
 		5A2DB71711045AC4466488DA /* PriceAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BBB0E47753759C583C4774 /* PriceAlertView.swift */; };
 		627F4961EF4877C20B64E385 /* RoundNumberProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF29D32A239ABA6CBA42FF6E /* RoundNumberProgressView.swift */; };
 		65A97B25FE47367308C3204D /* ConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */; };
 		674B2A5FED39A8E18CE4971F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6679991C3BA5CC231D9C9A71 /* ContentView.swift */; };
 		6C43B2462D81150C49C2BF11 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
+		6F12427962FAA26B9984F31E /* AppCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */; };
 		70AB9B5069814CD59168BE20 /* AppIcon-Midnight-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 164BB5922B7410E55C2BDA37 /* AppIcon-Midnight-83.5@2x.png */; };
 		7169E51C30A986F766A07179 /* AppIcon-Gold-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 884ECFF4DD0A65FD12706712 /* AppIcon-Gold-83.5@2x.png */; };
 		7173E5D6E50A983940596DA9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC958B17127DC41540B836E6 /* Assets.xcassets */; };
@@ -44,17 +48,20 @@
 		77DE522F11100BCCD59DA368 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
 		7A9CB6C47C696490E2C65EB1 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */; };
 		7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
+		7BAA509C1FB766647C05CDC7 /* GlassStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5896ED8E4CB0049346826EF0 /* GlassStyle.swift */; };
 		8130DD0E1427539E0EEE30C8 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
 		837C906963F6D35B2C7B8A86 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */; };
 		84625F1B6CD89B197545AE0F /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
 		89592FE0403AA2B7D4B58035 /* AppIcon@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */; };
 		8C1D6CC1DDB682DF818CD378 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C71B110B96E76243F0E8D0CE /* PaywallView.swift */; };
+		8CE6C81566A24A3752F8E29D /* AppCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */; };
 		8D69B64BD3E8BE28BE4B88DF /* AppIcon-Midnight@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445C44B4F16C0A4CCE8EB46E /* AppIcon-Midnight@3x.png */; };
 		92B1AB3800BAEC51626F36BF /* complications-preview.html in Resources */ = {isa = PBXBuildFile; fileRef = 6D0BEE1C4BEE3B1FEB743B9B /* complications-preview.html */; };
 		98BB19CF2ECA4DCC81F40C5D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 86236CBFE9D15F33C7BB79AB /* Assets.xcassets */; };
 		9B3AD5C2B8D2A1FC988E883F /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
 		9C5AF69271D9DB74699B94FB /* ProService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89369E4056C986B0123362 /* ProService.swift */; };
 		9CBBC7F2F1318D9BB7FD317B /* PriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019AB939EADD61F5E7723297 /* PriceService.swift */; };
+		9D73715E32EE20481BBBCA82 /* LockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF03608C3190FC8FF917634 /* LockView.swift */; };
 		A13B9DB9717C80270FDC91D3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */; };
 		A5842BE3EC07107F7CC978A0 /* BTCLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */; };
 		A72370E5B22CE1D0F7553794 /* BitcoinWatchWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -63,6 +70,7 @@
 		B0678CB06DCDC9804B5347D4 /* AppIcon-Silver-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 105F3DDAF999A222E60A061A /* AppIcon-Silver-83.5@2x.png */; };
 		B21812DD83CA5F704763EE56 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */; };
 		B222117B7E3187C2CA099F9B /* PriceChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5F75E5632EE79637E7C994 /* PriceChartView.swift */; };
+		BAAF949ACFA57FEA683F67C2 /* PortfolioCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D73D75E08D14B007B0BD04 /* PortfolioCardView.swift */; };
 		BBF3A4AF61778C3CD0DFDAFE /* AppIcon-Midnight@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F9391ABB865416492496ED8C /* AppIcon-Midnight@2x.png */; };
 		CD063B6A61E410BA9B8BBDA4 /* BTCComplicationPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */; };
 		D29C6B782805316FA9E04761 /* BitcoinWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F914EDBACCC70D2025834EE9 /* BitcoinWatchWidget.swift */; };
@@ -78,6 +86,7 @@
 		EE1F9917DAEE7B8BD43E392D /* AppIcon-Silver@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE1D287ED03EB2E29E7DF4B7 /* AppIcon-Silver@2x.png */; };
 		EFF8F1E01CC882DF19E25E9D /* AppIcon-Midnight-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A2CD2BA22AD52C421B100834 /* AppIcon-Midnight-76@2x.png */; };
 		F5C45470F9FE6210F8480AA8 /* BTCChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00F17F597850C90630FDBAE /* BTCChartView.swift */; };
+		FC6F1315A542B3EB26B1D6DA /* AppCurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */; };
 		FE3CE138F9EF82114DC9875B /* WatchConnectivityReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB55806C0F67C725D0D1BDE /* WatchConnectivityReceiver.swift */; };
 /* End PBXBuildFile section */
 
@@ -161,11 +170,15 @@
 		388C849C78D428C6F48A879B /* PushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushService.swift; sourceTree = "<group>"; };
 		3AF1551661A68A7B563D2D09 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
 		445C44B4F16C0A4CCE8EB46E /* AppIcon-Midnight@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight@3x.png"; sourceTree = "<group>"; };
+		469F78F4E466CF251828F929 /* HoldingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldingsService.swift; sourceTree = "<group>"; };
 		47ABF64782E9AC08FE3C5DBD /* AppIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@2x.png"; sourceTree = "<group>"; };
 		49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsService.swift; sourceTree = "<group>"; };
 		4C103E080469D0C70036B988 /* SatoshiConverterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatoshiConverterView.swift; sourceTree = "<group>"; };
 		55554FE7BEF6158BD06EA356 /* AppIcon-Gold@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold@3x.png"; sourceTree = "<group>"; };
+		56BCC10C53920AC2AFE27574 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
+		5896ED8E4CB0049346826EF0 /* GlassStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassStyle.swift; sourceTree = "<group>"; };
 		5AAB0284112FD7A8D04E026C /* BitcoinWatchWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinWatchWatchApp.swift; sourceTree = "<group>"; };
+		5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCurrency.swift; sourceTree = "<group>"; };
 		6679991C3BA5CC231D9C9A71 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		6A218DADBC943B2C922DCC52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -188,7 +201,9 @@
 		A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */ = {isa = PBXFileReference; path = ComplicationController.swift.retired; sourceTree = "<group>"; };
 		A53BEDEED300135875722269 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
 		A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
+		A9D73D75E08D14B007B0BD04 /* PortfolioCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioCardView.swift; sourceTree = "<group>"; };
 		AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		ADF03608C3190FC8FF917634 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@3x.png"; sourceTree = "<group>"; };
 		B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityManager.swift; sourceTree = "<group>"; };
 		BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
@@ -239,8 +254,10 @@
 			isa = PBXGroup;
 			children = (
 				3AF1551661A68A7B563D2D09 /* AlertService.swift */,
+				56BCC10C53920AC2AFE27574 /* AppLockService.swift */,
 				A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */,
 				B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */,
+				469F78F4E466CF251828F929 /* HoldingsService.swift */,
 				BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */,
 				019AB939EADD61F5E7723297 /* PriceService.swift */,
 				2B89369E4056C986B0123362 /* ProService.swift */,
@@ -321,8 +338,11 @@
 				E00F17F597850C90630FDBAE /* BTCChartView.swift */,
 				6679991C3BA5CC231D9C9A71 /* ContentView.swift */,
 				CF7154FB28587C537C907EE0 /* DCACalculatorView.swift */,
+				5896ED8E4CB0049346826EF0 /* GlassStyle.swift */,
+				ADF03608C3190FC8FF917634 /* LockView.swift */,
 				1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */,
 				C71B110B96E76243F0E8D0CE /* PaywallView.swift */,
+				A9D73D75E08D14B007B0BD04 /* PortfolioCardView.swift */,
 				19BBB0E47753759C583C4774 /* PriceAlertView.swift */,
 				8D5F75E5632EE79637E7C994 /* PriceChartView.swift */,
 				EF29D32A239ABA6CBA42FF6E /* RoundNumberProgressView.swift */,
@@ -336,6 +356,7 @@
 		AC9BFE2D0A7A65CBBFB0D77C /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				5B59B78F2E720AF1B8FC4819 /* AppCurrency.swift */,
 				13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */,
 				F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */,
 				2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */,
@@ -586,6 +607,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FA88B4BC3A666A94C12E6C8 /* AlertService.swift in Sources */,
+				FC6F1315A542B3EB26B1D6DA /* AppCurrency.swift in Sources */,
+				4B19C858D6B0BCEEA53AC6C3 /* AppLockService.swift in Sources */,
 				ECBF12BA4A5E63ABC166BFBA /* AppStoreScreenshots.swift in Sources */,
 				9B3AD5C2B8D2A1FC988E883F /* BTCAppIntents.swift in Sources */,
 				F5C45470F9FE6210F8480AA8 /* BTCChartView.swift in Sources */,
@@ -596,9 +619,13 @@
 				65A97B25FE47367308C3204D /* ConnectivityManager.swift in Sources */,
 				674B2A5FED39A8E18CE4971F /* ContentView.swift in Sources */,
 				27228CB5CA36FCFCC6865FA1 /* DCACalculatorView.swift in Sources */,
+				7BAA509C1FB766647C05CDC7 /* GlassStyle.swift in Sources */,
+				29A263A69137C04FB5D49F92 /* HoldingsService.swift in Sources */,
 				B21812DD83CA5F704763EE56 /* LiveActivityManager.swift in Sources */,
+				9D73715E32EE20481BBBCA82 /* LockView.swift in Sources */,
 				239D28A0B8C577A1A555EC18 /* OnboardingView.swift in Sources */,
 				8C1D6CC1DDB682DF818CD378 /* PaywallView.swift in Sources */,
+				BAAF949ACFA57FEA683F67C2 /* PortfolioCardView.swift in Sources */,
 				5A2DB71711045AC4466488DA /* PriceAlertView.swift in Sources */,
 				B222117B7E3187C2CA099F9B /* PriceChartView.swift in Sources */,
 				9CBBC7F2F1318D9BB7FD317B /* PriceService.swift in Sources */,
@@ -618,6 +645,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F12427962FAA26B9984F31E /* AppCurrency.swift in Sources */,
 				14B7C57026D735EAFA1D52DA /* BTCAppIntents.swift in Sources */,
 				A5842BE3EC07107F7CC978A0 /* BTCLiveActivity.swift in Sources */,
 				29BDA483447ADFEAE76EFADD /* BTCLiveActivityAttributes.swift in Sources */,
@@ -631,6 +659,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				53D45D7EC329F3C337C3456D /* AppCurrency.swift in Sources */,
 				EAEBF67D6E59ED05F4C833CF /* BTCAppIntents.swift in Sources */,
 				144A5AA686E6E14C9A1DF548 /* BTCLiveActivityAttributes.swift in Sources */,
 				01AA004893AD5433F807D0C7 /* BitcoinPrice.swift in Sources */,
@@ -647,6 +676,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8CE6C81566A24A3752F8E29D /* AppCurrency.swift in Sources */,
 				7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */,
 				CD063B6A61E410BA9B8BBDA4 /* BTCComplicationPreviews.swift in Sources */,
 				219C1809527B20E03FD01A2A /* BTCLiveActivityAttributes.swift in Sources */,
@@ -743,7 +773,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 42;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -757,7 +787,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.0.1;
+				MARKETING_VERSION = 3.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -851,7 +881,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 42;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -871,7 +901,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.0.1;
+				MARKETING_VERSION = 3.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
