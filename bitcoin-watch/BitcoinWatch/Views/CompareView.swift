@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import LinkPresentation
 
 private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
@@ -48,10 +49,47 @@ struct CompareView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button { renderAndShare() } label: { Image(systemName: "square.and.arrow.up") }
+                }
             }
             .preferredColorScheme(.dark)
             .task(id: range) { await service.fetch(assets: CompareAsset.allCases, range: range) }
         }
+    }
+
+    @MainActor
+    private func renderAndShare() {
+        let card = VStack(alignment: .leading, spacing: 16) {
+            Text("Bitcoin vs. Everything")
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(.orange)
+            Text(range.rawValue == "All" ? "All-time" : "\(range.rawValue) return")
+                .font(.system(size: 12)).foregroundStyle(.secondary)
+            chartCard
+            returnSummary
+        }
+        .padding(20)
+        .frame(width: 360)
+        .background(Color(red: 0.07, green: 0.06, blue: 0.06))
+        .environment(\.colorScheme, .dark)
+
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = UIScreen.main.scale
+        guard let image = renderer.uiImage,
+              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let root = scene.windows.first?.rootViewController else { return }
+
+        let metadata = LPLinkMetadata()
+        metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
+        metadata.title = "Bitcoin vs. Everything"
+        metadata.imageProvider = NSItemProvider(object: image)
+        let shareItem = BTCShareItem(metadata: metadata)
+
+        var top = root
+        while let next = top.presentedViewController { top = next }
+        let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
+        top.present(vc, animated: true)
     }
 
     private var assetChips: some View {

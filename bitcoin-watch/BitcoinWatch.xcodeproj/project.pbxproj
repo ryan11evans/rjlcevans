@@ -16,6 +16,7 @@
 		144A5AA686E6E14C9A1DF548 /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
 		14B7C57026D735EAFA1D52DA /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
 		151FD916CFBEBA9693715BD2 /* AppIcon-Rose-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ADB9D3AF9DFDCE9100F1E454 /* AppIcon-Rose-76@2x.png */; };
+		171C254656400AD92FDC6A76 /* YearInBitcoinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F80EF02C75E11D1F28E690E /* YearInBitcoinView.swift */; };
 		1813E3536C75A46F09C38EB0 /* AppIcon-Gold-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 80715C6C024438F0C73A5E95 /* AppIcon-Gold-76@2x.png */; };
 		1A00625B469AA68431F294B1 /* AppIcon-Emerald@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = B92509136B284F2A161A2872 /* AppIcon-Emerald@3x.png */; };
 		1FA88B4BC3A666A94C12E6C8 /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF1551661A68A7B563D2D09 /* AlertService.swift */; };
@@ -205,6 +206,7 @@
 		6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCLiveActivity.swift; sourceTree = "<group>"; };
 		75F96420DA35FED114AC2F2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCComplicationPreviews.swift; sourceTree = "<group>"; };
+		7F80EF02C75E11D1F28E690E /* YearInBitcoinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearInBitcoinView.swift; sourceTree = "<group>"; };
 		80715C6C024438F0C73A5E95 /* AppIcon-Gold-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold-76@2x.png"; sourceTree = "<group>"; };
 		86236CBFE9D15F33C7BB79AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		86A32DB53E5F89944ECCEFEB /* AppIcon-Emerald-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Emerald-76@2x.png"; sourceTree = "<group>"; };
@@ -376,6 +378,7 @@
 				4C103E080469D0C70036B988 /* SatoshiConverterView.swift */,
 				32EAAC69EDF3728A37E0542E /* SettingsView.swift */,
 				686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */,
+				7F80EF02C75E11D1F28E690E /* YearInBitcoinView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -685,6 +688,7 @@
 				4088C1FB8302ABC256E51F6E /* ShareCardView.swift in Sources */,
 				E35B2A5C85F527A40AC51CDB /* StatsService.swift in Sources */,
 				BD48ADD10E261D5AD6D62909 /* WidgetTheme.swift in Sources */,
+				171C254656400AD92FDC6A76 /* YearInBitcoinView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

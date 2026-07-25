@@ -2,6 +2,9 @@ import SwiftUI
 import WidgetKit
 
 struct SettingsView: View {
+    @EnvironmentObject private var service: PriceService
+    @State private var showYearInBitcoin = false
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -21,6 +24,7 @@ struct SettingsView: View {
                         PrivacySection()
                         IconPickerSection()
                         WidgetThemePickerSection()
+                        RecapSection(showYearInBitcoin: $showYearInBitcoin)
                         VersionFooter()
                     }
                     .padding(.top, 8)
@@ -31,6 +35,9 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
+            .sheet(isPresented: $showYearInBitcoin) {
+                YearInBitcoinView(currentPrice: service.currentPrice?.usd)
+            }
         }
     }
 }
@@ -418,6 +425,37 @@ private struct NotificationsSection: View {
 }
 
 // MARK: - Privacy (Face ID lock)
+
+private struct RecapSection: View {
+    @Binding var showYearInBitcoin: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Recap")
+
+            Button { showYearInBitcoin = true } label: {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "sparkles", color: .orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your Year in Bitcoin")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Your stack's story — buys, P&L, biggest days")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 13)
+            }
+            .buttonStyle(.plain)
+            .modifier(CardBackground())
+        }
+    }
+}
 
 private struct PrivacySection: View {
     @AppStorage("requireFaceID", store: .shared) private var requireFaceID = false
