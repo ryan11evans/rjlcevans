@@ -106,6 +106,11 @@ struct PortfolioCardView: View {
 
 // MARK: - Entry / transaction editor
 
+private enum TransactionMode: String, CaseIterable {
+    case buy = "Buy"
+    case sell = "Sell"
+}
+
 struct HoldingsEntryView: View {
     let currentPrice: Double?
 
@@ -113,6 +118,7 @@ struct HoldingsEntryView: View {
     @ObservedObject private var holdings = HoldingsService.shared
     @ObservedObject private var pro = ProService.shared
 
+    @State private var mode: TransactionMode = .buy
     @State private var amountText = ""
     @State private var priceText = ""
     @State private var showPaywall = false
@@ -127,9 +133,10 @@ struct HoldingsEntryView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        if holdings.hasHoldings { summary }
+                        if holdings.hasHoldings || holdings.hasSales { summary }
                         addForm
                         if !holdings.purchases.isEmpty { lotList }
+                        if !holdings.sales.isEmpty { salesList }
                         if !pro.isPro { proUpsell }
                     }
                     .padding(20)
@@ -177,6 +184,22 @@ struct HoldingsEntryView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+
+            if holdings.hasSales {
+                let up = holdings.realizedGain >= 0
+                HStack(spacing: 16) {
+                    metric("REALIZED P&L",
+                           "\(up ? "+" : "-")\(cur.format(abs(holdings.realizedGain)))",
+                           up ? upColor : downColor)
+                    if let pct = holdings.realizedPct {
+                        Divider().frame(height: 28).overlay(.white.opacity(0.1))
+                        metric("REALIZED RETURN",
+                               "\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))%",
+                               pct >= 0 ? upColor : downColor)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
         .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
@@ -195,38 +218,60 @@ struct HoldingsEntryView: View {
         }
     }
 
-    // Add-a-purchase form
+    // Add-a-purchase or log-a-sale form
     private var addForm: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("ADD A PURCHASE")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary).tracking(0.5)
+            Picker("", selection: $mode) {
+                ForEach(TransactionMode.allCases, id: \.self) { m in
+                    Text(m.rawValue).tag(m)
+                }
+            }
+            .pickerStyle(.segmented)
 
             HStack(spacing: 10) {
                 field(placeholder: "Amount", text: $amountText, suffix: "BTC")
                     .focused($amountFocused)
-                field(placeholder: "Buy price", text: $priceText, suffix: cur.code)
+                field(placeholder: mode == .buy ? "Buy price" : "Sell price", text: $priceText, suffix: cur.code)
             }
 
-            Text("Leave buy price blank if you just want to track value.")
+            Text(mode == .buy
+                 ? "Leave buy price blank if you just want to track value."
+                 : "Sell price is needed to calculate realized profit/loss.")
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
 
             Button {
                 guard let amt = Double(amountText), amt > 0 else { return }
-                holdings.add(Purchase(amount: amt, price: Double(priceText) ?? 0))
+                switch mode {
+                case .buy:
+                    holdings.add(Purchase(amount: amt, price: Double(priceText) ?? 0))
+                case .sell:
+                    guard let price = Double(priceText), price > 0 else { return }
+                    holdings.addSale(Sale(amount: amt, price: price))
+                }
                 amountText = ""; priceText = ""
                 amountFocused = true
             } label: {
-                Text("Add")
+                Text(mode == .buy ? "Add" : "Log Sale")
                     .font(.system(size: 15, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
                     .background(RoundedRectangle(cornerRadius: 12)
-                        .fill((Double(amountText) ?? 0) > 0 ? Color.orange : Color.orange.opacity(0.4)))
+                        .fill(canSubmit ? Color.orange : Color.orange.opacity(0.4)))
                     .foregroundStyle(.black)
             }
-            .disabled((Double(amountText) ?? 0) <= 0)
+            .disabled(!canSubmit)
+        }
+    }
+
+    private var canSubmit: Bool {
+        guard let amt = Double(amountText), amt > 0 else { return false }
+        switch mode {
+        case .buy:
+            return true
+        case .sell:
+            guard let price = Double(priceText), price > 0 else { return false }
+            return amt <= holdings.totalAmount
         }
     }
 
@@ -273,6 +318,43 @@ struct HoldingsEntryView: View {
                     }
                     .padding(.horizontal, 14).padding(.vertical, 11)
                     if p.id != holdings.purchases.last?.id {
+                        Divider().overlay(.white.opacity(0.06)).padding(.leading, 14)
+                    }
+                }
+            }
+            .glassCard(cornerRadius: 14)
+        }
+    }
+
+    private var salesList: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("YOUR SALES")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary).tracking(0.5)
+
+            VStack(spacing: 0) {
+                ForEach(holdings.sales) { s in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(SatsDisplay.formatAmount(s.amount))
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("@ \(cur.format(s.price))")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button {
+                            holdings.removeSale(s)
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.red.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 11)
+                    if s.id != holdings.sales.last?.id {
                         Divider().overlay(.white.opacity(0.06)).padding(.leading, 14)
                     }
                 }
