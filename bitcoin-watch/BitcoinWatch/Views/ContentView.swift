@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var showAlertSheet = false
     @State private var showCalculator = false
     @State private var showDCA = false
+    @State private var showCompare = false
     @State private var showSettings = false
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
@@ -92,6 +93,9 @@ struct ContentView: View {
             .sheet(isPresented: $showDCA) {
                 CalculatorsView(currentPrice: service.currentPrice?.usd)
             }
+            .sheet(isPresented: $showCompare) {
+                CompareView()
+            }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
@@ -116,6 +120,9 @@ struct ContentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
+                        Button { showCompare = true } label: {
+                            Image(systemName: "chart.bar.xaxis")
+                        }
                         Button { showDCA = true } label: {
                             Image(systemName: "chart.line.uptrend.xyaxis")
                         }
