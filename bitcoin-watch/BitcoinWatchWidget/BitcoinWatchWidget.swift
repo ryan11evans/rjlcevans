@@ -11,6 +11,14 @@ private func trendColor(_ change: Double?) -> Color {
     (change ?? 0) >= 0 ? upColor : downColor
 }
 
+// Pro users can theme the brand accent (icon glyph, stack labels); trend
+// colors above are never affected since they carry real up/down meaning.
+private var themeAccent: Color {
+    let theme = WidgetTheme.current
+    guard !theme.isPro || UserDefaults.shared.bool(forKey: "isProUnlocked") else { return .orange }
+    return theme.accentColor
+}
+
 // Dark branded background with an orange glow, matching the app.
 private struct WidgetBackground: View {
     var tint: Color = .orange
@@ -165,7 +173,7 @@ struct SmallWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
-                Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(.orange)
+                Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent)
                 Spacer()
                 if let change = entry.change24h {
                     Text(String(format: "%+.1f%%", change))
@@ -191,7 +199,7 @@ struct MediumWidgetView: View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
-                    Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(.orange).font(.subheadline)
+                    Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent).font(.subheadline)
                     Text("Bitcoin").font(.subheadline.weight(.semibold))
                 }
                 Text(entry.price.formatted)
@@ -205,7 +213,7 @@ struct MediumWidgetView: View {
                 if let stack = entry.holdingsValue {
                     Text("Stack · \(AppCurrency.current.format(stack))")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.orange).lineLimit(1)
+                        .foregroundStyle(themeAccent).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
@@ -221,7 +229,7 @@ struct LargeWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(.orange)
+                Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent)
                 Text("Bitcoin").font(.headline)
                 Spacer()
                 Text(entry.price.timestamp, style: .relative)
@@ -247,7 +255,7 @@ struct LargeWidgetView: View {
             HStack(spacing: 8) {
                 if let h = entry.high24h { statTile("24H HIGH", AppCurrency.current.formatShort(h), upColor) }
                 if let l = entry.low24h  { statTile("24H LOW",  AppCurrency.current.formatShort(l), downColor) }
-                if let a = entry.ath     { statTile("ATH",      AppCurrency.current.formatShort(a), .orange) }
+                if let a = entry.ath     { statTile("ATH",      AppCurrency.current.formatShort(a), themeAccent) }
                 if let f = entry.fng     { statTile("FEAR/GREED", "\(f)", .cyan) }
             }
 
@@ -259,7 +267,7 @@ struct LargeWidgetView: View {
                     Spacer()
                     Text(AppCurrency.current.format(stack))
                         .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(themeAccent)
                     if let pct = entry.holdingsGainPct {
                         Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))%")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
@@ -295,7 +303,7 @@ struct PortfolioWidgetView: View {
         if let stack = entry.holdingsValue {
             VStack(alignment: .leading, spacing: family == .systemSmall ? 3 : 5) {
                 HStack(spacing: 4) {
-                    Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(.orange).font(.caption)
+                    Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent).font(.caption)
                     Text("YOUR STACK")
                         .font(.system(size: 10, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary).tracking(0.5)
@@ -322,7 +330,7 @@ struct PortfolioWidgetView: View {
         } else {
             // No holdings / not Pro — invite them in.
             VStack(spacing: 6) {
-                Image(systemName: "bitcoinsign.circle.fill").font(.title).foregroundStyle(.orange)
+                Image(systemName: "bitcoinsign.circle.fill").font(.title).foregroundStyle(themeAccent)
                 Text("Track your Bitcoin")
                     .font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white)
                 Text("Add your holdings in TapBTC")
@@ -330,7 +338,7 @@ struct PortfolioWidgetView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .containerBackground(for: .widget) { WidgetBackground() }
+            .containerBackground(for: .widget) { WidgetBackground(tint: themeAccent) }
         }
     }
 }

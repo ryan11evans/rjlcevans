@@ -87,6 +87,28 @@
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
+            <key>AppIcon-Emerald</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon-Emerald</string>
+                    <string>AppIcon-Emerald-76</string>
+                    <string>AppIcon-Emerald-83.5</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+            <key>AppIcon-Rose</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIcon-Rose</string>
+                    <string>AppIcon-Rose-76</string>
+                    <string>AppIcon-Rose-83.5</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
         </dict>
     </dict>
 </dict>
