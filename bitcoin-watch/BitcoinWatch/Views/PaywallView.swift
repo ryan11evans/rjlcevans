@@ -52,7 +52,11 @@ struct PaywallView: View {
                                 Divider().padding(.leading, 56)
                                 feature(icon: "app.badge.fill",
                                         title: "Exclusive app icons",
-                                        subtitle: "Unlock the Gold and Midnight icons")
+                                        subtitle: "Unlock Gold, Midnight, Emerald & Rose")
+                                Divider().padding(.leading, 56)
+                                feature(icon: "paintpalette.fill",
+                                        title: "Widget themes",
+                                        subtitle: "Color your Home Screen widget to match your icon")
                             }
                             .glassCard(cornerRadius: 18)
                             .padding(.horizontal, 20)

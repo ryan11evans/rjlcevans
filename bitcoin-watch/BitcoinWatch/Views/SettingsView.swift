@@ -20,6 +20,7 @@ struct SettingsView: View {
                         NotificationsSection()
                         PrivacySection()
                         IconPickerSection()
+                        WidgetThemePickerSection()
                         VersionFooter()
                     }
                     .padding(.top, 8)
@@ -462,6 +463,8 @@ enum AppIcon: String, CaseIterable {
     case gold      = "AppIcon-Gold"
     case midnight  = "AppIcon-Midnight"
     case silver    = "AppIcon-Silver"
+    case emerald   = "AppIcon-Emerald"
+    case rose      = "AppIcon-Rose"
 
     var displayName: String {
         switch self {
@@ -469,14 +472,16 @@ enum AppIcon: String, CaseIterable {
         case .gold:     return "Gold"
         case .midnight: return "Midnight"
         case .silver:   return "Silver"
+        case .emerald:  return "Emerald"
+        case .rose:     return "Rose"
         }
     }
 
     // nil = primary icon (system requirement)
     var alternateIconName: String? { self == .default ? nil : rawValue }
 
-    // Gold & Midnight are Pro-exclusive; Default & Silver are free.
-    var isPro: Bool { self == .gold || self == .midnight }
+    // Gold, Midnight, Emerald & Rose are Pro-exclusive; Default & Silver are free.
+    var isPro: Bool { self == .gold || self == .midnight || self == .emerald || self == .rose }
 
     // Accent color for the rendered preview tile
     var accentColor: Color {
@@ -485,6 +490,8 @@ enum AppIcon: String, CaseIterable {
         case .gold:     return Color(red: 1.0, green: 0.84, blue: 0.0)
         case .midnight: return Color(red: 0.4, green: 0.3, blue: 0.9)
         case .silver:   return Color(red: 0.8, green: 0.8, blue: 0.85)
+        case .emerald:  return Color(red: 0.29, green: 0.85, blue: 0.5)
+        case .rose:     return Color(red: 1.0, green: 0.42, blue: 0.71)
         }
     }
 
@@ -494,6 +501,8 @@ enum AppIcon: String, CaseIterable {
         case .gold:     return [Color(red: 0.20, green: 0.17, blue: 0.05), Color(red: 0.10, green: 0.08, blue: 0.02)]
         case .midnight: return [Color(red: 0.06, green: 0.05, blue: 0.15), Color(red: 0.02, green: 0.02, blue: 0.08)]
         case .silver:   return [Color(red: 0.18, green: 0.18, blue: 0.20), Color(red: 0.08, green: 0.08, blue: 0.10)]
+        case .emerald:  return [Color(red: 0.05, green: 0.16, blue: 0.09), Color(red: 0.02, green: 0.08, blue: 0.04)]
+        case .rose:     return [Color(red: 0.20, green: 0.06, blue: 0.13), Color(red: 0.10, green: 0.02, blue: 0.07)]
         }
     }
 }
@@ -615,6 +624,91 @@ private struct IconTile: View {
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
+                .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .rounded))
+                .foregroundStyle(isSelected ? .orange : .secondary)
+        }
+        .onTapGesture(perform: onTap)
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
+    }
+}
+
+// MARK: - Widget Theme Picker
+
+private struct WidgetThemePickerSection: View {
+    @ObservedObject private var pro = ProService.shared
+    @State private var selected: WidgetTheme = WidgetTheme.current
+    @State private var showPaywall = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Widget Theme")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(WidgetTheme.allCases, id: \.rawValue) { theme in
+                        WidgetThemeSwatch(theme: theme,
+                                           isSelected: selected == theme,
+                                           locked: theme.isPro && !pro.isPro) {
+                            if theme.isPro && !pro.isPro {
+                                showPaywall = true
+                            } else {
+                                selected = theme
+                                WidgetTheme.current = theme
+                                WidgetCenter.shared.reloadAllTimelines()
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 4)
+            }
+        }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+    }
+}
+
+private struct WidgetThemeSwatch: View {
+    let theme: WidgetTheme
+    let isSelected: Bool
+    var locked: Bool = false
+    let onTap: () -> Void
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .fill(theme.accentColor)
+                    .frame(width: 64, height: 64)
+                    .overlay(
+                        Circle().strokeBorder(
+                            isSelected ? Color.orange : Color.white.opacity(0.15),
+                            lineWidth: isSelected ? 2.5 : 1
+                        )
+                    )
+                    .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.55))
+                }
+
+                if locked {
+                    ZStack {
+                        Circle()
+                            .fill(.black.opacity(0.75))
+                            .frame(width: 22, height: 22)
+                            .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.orange)
+                    }
+                    .offset(x: 26, y: -26)
+                }
+            }
+            .frame(width: 64, height: 64)
+
+            Text(theme.displayName)
                 .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .rounded))
                 .foregroundStyle(isSelected ? .orange : .secondary)
         }
