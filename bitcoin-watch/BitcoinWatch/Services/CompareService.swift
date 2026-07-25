@@ -96,6 +96,18 @@ final class CompareService: ObservableObject {
     }
 
     private static func fetchSeries(asset: CompareAsset, range: CompareRange) async -> [ComparePoint]? {
+        guard let raw = await fetchRawCloses(asset: asset, range: range),
+              let firstClose = raw.first?.close, firstClose > 0
+        else { return nil }
+
+        return raw.map { point in
+            ComparePoint(date: point.date, pctChange: (point.close / firstClose - 1) * 100)
+        }
+    }
+
+    // Raw (date, close) pairs — used directly by features that need actual
+    // price levels rather than a % return normalized to the fetch's start.
+    static func fetchRawCloses(asset: CompareAsset, range: CompareRange) async -> [(date: Date, close: Double)]? {
         guard let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(asset.yahooSymbol)?range=\(range.yahooRange)&interval=\(range.yahooInterval)") else { return nil }
         var request = URLRequest(url: url)
         request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
@@ -118,15 +130,12 @@ final class CompareService: ObservableObject {
 
         guard let decoded = try? JSONDecoder().decode(Response.self, from: data),
               let result = decoded.chart.result?.first,
-              let closes = result.indicators.quote.first?.close,
-              let firstClose = closes.first(where: { $0 != nil }).flatMap({ $0 }),
-              firstClose > 0
+              let closes = result.indicators.quote.first?.close
         else { return nil }
 
         return zip(result.timestamp, closes).compactMap { timestamp, close in
             guard let close else { return nil }
-            let pct = (close / firstClose - 1) * 100
-            return ComparePoint(date: Date(timeIntervalSince1970: TimeInterval(timestamp)), pctChange: pct)
+            return (Date(timeIntervalSince1970: TimeInterval(timestamp)), close)
         }
     }
 }
