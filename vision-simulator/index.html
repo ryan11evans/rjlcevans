@@ -276,6 +276,8 @@
     <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
     <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span></button>
     <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
+    <button class="cond" data-cond="hemianopia"><span class="name">Hemianopia</span><span class="latin">homonymous field loss</span></button>
+    <button class="cond" data-cond="aura"><span class="name">Migraine Aura</span><span class="latin">scintillating scotoma</span></button>
   </div>
 
   <div class="controls" id="controlsPanel">
@@ -339,7 +341,9 @@
     colorblind:  { cvdType: 'deutan' },
     floaters:    { floaterCount: 6 },
     rp:          { rpStage: 2 },
-    presbyopia:  { presbySev: 2 }
+    presbyopia:  { presbySev: 2 },
+    hemianopia:  { hemiSide: 'right' },
+    aura:        { auraStage: 2 }
   };
 
   const params = {
@@ -354,7 +358,9 @@
     cvdType: 'deutan',
     floaterCount: 6,
     rpStage: 2,
-    presbySev: 2
+    presbySev: 2,
+    hemiSide: 'right',
+    auraStage: 2
   };
 
   const snellenBlur = {
@@ -721,6 +727,84 @@
     applyBlur([0, 4, 11, 22][sev] || 11);
   }
 
+  // Homonymous hemianopia — retrochiasmal pathway damage (commonly stroke) knocks
+  // out the same half of the visual field in both eyes. Rendered as a feathered
+  // vertical cut through the midline, on whichever side is selected.
+  function applyHemianopia(side) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    const midX = w / 2;
+    const feather = w * 0.05;
+    ctx.save();
+    if (side === 'right') {
+      const grad = ctx.createLinearGradient(midX - feather, 0, midX + feather, 0);
+      grad.addColorStop(0, 'rgba(5,5,8,0)');
+      grad.addColorStop(1, 'rgba(5,5,8,1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(midX - feather, 0, w - (midX - feather), h);
+    } else {
+      const grad = ctx.createLinearGradient(midX + feather, 0, midX - feather, 0);
+      grad.addColorStop(0, 'rgba(5,5,8,0)');
+      grad.addColorStop(1, 'rgba(5,5,8,1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, midX + feather, h);
+    }
+    ctx.restore();
+  }
+
+  // Migraine aura — cortical spreading depression produces a shimmering,
+  // zigzag "fortification spectra" ring that expands outward from a small
+  // paracentral point, with a grayed/blurred scotoma trailing inside it.
+  let auraSeed = null;
+  function initAura() {
+    auraSeed = Math.random() * Math.PI * 2;
+  }
+  function applyMigraineAura(stage) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    if (auraSeed === null) initAura();
+
+    const cx = w * 0.55, cy = h * 0.45;
+    const minDim = Math.min(w, h);
+    const cfg = ({ 1: { r: 0.07, ring: 0.03 }, 2: { r: 0.16, ring: 0.045 }, 3: { r: 0.3, ring: 0.06 }, 4: { r: 0.46, ring: 0.075 } })[stage] || { r: 0.16, ring: 0.045 };
+    const R = minDim * cfg.r;
+    const ringW = minDim * cfg.ring;
+
+    // Scotoma: grayed, blurred, and washed-out interior
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.filter = 'blur(6px) grayscale(0.6) brightness(1.3)';
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+
+    // Fortification spectra: shimmering zigzag ring at the scotoma's edge
+    const colors = ['#ffffff', '#ffe14d', '#ff5f6d', '#5ad1ff', '#8f6bff'];
+    const teeth = 24 + stage * 6;
+    ctx.save();
+    ctx.lineWidth = Math.max(1.5, minDim * 0.004);
+    for (let pass = 0; pass < 3; pass++) {
+      ctx.beginPath();
+      for (let i = 0; i <= teeth; i++) {
+        const a = auraSeed + (i / teeth) * Math.PI * 2;
+        const jag = i % 2 === 0 ? 1 : 0.65;
+        const rr = R + ringW * jag + Math.sin(i * 1.7 + pass) * ringW * 0.15;
+        const px = cx + Math.cos(a) * rr;
+        const py = cy + Math.sin(a) * rr;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = colors[pass % colors.length];
+      ctx.globalAlpha = 0.55 - pass * 0.12;
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   let floaterState = null;
   function initFloaters(count) {
     floaterState = [];
@@ -789,6 +873,8 @@
       case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloatersCanvas(); break;
       case 'rp':         applyRP(params.rpStage); break;
       case 'presbyopia': applyPresbyopia(params.presbySev); break;
+      case 'hemianopia': applyHemianopia(params.hemiSide); break;
+      case 'aura':        applyMigraineAura(params.auraStage); break;
     }
   }
 
@@ -940,6 +1026,16 @@
       title: 'Presbyopia',
       note: '<strong>This simulation represents near vision at reading distance (~40 cm)</strong> without reading correction. Age-related loss of crystalline lens flexibility reduces the eye\'s accommodative amplitude through the 40s–60s. Unlike myopia, distance vision remains clear — only near focus is impaired. Nearly universal by age 50; corrected with reading glasses, bifocals, or progressive lenses.',
       controls: () => [presbySevControl()]
+    },
+    hemianopia: {
+      title: 'Homonymous Hemianopia',
+      note: 'Damage to the retrochiasmal visual pathway — most often from stroke — causes loss of the <strong>same half of the visual field in both eyes</strong>. A left-hemisphere (left MCA) stroke causes right hemianopia, and vice versa. Patients often compensate with head-turning and may be unaware of the deficit, which affects reading and safe mobility.',
+      controls: () => [hemiSideControl()]
+    },
+    aura: {
+      title: 'Migraine with Aura (Scintillating Scotoma)',
+      note: 'Cortical spreading depression across the visual cortex produces classic <strong>fortification spectra</strong> — a shimmering, colorful zigzag arc that expands outward from a small paracentral point over roughly 20–30 minutes, often leaving a grayed-out scotoma trailing behind it. Aura is typically <strong>fully reversible</strong>, resolving before or during the headache phase, which distinguishes it from a stroke-related field defect.',
+      controls: () => [auraStageControl()]
     }
   };
 
@@ -1081,6 +1177,54 @@
       if (s.v === params.presbySev) b.setAttribute('aria-pressed', 'true');
       b.addEventListener('click', () => {
         params.presbySev = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function hemiSideControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Field loss side</label><div class="presets" id="hemiSides"></div>`;
+    const sides = [
+      { v: 'right', label: 'Right (left MCA stroke)' },
+      { v: 'left', label: 'Left (right MCA stroke)' }
+    ];
+    const host = wrap.querySelector('#hemiSides');
+    sides.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.hemiSide) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.hemiSide = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function auraStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Aura progression</label><div class="presets" id="auraStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Onset' }, { v: 2, label: 'Expanding' },
+      { v: 3, label: 'Peripheral' }, { v: 4, label: 'Near-total' }
+    ];
+    const host = wrap.querySelector('#auraStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.auraStage) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.auraStage = s.v;
         host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
         b.setAttribute('aria-pressed', 'true');
         if (currentSource === 'image') drawOnce();
