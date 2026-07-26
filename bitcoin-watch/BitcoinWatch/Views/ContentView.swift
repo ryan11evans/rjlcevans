@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var showDCA = false
     @State private var showCompare = false
     @State private var showSettings = false
+    @State private var showHalving = false
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
 
@@ -44,7 +45,8 @@ struct ContentView: View {
                                 currentPrice: service.currentPrice?.usd,
                                 chartLow: statsService.chartData.map(\.price).min(),
                                 chartHigh: statsService.chartData.map(\.price).max(),
-                                fearGreed: statsService.fearGreed
+                                fearGreed: statsService.fearGreed,
+                                onTapHalving: { showHalving = true }
                             )
                         }
                         .padding(.horizontal)
@@ -98,6 +100,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .sheet(isPresented: $showHalving) {
+                HalvingView(currentPrice: service.currentPrice?.usd)
             }
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingView {
