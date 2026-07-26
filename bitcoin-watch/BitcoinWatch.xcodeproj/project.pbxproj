@@ -166,7 +166,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BitcoinWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0065C57C5D549561FB10A354 /* BitcoinWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BitcoinWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		019AB939EADD61F5E7723297 /* PriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceService.swift; sourceTree = "<group>"; };
 		06643E1B5EEC7D17D77FA47A /* BitcoinWatchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BitcoinWatchWidget.entitlements; sourceTree = "<group>"; };
 		0F99F8A4EB5A94D87667B739 /* StatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
@@ -202,7 +202,7 @@
 		6A218DADBC943B2C922DCC52 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6CEDA9A264A2295E5F90DFFD /* BitcoinWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BitcoinWatch.entitlements; sourceTree = "<group>"; };
 		6D0BEE1C4BEE3B1FEB743B9B /* complications-preview.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "complications-preview.html"; sourceTree = "<group>"; };
-		6DE2D0B44966A2407E30A08A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6DE2D0B44966A2407E30A08A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6E8F66B5779C0F7B83CCFD96 /* BTCLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCLiveActivity.swift; sourceTree = "<group>"; };
 		75F96420DA35FED114AC2F2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7D7AF0E836623E75BBDDA603 /* BTCComplicationPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCComplicationPreviews.swift; sourceTree = "<group>"; };
@@ -220,11 +220,11 @@
 		97607D5337BEDB91D248E1A9 /* BitcoinWatchWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BitcoinWatchWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97E64DD22F1DAD9ACF3C78CF /* AppIcon-Silver@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver@3x.png"; sourceTree = "<group>"; };
 		A2CD2BA22AD52C421B100834 /* AppIcon-Midnight-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Midnight-76@2x.png"; sourceTree = "<group>"; };
-		A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */ = {isa = PBXFileReference; path = ComplicationController.swift.retired; sourceTree = "<group>"; };
+		A3D02239143C480FAA38CEA7 /* ComplicationController.swift.retired */ = {isa = PBXFileReference; lastKnownFileType = text; path = ComplicationController.swift.retired; sourceTree = "<group>"; };
 		A53BEDEED300135875722269 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
 		A8658BFF97D78174089F5A16 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
 		A9D73D75E08D14B007B0BD04 /* PortfolioCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioCardView.swift; sourceTree = "<group>"; };
-		AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AA8C042BEE3C78AEEDF869E8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ADB9D3AF9DFDCE9100F1E454 /* AppIcon-Rose-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Rose-76@2x.png"; sourceTree = "<group>"; };
 		ADF03608C3190FC8FF917634 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@3x.png"; sourceTree = "<group>"; };
@@ -233,10 +233,10 @@
 		B92509136B284F2A161A2872 /* AppIcon-Emerald@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Emerald@3x.png"; sourceTree = "<group>"; };
 		BF8066FBCC6A50F812CB967E /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		C01E1D2B300EB67EDC226301 /* BTCWatchComplication.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BTCWatchComplication.entitlements; sourceTree = "<group>"; };
-		C3567CE079700FAFE0963A62 /* BitcoinWatch.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BitcoinWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C3567CE079700FAFE0963A62 /* BitcoinWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BitcoinWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C71B110B96E76243F0E8D0CE /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
-		C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C8B3D82229A63F3DDEDE8B7A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C9FEC68A4D004E729EECF424 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CA733FC6C36001D7D06489E9 /* CompareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompareService.swift; sourceTree = "<group>"; };
 		CC958B17127DC41540B836E6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshBTCIntent.swift; sourceTree = "<group>"; };
@@ -549,7 +549,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					3077CE7A4DD11ED2A0445343 = {
 						DevelopmentTeam = 9B9PTBR9A2;
@@ -828,10 +828,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 43;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -845,6 +847,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -936,10 +939,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 43;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -960,6 +965,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;

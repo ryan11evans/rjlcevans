@@ -18,32 +18,37 @@ struct CompareView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
-                             Color(red: 0.05, green: 0.04, blue: 0.04)],
-                    startPoint: .topLeading, endPoint: .bottom
-                )
-                .ignoresSafeArea()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        Picker("", selection: $range) {
-                            ForEach(CompareRange.allCases, id: \.self) { r in
-                                Text(r.rawValue).tag(r)
-                            }
+            List {
+                Section {
+                    Picker("", selection: $range) {
+                        ForEach(CompareRange.allCases, id: \.self) { r in
+                            Text(r.rawValue).tag(r)
                         }
-                        .pickerStyle(.segmented)
-
-                        assetChips
-
-                        chartCard
-
-                        returnSummary
                     }
-                    .padding(20)
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                }
+
+                Section("Assets") {
+                    assetChips
+                        .listRowBackground(Color.clear)
+                }
+
+                Section("% Return") {
+                    chartCard
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+
+                Section("Returns") {
+                    returnSummary
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .nativeListBackground()
             .navigationTitle("Bitcoin vs. Everything")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

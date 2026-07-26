@@ -12,31 +12,23 @@ struct CalculatorsView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
-                             Color(red: 0.05, green: 0.04, blue: 0.04)],
-                    startPoint: .topLeading, endPoint: .bottom
-                )
-                .ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    Picker("", selection: $tab) {
-                        Text("DCA").tag(0)
-                        Text("Goal").tag(1)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 4)
-
-                    TabView(selection: $tab) {
-                        DCATab(currentPrice: currentPrice).tag(0)
-                        GoalTab(currentPrice: currentPrice).tag(1)
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+            VStack(spacing: 0) {
+                Picker("", selection: $tab) {
+                    Text("DCA").tag(0)
+                    Text("Goal").tag(1)
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+
+                TabView(selection: $tab) {
+                    DCATab(currentPrice: currentPrice).tag(0)
+                    GoalTab(currentPrice: currentPrice).tag(1)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
+            .background(Color(red: 0.05, green: 0.04, blue: 0.04).ignoresSafeArea())
             .navigationTitle(titles[tab])
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -110,102 +102,89 @@ private struct DCATab: View {
     private let rows = [("1 Year", 1.0), ("2 Years", 2.0), ("5 Years", 5.0), ("10 Years", 10.0)]
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Amount
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("INVEST PER PERIOD")
-                    HStack(spacing: 8) {
-                        Text(AppCurrency.current.symbol).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                        TextField("100", text: $amountText)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .keyboardType(.decimalPad).foregroundStyle(.white)
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 12)
-                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+        List {
+            Section("Invest Per Period") {
+                HStack(spacing: 8) {
+                    Text(AppCurrency.current.symbol).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                    TextField("100", text: $amountText)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .keyboardType(.decimalPad)
                 }
+                .listRowBackground(Color.listRowTint)
 
                 HStack(spacing: 8) {
                     ForEach(["25", "50", "100", "500"], id: \.self) { v in
                         chip(v, active: amountText == v) { amountText = v }
                     }
                 }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
+                .listRowBackground(Color.clear)
+            }
 
-                // Frequency
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("FREQUENCY")
-                    HStack(spacing: 0) {
-                        ForEach(Freq.allCases, id: \.rawValue) { f in
-                            Button(f.rawValue) { withAnimation(.easeInOut(duration: 0.15)) { freq = f } }
-                                .font(.system(size: 14, weight: freq == f ? .semibold : .regular))
-                                .foregroundStyle(freq == f ? .orange : .secondary)
-                                .frame(maxWidth: .infinity).padding(.vertical, 10)
-                                .background(freq == f ? Color.orange.opacity(0.15) : Color.clear)
-                        }
+            Section("Frequency") {
+                Picker("Frequency", selection: $freq.animation(.easeInOut(duration: 0.15))) {
+                    ForEach(Freq.allCases, id: \.rawValue) { f in
+                        Text(f.rawValue).tag(f)
                     }
-                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+            }
 
-                if amount > 0, let price = currentPrice, price > 0 {
-                    // Per-purchase badge
+            if amount > 0, let price = currentPrice, price > 0 {
+                Section {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             lbl("PER PURCHASE")
                             Text(btcPer.btcFormatted)
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .foregroundStyle(.orange).minimumScaleFactor(0.6).lineLimit(1)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 4) {
                             lbl("BTC PRICE")
                             Text(BitcoinPrice(usd: price, timestamp: Date()).formatted)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
                         }
                     }
-                    .padding(16)
-                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+                    .listRowBackground(Color.listRowTint)
+                }
 
-                    // Projection table
-                    VStack(alignment: .leading, spacing: 10) {
-                        lbl("ACCUMULATION PROJECTION")
-                        VStack(spacing: 0) {
-                            ForEach(Array(rows.enumerated()), id: \.offset) { idx, row in
-                                let btc = btcPer * freq.perYear * row.1
-                                let inv = amount * freq.perYear * row.1
-                                HStack {
-                                    Text(row.0).font(.system(size: 14, weight: .medium)).foregroundStyle(.white)
-                                        .frame(width: 85, alignment: .leading)
-                                    Spacer()
-                                    VStack(alignment: .trailing, spacing: 3) {
-                                        Text(btc.btcFormatted)
-                                            .font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                                        Text("\(AppCurrency.current.format(inv)) in")
-                                            .font(.system(size: 11)).foregroundStyle(.secondary)
-                                    }
-                                }
-                                .padding(.horizontal, 16).padding(.vertical, 11)
-                                .background(Color.white.opacity(idx % 2 == 0 ? 0.05 : 0.03))
-                                if idx < rows.count - 1 {
-                                    Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
-                                }
+                Section("Accumulation Projection") {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { idx, row in
+                        let btc = btcPer * freq.perYear * row.1
+                        let inv = amount * freq.perYear * row.1
+                        HStack {
+                            Text(row.0).font(.system(size: 14, weight: .medium))
+                                .frame(width: 85, alignment: .leading)
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text(btc.btcFormatted)
+                                    .font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                                Text("\(AppCurrency.current.format(inv)) in")
+                                    .font(.system(size: 11)).foregroundStyle(.secondary)
                             }
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .listRowBackground(Color.listRowTint)
                     }
+                }
 
-                    // Share
+                Section {
                     Button { doShare() } label: {
                         Label("Share DCA Plan", systemImage: "square.and.arrow.up")
                             .font(.system(size: 15, weight: .semibold)).foregroundStyle(.black)
                             .frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.orange, in: RoundedRectangle(cornerRadius: 12))
                     }
+                    .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
-                Spacer(minLength: 40)
             }
-            .padding(.top, 20).padding(.horizontal, 20)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .nativeListBackground()
     }
 
     @MainActor private func doShare() {
@@ -240,42 +219,37 @@ private struct GoalTab: View {
     private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Target input
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("MY TARGET")
-                    HStack(spacing: 8) {
-                        TextField("1.0", text: $targetStr)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .keyboardType(.decimalPad).foregroundStyle(.white)
-                        Text("BTC").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 12)
-                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+        List {
+            Section("My Target") {
+                HStack(spacing: 8) {
+                    TextField("1.0", text: $targetStr)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .keyboardType(.decimalPad)
+                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.orange)
                 }
+                .listRowBackground(Color.listRowTint)
 
                 HStack(spacing: 8) {
                     ForEach(["0.01", "0.1", "0.5", "1.0"], id: \.self) { v in
                         chip(v, active: targetStr == v) { targetStr = v }
                     }
                 }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
+                .listRowBackground(Color.clear)
+            }
 
-                // Holdings input
-                VStack(alignment: .leading, spacing: 8) {
-                    lbl("I CURRENTLY HOLD")
-                    HStack(spacing: 8) {
-                        TextField("0", text: $heldStr)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .keyboardType(.decimalPad).foregroundStyle(.white)
-                        Text("BTC").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 12)
-                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+            Section("I Currently Hold") {
+                HStack(spacing: 8) {
+                    TextField("0", text: $heldStr)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .keyboardType(.decimalPad)
+                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
                 }
+                .listRowBackground(Color.listRowTint)
+            }
 
-                if target > 0 {
-                    // Progress ring
+            if target > 0 {
+                Section {
                     ZStack {
                         Circle().stroke(Color.white.opacity(0.08), lineWidth: 14)
                         Circle().trim(from: 0, to: CGFloat(progress))
@@ -288,50 +262,53 @@ private struct GoalTab: View {
                             .animation(.easeOut(duration: 0.6), value: progress)
                         VStack(spacing: 4) {
                             Text(String(format: "%.1f%%", progress * 100))
-                                .font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(.white)
+                                .font(.system(size: 26, weight: .heavy, design: .rounded))
                             Text("of goal").font(.system(size: 13)).foregroundStyle(.secondary)
                         }
                     }
-                    .frame(width: 150, height: 150).frame(maxWidth: .infinity)
+                    .frame(width: 130, height: 130)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
+                }
 
-                    // Stats table
-                    VStack(spacing: 0) {
-                        goalRow("Target", target.btcFormatted, .orange)
-                        goalRow("Held", held.btcFormatted, .white)
-                        goalRow("Still needed", remaining.btcFormatted, downColor)
-                        if let price = currentPrice, remaining > 0 {
-                            goalRow("Cost to complete", AppCurrency.current.format(remaining * price), .secondary)
-                        }
-                        if let price = currentPrice, held > 0 {
-                            goalRow("Holdings value", AppCurrency.current.format(held * price), upColor)
-                        }
+                Section("Progress") {
+                    goalRow("Target", target.btcFormatted, .orange)
+                    goalRow("Held", held.btcFormatted, .white)
+                    goalRow("Still needed", remaining.btcFormatted, downColor)
+                    if let price = currentPrice, remaining > 0 {
+                        goalRow("Cost to complete", AppCurrency.current.format(remaining * price), .secondary)
                     }
-                    .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-
-                    if progress >= 1 {
-                        Text("Goal reached!")
-                            .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(.orange)
-                            .padding(.horizontal, 20).padding(.vertical, 10)
-                            .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                    if let price = currentPrice, held > 0 {
+                        goalRow("Holdings value", AppCurrency.current.format(held * price), upColor)
                     }
                 }
-                Spacer(minLength: 40)
+
+                if progress >= 1 {
+                    Section {
+                        HStack {
+                            Spacer()
+                            Text("Goal reached! 🎉")
+                                .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                            Spacer()
+                        }
+                        .listRowBackground(Color.orange.opacity(0.15))
+                    }
+                }
             }
-            .padding(.top, 20).padding(.horizontal, 20)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .nativeListBackground()
     }
 
     private func goalRow(_ label: String, _ value: String, _ color: Color) -> some View {
         HStack {
-            Text(label).font(.system(size: 13)).foregroundStyle(.secondary)
+            Text(label).font(.system(size: 14)).foregroundStyle(.secondary)
             Spacer()
-            Text(value).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
+            Text(value).font(.system(size: 14, weight: .semibold)).foregroundStyle(color)
         }
-        .padding(.horizontal, 16).padding(.vertical, 11)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(.white.opacity(0.07)).frame(height: 1).padding(.horizontal, 16)
-        }
+        .listRowBackground(Color.listRowTint)
     }
 }
 
