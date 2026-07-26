@@ -6,6 +6,7 @@ struct BitcoinInfoView: View {
     var chartLow: Double? = nil
     var chartHigh: Double? = nil
     var fearGreed: StatsService.FearGreedData? = nil
+    var onTapHalving: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 6) {
@@ -37,7 +38,8 @@ struct BitcoinInfoView: View {
                              value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
                              subtitle: stats.map { halvingSubtitle($0.blockHeight) },
                              color: .purple,
-                             compact: true)
+                             compact: true,
+                             action: onTapHalving)
                     StatTile(label: "Fear & Greed",
                              value: fearGreed.map { "\($0.value) · \($0.classification)" } ?? "—",
                              subtitle: nil,
@@ -342,8 +344,31 @@ private struct StatTile: View {
     let subtitle: String?
     let color: Color
     var compact: Bool = false
+    var action: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let action {
+                Button(action: action) { content }
+                    .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, compact ? 8 : 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: compact ? 1 : 3) {
             Text(label)
                 .font(.system(size: compact ? 9 : 10, weight: .medium))
@@ -368,15 +393,5 @@ private struct StatTile: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, compact ? 8 : 12)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(color.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(color.opacity(0.2), lineWidth: 1)
-                )
-        )
     }
 }

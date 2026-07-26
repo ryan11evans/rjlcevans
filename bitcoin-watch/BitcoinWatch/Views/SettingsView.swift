@@ -4,6 +4,7 @@ import WidgetKit
 struct SettingsView: View {
     @EnvironmentObject private var service: PriceService
     @State private var showYearInBitcoin = false
+    @State private var showHalving = false
 
     var body: some View {
         NavigationStack {
@@ -27,7 +28,7 @@ struct SettingsView: View {
                         .listRowInsets(EdgeInsets())
                 }
 
-                RecapSection(showYearInBitcoin: $showYearInBitcoin)
+                RecapSection(showYearInBitcoin: $showYearInBitcoin, showHalving: $showHalving)
 
                 Section {
                     VersionFooter()
@@ -44,6 +45,9 @@ struct SettingsView: View {
             .preferredColorScheme(.dark)
             .sheet(isPresented: $showYearInBitcoin) {
                 YearInBitcoinView(currentPrice: service.currentPrice?.usd)
+            }
+            .sheet(isPresented: $showHalving) {
+                HalvingView(currentPrice: service.currentPrice?.usd)
             }
         }
     }
@@ -400,6 +404,7 @@ private struct NotificationsSection: View {
 
 private struct RecapSection: View {
     @Binding var showYearInBitcoin: Bool
+    @Binding var showHalving: Bool
 
     var body: some View {
         Section("Recap") {
@@ -411,6 +416,27 @@ private struct RecapSection: View {
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                         Text("Your stack's story — buys, P&L, biggest days")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(rowTint)
+
+            Button { showHalving = true } label: {
+                HStack(spacing: 14) {
+                    IconChip(systemName: "square.split.2x1", color: Color(red: 0.6, green: 0.4, blue: 1.0))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("The Halving")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Countdown, history, and why supply gets cut in half")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
