@@ -37,14 +37,7 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(
-                LinearGradient(
-                    colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
-                             Color(red: 0.05, green: 0.04, blue: 0.04)],
-                    startPoint: .topLeading, endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            )
+            .nativeListBackground()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -56,9 +49,7 @@ struct SettingsView: View {
     }
 }
 
-// Subtle dark row tint standing in for the system's grouped-row background,
-// since `.scrollContentBackground(.hidden)` drops it in favor of our gradient.
-private let rowTint = Color.white.opacity(0.05)
+private let rowTint = Color.listRowTint
 
 // MARK: - Shared styling
 

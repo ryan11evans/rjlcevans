@@ -193,95 +193,74 @@ struct AddAlertView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color(red: 0.07, green: 0.06, blue: 0.06).ignoresSafeArea()
+            List {
+                Section("Direction") {
+                    Picker("Direction", selection: $direction) {
+                        Text("Above  ↑").tag(PriceAlert.Direction.above)
+                        Text("Below  ↓").tag(PriceAlert.Direction.below)
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                }
 
-                ScrollView {
-                    VStack(spacing: 22) {
-                        // Direction
-                        field("Direction") {
-                            HStack(spacing: 0) {
-                                dirButton("Above  ↑", value: .above)
-                                dirButton("Below  ↓", value: .below)
-                            }
-                            .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.06)))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
+                Section("Target Price") {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(AppCurrency.current.symbol)
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                        TextField("0", text: $targetText)
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .keyboardType(.numberPad)
+                            .focused($priceFocused)
+                    }
+                    .listRowBackground(Color.listRowTint)
+                }
 
-                        // Target price
-                        field("Target Price") {
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(AppCurrency.current.symbol)
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                TextField("0", text: $targetText)
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .keyboardType(.numberPad)
-                                    .focused($priceFocused)
-                                    .foregroundStyle(.white)
-                            }
-                            .padding(.horizontal, 16).padding(.vertical, 14)
-                            .background(RoundedRectangle(cornerRadius: 14)
-                                .fill(.white.opacity(0.06))
-                                .overlay(RoundedRectangle(cornerRadius: 14)
-                                    .strokeBorder(priceFocused ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1)))
-                            .animation(.easeInOut(duration: 0.15), value: priceFocused)
-                        }
-
-                        // Quick suggestions
-                        if currentBTCPrice > 0 {
-                            field("Quick Add") {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(suggestions, id: \.label) { s in
-                                            Button {
-                                                targetText = "\(Int(s.price))"
-                                                priceFocused = false
-                                            } label: {
-                                                VStack(spacing: 2) {
-                                                    Text(s.label)
-                                                        .font(.system(size: 13, weight: .semibold))
-                                                    Text(AppCurrency.current.format(s.price))
-                                                        .font(.system(size: 11))
-                                                        .foregroundStyle(.secondary)
-                                                }
-                                                .padding(.horizontal, 14).padding(.vertical, 9)
-                                                .background(RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.08)))
-                                                .foregroundStyle(.white)
-                                            }
+                // Quick suggestions
+                if currentBTCPrice > 0 {
+                    Section("Quick Add") {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(suggestions, id: \.label) { s in
+                                    Button {
+                                        targetText = "\(Int(s.price))"
+                                        priceFocused = false
+                                    } label: {
+                                        VStack(spacing: 2) {
+                                            Text(s.label)
+                                                .font(.system(size: 13, weight: .semibold))
+                                            Text(AppCurrency.current.format(s.price))
+                                                .font(.system(size: 11))
+                                                .foregroundStyle(.secondary)
                                         }
+                                        .padding(.horizontal, 14).padding(.vertical, 9)
+                                        .background(RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.08)))
+                                        .foregroundStyle(.white)
                                     }
                                 }
                             }
+                            .padding(.vertical, 2)
                         }
-
-                        // Label
-                        field("Label  (optional)") {
-                            TextField("e.g. Take profit, Buy the dip", text: $labelText)
-                                .font(.system(size: 16))
-                                .padding(.horizontal, 16).padding(.vertical, 14)
-                                .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.06)))
-                                .foregroundStyle(.white)
-                        }
-
-                        // Repeat
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("Repeat")
-                                    .font(.system(size: 16, weight: .medium))
-                                Text("Re-arm after each trigger · 1-hour cooldown")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $isRepeating).labelsHidden().tint(.orange)
-                        }
-                        .padding(.horizontal, 16).padding(.vertical, 14)
-                        .glassCard(cornerRadius: 14, shadow: false)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowBackground(Color.clear)
                     }
-                    .padding(20)
+                }
+
+                Section("Label  (optional)") {
+                    TextField("e.g. Take profit, Buy the dip", text: $labelText)
+                        .listRowBackground(Color.listRowTint)
+                }
+
+                Section {
+                    Toggle("Repeat", isOn: $isRepeating).tint(.orange)
+                        .listRowBackground(Color.listRowTint)
+                } footer: {
+                    Text("Re-arm after each trigger · 1-hour cooldown")
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .nativeListBackground()
             // Pinned to the bottom of the sheet; slides up above the keyboard
             // so it's always tappable while typing.
             .safeAreaInset(edge: .bottom) {
