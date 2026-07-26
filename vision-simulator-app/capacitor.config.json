@@ -2,6 +2,11 @@
   "appId": "com.rjlcevans.visionsim",
   "appName": "Vision Simulator",
   "webDir": "../vision-simulator",
+  "server": {
+    "url": "https://rjlcevans.com/vision-simulator/",
+    "cleartext": false,
+    "iosScheme": "capacitor"
+  },
   "plugins": {
     "StatusBar": {
       "style": "DARK",
