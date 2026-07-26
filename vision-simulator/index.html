@@ -233,6 +233,10 @@
       <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
       Snapshot
     </button>
+    <button class="btn ghost tool" id="handoutBtn">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+      Patient Handout
+    </button>
   </div>
 
   <div class="source-row" id="sampleRow">
@@ -870,6 +874,141 @@
     }, 'image/png');
   }
 
+  // ===== Patient Handout: composite before/after + clinical note into a shareable image =====
+  function captureCleanFrame() {
+    // Renders the current condition without the compare-mode split, regardless of UI state,
+    // then restores whatever the user had on screen.
+    const wasCompare = compareMode;
+    if (wasCompare) { compareMode = false; render(); }
+    const snap = document.createElement('canvas');
+    snap.width = stageCanvas.width; snap.height = stageCanvas.height;
+    snap.getContext('2d').drawImage(stageCanvas, 0, 0);
+    if (wasCompare) { compareMode = true; render(); }
+    return snap;
+  }
+
+  function wrapLines(measureCtx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (let i = 0; i < words.length; i++) {
+      const test = line ? `${line} ${words[i]}` : words[i];
+      if (measureCtx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = words[i];
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  async function generateHandout() {
+    if (!currentSource) { alert('Start the camera or upload an image first.'); return; }
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+
+    const meta = conditionMeta[condition];
+    const showBeforeAfter = condition !== 'none';
+
+    const beforeCanvas = document.createElement('canvas');
+    beforeCanvas.width = sourceCanvas.width; beforeCanvas.height = sourceCanvas.height;
+    beforeCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0);
+    const afterCanvas = showBeforeAfter ? captureCleanFrame() : beforeCanvas;
+
+    const W = 1100;
+    const margin = 56;
+    const paneGutter = 24;
+    const paneW = showBeforeAfter ? (W - margin * 2 - paneGutter) / 2 : (W - margin * 2);
+    const aspect = afterCanvas.height / afterCanvas.width;
+    const paneH = paneW * aspect;
+
+    const headerH = 132;
+    const paneLabelH = 30;
+    const noteTop = headerH + paneLabelH + paneH + 36;
+    const noteLineH = 24;
+    const noteMaxWidth = W - margin * 2;
+    const noteFont = "400 17px 'Inter Tight', sans-serif";
+
+    // Plain-text note (strip inline HTML tags from the clinical copy)
+    const plainNote = meta.note.replace(/<[^>]+>/g, '');
+    const fullNoteText = `${meta.title}. ${plainNote}`;
+
+    const measureCtx = document.createElement('canvas').getContext('2d');
+    measureCtx.font = noteFont;
+    const noteLines = wrapLines(measureCtx, fullNoteText, noteMaxWidth);
+    const noteH = noteLines.length * noteLineH + 12;
+
+    const footerH = 64;
+    const H = Math.round(noteTop + noteH + footerH);
+
+    const out = document.createElement('canvas');
+    out.width = W; out.height = H;
+    const o = out.getContext('2d');
+
+    // Paper background (print-friendly, unlike the app's dark theme)
+    o.fillStyle = '#fbf8f2';
+    o.fillRect(0, 0, W, H);
+
+    // Header
+    o.fillStyle = '#1a1a1a';
+    o.font = "500 30px 'Fraunces', serif";
+    o.fillText('Vision Simulation — Patient Handout', margin, 52);
+    o.fillStyle = '#6b6255';
+    o.font = "400 15px 'Inter Tight', sans-serif";
+    o.fillText(`Dr. Ryan Evans, OD  ·  ${new Date().toLocaleDateString()}`, margin, 78);
+    o.strokeStyle = '#d4a574';
+    o.lineWidth = 2;
+    o.beginPath(); o.moveTo(margin, 96); o.lineTo(W - margin, 96); o.stroke();
+
+    // Panes
+    const paneY = headerH + paneLabelH;
+    o.fillStyle = '#1a1a1a';
+    o.font = "600 14px 'Inter Tight', sans-serif";
+    if (showBeforeAfter) {
+      o.drawImage(beforeCanvas, margin, paneY, paneW, paneH);
+      o.drawImage(afterCanvas, margin + paneW + paneGutter, paneY, paneW, paneH);
+      o.fillText('NORMAL VISION', margin, headerH + 20);
+      o.fillText(meta.title.toUpperCase(), margin + paneW + paneGutter, headerH + 20);
+    } else {
+      o.drawImage(afterCanvas, margin, paneY, paneW, paneH);
+      o.fillText('NORMAL VISION', margin, headerH + 20);
+    }
+
+    // Clinical note
+    o.fillStyle = '#2a2a2a';
+    o.font = noteFont;
+    let noteY = noteTop;
+    noteLines.forEach((line) => { o.fillText(line, margin, noteY); noteY += noteLineH; });
+
+    // Footer
+    o.strokeStyle = '#ddd6c8';
+    o.lineWidth = 1;
+    o.beginPath(); o.moveTo(margin, H - footerH + 8); o.lineTo(W - margin, H - footerH + 8); o.stroke();
+    o.fillStyle = '#8a8275';
+    o.font = "400 13px 'Inter Tight', sans-serif";
+    o.fillText('For educational demonstration only · Not a diagnostic tool', margin, H - 28);
+
+    out.toBlob(async (blob) => {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `vision-handout-${condition}-${dateStr}.png`;
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'Vision Simulation Handout', text: meta.title });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  }
+
   const conditionMeta = {
     none: {
       title: 'Normal Vision (Emmetropia)',
@@ -1306,6 +1445,7 @@
   document.getElementById('flipCam').addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
   document.getElementById('snapshot').addEventListener('click', takeSnapshot);
+  document.getElementById('handoutBtn').addEventListener('click', generateHandout);
 
   document.getElementById('sampleRow').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-sample]');
