@@ -1,5 +1,5 @@
 {
-  "appId": "com.rjlcevans.visionsimulator",
+  "appId": "com.rjlcevans.visionsim",
   "appName": "Vision Simulator",
   "webDir": "../vision-simulator",
   "plugins": {
