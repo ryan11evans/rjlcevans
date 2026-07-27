@@ -61,7 +61,7 @@
   @media (max-width: 900px) {
     .stage-wrap {
       position: sticky;
-      top: 8px;
+      top: calc(8px + env(safe-area-inset-top));
       z-index: 50;
       aspect-ratio: 16/10;
       max-height: 42vh;
