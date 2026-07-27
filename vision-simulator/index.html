@@ -143,15 +143,46 @@
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
   .conditions-hint { font-size: 11px; color: var(--ink-mute); margin: -6px 0 10px; }
+  .conditions-scroller { position: relative; }
   .conditions {
     display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
     scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
     padding-bottom: 4px; margin-bottom: -4px;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 28px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 28px), transparent);
   }
   .conditions::-webkit-scrollbar { display: none; }
+  /* Fade masks only appear on the side that actually has more to scroll to —
+     toggled by JS based on scroll position, so "Normal Vision" at the very
+     start never looks artificially cut off. */
+  .conditions-scroller.can-scroll-left .conditions {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px);
+    mask-image: linear-gradient(to right, transparent, black 24px);
+  }
+  .conditions-scroller.can-scroll-right .conditions {
+    -webkit-mask-image: linear-gradient(to left, transparent, black 36px);
+    mask-image: linear-gradient(to left, transparent, black 36px);
+  }
+  .conditions-scroller.can-scroll-left.can-scroll-right .conditions {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+  }
+  /* Prominent "more this way" cue on the right — a soft pulsing chevron,
+     only shown while there's actually more to reveal. */
+  .scroll-cue {
+    position: absolute; right: -2px; top: 0; bottom: 4px; width: 40px;
+    display: flex; align-items: center; justify-content: flex-end;
+    pointer-events: none; opacity: 0; transition: opacity 0.25s ease;
+  }
+  .conditions-scroller.can-scroll-right .scroll-cue { opacity: 1; }
+  .scroll-cue svg {
+    width: 22px; height: 22px; color: var(--accent);
+    filter: drop-shadow(0 0 6px rgba(212,165,116,0.5));
+    animation: scrollCuePulse 1.6s ease-in-out infinite;
+  }
+  @keyframes scrollCuePulse {
+    0%, 100% { transform: translateX(0); opacity: 0.55; }
+    50% { transform: translateX(4px); opacity: 1; }
+  }
   .cond {
     flex: 0 0 auto; scroll-snap-align: start; min-width: 128px;
     padding: 12px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-sm);
@@ -304,18 +335,23 @@
 
   <h2 class="section-title">Select Condition</h2>
   <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
-  <div class="conditions" id="conditions">
-    <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
-    <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
-    <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
-    <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
-    <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
-    <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
-    <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
-    <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span></button>
-    <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
-    <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span></button>
-    <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
+  <div class="conditions-scroller" id="conditionsScroller">
+    <div class="conditions" id="conditions">
+      <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
+      <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
+      <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
+      <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
+      <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
+      <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
+      <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
+      <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span></button>
+      <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
+      <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span></button>
+      <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
   </div>
 
   <div class="controls" id="controlsPanel">
@@ -356,7 +392,22 @@
   const ctrlGrid = document.getElementById('ctrlGrid');
   const clinicalNote = document.getElementById('clinicalNote');
   const conditionsEl = document.getElementById('conditions');
+  const conditionsScroller = document.getElementById('conditionsScroller');
   const compareLine = document.getElementById('compareLine');
+
+  // Toggle fade masks / scroll cue based on actual scroll position, so
+  // "Normal Vision" at the very start never looks cut off on the left,
+  // and the right-side cue disappears once you've reached the last chip.
+  function updateConditionsScrollState() {
+    const maxScroll = conditionsEl.scrollWidth - conditionsEl.clientWidth;
+    const atStart = conditionsEl.scrollLeft <= 2;
+    const atEnd = conditionsEl.scrollLeft >= maxScroll - 2;
+    conditionsScroller.classList.toggle('can-scroll-left', !atStart && maxScroll > 2);
+    conditionsScroller.classList.toggle('can-scroll-right', !atEnd && maxScroll > 2);
+  }
+  conditionsEl.addEventListener('scroll', updateConditionsScrollState, { passive: true });
+  window.addEventListener('resize', updateConditionsScrollState);
+  window.addEventListener('load', updateConditionsScrollState); // fonts can reflow chip widths after first paint
 
   const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
   const ctx = stageCanvas.getContext('2d');
@@ -1594,6 +1645,7 @@
 
   resizeStage();
   buildControls();
+  updateConditionsScrollState();
 
   window.addEventListener('beforeunload', stopCamera);
 })();
