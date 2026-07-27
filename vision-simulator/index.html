@@ -55,6 +55,29 @@
     background: rgba(255, 255, 255, 0.04);
   }
 
+  /* Inside the native app, the marketing header (eyebrow/H1/description/App
+     Store badge) makes way for a slim title bar — the website framing is
+     redundant once someone already has the app open. Tapping "About" reveals
+     the full text again without it costing space on every launch. */
+  .hero-app-bar { display: none; align-items: center; justify-content: space-between; gap: 10px; }
+  .hero-app-bar .hero-app-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 500; color: var(--ink); }
+  .hero-app-bar .hero-info-btn {
+    appearance: none; border: 1px solid var(--line); background: none; color: var(--ink-mute);
+    font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  }
+  html.is-app .hero-app-bar { display: flex; }
+  html.is-app header.hero { padding: 10px 4px 12px; margin-bottom: 10px; }
+  html.is-app .eyebrow,
+  html.is-app h1,
+  html.is-app .sub,
+  html.is-app .credit { display: none; }
+  html.is-app.info-expanded .eyebrow,
+  html.is-app.info-expanded h1,
+  html.is-app.info-expanded .sub,
+  html.is-app.info-expanded .credit { display: block; margin-top: 12px; }
+  html.is-app.info-expanded .credit { display: inline-block; }
+
   .stage-wrap { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(--line); }
 
   /* On mobile, pin the video to the top so it stays visible while scrolling controls. */
@@ -76,6 +99,11 @@
     .conditions { gap: 6px; }
     .cond { padding: 9px 10px; font-size: 12px; min-width: 108px; }
     .controls { padding: 14px; margin-top: 8px; }
+  }
+  /* With the header collapsed to a slim bar in-app, give the camera more
+     room — closer to filling the top third of the screen. */
+  @media (max-width: 900px) {
+    html.is-app .stage-wrap { max-height: 48vh; }
   }
   .stage { position: absolute; inset: 0; display: grid; place-items: center; }
   #video, #sourceCanvas { display: none; }
@@ -251,7 +279,7 @@
     border-color: var(--line); color: var(--ink-dim); font-size: 13px; gap: 9px;
   }
   #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
-  .sample-thumb { width: 26px; height: 20px; border-radius: 4px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
+  .sample-thumb { width: 40px; height: 32px; border-radius: 6px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -268,6 +296,10 @@
 <div class="wrap">
 
   <header class="hero">
+    <div class="hero-app-bar">
+      <span class="hero-app-title">Vision Simulator</span>
+      <button type="button" class="hero-info-btn" id="heroInfoBtn" aria-expanded="false">About</button>
+    </div>
     <p class="eyebrow">Patient education · Educational use only</p>
     <h1>How the World Looks <em>Through Other Eyes</em></h1>
     <p class="sub">A clinically-informed simulator for refractive error, cataract, glaucoma, age-related macular degeneration, diabetic retinopathy, and vitreous floaters. Use the camera or upload an image to explore.</p>
@@ -324,7 +356,7 @@
       Amsler Grid
     </button>
     <button class="btn ghost" data-sample="street">
-      <img class="sample-thumb" src="samples/night-street.jpg" alt="">
+      <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
       Night Street
     </button>
     <button class="btn ghost" data-sample="garden">
@@ -1730,6 +1762,16 @@
     document.getElementById('appStoreBadge').style.display = 'none';
     document.getElementById('homeLink').style.display      = 'none';
     document.getElementById('privacyLink').style.display   = 'inline';
+    document.documentElement.classList.add('is-app');
+  }
+
+  const heroInfoBtn = document.getElementById('heroInfoBtn');
+  if (heroInfoBtn) {
+    heroInfoBtn.addEventListener('click', () => {
+      const expanded = document.documentElement.classList.toggle('info-expanded');
+      heroInfoBtn.setAttribute('aria-expanded', String(expanded));
+      heroInfoBtn.textContent = expanded ? 'Hide' : 'About';
+    });
   }
 </script>
 </body>
