@@ -363,7 +363,15 @@
       Amsler Grid
     </button>
     <button class="btn ghost" data-sample="street">
-      <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
+      <svg class="sample-thumb" viewBox="0 0 26 20">
+        <rect width="26" height="20" fill="#0b0e16"/>
+        <path d="M11 8 L15 8 L21 20 L5 20 Z" fill="#1b1f27"/>
+        <path d="M13 8 V20" stroke="#c9b15a" stroke-width="0.6" stroke-dasharray="1.4 1.4"/>
+        <circle cx="9" cy="16" r="2.2" fill="#fffdf0" opacity="0.9"/>
+        <circle cx="17" cy="16" r="2.2" fill="#fffdf0" opacity="0.9"/>
+        <circle cx="4" cy="9" r="1.3" fill="#fff8e0" opacity="0.85"/>
+        <circle cx="22" cy="8" r="1.1" fill="#fff8e0" opacity="0.85"/>
+      </svg>
       Night Street
     </button>
     <button class="btn ghost" data-sample="garden">
@@ -1514,25 +1522,81 @@
       g.fillStyle = '#ffffff';
       g.beginPath(); g.arc(c.width / 2, c.height / 2, 9, 0, Math.PI * 2); g.fill();
     } else if (kind === 'street') {
-      // Night street with headlight glare (great for cataract/astigmatism)
+      // Night driving scene built around glare: streetlamps down both
+      // sides, oncoming headlights, and receding taillights.
+      const horizonY = c.height * 0.4, vanishX = c.width * 0.5;
       const sky = g.createLinearGradient(0, 0, 0, c.height);
-      sky.addColorStop(0, '#070b14'); sky.addColorStop(0.6, '#0d1422'); sky.addColorStop(1, '#161b24');
+      sky.addColorStop(0, '#050810'); sky.addColorStop(0.55, '#0c1220'); sky.addColorStop(1, '#181e28');
       g.fillStyle = sky; g.fillRect(0, 0, c.width, c.height);
-      // road
+
+      // Distant skyline silhouettes with scattered lit windows, for depth.
+      g.fillStyle = '#0a0e18';
+      g.fillRect(0, horizonY - 260, c.width*0.30, c.height - (horizonY - 260));
+      g.fillRect(c.width*0.74, horizonY - 190, c.width*0.26, c.height - (horizonY - 190));
+      g.fillStyle = 'rgba(255,214,120,0.55)';
+      for (let i = 0; i < 46; i++) {
+        const onLeft = Math.random() < 0.5;
+        const bh = onLeft ? 260 : 190;
+        const bx = onLeft ? 8 + Math.random()*(c.width*0.30-16) : c.width*0.76 + Math.random()*(c.width*0.22);
+        const by = horizonY - bh + 12 + Math.random()*(bh-24);
+        if (Math.random() < 0.55) g.fillRect(bx, by, 7, 10);
+      }
+
+      // Road surface, converging to a vanishing point at the horizon.
       g.fillStyle = '#1b1f27'; g.beginPath();
-      g.moveTo(c.width*0.42, c.height*0.55); g.lineTo(c.width*0.58, c.height*0.55);
-      g.lineTo(c.width*0.95, c.height); g.lineTo(c.width*0.05, c.height); g.closePath(); g.fill();
-      // lane dashes
-      g.strokeStyle = '#c9b15a'; g.lineWidth = 6; g.setLineDash([26, 30]);
-      g.beginPath(); g.moveTo(c.width/2, c.height*0.56); g.lineTo(c.width/2, c.height); g.stroke();
-      g.setLineDash([]);
-      // headlights / streetlights as bright glares
-      const lights = [[c.width*0.46, c.height*0.62, 26],[c.width*0.54, c.height*0.62, 26],[c.width*0.2, c.height*0.3, 16],[c.width*0.8, c.height*0.28, 18]];
-      lights.forEach(([x,y,r]) => {
-        const gr = g.createRadialGradient(x,y,0,x,y,r*6);
-        gr.addColorStop(0,'rgba(255,250,220,0.95)'); gr.addColorStop(0.3,'rgba(255,240,180,0.5)'); gr.addColorStop(1,'rgba(255,240,180,0)');
-        g.fillStyle = gr; g.fillRect(x-r*6,y-r*6,r*12,r*12);
-        g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
+      g.moveTo(vanishX - c.width*0.045, horizonY); g.lineTo(vanishX + c.width*0.045, horizonY);
+      g.lineTo(c.width*0.97, c.height); g.lineTo(c.width*0.03, c.height); g.closePath(); g.fill();
+
+      // Center lane dashes, thickening as they approach the viewer.
+      g.strokeStyle = '#c9b15a';
+      for (let t = 0; t < 1; t += 0.09) {
+        const y0 = horizonY + (c.height-horizonY)*t, y1 = horizonY + (c.height-horizonY)*Math.min(t+0.045, 1);
+        g.lineWidth = 2 + t*8;
+        g.beginPath(); g.moveTo(vanishX, y0); g.lineTo(vanishX, y1); g.stroke();
+      }
+
+      const perspX = (edge, t) => {
+        const nearX = edge < 0 ? c.width*0.03 : c.width*0.97;
+        const farX = vanishX + edge * c.width*0.045;
+        return nearX + (farX - nearX) * t;
+      };
+      const perspY = t => c.height - (c.height - horizonY) * t;
+      const glow = (x, y, r, rgb) => {
+        const gr = g.createRadialGradient(x,y,0,x,y,r*5.5);
+        gr.addColorStop(0, `rgba(${rgb},0.95)`); gr.addColorStop(0.32, `rgba(${rgb},0.5)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+        g.fillStyle = gr; g.fillRect(x-r*5.5, y-r*5.5, r*11, r*11);
+      };
+
+      // Streetlamps receding down both sides of the road.
+      [0.05, 0.28, 0.5, 0.7, 0.86].forEach(t => {
+        const scale = 1 - t*0.8, groundY = perspY(t);
+        [-1, 1].forEach(edge => {
+          const px = perspX(edge, t) + edge * (18*scale), lampY = groundY - 130*scale;
+          g.strokeStyle = 'rgba(15,17,22,0.9)'; g.lineWidth = Math.max(1, 4*scale);
+          g.beginPath(); g.moveTo(px, groundY); g.lineTo(px, lampY); g.stroke();
+          glow(px, lampY, 46*scale, '255,238,180');
+          g.fillStyle = '#fff8e0'; g.beginPath(); g.arc(px, lampY, 4*scale+1, 0, Math.PI*2); g.fill();
+        });
+      });
+
+      // Oncoming headlights, white, in the near (left) lane.
+      [0.08, 0.3, 0.55].forEach(t => {
+        const scale = 1 - t*0.75, laneX = vanishX - c.width*0.02 - (vanishX - perspX(-1,t))*0.35, y = perspY(t) - 10*scale;
+        [-1, 1].forEach(side => {
+          const x = laneX + side*10*scale, r = 22*scale;
+          glow(x, y, r, '255,248,215');
+          g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x, y, r*0.4, 0, Math.PI*2); g.fill();
+        });
+      });
+
+      // Receding taillights, red, in the far (right) lane.
+      [0.12, 0.35, 0.6].forEach(t => {
+        const scale = 1 - t*0.75, laneX = vanishX + c.width*0.02 + (perspX(1,t) - vanishX)*0.35, y = perspY(t) - 10*scale;
+        [-1, 1].forEach(side => {
+          const x = laneX + side*9*scale, r = 14*scale;
+          glow(x, y, r, '255,60,50');
+          g.fillStyle = '#ff6b5c'; g.beginPath(); g.arc(x, y, r*0.35, 0, Math.PI*2); g.fill();
+        });
       });
     } else if (kind === 'face') {
       c.width = 900; c.height = 1100;
@@ -1594,42 +1658,31 @@
       g.fillStyle='#2e4f7a';
       g.beginPath(); g.moveTo(0,c.height); g.lineTo(0,hy+360); g.quadraticCurveTo(cx-280,hy+290,cx-90,hy+240); g.lineTo(cx-78,hy+232); g.lineTo(cx+78,hy+232); g.lineTo(cx+90,hy+240); g.quadraticCurveTo(cx+280,hy+290,c.width,hy+360); g.lineTo(c.width,c.height); g.closePath(); g.fill();
     } else if (kind === 'reading') {
+      // A book passage at a comfortable large-print size — good for testing
+      // presbyopia / near-vision acuity rather than a clinical form.
       c.width = 900; c.height = 1200;
-      g.fillStyle = '#fdfaf4'; g.fillRect(0, 0, c.width, c.height);
-      g.strokeStyle = '#e8e2d4'; g.lineWidth = 1;
-      g.strokeRect(48, 48, c.width-96, c.height-96);
+      g.fillStyle = '#fbf6ec'; g.fillRect(0, 0, c.width, c.height);
       g.textAlign = 'left'; g.textBaseline = 'top';
-      g.fillStyle = '#14142a';
-      g.font = '700 48px Georgia, serif'; g.fillText('Physician Referral Note', 70, 72);
-      g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
-      let ry = 152;
-      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
-        g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
-        g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
-        ry += 38;
+      g.fillStyle = '#2a2418';
+      g.font = 'italic 400 22px Georgia, serif';
+      g.fillText('Alice’s Adventures in Wonderland', 70, 64);
+      g.strokeStyle = '#d8cdb0'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(70, 104); g.lineTo(c.width-70, 104); g.stroke();
+
+      const passage = 'Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice, “without pictures or conversations?” So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.';
+
+      g.font = '400 30px Georgia, serif'; g.fillStyle = '#1c1810';
+      const maxW = c.width - 140, lineHeight = 30 * 1.6;
+      let line = '', ry = 150;
+      passage.split(' ').forEach(word => {
+        const test = line + (line ? ' ' : '') + word;
+        if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += lineHeight; line = word; }
+        else line = test;
       });
-      ry += 10;
-      g.strokeStyle = '#d8d0c0'; g.lineWidth = 1; g.beginPath(); g.moveTo(70,ry); g.lineTo(c.width-70,ry); g.stroke(); ry += 20;
-      const paras = [
-        { text: 'Rx: Progressive addition lenses. Distance: +0.25 −0.50 × 095 / +0.50 −0.25 × 085. Add: +2.25 OU. PD: 63/61.', size: 23 },
-        { text: 'Instructions: Wear full time. Avoid progressives while driving until adapted (allow 2–3 weeks). Return visit in 6 weeks.', size: 19 },
-        { text: 'The patient reports increasing difficulty reading small print and near tasks over the past 18 months. Best corrected visual acuity is 20/20 OD and 20/20 OS at distance. Near acuity without correction is J5 at 40 cm bilaterally.', size: 15 },
-        { text: 'Side effects may include: dizziness, peripheral distortion, and difficulty with stairs during adaptation. If symptoms persist beyond two weeks, contact our office at (555) 867-5309. Do not adjust the frame yourself.', size: 12 },
-        { text: 'This prescription is valid for 24 months from the date of examination. Frame selection, lens material, coatings, and fitting are the responsibility of the dispensing optician. Insurance benefits apply subject to plan limitations and co-pay is due at time of dispensing. Lens prescription is not transferable.', size: 9 },
-        { text: 'Fine print: Warranty covers manufacturing defects only and does not include scratches, breakage, or loss. Anti-reflective coating void if cleaned with abrasive materials. Progressive lens designs may vary by manufacturer. All measurements are in millimetres unless otherwise stated. Patient acknowledges receipt of this prescription.', size: 7 },
-      ];
-      paras.forEach(p => {
-        g.font = `400 ${p.size}px Georgia, serif`; g.fillStyle = '#1a1a2a';
-        const maxW = c.width - 140; let line = '';
-        p.text.split(' ').forEach(word => {
-          const test = line + (line ? ' ' : '') + word;
-          if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += p.size*1.65; line = word; }
-          else line = test;
-        });
-        if (line) { g.fillText(line, 70, ry); ry += p.size*1.65; }
-        ry += p.size * 1.2;
-      });
+      if (line) g.fillText(line, 70, ry);
+      ry += lineHeight * 1.8;
+      g.font = 'italic 400 16px Georgia, serif'; g.fillStyle = '#8a8066';
+      g.fillText('— Lewis Carroll', 70, ry);
     } else if (kind === 'garden') {
       // Colorful flowers (great for color blindness + general)
       g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
@@ -1649,7 +1702,6 @@
   // Real photos drop-in: place files in vision-simulator/samples/ and they
   // override the procedural fallback automatically.
   const PHOTO_SAMPLES = {
-    street: 'samples/night-street.jpg',
     garden: 'samples/garden.jpg',
     face:   'samples/portrait.jpg'
   };
