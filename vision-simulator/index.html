@@ -161,20 +161,15 @@
   .btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
   .btn-file { position: relative; overflow: hidden; }
   .btn-file input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  /* View-tool buttons (Compare, Snapshot) — set apart from source-action buttons
-     with a small leading icon. */
+  /* Compare: set apart from source-action buttons with a small leading icon. */
   .btn .btn-ico { width: 16px; height: 16px; flex: 0 0 auto; }
   /* Compare reads as a toggle: a pill with a switch-like outline when off,
      filled/lit when on. */
   .btn.toggle { border-radius: 999px; border-style: dashed; }
   .btn.toggle[aria-pressed="true"] { border-style: solid; }
-  /* Snapshot: action pill, subtly tinted so it's distinct from plain ghost buttons */
-  .btn.tool { border-radius: 999px; }
   /* Flip Camera: icon-only, since it's a secondary action only shown while
      the camera is actually the active source. */
   .btn.icon-only { padding: 11px; }
-  /* Separates source controls (camera/upload) from view tools (compare/snapshot). */
-  .controls-divider { width: 1px; align-self: stretch; background: var(--line); margin: 2px 2px; }
 
   .section-title {
     font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
@@ -351,14 +346,9 @@
     <label class="btn btn-file">Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
-    <span class="controls-divider"></span>
     <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
       <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><path d="M7 9l-2 3 2 3M17 9l2 3-2 3"/></svg>
       <span id="compareLabel">Compare: Off</span>
-    </button>
-    <button class="btn ghost tool" id="snapshot">
-      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
-      Snapshot
     </button>
   </div>
 
@@ -1082,44 +1072,6 @@
     }
   }
 
-  // ===== Snapshot: save the current stage to a PNG =====
-  function takeSnapshot() {
-    if (!currentSource) { alert('Start the camera or upload an image first.'); return; }
-    // Compose stage + SVG overlay (floaters) into one canvas
-    const out = document.createElement('canvas');
-    out.width = stageCanvas.width; out.height = stageCanvas.height;
-    const o = out.getContext('2d');
-    o.drawImage(stageCanvas, 0, 0);
-    // burn in a small caption
-    const active = activeConditionKeys();
-    const titles = active.map(k => conditionMeta[k].title);
-    const label = (compareMode && active.length ? 'Normal | ' : '') + (titles.length ? titles.join(' + ') : conditionMeta.none.title);
-    o.font = `${Math.round(out.width * 0.022)}px Inter Tight, sans-serif`;
-    o.fillStyle = 'rgba(0,0,0,0.55)';
-    const tw = o.measureText(label).width + 20;
-    o.fillRect(10, out.height - 38, tw, 26);
-    o.fillStyle = '#fff';
-    o.fillText(label, 20, out.height - 20);
-
-    out.toBlob(async (blob) => {
-      const filename = `vision-sim-${active.length ? active.join('-') : 'none'}.png`;
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: 'Vision Simulator', text: label });
-          return;
-        } catch (e) {
-          if (e.name === 'AbortError') return;
-        }
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, 'image/png');
-  }
-
   const conditionMeta = {
     none: {
       title: 'Normal Vision (Emmetropia)',
@@ -1784,7 +1736,6 @@
   });
   flipBtn.addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
-  document.getElementById('snapshot').addEventListener('click', takeSnapshot);
 
   document.getElementById('sampleRow').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-sample]');
