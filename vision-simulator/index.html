@@ -170,6 +170,11 @@
   .btn.toggle[aria-pressed="true"] { border-style: solid; }
   /* Snapshot: action pill, subtly tinted so it's distinct from plain ghost buttons */
   .btn.tool { border-radius: 999px; }
+  /* Flip Camera: icon-only, since it's a secondary action only shown while
+     the camera is actually the active source. */
+  .btn.icon-only { padding: 11px; }
+  /* Separates source controls (camera/upload) from view tools (compare/snapshot). */
+  .controls-divider { width: 1px; align-self: stretch; background: var(--line); margin: 2px 2px; }
 
   .section-title {
     font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
@@ -336,12 +341,17 @@
   </div>
 
   <div class="source-row">
-    <button class="btn primary" id="startCam">Start Camera</button>
-    <button class="btn ghost" id="stopCam">Stop</button>
-    <button class="btn ghost" id="flipCam">Flip Camera</button>
+    <button class="btn primary" id="camToggle">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      <span id="camToggleLabel">Start Camera</span>
+    </button>
+    <button class="btn ghost icon-only" id="flipCam" title="Flip Camera" style="display:none;">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
     <label class="btn btn-file">Upload Image
       <input type="file" id="upload" accept="image/*">
     </label>
+    <span class="controls-divider"></span>
     <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
       <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><path d="M7 9l-2 3 2 3M17 9l2 3-2 3"/></svg>
       <span id="compareLabel">Compare: Off</span>
@@ -439,6 +449,9 @@
   const stageCanvas = document.getElementById('stageCanvas');
   const overlay = document.getElementById('overlay');
   const emptyState = document.getElementById('emptyState');
+  const camToggle = document.getElementById('camToggle');
+  const camToggleLabel = document.getElementById('camToggleLabel');
+  const flipBtn = document.getElementById('flipCam');
   const ctrlGrid = document.getElementById('ctrlGrid');
   const clinicalNote = document.getElementById('clinicalNote');
   const conditionsEl = document.getElementById('conditions');
@@ -536,6 +549,16 @@
     });
   }, { passive: true });
 
+  // Start/Stop share one toggle button, and Flip only makes sense while the
+  // camera is actually the active source — keep them in sync here rather
+  // than duplicating this in every place currentSource can change.
+  function updateCamUI() {
+    const active = currentSource === 'camera';
+    camToggle.classList.toggle('primary', !active);
+    camToggle.classList.toggle('ghost', active);
+    camToggleLabel.textContent = active ? 'Stop Camera' : 'Start Camera';
+    flipBtn.style.display = active ? 'inline-flex' : 'none';
+  }
   async function startCamera() {
     try {
       stopCamera();
@@ -549,6 +572,7 @@
       emptyState.style.display = 'none';
       resizeStage();
       loop();
+      updateCamUI();
     } catch (err) {
       alert('Camera unavailable: ' + err.message);
     }
@@ -561,6 +585,7 @@
       ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
       emptyState.style.display = 'grid';
     }
+    updateCamUI();
   }
   function flipCamera() {
     facingMode = facingMode === 'user' ? 'environment' : 'user';
@@ -1489,18 +1514,25 @@
     const g = c.getContext('2d');
 
     if (kind === 'chart') {
-      // Snellen-style eye chart
+      // Snellen-style eye chart. Rows shrink top-to-bottom, so the block of
+      // text is naturally top-heavy — center it vertically in the canvas
+      // rather than anchoring to a fixed y, so the "cover" crop that maps
+      // this onto the viewfinder doesn't leave it looking shifted up with
+      // blank space below.
       g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const rows = [
         { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
         { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
       ];
-      let y = 130;
-      rows.forEach(r => {
+      let y = 0;
+      const positions = rows.map(r => { const py = y; y += r.s * 0.95 + 24; return py; });
+      const topExtent = positions[0] - rows[0].s * 0.55;
+      const bottomExtent = positions[positions.length - 1] + rows[rows.length - 1].s * 0.55;
+      const offset = (c.height - (bottomExtent - topExtent)) / 2 - topExtent;
+      rows.forEach((r, i) => {
         g.font = `700 ${r.s}px Arial, sans-serif`;
-        g.fillText(r.t, c.width / 2, y);
-        y += r.s * 0.95 + 24;
+        g.fillText(r.t, c.width / 2, positions[i] + offset);
       });
     } else if (kind === 'grid') {
       // Amsler grid with central dot
@@ -1747,9 +1779,10 @@
     img.src = c.toDataURL('image/png');
   }
 
-  document.getElementById('startCam').addEventListener('click', startCamera);
-  document.getElementById('stopCam').addEventListener('click', stopCamera);
-  document.getElementById('flipCam').addEventListener('click', flipCamera);
+  camToggle.addEventListener('click', () => {
+    if (currentSource === 'camera') stopCamera(); else startCamera();
+  });
+  flipBtn.addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
   document.getElementById('snapshot').addEventListener('click', takeSnapshot);
 
