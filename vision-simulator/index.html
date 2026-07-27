@@ -186,6 +186,23 @@
   }
   .clear-conditions-btn.visible { display: inline-block; }
   .clear-conditions-btn:hover { text-decoration: underline; }
+  /* Pro upsell entry point + locked-condition badges. Pro gating only
+     exists inside the native app (there's no purchase flow on the plain
+     website), and only once we know the user hasn't already unlocked it. */
+  .unlock-pro-btn {
+    appearance: none; border: 1px solid var(--accent); background: rgba(212,165,116,0.12); color: var(--accent);
+    font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer;
+    padding: 3px 10px; border-radius: 999px; flex: 0 0 auto; display: none;
+  }
+  html.is-app:not(.is-pro) .unlock-pro-btn { display: inline-block; }
+  .pro-lock {
+    display: none; position: absolute; top: 6px; right: 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.03em; color: #1a1208;
+    background: var(--accent); padding: 1px 5px; border-radius: 999px;
+  }
+  html.is-app:not(.is-pro) .cond.locked { position: relative; opacity: 0.6; }
+  html.is-app:not(.is-pro) .cond.locked .pro-lock { display: inline-block; }
+  html.is-app:not(.is-pro) .btn.locked { opacity: 0.6; }
   .conditions-scroller { position: relative; }
   /* Two rows sharing one horizontally-scrolling grid — grid-auto-flow: column
      fills top-to-bottom then starts a new column, so a single swipe moves
@@ -292,6 +309,41 @@
   }
   #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
   .sample-thumb { width: 40px; height: 32px; border-radius: 6px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
+
+  /* Paywall: a simple centered sheet, shown/hidden via .open rather than
+     mounted/unmounted, since it's rare enough not to need JS-driven layout. */
+  .paywall-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200; background: rgba(8,11,16,0.72);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .paywall-overlay.open { display: flex; }
+  .paywall-panel {
+    position: relative; max-width: 380px; width: 100%; background: var(--panel);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 24px 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  .paywall-close {
+    position: absolute; top: 10px; right: 10px; appearance: none; border: none; background: none;
+    color: var(--ink-mute); font-size: 22px; line-height: 1; cursor: pointer; padding: 6px;
+  }
+  .paywall-close:hover { color: var(--ink); }
+  .paywall-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .paywall-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 16px; color: var(--ink); }
+  .paywall-features { margin: 0 0 22px; padding: 0 0 0 18px; color: var(--ink-dim); font-size: 13px; line-height: 1.6; }
+  .paywall-features li + li { margin-top: 8px; }
+  .paywall-buy {
+    appearance: none; width: 100%; border: 1px solid var(--accent); background: var(--accent); color: #1a1208;
+    font-family: inherit; font-size: 15px; font-weight: 700; padding: 13px; border-radius: var(--radius-sm);
+    cursor: pointer; margin-bottom: 10px;
+  }
+  .paywall-buy:hover { background: #e0b483; }
+  .paywall-restore {
+    appearance: none; width: 100%; border: none; background: none; color: var(--ink-mute);
+    font-family: inherit; font-size: 12px; cursor: pointer; padding: 6px;
+  }
+  .paywall-restore:hover { color: var(--ink); text-decoration: underline; }
+  .paywall-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin: 8px 0 0; min-height: 1.4em; }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -388,6 +440,7 @@
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions-header">
     <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
+    <button type="button" class="unlock-pro-btn" id="unlockProBtn">Unlock Pro</button>
     <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
   </div>
   <div class="conditions-scroller" id="conditionsScroller">
@@ -396,13 +449,13 @@
       <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
       <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
       <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
-      <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span></button>
-      <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span></button>
-      <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span></button>
-      <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span></button>
-      <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span></button>
-      <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span></button>
-      <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span></button>
+      <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
     </div>
     <div class="scroll-cue" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -419,6 +472,22 @@
     <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
     <a href="https://rjlcevans.com/privacy" id="privacyLink" style="display:none;">Privacy Policy</a>
   </footer>
+</div>
+
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-panel">
+    <button type="button" class="paywall-close" id="paywallClose" aria-label="Close">&times;</button>
+    <p class="paywall-eyebrow">Vision Simulator Pro</p>
+    <h3 class="paywall-title">Unlock the full clinical set</h3>
+    <ul class="paywall-features">
+      <li>7 more conditions — Glaucoma, AMD, Diabetic Retinopathy, Color Blindness, Floaters/PVD, Retinitis Pigmentosa, Presbyopia</li>
+      <li>Combine multiple conditions at once</li>
+      <li>Compare mode — side-by-side normal vs. impaired</li>
+    </ul>
+    <button type="button" class="paywall-buy" id="paywallBuy">Unlock Pro — $1.99</button>
+    <button type="button" class="paywall-restore" id="paywallRestore">Restore Purchases</button>
+    <p class="paywall-note" id="paywallNote"></p>
+  </div>
 </div>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -452,6 +521,79 @@
   const conditionsEl = document.getElementById('conditions');
   const conditionsScroller = document.getElementById('conditionsScroller');
   const compareLine = document.getElementById('compareLine');
+  const compareBtn = document.getElementById('compareToggle');
+
+  // ===== Pro unlock (In-App Purchase via cordova-plugin-purchase) =====
+  // Gating only applies inside the native app — there's no purchase flow on
+  // the plain website, so it stays fully open there like it always has.
+  // NOTE: PRO_PRODUCT_ID must exactly match the non-consumable product ID
+  // registered in App Store Connect, or purchases will fail to resolve.
+  const PRO_PRODUCT_ID = 'com.rjlcevans.visionsim.pro';
+  const PRO_CONDITIONS = new Set(['glaucoma', 'amd', 'diabetic', 'colorblind', 'floaters', 'rp', 'presbyopia']);
+  const isNativeApp = !!window.Capacitor;
+  let isPro = false;
+  let iapStore = null;
+
+  const paywallOverlay = document.getElementById('paywallOverlay');
+  const paywallNote = document.getElementById('paywallNote');
+
+  function updateProUI() {
+    document.documentElement.classList.toggle('is-pro', isPro);
+    conditionsEl.querySelectorAll('.cond').forEach(b => {
+      b.classList.toggle('locked', !isPro && PRO_CONDITIONS.has(b.dataset.cond));
+    });
+    compareBtn.classList.toggle('locked', !isPro);
+  }
+  function setPro(owned) {
+    isPro = owned;
+    try { localStorage.setItem('vs_isPro', owned ? '1' : '0'); } catch (e) {}
+    updateProUI();
+  }
+  function openPaywall(note) {
+    paywallNote.textContent = note || '';
+    paywallOverlay.classList.add('open');
+  }
+  function closePaywall() { paywallOverlay.classList.remove('open'); }
+
+  document.getElementById('unlockProBtn').addEventListener('click', () => openPaywall());
+  document.getElementById('paywallClose').addEventListener('click', closePaywall);
+  paywallOverlay.addEventListener('click', e => { if (e.target === paywallOverlay) closePaywall(); });
+  document.getElementById('paywallBuy').addEventListener('click', () => {
+    if (!iapStore || !window.CdvPurchase) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    const { Platform } = window.CdvPurchase;
+    const product = iapStore.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
+    const offer = product && product.getOffer();
+    if (offer) offer.order();
+    else openPaywall('Purchase unavailable right now — try again shortly.');
+  });
+  document.getElementById('paywallRestore').addEventListener('click', () => {
+    if (!iapStore) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    paywallNote.textContent = 'Restoring…';
+    iapStore.restorePurchases();
+  });
+
+  if (isNativeApp) {
+    // Cache last-known state so gating is correct instantly on launch,
+    // before the store has a chance to check in over the network. Runs
+    // unconditionally even on a cache miss, so buttons default to locked
+    // rather than flashing unlocked until the store round-trip resolves.
+    try { if (localStorage.getItem('vs_isPro') === '1') isPro = true; } catch (e) {}
+    updateProUI();
+
+    document.addEventListener('deviceready', () => {
+      if (!window.CdvPurchase) return;
+      const { store, ProductType, Platform } = window.CdvPurchase;
+      iapStore = store;
+      store.register([{ id: PRO_PRODUCT_ID, type: ProductType.NON_CONSUMABLE, platform: Platform.APPLE_APPSTORE }]);
+      store.when().approved(transaction => transaction.verify()).verified(receipt => receipt.finish());
+      store.when().productUpdated(() => {
+        const product = store.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
+        if (product) setPro(store.owned(product));
+        if (paywallOverlay.classList.contains('open')) paywallNote.textContent = store.owned(product) ? 'Unlocked — thanks!' : '';
+      });
+      store.initialize([Platform.APPLE_APPSTORE]);
+    });
+  }
 
   // Toggle fade masks / scroll cue based on actual scroll position, so
   // "Normal Vision" at the very start never looks cut off on the left,
@@ -1435,6 +1577,14 @@
     if (!btn) return;
     const key = btn.dataset.cond;
     const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
+    const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
+
+    if (isNativeApp && !isPro && key !== 'none' && !alreadyOn) {
+      if (PRO_CONDITIONS.has(key)) { openPaywall(); return; }
+      // Combining requires Pro too — block adding a second condition, but
+      // always allow switching away from / turning off the current one.
+      if (activeConditions.size >= 1 && !activeConditions.has('none')) { openPaywall(); return; }
+    }
 
     if (key === 'none') {
       conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
@@ -1748,7 +1898,6 @@
     loadSample(btn.dataset.sample);
   });
 
-  const compareBtn = document.getElementById('compareToggle');
   function positionDivider() {
     compareLine.style.left = (compareSplit * 100) + '%';
     const tagL = document.getElementById('compareTagL');
@@ -1758,6 +1907,7 @@
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
   compareBtn.addEventListener('click', () => {
+    if (isNativeApp && !isPro) { openPaywall(); return; }
     compareMode = !compareMode;
     compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
     const lbl = document.getElementById('compareLabel');
