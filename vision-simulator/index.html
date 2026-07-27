@@ -363,15 +363,7 @@
       Amsler Grid
     </button>
     <button class="btn ghost" data-sample="street">
-      <svg class="sample-thumb" viewBox="0 0 26 20">
-        <rect width="26" height="20" fill="#0b0e16"/>
-        <path d="M11 8 L15 8 L21 20 L5 20 Z" fill="#1b1f27"/>
-        <path d="M13 8 V20" stroke="#c9b15a" stroke-width="0.6" stroke-dasharray="1.4 1.4"/>
-        <circle cx="9" cy="16" r="2.2" fill="#fffdf0" opacity="0.9"/>
-        <circle cx="17" cy="16" r="2.2" fill="#fffdf0" opacity="0.9"/>
-        <circle cx="4" cy="9" r="1.3" fill="#fff8e0" opacity="0.85"/>
-        <circle cx="22" cy="8" r="1.1" fill="#fff8e0" opacity="0.85"/>
-      </svg>
+      <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
       Night Street
     </button>
     <button class="btn ghost" data-sample="garden">
@@ -1659,30 +1651,46 @@
       g.beginPath(); g.moveTo(0,c.height); g.lineTo(0,hy+360); g.quadraticCurveTo(cx-280,hy+290,cx-90,hy+240); g.lineTo(cx-78,hy+232); g.lineTo(cx+78,hy+232); g.lineTo(cx+90,hy+240); g.quadraticCurveTo(cx+280,hy+290,c.width,hy+360); g.lineTo(c.width,c.height); g.closePath(); g.fill();
     } else if (kind === 'reading') {
       // A book passage at a comfortable large-print size — good for testing
-      // presbyopia / near-vision acuity rather than a clinical form.
-      c.width = 900; c.height = 1200;
-      g.fillStyle = '#fbf6ec'; g.fillRect(0, 0, c.width, c.height);
-      g.textAlign = 'left'; g.textBaseline = 'top';
-      g.fillStyle = '#2a2418';
-      g.font = 'italic 400 22px Georgia, serif';
-      g.fillText('Alice’s Adventures in Wonderland', 70, 64);
-      g.strokeStyle = '#d8cdb0'; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(70, 104); g.lineTo(c.width-70, 104); g.stroke();
+      // presbyopia / near-vision acuity rather than a clinical form. Height
+      // is sized to the measured passage length (rather than a fixed tall
+      // canvas) so the "cover" crop that maps this onto the viewfinder
+      // shows the whole passage instead of blank page below it.
+      c.width = 900;
+      const marginX = 70, maxW = c.width - marginX*2;
+      const titleSize = 22, bodySize = 30, lineHeight = bodySize * 1.6, attribSize = 16;
+      const topPad = 56, titleToRule = 22, ruleToBody = 40, bodyToAttrib = lineHeight * 0.9, bottomPad = 56;
 
       const passage = 'Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice, “without pictures or conversations?” So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.';
 
-      g.font = '400 30px Georgia, serif'; g.fillStyle = '#1c1810';
-      const maxW = c.width - 140, lineHeight = 30 * 1.6;
-      let line = '', ry = 150;
+      g.font = `400 ${bodySize}px Georgia, serif`;
+      const lines = [];
+      let line = '';
       passage.split(' ').forEach(word => {
         const test = line + (line ? ' ' : '') + word;
-        if (g.measureText(test).width > maxW && line) { g.fillText(line, 70, ry); ry += lineHeight; line = word; }
+        if (g.measureText(test).width > maxW && line) { lines.push(line); line = word; }
         else line = test;
       });
-      if (line) g.fillText(line, 70, ry);
-      ry += lineHeight * 1.8;
-      g.font = 'italic 400 16px Georgia, serif'; g.fillStyle = '#8a8066';
-      g.fillText('— Lewis Carroll', 70, ry);
+      if (line) lines.push(line);
+
+      const contentH = titleSize*1.3 + titleToRule + ruleToBody + lines.length*lineHeight + bodyToAttrib + attribSize*1.3;
+      c.height = Math.round(topPad + contentH + bottomPad);
+
+      g.fillStyle = '#fbf6ec'; g.fillRect(0, 0, c.width, c.height);
+      g.textAlign = 'left'; g.textBaseline = 'top';
+
+      let ry = topPad;
+      g.fillStyle = '#2a2418'; g.font = `italic 400 ${titleSize}px Georgia, serif`;
+      g.fillText('Alice’s Adventures in Wonderland', marginX, ry);
+      ry += titleSize*1.3 + titleToRule;
+      g.strokeStyle = '#d8cdb0'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(marginX, ry); g.lineTo(c.width-marginX, ry); g.stroke();
+      ry += ruleToBody;
+
+      g.font = `400 ${bodySize}px Georgia, serif`; g.fillStyle = '#1c1810';
+      lines.forEach(l => { g.fillText(l, marginX, ry); ry += lineHeight; });
+      ry += bodyToAttrib;
+      g.font = `italic 400 ${attribSize}px Georgia, serif`; g.fillStyle = '#8a8066';
+      g.fillText('— Lewis Carroll', marginX, ry);
     } else if (kind === 'garden') {
       // Colorful flowers (great for color blindness + general)
       g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
@@ -1702,6 +1710,7 @@
   // Real photos drop-in: place files in vision-simulator/samples/ and they
   // override the procedural fallback automatically.
   const PHOTO_SAMPLES = {
+    street: 'samples/night-street.jpg',
     garden: 'samples/garden.jpg',
     face:   'samples/portrait.jpg'
   };
