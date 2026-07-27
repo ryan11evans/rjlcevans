@@ -187,8 +187,13 @@
   .clear-conditions-btn.visible { display: inline-block; }
   .clear-conditions-btn:hover { text-decoration: underline; }
   .conditions-scroller { position: relative; }
+  /* Two rows sharing one horizontally-scrolling grid — grid-auto-flow: column
+     fills top-to-bottom then starts a new column, so a single swipe moves
+     both rows together (they're the same scroll container, not two synced
+     ones) while still showing twice as many conditions per screen. */
   .conditions {
-    display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto);
+    overflow-x: auto; gap: 8px;
     scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
     padding-bottom: 4px; margin-bottom: -4px;
     scrollbar-width: none;
@@ -227,7 +232,7 @@
     50% { transform: translateX(4px); opacity: 1; }
   }
   .cond {
-    flex: 0 0 auto; scroll-snap-align: start; min-width: 128px;
+    scroll-snap-align: start; min-width: 128px;
     padding: 12px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-sm);
     cursor: pointer; text-align: left; color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 500;
     transition: border-color 0.22s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -354,29 +359,29 @@
 
   <div class="source-row" id="sampleRow">
     <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
-    <button class="btn ghost" data-sample="chart">
-      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
-      Eye Chart
-    </button>
-    <button class="btn ghost" data-sample="grid">
-      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#0b0b0b"/><g stroke="#fff" stroke-width="0.5"><path d="M4 0V20M9 0V20M13 0V20M17 0V20M22 0V20M0 4H26M0 9H26M0 13H26M0 17H26"/></g><circle cx="13" cy="10" r="1.3" fill="#fff"/></svg>
-      Amsler Grid
-    </button>
-    <button class="btn ghost" data-sample="street">
-      <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
-      Night Street
+    <button class="btn ghost" data-sample="reading">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
+      Reading
     </button>
     <button class="btn ghost" data-sample="garden">
       <img class="sample-thumb" src="samples/garden.jpg" alt="" style="object-position:center bottom;">
       Color Garden
     </button>
+    <button class="btn ghost" data-sample="chart">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
+      Eye Chart
+    </button>
+    <button class="btn ghost" data-sample="street">
+      <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
+      Night Street
+    </button>
     <button class="btn ghost" data-sample="face">
       <img class="sample-thumb" src="samples/portrait.jpg" alt="">
       Portrait
     </button>
-    <button class="btn ghost" data-sample="reading">
-      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
-      Reading
+    <button class="btn ghost" data-sample="grid">
+      <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#0b0b0b"/><g stroke="#fff" stroke-width="0.5"><path d="M4 0V20M9 0V20M13 0V20M17 0V20M22 0V20M0 4H26M0 9H26M0 13H26M0 17H26"/></g><circle cx="13" cy="10" r="1.3" fill="#fff"/></svg>
+      Amsler Grid
     </button>
   </div>
 
