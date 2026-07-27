@@ -187,22 +187,25 @@
   .clear-conditions-btn.visible { display: inline-block; }
   .clear-conditions-btn:hover { text-decoration: underline; }
   /* Pro upsell entry point + locked-condition badges. Pro gating only
-     exists inside the native app (there's no purchase flow on the plain
-     website), and only once we know the user hasn't already unlocked it. */
+     exists inside the native app, and only once the IAP plugin has actually
+     confirmed itself present (html.pro-ready, set by JS) — never just off
+     window.Capacitor. That guards against gating a build that predates the
+     plugin: it would set html.is-app same as any newer build, but could
+     never satisfy a purchase, so it must never lock anything either. */
   .unlock-pro-btn {
     appearance: none; border: 1px solid var(--accent); background: rgba(212,165,116,0.12); color: var(--accent);
     font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer;
     padding: 3px 10px; border-radius: 999px; flex: 0 0 auto; display: none;
   }
-  html.is-app:not(.is-pro) .unlock-pro-btn { display: inline-block; }
+  html.is-app.pro-ready:not(.is-pro) .unlock-pro-btn { display: inline-block; }
   .pro-lock {
     display: none; position: absolute; top: 6px; right: 6px;
     font-size: 9px; font-weight: 700; letter-spacing: 0.03em; color: #1a1208;
     background: var(--accent); padding: 1px 5px; border-radius: 999px;
   }
-  html.is-app:not(.is-pro) .cond.locked { position: relative; opacity: 0.6; }
-  html.is-app:not(.is-pro) .cond.locked .pro-lock { display: inline-block; }
-  html.is-app:not(.is-pro) .btn.locked { opacity: 0.6; }
+  html.is-app.pro-ready:not(.is-pro) .cond.locked { position: relative; opacity: 0.6; }
+  html.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock { display: inline-block; }
+  html.is-app.pro-ready:not(.is-pro) .btn.locked { opacity: 0.6; }
   .conditions-scroller { position: relative; }
   /* Two rows sharing one horizontally-scrolling grid — grid-auto-flow: column
      fills top-to-bottom then starts a new column, so a single swipe moves
@@ -533,6 +536,11 @@
   const isNativeApp = !!window.Capacitor;
   let isPro = false;
   let iapStore = null;
+  // True only once deviceready has fired *and* the plugin is confirmed
+  // present. A build that predates this feature also sets window.Capacitor,
+  // so gating must never key off that alone — it'd lock out anyone still
+  // on an old binary with no way for them to actually purchase.
+  let pluginReady = false;
 
   const paywallOverlay = document.getElementById('paywallOverlay');
   const paywallNote = document.getElementById('paywallNote');
@@ -540,9 +548,9 @@
   function updateProUI() {
     document.documentElement.classList.toggle('is-pro', isPro);
     conditionsEl.querySelectorAll('.cond').forEach(b => {
-      b.classList.toggle('locked', !isPro && PRO_CONDITIONS.has(b.dataset.cond));
+      b.classList.toggle('locked', pluginReady && !isPro && PRO_CONDITIONS.has(b.dataset.cond));
     });
-    compareBtn.classList.toggle('locked', !isPro);
+    compareBtn.classList.toggle('locked', pluginReady && !isPro);
   }
   function setPro(owned) {
     isPro = owned;
@@ -573,15 +581,16 @@
   });
 
   if (isNativeApp) {
-    // Cache last-known state so gating is correct instantly on launch,
-    // before the store has a chance to check in over the network. Runs
-    // unconditionally even on a cache miss, so buttons default to locked
-    // rather than flashing unlocked until the store round-trip resolves.
+    // Cache last-known state so gating is correct instantly once pluginReady
+    // flips true, before the store has a chance to check in over the network.
     try { if (localStorage.getItem('vs_isPro') === '1') isPro = true; } catch (e) {}
-    updateProUI();
 
     document.addEventListener('deviceready', () => {
-      if (!window.CdvPurchase) return;
+      if (!window.CdvPurchase) return; // build predates the plugin — stay fully unlocked, same as before this feature existed
+      pluginReady = true;
+      document.documentElement.classList.add('pro-ready');
+      updateProUI(); // now that gating can actually be satisfied, lock by default until the store confirms ownership
+
       const { store, ProductType, Platform } = window.CdvPurchase;
       iapStore = store;
       store.register([{ id: PRO_PRODUCT_ID, type: ProductType.NON_CONSUMABLE, platform: Platform.APPLE_APPSTORE }]);
@@ -1579,7 +1588,7 @@
     const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
     const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
 
-    if (isNativeApp && !isPro && key !== 'none' && !alreadyOn) {
+    if (pluginReady && !isPro && key !== 'none' && !alreadyOn) {
       if (PRO_CONDITIONS.has(key)) { openPaywall(); return; }
       // Combining requires Pro too — block adding a second condition, but
       // always allow switching away from / turning off the current one.
@@ -1907,7 +1916,7 @@
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
   compareBtn.addEventListener('click', () => {
-    if (isNativeApp && !isPro) { openPaywall(); return; }
+    if (pluginReady && !isPro) { openPaywall(); return; }
     compareMode = !compareMode;
     compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
     const lbl = document.getElementById('compareLabel');
