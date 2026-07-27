@@ -101,9 +101,16 @@
     .controls { padding: 14px; margin-top: 8px; }
   }
   /* With the header collapsed to a slim bar in-app, give the camera more
-     room — closer to filling the top third of the screen. */
+     room — closer to filling the top third of the screen. Breaking it out
+     of .wrap's side padding lets it run edge-to-edge instead of matching
+     the article-width column the rest of the page uses. */
   @media (max-width: 900px) {
-    html.is-app .stage-wrap { max-height: 48vh; }
+    html.is-app .stage-wrap {
+      max-height: 48vh;
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      border-radius: 0;
+    }
   }
   .stage { position: absolute; inset: 0; display: grid; place-items: center; }
   #video, #sourceCanvas { display: none; }
