@@ -142,7 +142,15 @@
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
-  .conditions-hint { font-size: 11px; color: var(--ink-mute); margin: -6px 0 10px; }
+  .conditions-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: -6px 0 10px; }
+  .conditions-hint { font-size: 11px; color: var(--ink-mute); margin: 0; }
+  .clear-conditions-btn {
+    appearance: none; border: none; background: none; color: var(--accent);
+    font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+    padding: 2px 0; flex: 0 0 auto; display: none;
+  }
+  .clear-conditions-btn.visible { display: inline-block; }
+  .clear-conditions-btn:hover { text-decoration: underline; }
   .conditions-scroller { position: relative; }
   .conditions {
     display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
@@ -334,7 +342,10 @@
   </div>
 
   <h2 class="section-title">Select Condition</h2>
-  <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
+  <div class="conditions-header">
+    <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
+    <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
+  </div>
   <div class="conditions-scroller" id="conditionsScroller">
     <div class="conditions" id="conditions">
       <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
@@ -1342,7 +1353,61 @@
       badge.style.display = '';
     }
     if (tagR) tagR.textContent = active.map(shortTitle).join(' + ');
+
+    const clearBtn = document.getElementById('clearConditionsBtn');
+    if (clearBtn) clearBtn.classList.toggle('visible', active.length > 0);
+
+    updateShareUrl();
   }
+
+  // Tiny haptic tap when toggling a condition — only fires inside the native
+  // app (Capacitor injects window.Capacitor there); silently does nothing on
+  // the plain website, where that object never exists.
+  function hapticTap() {
+    try {
+      const haptics = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+      if (haptics) haptics.impact({ style: 'Light' });
+    } catch (_) { /* not running inside the app — ignore */ }
+  }
+
+  // Keep the URL in sync with the active combination so it can be copied
+  // and shared/bookmarked (e.g. for patient-education handouts) — loading
+  // that URL later reopens the same combo. No-op inside the native app
+  // (no address bar to copy from there), harmless either way.
+  function updateShareUrl() {
+    if (!window.history || !window.history.replaceState) return;
+    const active = activeConditionKeys();
+    const url = new URL(window.location.href);
+    if (active.length > 0) url.searchParams.set('cond', active.join(','));
+    else url.searchParams.delete('cond');
+    window.history.replaceState(null, '', url.toString());
+  }
+
+  // Apply a specific combination (used by the clear-all button and by the
+  // ?cond= deep link on load). Pass [] to reset to Normal Vision.
+  function setActiveConditions(keys) {
+    const valid = keys.filter(k => CONDITION_ORDER.includes(k));
+    conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    if (valid.length === 0) {
+      activeConditions = new Set(['none']);
+      const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
+      if (noneBtn) noneBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      activeConditions = new Set(valid);
+      valid.forEach(key => {
+        const b = conditionsEl.querySelector(`[data-cond="${key}"]`);
+        if (b) b.setAttribute('aria-pressed', 'true');
+        if (defaults[key]) Object.assign(params, defaults[key]);
+      });
+    }
+    buildControls();
+    if (currentSource === 'image') drawOnce();
+  }
+
+  document.getElementById('clearConditionsBtn').addEventListener('click', () => {
+    setActiveConditions([]);
+    hapticTap();
+  });
 
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
@@ -1372,6 +1437,7 @@
       }
     }
 
+    hapticTap();
     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     buildControls();
     if (currentSource === 'image') drawOnce();
@@ -1644,7 +1710,13 @@
   stageWrap.addEventListener('pointercancel', endDrag);
 
   resizeStage();
-  buildControls();
+  // Deep link: ?cond=cataract,glaucoma opens straight into that combination.
+  const urlConds = new URLSearchParams(window.location.search).get('cond');
+  if (urlConds) {
+    setActiveConditions(urlConds.split(',').map(s => s.trim()).filter(Boolean));
+  } else {
+    buildControls();
+  }
   updateConditionsScrollState();
 
   window.addEventListener('beforeunload', stopCamera);
