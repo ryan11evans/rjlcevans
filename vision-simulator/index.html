@@ -142,11 +142,14 @@
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
+  .conditions-hint { font-size: 11px; color: var(--ink-mute); margin: -6px 0 10px; }
   .conditions {
     display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
     scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
     padding-bottom: 4px; margin-bottom: -4px;
     scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 28px), transparent);
   }
   .conditions::-webkit-scrollbar { display: none; }
   .cond {
@@ -159,6 +162,11 @@
   .cond[aria-pressed="true"] { background: var(--panel-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .cond .name { display: block; white-space: nowrap; }
   .cond .latin { display: block; font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; color: var(--ink-mute); margin-top: 2px; font-weight: 400; white-space: nowrap; }
+  .ctrl-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin: 4px 0 -4px; grid-column: 1 / -1;
+  }
+  .ctrl-group-label:first-child { margin-top: 0; }
 
   .controls { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 12px; }
   .ctrl-grid { display: grid; gap: 16px; }
@@ -295,6 +303,7 @@
   </div>
 
   <h2 class="section-title">Select Condition</h2>
+  <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
   <div class="conditions" id="conditions">
     <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
     <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
@@ -357,7 +366,11 @@
   let currentSource = null;
   let uploadedImage = null;
   let facingMode = 'environment';
-  let condition = 'none';
+  let activeConditions = new Set(['none']);
+  // Fixed compositing order when multiple conditions are combined — roughly
+  // optical (refractive) first, then media opacity, then field-loss, then overlays.
+  const CONDITION_ORDER = ['myopia', 'astigmatism', 'presbyopia', 'cataract', 'glaucoma', 'amd', 'diabetic', 'rp', 'colorblind', 'floaters'];
+  function activeConditionKeys() { return CONDITION_ORDER.filter(k => activeConditions.has(k)); }
   let compareMode = false;
   let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
 
@@ -499,6 +512,7 @@
   // ===== Filters =====
   const _blurCanvasA = document.createElement('canvas');
   const _blurCanvasB = document.createElement('canvas');
+  const _chainCanvas = document.createElement('canvas'); // holds intermediate result when chaining multiple conditions
   function applyBlur(sigma) {
     if (sigma <= 0) {
       ctx.drawImage(sourceCanvas, 0, 0);
@@ -859,10 +873,10 @@
     ctx.restore();
   }
 
-  // Dispatch the active condition's filter onto the (already-clipped) canvas.
-  function applyCondition() {
-    switch (condition) {
-      case 'none':       ctx.drawImage(sourceCanvas, 0, 0); break;
+  // Render a single condition's filter onto the (already-clipped) canvas,
+  // reading from sourceCanvas and writing to ctx.
+  function applyConditionSingle(cond) {
+    switch (cond) {
       case 'myopia':     applyBlur(params.blurSigma); break;
       case 'astigmatism':applyAstigmatism(params.astigMag, params.axis); break;
       case 'cataract':   applyCataract(params.cataractSev); break;
@@ -876,13 +890,38 @@
     }
   }
 
+  // Dispatch onto the (already-clipped) canvas. When multiple conditions are
+  // active, chain them: each one's rendered result becomes the next one's
+  // input, via sourceCanvas/_chainCanvas (sourceCanvas gets refreshed from
+  // the live camera/image again next frame, so overwriting it mid-chain here
+  // is safe).
+  function applyCondition() {
+    const active = activeConditionKeys();
+    if (active.length === 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
+    if (active.length === 1) { applyConditionSingle(active[0]); return; }
+
+    const w = stageCanvas.width, h = stageCanvas.height;
+    _chainCanvas.width = w; _chainCanvas.height = h;
+    const chainCtx = _chainCanvas.getContext('2d');
+    chainCtx.clearRect(0, 0, w, h);
+    chainCtx.drawImage(sourceCanvas, 0, 0);
+    for (const key of active) {
+      sCtx.clearRect(0, 0, w, h);
+      sCtx.drawImage(_chainCanvas, 0, 0);
+      applyConditionSingle(key);
+      chainCtx.clearRect(0, 0, w, h);
+      chainCtx.drawImage(stageCanvas, 0, 0);
+    }
+    // Final composited result is already in ctx from the last pass.
+  }
+
   function render() {
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
     clearOverlay();                 // we now draw floaters on the canvas, not SVG
-    if (condition === 'floaters') stepFloaters();
+    if (activeConditions.has('floaters')) stepFloaters();
 
-    if (compareMode && condition !== 'none') {
+    if (compareMode && !activeConditions.has('none')) {
       const w = stageCanvas.width, h = stageCanvas.height;
       const splitX = Math.round(w * compareSplit);
       // Left side: normal (untouched source)
@@ -910,7 +949,7 @@
   }
   function drawOnce() {
     if (rafId) cancelAnimationFrame(rafId);
-    if (condition === 'floaters' || currentSource === 'camera') {
+    if (activeConditions.has('floaters') || currentSource === 'camera') {
       loop();
     } else {
       render();
@@ -926,8 +965,9 @@
     const o = out.getContext('2d');
     o.drawImage(stageCanvas, 0, 0);
     // burn in a small caption
-    const meta = conditionMeta[condition];
-    const label = (compareMode && condition !== 'none' ? 'Normal | ' : '') + (meta ? meta.title : '');
+    const active = activeConditionKeys();
+    const titles = active.map(k => conditionMeta[k].title);
+    const label = (compareMode && active.length ? 'Normal | ' : '') + (titles.length ? titles.join(' + ') : conditionMeta.none.title);
     o.font = `${Math.round(out.width * 0.022)}px Inter Tight, sans-serif`;
     o.fillStyle = 'rgba(0,0,0,0.55)';
     const tw = o.measureText(label).width + 20;
@@ -936,7 +976,7 @@
     o.fillText(label, 20, out.height - 20);
 
     out.toBlob(async (blob) => {
-      const filename = `vision-sim-${condition}.png`;
+      const filename = `vision-sim-${active.length ? active.join('-') : 'none'}.png`;
       const file = new File([blob], filename, { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
@@ -1208,37 +1248,80 @@
     return wrap;
   }
 
+  function shortTitle(key) { return conditionMeta[key].title.split(' (')[0].split(' — ')[0]; }
+
   function buildControls() {
     ctrlGrid.innerHTML = '';
     ctrlGrid.classList.remove('entering');
     void ctrlGrid.offsetWidth; // force reflow so animation restarts
     ctrlGrid.classList.add('entering');
-    const meta = conditionMeta[condition];
-    clinicalNote.innerHTML = `<strong>${meta.title}.</strong> ${meta.note}`;
-    meta.controls().forEach(node => ctrlGrid.appendChild(node));
-    if (condition === 'floaters') initFloaters(params.floaterCount);
-    if (condition === 'diabetic') initDR(params.drSeverity);
-    if (condition === 'rp') { rpSpicules = null; initRP(params.rpStage); }
+
+    const active = activeConditionKeys();
+    const badge = document.getElementById('activeBadge');
+    const tagR = document.getElementById('compareTagR');
+
+    if (active.length === 0) {
+      const meta = conditionMeta.none;
+      clinicalNote.innerHTML = `<strong>${meta.title}.</strong> ${meta.note}`;
+      clearOverlay();
+      if (badge) badge.style.display = 'none';
+      if (tagR) tagR.textContent = 'Impaired';
+      return;
+    }
+
+    clinicalNote.innerHTML = active
+      .map(key => `<strong>${conditionMeta[key].title}.</strong> ${conditionMeta[key].note}`)
+      .join('<hr style="border:none;border-top:1px solid var(--line);margin:12px 0;">');
+
+    active.forEach(key => {
+      const label = document.createElement('div');
+      label.className = 'ctrl-group-label';
+      label.textContent = shortTitle(key);
+      ctrlGrid.appendChild(label);
+      conditionMeta[key].controls().forEach(node => ctrlGrid.appendChild(node));
+    });
+
+    if (activeConditions.has('floaters')) initFloaters(params.floaterCount);
+    if (activeConditions.has('diabetic')) initDR(params.drSeverity);
+    if (activeConditions.has('rp')) { rpSpicules = null; initRP(params.rpStage); }
     clearOverlay();
 
-    const badge = document.getElementById('activeBadge');
     if (badge) {
-      const short = meta.title.split(' (')[0].split(' — ')[0];
-      badge.textContent = short;
-      badge.style.display = condition === 'none' ? 'none' : '';
+      badge.textContent = active.map(shortTitle).join(' + ');
+      badge.style.display = '';
     }
-    const tagR = document.getElementById('compareTagR');
-    if (tagR) tagR.textContent = condition === 'none' ? 'Impaired' : meta.title.split(' (')[0];
+    if (tagR) tagR.textContent = active.map(shortTitle).join(' + ');
   }
 
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
-    conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
-    btn.setAttribute('aria-pressed', 'true');
+    const key = btn.dataset.cond;
+    const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
+
+    if (key === 'none') {
+      conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      activeConditions = new Set(['none']);
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      activeConditions.delete('none');
+      if (noneBtn) noneBtn.setAttribute('aria-pressed', 'false');
+      const isActive = btn.getAttribute('aria-pressed') === 'true';
+      if (isActive) {
+        activeConditions.delete(key);
+        btn.setAttribute('aria-pressed', 'false');
+      } else {
+        activeConditions.add(key);
+        btn.setAttribute('aria-pressed', 'true');
+        if (defaults[key]) Object.assign(params, defaults[key]);
+      }
+      if (activeConditions.size === 0) {
+        activeConditions.add('none');
+        if (noneBtn) noneBtn.setAttribute('aria-pressed', 'true');
+      }
+    }
+
     btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    condition = btn.dataset.cond;
-    if (defaults[condition]) Object.assign(params, defaults[condition]);
     buildControls();
     if (currentSource === 'image') drawOnce();
   });
@@ -1490,7 +1573,7 @@
     if (currentSource === 'image') drawOnce();
   }
   stageWrap.addEventListener('pointerdown', (e) => {
-    if (!compareMode || condition === 'none') return;
+    if (!compareMode || activeConditions.has('none')) return;
     dragging = true;
     stageWrap.setPointerCapture(e.pointerId);
     updateSplitFromEvent(e.clientX);
