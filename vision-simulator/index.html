@@ -97,7 +97,7 @@
     .section-title { margin: 18px 0 8px; font-size: 17px; }
     .source-row { margin: 10px 0 4px; }
     .conditions { gap: 6px; }
-    .cond { padding: 9px 10px; font-size: 12px; min-width: 108px; }
+    .cond { padding: 9px 10px; font-size: 12px; width: 108px; }
     .controls { padding: 14px; margin-top: 8px; }
   }
   /* With the header collapsed to a slim bar in-app, give the camera more
@@ -252,15 +252,15 @@
     50% { transform: translateX(4px); opacity: 1; }
   }
   .cond {
-    scroll-snap-align: start; min-width: 128px;
+    scroll-snap-align: start; width: 128px;
     padding: 12px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-sm);
     cursor: pointer; text-align: left; color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 500;
     transition: border-color 0.22s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
   .cond:hover { border-color: var(--accent-2); }
   .cond[aria-pressed="true"] { background: var(--panel-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .cond .name { display: block; white-space: nowrap; }
-  .cond .latin { display: block; font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; color: var(--ink-mute); margin-top: 2px; font-weight: 400; white-space: nowrap; }
+  .cond .name { display: block; }
+  .cond .latin { display: block; font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; color: var(--ink-mute); margin-top: 2px; font-weight: 400; }
   .ctrl-group-label {
     font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--accent); margin: 4px 0 -4px; grid-column: 1 / -1;
