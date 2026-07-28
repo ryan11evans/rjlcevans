@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Vision Simulator — App Store Screenshots (iPad)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { background: #070e18; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 40px 24px; font-family: 'Inter Tight', -apple-system, sans-serif; }
+  h1 { color: #d4a574; margin: 0; font-size: 22px; font-family: 'Fraunces', serif; font-weight: 500; }
+  p.sub { color: #6b7888; margin: 0; font-size: 13px; text-align: center; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  canvas { border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.8); }
+  .label { color: #6b7888; font-size: 12px; }
+  button { padding: 10px 24px; background: #d4a574; color: #1a1208; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .err { color: #f66; font-size: 12px; max-width: 280px; }
+</style>
+</head>
+<body>
+<h1>Vision Simulator — App Store Screenshots (13" iPad)</h1>
+<p class="sub">5 screenshots · 2064 × 2752 · iPad 13"</p>
+<div class="row" id="cards"></div>
+
+<script>
+const W = 2064, H = 2752;
+const BG      = '#0f1620';
+const ACCENT  = '#d4a574';
+const INK     = '#eef2f7';
+const INK_D   = 'rgba(238,242,247,0.65)';
+const INK_M   = 'rgba(238,242,247,0.32)';
+const PAD     = 110;
+
+// Raw iPad captures are 2064×2752 — same aspect ratio as the final canvas.
+const IMG_SRC_W = 2064, IMG_SRC_H = 2752;
+
+// Device image: 60% of canvas width keeps room for headline + bullets.
+const PHONE_W = 1238;
+const PHONE_H = Math.round(PHONE_W * IMG_SRC_H / IMG_SRC_W); // ≈1651
+const PHONE_X = Math.round((W - PHONE_W) / 2);               // =413
+
+const SCREENS = [
+  {
+    img: 'screens/ipad-s1-hero.png',
+    label: 'Screen 1 — Hero',
+    file: 'visionsim-ipad-1-hero.png',
+    eyebrow: 'VISION IMPAIRMENT SIMULATOR',
+    headline: '11 Conditions. Free to Start.',
+    sub: 'Built by Dr. Ryan Evans, OD — real-time simulation your patients finally understand',
+    bullets: [
+      '· Start camera or upload any image — results are instant',
+      '· Reading test, eye chart, Amsler grid, and real-world scenes',
+      '· Share simulations with patients, families, and colleagues',
+    ],
+    bar: 'Built by Dr. Ryan Evans, OD  ·  rjlcevans.com',
+  },
+  {
+    img: 'screens/ipad-s2-amd-compare.png',
+    label: 'Screen 2 — AMD Compare',
+    file: 'visionsim-ipad-2-amd-compare.png',
+    eyebrow: 'AGE-RELATED MACULAR DEGENERATION',
+    headline: '"Now I Get It, Doctor."',
+    sub: 'Drag to compare normal vision vs. AMD — on any photo or live camera',
+    bullets: [
+      '· Central scotoma with adjustable size and severity',
+      '· Works on live camera or any uploaded photo',
+      '· One drag makes the diagnosis click',
+    ],
+    bar: 'AMD  ·  Central Vision Loss  ·  Compare Mode',
+  },
+  {
+    img: 'screens/ipad-s3-cataract-night.png',
+    label: 'Screen 3 — Cataract Night',
+    file: 'visionsim-ipad-3-cataract-night.png',
+    eyebrow: 'CATARACTS · NIGHT DRIVING',
+    headline: "The Glare They Can't Explain.",
+    sub: 'Show the halos, the haze, the blur — before the pre-op conversation',
+    bullets: [
+      '· Nuclear sclerotic cataract with glare simulation',
+      '· Real-time camera mode — use their own surroundings',
+      '· Severity slider from early to advanced',
+    ],
+    bar: 'Cataracts  ·  Real-Time Camera Simulation',
+  },
+  {
+    img: 'screens/ipad-s5-colorblind-compare.png',
+    label: 'Screen 4 — Color Blindness Compare',
+    file: 'visionsim-ipad-4-colorblind-compare.png',
+    eyebrow: 'COLOR VISION DEFICIENCY',
+    headline: 'See What 8% of Men See.',
+    sub: 'Protan · Deutan · Tritan — compared side-by-side with normal color vision',
+    bullets: [
+      '· All three types of color vision deficiency',
+      '· Drag the divider to reveal the color shift',
+      '· Finally helps families understand each other',
+    ],
+    bar: 'Color Blindness  ·  Pro Feature  ·  Compare Mode',
+  },
+  {
+    img: 'screens/ipad-s4-conditions-freepro.png',
+    label: 'Screen 5 — Free + Pro',
+    file: 'visionsim-ipad-5-free-pro.png',
+    eyebrow: '11 CONDITIONS · FREE + PRO',
+    headline: 'Every Condition. Every Stage.',
+    sub: '4 common conditions free. Unlock 7 more, combining, and Compare for $1.99.',
+    bullets: [
+      '· Free: Myopia, Astigmatism, Cataract & camera/upload',
+      '· Pro: Glaucoma, AMD, Diabetic Retinopathy, RP & more',
+      '· One-time $1.99 unlock — no subscription',
+    ],
+    bar: 'Free to Start  ·  $1.99 Pro Unlock  ·  No Subscription',
+  },
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function wrapLines(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  words.forEach(w => {
+    const test = line ? line + ' ' + w : w;
+    if (test.length > maxChars && line) { lines.push(line); line = w; }
+    else line = test;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawScreen(ctx, img, s) {
+  // Background
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+
+  // Radial glow — top right blue
+  const g1 = ctx.createRadialGradient(W*0.88, -100, 0, W*0.88, -100, W*1.3);
+  g1.addColorStop(0, 'rgba(90,143,184,0.18)');
+  g1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
+
+  // Radial glow — bottom left warm
+  const g2 = ctx.createRadialGradient(-100, H+100, 0, -100, H+100, W*1.1);
+  g2.addColorStop(0, 'rgba(212,165,116,0.12)');
+  g2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+
+  // ── EYEBROW ────────────────────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(212,165,116,0.55)';
+  ctx.font = '500 32px "Inter Tight", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(s.eyebrow, W/2, 108);
+
+  // Thin accent rule under eyebrow
+  ctx.fillStyle = 'rgba(212,165,116,0.28)';
+  ctx.fillRect(PAD*2, 128, W - PAD*4, 1);
+
+  // ── HEADLINE ───────────────────────────────────────────────────────────────
+  ctx.fillStyle = INK;
+  ctx.font = '500 88px "Fraunces", serif';
+  const hLines = wrapLines(s.headline, 28);
+  const hLineH = 102;
+  const hTop = 230;
+  hLines.forEach((l, i) => ctx.fillText(l, W/2, hTop + i * hLineH));
+  const hBottom = hTop + (hLines.length - 1) * hLineH;
+
+  // ── SUB ────────────────────────────────────────────────────────────────────
+  ctx.fillStyle = INK_D;
+  ctx.font = '400 40px "Inter Tight", sans-serif';
+  const subLines = wrapLines(s.sub, 52);
+  const subTop = hBottom + 75;
+  subLines.forEach((l, i) => ctx.fillText(l, W/2, subTop + i * 56));
+
+  // Phone starts 50px below last sub line; never above y=520 (keeps top padding)
+  const phoneY = Math.max(520, subTop + (subLines.length - 1) * 56 + 50);
+
+  // ── DEVICE IMAGE ───────────────────────────────────────────────────────────
+  // Drop shadow (draw dark rounded rect slightly offset before image)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.70)';
+  ctx.shadowBlur   = 60;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 16;
+  ctx.fillStyle = '#000';
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 36);
+  ctx.fill();
+  ctx.restore();
+
+  // Clip to rounded rect and draw screenshot
+  ctx.save();
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 36);
+  ctx.clip();
+  ctx.drawImage(img, PHONE_X, phoneY, PHONE_W, PHONE_H);
+  ctx.restore();
+
+  // Subtle inner border
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+  ctx.lineWidth = 2;
+  rr(ctx, PHONE_X, phoneY, PHONE_W, PHONE_H, 36);
+  ctx.stroke();
+
+  // ── BULLETS ────────────────────────────────────────────────────────────────
+  const bulletTop = phoneY + PHONE_H + 65;
+  ctx.font = '400 34px "Inter Tight", sans-serif';
+  ctx.textAlign = 'left';
+  s.bullets.forEach((b, i) => {
+    ctx.fillStyle = i === 0 ? INK : INK_D;
+    ctx.fillText(b, PAD, bulletTop + i * 62);
+  });
+
+  // ── BOTTOM BAR ─────────────────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(15,22,32,0.92)';
+  ctx.fillRect(0, H - 170, W, 170);
+  ctx.fillStyle = 'rgba(212,165,116,0.30)';
+  ctx.fillRect(0, H - 170, W, 1.5);
+  ctx.fillStyle = ACCENT;
+  ctx.font = '600 40px "Inter Tight", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(s.bar, W/2, H - 85);
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function makeCard(s) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  c.style.width  = Math.round(W / 5.5) + 'px';
+  c.style.height = Math.round(H / 5.5) + 'px';
+  c.id = 'canvas-' + s.file;
+  div.appendChild(c);
+  document.getElementById('cards').appendChild(div);
+
+  const img = new Image();
+  img.onload = () => {
+    try {
+      drawScreen(c.getContext('2d'), img, s);
+      c.dataset.ready = '1';
+    } catch(e) {
+      const err = document.createElement('p');
+      err.className = 'err';
+      err.textContent = s.label + ': ' + e.message;
+      div.appendChild(err);
+    }
+  };
+  img.onerror = () => {
+    const err = document.createElement('p');
+    err.className = 'err';
+    err.textContent = 'Could not load ' + s.img;
+    div.appendChild(err);
+  };
+  img.src = s.img;
+
+  const lbl = document.createElement('p');
+  lbl.className = 'label';
+  lbl.textContent = s.label + ' · ' + W + '×' + H;
+  div.appendChild(lbl);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Download';
+  btn.onclick = () => {
+    const a = document.createElement('a');
+    a.download = s.file;
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  div.appendChild(btn);
+}
+
+window.__screens = SCREENS;
+document.fonts.ready.then(() => SCREENS.forEach(makeCard));
+</script>
+</body>
+</html>
