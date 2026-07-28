@@ -202,6 +202,16 @@
   }
   .clear-conditions-btn.visible { display: inline-block; }
   .clear-conditions-btn:hover { text-decoration: underline; }
+  /* Combine: pill toggle, same on/off language as the Compare button but
+     sized to sit in the slim conditions-header row. Off by default so a
+     plain tap always switches conditions instead of silently layering them
+     on top of whatever was already active. */
+  .combine-conditions-btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink-dim);
+    font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+    padding: 3px 10px; border-radius: 999px; flex: 0 0 auto;
+  }
+  .combine-conditions-btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
   /* Pro upsell entry point + locked-condition badges. Pro gating only
      exists inside the native app, and only once the IAP plugin has actually
      confirmed itself present (html.pro-ready, set by JS) — never just off
@@ -221,7 +231,8 @@
   }
   html.is-app.pro-ready:not(.is-pro) .cond.locked { position: relative; opacity: 0.6; }
   html.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock { display: inline-block; }
-  html.is-app.pro-ready:not(.is-pro) .btn.locked { opacity: 0.6; }
+  html.is-app.pro-ready:not(.is-pro) .btn.locked,
+  html.is-app.pro-ready:not(.is-pro) .combine-conditions-btn.locked { opacity: 0.6; }
   .conditions-scroller { position: relative; }
   /* Two rows sharing one horizontally-scrolling grid — grid-auto-flow: column
      fills top-to-bottom then starts a new column, so a single swipe moves
@@ -463,7 +474,8 @@
 
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions-header">
-    <p class="conditions-hint">Swipe for all 11 · tap to combine multiple conditions</p>
+    <p class="conditions-hint">Swipe for all 11 · tap to switch · Combine to layer several</p>
+    <button type="button" class="combine-conditions-btn" id="combineConditionsBtn" aria-pressed="false">Combine: Off</button>
     <button type="button" class="unlock-pro-btn" id="unlockProBtn">Unlock Pro</button>
     <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
   </div>
@@ -574,6 +586,7 @@
       b.classList.toggle('locked', pluginReady && !isPro && PRO_CONDITIONS.has(b.dataset.cond));
     });
     compareBtn.classList.toggle('locked', pluginReady && !isPro);
+    combineBtn.classList.toggle('locked', pluginReady && !isPro);
   }
   function setPro(owned) {
     isPro = owned;
@@ -1616,6 +1629,25 @@
     hapticTap();
   });
 
+  // Combine mode: off by default, so a plain tap on a new condition switches
+  // to it (like the old single-select behavior) instead of layering it onto
+  // whatever was already active. Layering multiple conditions is still
+  // available, but only once this is explicitly turned on — that was the
+  // fix for tapping Cataract while Myopia was active and getting an
+  // unexpected Pro paywall for a "combination" the user never intended.
+  let combineMode = false;
+  const combineBtn = document.getElementById('combineConditionsBtn');
+  function setCombineMode(on) {
+    combineMode = on;
+    combineBtn.setAttribute('aria-pressed', String(on));
+    combineBtn.textContent = on ? 'Combine: On' : 'Combine: Off';
+  }
+  combineBtn.addEventListener('click', () => {
+    if (pluginReady && !isPro) { openPaywall(); return; }
+    setCombineMode(!combineMode);
+    hapticTap();
+  });
+
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
@@ -1623,33 +1655,35 @@
     const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
     const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
 
-    if (pluginReady && !isPro && key !== 'none' && !alreadyOn) {
-      if (PRO_CONDITIONS.has(key)) { openPaywall(); return; }
-      // Combining requires Pro too — block adding a second condition, but
-      // always allow switching away from / turning off the current one.
-      if (activeConditions.size >= 1 && !activeConditions.has('none')) { openPaywall(); return; }
-    }
-
     if (key === 'none') {
       conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
       activeConditions = new Set(['none']);
       btn.setAttribute('aria-pressed', 'true');
-    } else {
-      activeConditions.delete('none');
-      if (noneBtn) noneBtn.setAttribute('aria-pressed', 'false');
-      const isActive = btn.getAttribute('aria-pressed') === 'true';
-      if (isActive) {
-        activeConditions.delete(key);
-        btn.setAttribute('aria-pressed', 'false');
-      } else {
-        activeConditions.add(key);
-        btn.setAttribute('aria-pressed', 'true');
-        if (defaults[key]) Object.assign(params, defaults[key]);
-      }
+    } else if (alreadyOn) {
+      // Turning off an already-active condition is always allowed, whether
+      // it's the only one selected or part of a combined set.
+      activeConditions.delete(key);
+      btn.setAttribute('aria-pressed', 'false');
       if (activeConditions.size === 0) {
         activeConditions.add('none');
         if (noneBtn) noneBtn.setAttribute('aria-pressed', 'true');
       }
+    } else {
+      if (pluginReady && !isPro) {
+        if (PRO_CONDITIONS.has(key)) { openPaywall(); return; }
+        if (combineMode && activeConditions.size >= 1 && !activeConditions.has('none')) { openPaywall(); return; }
+      }
+      if (combineMode) {
+        activeConditions.delete('none');
+        if (noneBtn) noneBtn.setAttribute('aria-pressed', 'false');
+        activeConditions.add(key);
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        activeConditions = new Set([key]);
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      if (defaults[key]) Object.assign(params, defaults[key]);
     }
 
     hapticTap();
