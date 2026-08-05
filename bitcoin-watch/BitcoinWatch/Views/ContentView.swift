@@ -65,7 +65,7 @@ struct ContentView: View {
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .task {
                 await statsService.fetch()
                 ReviewManager.shared.recordOpen()
