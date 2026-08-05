@@ -58,6 +58,7 @@ struct ContentView: View {
                     }
                 }
                 .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
                 .refreshable {
                     await service.fetchPrice()
                     await statsService.fetch()
