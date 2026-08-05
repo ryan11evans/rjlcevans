@@ -104,7 +104,7 @@ struct BTCChartView: View {
                         )
                         .foregroundStyle(lineColor)
                         .interpolationMethod(.monotone)
-                        .lineStyle(StrokeStyle(lineWidth: 2))
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                     }
 
                     // Subtle high/low markers so the chart is readable at a glance
