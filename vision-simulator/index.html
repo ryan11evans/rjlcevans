@@ -630,12 +630,19 @@
       const { store, ProductType, Platform } = window.CdvPurchase;
       iapStore = store;
       store.register([{ id: PRO_PRODUCT_ID, type: ProductType.NON_CONSUMABLE, platform: Platform.APPLE_APPSTORE }]);
-      store.when().approved(transaction => transaction.verify()).verified(receipt => receipt.finish());
-      store.when().productUpdated(() => {
+      // No receipt-validation server is configured (store.validator is unset), so
+      // .verify()/.verified() never fire — that event chain requires a validator
+      // per the plugin's docs. Finish transactions straight off Apple's own
+      // approval instead, and track ownership via receiptUpdated/productUpdated,
+      // which is the plugin's documented pattern for running without a validator.
+      store.when().approved(transaction => transaction.finish());
+      function syncProStatus() {
         const product = store.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
         if (product) setPro(store.owned(product));
         if (paywallOverlay.classList.contains('open')) paywallNote.textContent = store.owned(product) ? 'Unlocked — thanks!' : '';
-      });
+      }
+      store.when().productUpdated(syncProStatus);
+      store.when().receiptUpdated(syncProStatus);
       store.initialize([Platform.APPLE_APPSTORE]);
     });
   }
