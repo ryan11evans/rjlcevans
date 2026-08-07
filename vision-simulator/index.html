@@ -520,7 +520,7 @@
       <li>Combine multiple conditions at once</li>
       <li>Compare mode — side-by-side normal vs. impaired</li>
     </ul>
-    <button type="button" class="paywall-buy" id="paywallBuy">Unlock Pro — $1.99</button>
+    <button type="button" class="paywall-buy" id="paywallBuy">Unlock Pro</button>
     <button type="button" class="paywall-restore" id="paywallRestore">Restore Purchases</button>
     <p class="paywall-note" id="paywallNote"></p>
   </div>
@@ -579,6 +579,7 @@
 
   const paywallOverlay = document.getElementById('paywallOverlay');
   const paywallNote = document.getElementById('paywallNote');
+  const paywallBuy = document.getElementById('paywallBuy');
 
   function updateProUI() {
     document.documentElement.classList.toggle('is-pro', isPro);
@@ -638,7 +639,13 @@
       store.when().approved(transaction => transaction.finish());
       function syncProStatus() {
         const product = store.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
-        if (product) setPro(store.owned(product));
+        if (product) {
+          setPro(store.owned(product));
+          // Show the real store-quoted price rather than a hardcoded guess, so it
+          // can never drift from what App Store Connect actually charges.
+          const price = product.pricing?.price;
+          if (price) paywallBuy.textContent = `Unlock Pro — ${price}`;
+        }
         if (paywallOverlay.classList.contains('open')) paywallNote.textContent = store.owned(product) ? 'Unlocked — thanks!' : '';
       }
       store.when().productUpdated(syncProStatus);
