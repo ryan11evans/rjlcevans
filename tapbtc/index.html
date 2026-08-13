@@ -129,6 +129,70 @@
   }
   .already-link:hover { color: rgba(255,255,255,0.5); }
 
+  /* ── SHOWCASE ── */
+  .showcase {
+    padding: 0 0 56px;
+  }
+
+  .showcase-row {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 8px 24px 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    justify-content: center;
+  }
+
+  .showcase-row::-webkit-scrollbar { display: none; }
+
+  .showcase-item {
+    flex: 0 0 auto;
+    width: 220px;
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone-frame {
+    position: relative;
+    width: 220px;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 34px;
+    overflow: hidden;
+    border: 3px solid rgba(255,255,255,0.10);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.04),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+    background: #000;
+  }
+
+  .showcase-item.hero .phone-frame {
+    border-color: rgba(245,166,35,0.35);
+    box-shadow:
+      0 20px 70px rgba(245,166,35,0.18),
+      0 0 0 1px rgba(245,166,35,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .phone-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .showcase-caption {
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+  }
+
   /* ── WATCH HERO ── */
   .watch-hero {
     margin: 0 auto;
@@ -263,6 +327,54 @@
     vertical-align: middle;
   }
 
+  .also-heading {
+    margin-top: 40px;
+  }
+
+  .compact-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .compact-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--card);
+  }
+
+  .compact-item + .compact-item {
+    border-top: 1px solid var(--border);
+  }
+
+  .compact-item .icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+  }
+
+  .compact-item .text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .compact-item h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .compact-item p {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.4;
+  }
+
   /* ── FOOTER ── */
   footer {
     text-align: center;
@@ -301,6 +413,24 @@
   </div>
 </section>
 
+<!-- SHOWCASE -->
+<section class="showcase">
+  <div class="showcase-row">
+    <div class="showcase-item">
+      <div class="phone-frame"><img src="img/screen-price.jpg" alt="Live Bitcoin price and chart in TapBTC" loading="lazy"></div>
+      <p class="showcase-caption">Live price &amp; chart</p>
+    </div>
+    <div class="showcase-item hero">
+      <div class="phone-frame"><img src="img/screen-portfolio.jpg" alt="Portfolio value and profit tracking in TapBTC" loading="lazy"></div>
+      <p class="showcase-caption">Your portfolio's profit</p>
+    </div>
+    <div class="showcase-item">
+      <div class="phone-frame"><img src="img/screen-alert.jpg" alt="Setting a Bitcoin price alert in TapBTC" loading="lazy"></div>
+      <p class="showcase-caption">Alerts that reach you</p>
+    </div>
+  </div>
+</section>
+
 <!-- WATCH HERO -->
 <div class="watch-hero">
   <div class="watch-card">
@@ -317,19 +447,13 @@
 
 <!-- FEATURES -->
 <section class="features">
-  <h2>Everything in TapBTC</h2>
+  <h2>Highlights</h2>
   <div class="feature-grid">
 
     <div class="feature-tile new">
       <span class="icon">💰</span>
       <h3>Portfolio &amp; Profit <span class="new-badge">New</span></h3>
       <p>Enter your holdings and buy price to see live value and profit/loss — on your Home Screen, Watch, and in a daily briefing. Stored on-device, no account.</p>
-    </div>
-
-    <div class="feature-tile">
-      <span class="icon">📈</span>
-      <h3>Live Price &amp; Chart</h3>
-      <p>Updates every 15 seconds when the app is open. 1D through All-time charts with touch scrubbing and high/low markers, in your local currency.</p>
     </div>
 
     <div class="feature-tile new">
@@ -350,40 +474,65 @@
       <p>Keep your holdings private. Lock the app behind Face ID, Touch ID, or your passcode.</p>
     </div>
 
-    <div class="feature-tile new">
+  </div>
+
+  <h2 class="also-heading">Also included</h2>
+  <div class="compact-list">
+
+    <div class="compact-item">
+      <span class="icon">📈</span>
+      <div class="text">
+        <h3>Live Price &amp; Chart</h3>
+        <p>Updates every 15 seconds. 1D through All-time, with touch scrubbing.</p>
+      </div>
+    </div>
+
+    <div class="compact-item">
       <span class="icon">💱</span>
-      <h3>Multi-Currency <span class="new-badge">New</span></h3>
-      <p>Prices, portfolio, and alerts in USD, EUR, GBP, CAD, AUD, or JPY — pick one anywhere in the app.</p>
+      <div class="text">
+        <h3>Multi-Currency</h3>
+        <p>USD, EUR, GBP, CAD, AUD, or JPY — anywhere in the app.</p>
+      </div>
     </div>
 
-    <div class="feature-tile">
+    <div class="compact-item">
       <span class="icon">🔁</span>
-      <h3>DCA Calculator</h3>
-      <p>See how much Bitcoin you'd stack investing $25, $50, or $100 every week. Projects 1–10 years out.</p>
+      <div class="text">
+        <h3>DCA Calculator</h3>
+        <p>See how much Bitcoin you'd stack investing weekly, 1–10 years out.</p>
+      </div>
     </div>
 
-    <div class="feature-tile">
+    <div class="compact-item">
       <span class="icon">🎯</span>
-      <h3>Goal Tracker</h3>
-      <p>Set a BTC target, enter what you hold, and watch a live progress ring show how close you are.</p>
+      <div class="text">
+        <h3>Goal Tracker</h3>
+        <p>Set a BTC target and watch a live progress ring track it.</p>
+      </div>
     </div>
 
-    <div class="feature-tile">
+    <div class="compact-item">
       <span class="icon">🧮</span>
-      <h3>Satoshi Calculator</h3>
-      <p>Instant USD ↔ satoshi conversion. Quick amounts for $1, $10, $100, and more.</p>
+      <div class="text">
+        <h3>Satoshi Calculator</h3>
+        <p>Instant USD ↔ satoshi conversion.</p>
+      </div>
     </div>
 
-    <div class="feature-tile">
+    <div class="compact-item">
       <span class="icon">📱</span>
-      <h3>Widgets & Lock Screen</h3>
-      <p>Home screen, Lock Screen, and Dynamic Island widgets. Live price always one glance away.</p>
+      <div class="text">
+        <h3>Widgets & Lock Screen</h3>
+        <p>Home Screen, Lock Screen, and Dynamic Island widgets.</p>
+      </div>
     </div>
 
-    <div class="feature-tile">
+    <div class="compact-item">
       <span class="icon">📊</span>
-      <h3>Bitcoin Dashboard</h3>
-      <p>Fear & Greed index, block height, halving countdown, 24h range, and all-time high — all at a glance.</p>
+      <div class="text">
+        <h3>Bitcoin Dashboard</h3>
+        <p>Fear &amp; Greed index, block height, halving countdown, and more.</p>
+      </div>
     </div>
 
   </div>
