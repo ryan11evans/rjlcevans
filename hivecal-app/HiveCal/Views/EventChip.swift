@@ -14,9 +14,8 @@ struct EventChip: View {
             Text(chipText)
                 .font(.system(size: compact ? 10 : 11, weight: .semibold))
                 .foregroundStyle(.white)
-                .lineLimit(2)
                 .multilineTextAlignment(.leading)
-                .minimumScaleFactor(0.9)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, 2)
         .padding(.trailing, 2)

@@ -82,26 +82,23 @@ struct MonthView: View {
 
     private var monthGrid: some View {
         let grid = MonthGrid(monthDate: monthDate, calendar: cal)
-        return GeometryReader { geo in
-            let rowHeight = geo.size.height / CGFloat(grid.weeks.count)
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(grid.weeks.indices, id: \.self) { row in
-                        HStack(spacing: 0) {
-                            ForEach(grid.weeks[row], id: \.self) { date in
-                                DayCell(
-                                    date: date,
-                                    isCurrentMonth: cal.isDate(date, equalTo: monthDate, toGranularity: .month),
-                                    isToday: cal.isDateInToday(date),
-                                    events: SampleData.events(on: date)
-                                )
-                                .frame(height: max(rowHeight, 108))
-                                .frame(maxWidth: .infinity)
-                                .onTapGesture { selectedDay = date }
-                            }
+        return ScrollView {
+            VStack(spacing: 0) {
+                ForEach(grid.weeks.indices, id: \.self) { row in
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(grid.weeks[row], id: \.self) { date in
+                            DayCell(
+                                date: date,
+                                isCurrentMonth: cal.isDate(date, equalTo: monthDate, toGranularity: .month),
+                                isToday: cal.isDateInToday(date),
+                                events: SampleData.events(on: date)
+                            )
+                            .frame(minHeight: 108, alignment: .top)
+                            .frame(maxWidth: .infinity)
+                            .onTapGesture { selectedDay = date }
                         }
-                        Divider().background(Color.white.opacity(0.08))
                     }
+                    Divider().background(Color.white.opacity(0.08))
                 }
             }
         }
