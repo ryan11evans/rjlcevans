@@ -10,6 +10,12 @@ class StatsService: ObservableObject {
     @Published var chartRange: ChartRange = .day
     @Published var fearGreed: FearGreedData? = nil
 
+    // Keyed by "<range>_<currency>". CoinGecko's free API rate-limits hard
+    // (observed 429s after a handful of calls in quick succession), so we
+    // cache each range's data for the session instead of refetching on
+    // every tap — switching back to an already-viewed range is instant.
+    private var chartCache: [String: [ChartPoint]] = [:]
+
     struct FearGreedData {
         let value: Int
         let classification: String
@@ -125,6 +131,15 @@ class StatsService: ObservableObject {
 
     func fetchChart(range: ChartRange) async {
         let vs = AppCurrency.current.rawValue
+        let cacheKey = "\(range.rawValue)_\(vs)"
+
+        // Switch immediately so the tap always feels responsive, and show
+        // cached data right away if we have it — no network round trip.
+        chartRange = range
+        if let cached = chartCache[cacheKey] {
+            chartData = cached
+        }
+
         let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=\(vs)&days=\(range.daysParam)")!
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
         struct R: Decodable { let prices: [[Double]] }
@@ -132,8 +147,11 @@ class StatsService: ObservableObject {
         let points = r.prices.map { pair in
             ChartPoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
         }
+        chartCache[cacheKey] = points
+        // The user may have tapped another range while this was in flight —
+        // don't clobber their latest selection with a stale response.
+        guard chartRange == range else { return }
         chartData = points
-        chartRange = range
     }
 
     private struct MarketResult {
