@@ -54,8 +54,11 @@ struct BTCLiveActivityWidget: Widget {
                     .foregroundStyle(.white)
                     .minimumScaleFactor(0.7)
             } minimal: {
-                Image(systemName: "bitcoinsign.circle.fill")
+                Text(BitcoinPrice(usd: context.state.price, timestamp: context.state.timestamp).circularFormatted)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(.orange)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
             }
         }
     }
