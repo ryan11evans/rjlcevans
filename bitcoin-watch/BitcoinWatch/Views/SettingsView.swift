@@ -508,6 +508,12 @@ private struct PrivacySection: View {
                 Toggle("", isOn: $requireFaceID)
                     .labelsHidden().tint(.orange)
                     .disabled(!AppLockService.biometricsAvailable)
+                    .onChange(of: requireFaceID) { _, newValue in
+                        // Apply immediately — otherwise holdings stay visible
+                        // on screen until the next background/foreground cycle,
+                        // right when the user just asked for privacy.
+                        if newValue { AppLockService.shared.lockNow() }
+                    }
             }
             .padding(.vertical, 4)
             .listRowBackground(rowTint)

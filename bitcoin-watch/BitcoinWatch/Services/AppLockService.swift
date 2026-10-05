@@ -8,6 +8,7 @@ final class AppLockService: ObservableObject {
     static let shared = AppLockService()
 
     @Published var isLocked: Bool
+    @Published var authError: String?
 
     var enabled: Bool { UserDefaults.shared.bool(forKey: "requireFaceID") }
 
@@ -34,14 +35,27 @@ final class AppLockService: ObservableObject {
         let context = LAContext()
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            // No biometrics/passcode set up — don't trap the user out.
-            isLocked = false
+            // Biometrics/passcode became unavailable (e.g. the device
+            // passcode was removed after this lock was turned on). Stay
+            // locked rather than granting access with zero auth — surface
+            // why so the UI can explain it instead of silently failing open.
+            authError = error?.localizedDescription ?? "Face ID, Touch ID, or a passcode is required to unlock."
             return
         }
+        authError = nil
         context.evaluatePolicy(.deviceOwnerAuthentication,
-                               localizedReason: "Unlock TapBTC to view your Bitcoin") { success, _ in
+                               localizedReason: "Unlock TapBTC to view your Bitcoin") { success, evalError in
             Task { @MainActor in
-                if success { self.isLocked = false }
+                if success {
+                    self.isLocked = false
+                    self.authError = nil
+                } else if let laError = evalError as? LAError,
+                          [.userCancel, .systemCancel, .appCancel].contains(laError.code) {
+                    // User dismissed the sheet themselves — not a failure worth surfacing.
+                    self.authError = nil
+                } else if let evalError {
+                    self.authError = evalError.localizedDescription
+                }
             }
         }
     }

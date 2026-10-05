@@ -10,16 +10,15 @@ struct GetBitcoinPriceIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some ReturnsValue<Double> & ProvidesDialog {
+        // The stored field is named `usd` for legacy reasons but actually
+        // holds the price in whatever currency is currently selected
+        // (PriceService fetches using AppCurrency.current) — format it as
+        // that currency, not hardcoded USD, or non-USD users get a "$" label
+        // on a JPY/EUR/GBP number.
         let price = UserDefaults.shared.loadPrice()?.usd ?? 0
-        let formatted = priceString(price)
+        let formatted = AppCurrency.current.format(price)
         return .result(value: price,
                        dialog: IntentDialog(stringLiteral: "Bitcoin is currently \(formatted)."))
-    }
-
-    private func priceString(_ usd: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency; f.currencyCode = "USD"; f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: usd)) ?? "$\(Int(usd))"
     }
 }
 
@@ -43,9 +42,11 @@ struct ConvertToSatoshisIntent: AppIntent {
         let sats = Int((dollars / btcPrice) * 100_000_000)
         let f = NumberFormatter(); f.numberStyle = .decimal
         let satsStr = f.string(from: NSNumber(value: sats)) ?? "\(sats)"
-        let usdStr = String(format: "$%.2f", dollars)
+        // `btcPrice` is in the current display currency (see GetBitcoinPriceIntent),
+        // so the input amount is too — label it accordingly instead of a fixed "$".
+        let amountStr = AppCurrency.current.format(dollars, fractionDigits: 2)
         return .result(value: sats,
-                       dialog: IntentDialog(stringLiteral: "\(usdStr) equals \(satsStr) satoshis at the current Bitcoin price."))
+                       dialog: IntentDialog(stringLiteral: "\(amountStr) equals \(satsStr) satoshis at the current Bitcoin price."))
     }
 }
 

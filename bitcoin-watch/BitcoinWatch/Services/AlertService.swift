@@ -11,9 +11,49 @@ struct PriceAlert: Codable, Identifiable {
     var isEnabled: Bool = true
     var createdAt: Date = Date()
     var lastFiredAt: Date? = nil
+    // The currency `targetPrice` was entered in. Needed because the app only
+    // has one *global* display currency — if the user switches currency
+    // after creating an alert, `targetPrice` must be converted at compare
+    // time or the alert silently goes dead (or fires immediately) against
+    // the new currency's much larger/smaller numbers.
+    var currency: AppCurrency = .current
 
     enum Direction: String, Codable {
         case above, below
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, label, targetPrice, direction, isRepeating, isEnabled, createdAt, lastFiredAt, currency
+    }
+
+    init(id: UUID = UUID(), label: String = "", targetPrice: Double, direction: Direction,
+         isRepeating: Bool = false, isEnabled: Bool = true, createdAt: Date = Date(),
+         lastFiredAt: Date? = nil, currency: AppCurrency = .current) {
+        self.id = id
+        self.label = label
+        self.targetPrice = targetPrice
+        self.direction = direction
+        self.isRepeating = isRepeating
+        self.isEnabled = isEnabled
+        self.createdAt = createdAt
+        self.lastFiredAt = lastFiredAt
+        self.currency = currency
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        label = try c.decode(String.self, forKey: .label)
+        targetPrice = try c.decode(Double.self, forKey: .targetPrice)
+        direction = try c.decode(Direction.self, forKey: .direction)
+        isRepeating = try c.decode(Bool.self, forKey: .isRepeating)
+        isEnabled = try c.decode(Bool.self, forKey: .isEnabled)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        lastFiredAt = try c.decodeIfPresent(Date.self, forKey: .lastFiredAt)
+        // Pre-fix alerts predate per-alert currency tagging; best-effort
+        // default to whatever currency is selected now rather than
+        // fabricating a history we don't have.
+        currency = try c.decodeIfPresent(AppCurrency.self, forKey: .currency) ?? .current
     }
 }
 
@@ -93,15 +133,20 @@ class AlertService: ObservableObject {
         var changed = false
         for i in alerts.indices {
             guard alerts[i].isEnabled else { continue }
+            // `currentPrice` is in the live display currency; `targetPrice`
+            // may have been entered under a different one (if the user
+            // switched currency since), so compare in a common currency.
+            let target = CurrencyRates.shared.convert(
+                alerts[i].targetPrice, from: alerts[i].currency, to: .current)
             let triggered = alerts[i].direction == .above
-                ? currentPrice >= alerts[i].targetPrice
-                : currentPrice <= alerts[i].targetPrice
+                ? currentPrice >= target
+                : currentPrice <= target
             guard triggered else { continue }
 
             // 1-hour cooldown keeps repeating alerts from spamming every 15s
             if let last = alerts[i].lastFiredAt, Date().timeIntervalSince(last) < 3600 { continue }
 
-            fireNotification(for: alerts[i], currentPrice: currentPrice)
+            fireNotification(for: alerts[i], currentPrice: currentPrice, targetPrice: target)
             alerts[i].lastFiredAt = Date()
             if !alerts[i].isRepeating { alerts[i].isEnabled = false }
             changed = true
@@ -118,12 +163,14 @@ class AlertService: ObservableObject {
             .requestAuthorization(options: [.alert, .sound])) ?? false
     }
 
-    private func fireNotification(for alert: PriceAlert, currentPrice: Double) {
+    private func fireNotification(for alert: PriceAlert, currentPrice: Double, targetPrice: Double) {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
         let content = UNMutableNotificationContent()
         let dir = alert.direction == .above ? "above" : "below"
         let fmt = BitcoinPrice(usd: currentPrice, timestamp: Date()).formatted
-        let tgt = BitcoinPrice(usd: alert.targetPrice, timestamp: Date()).formatted
+        // Use the already-converted target (in the current display currency),
+        // not the raw stored value which may still be tagged to an older currency.
+        let tgt = BitcoinPrice(usd: targetPrice, timestamp: Date()).formatted
         content.title = alert.label.isEmpty ? "Bitcoin Price Alert" : alert.label
         content.body  = "BTC is now \(fmt) — \(dir) your target of \(tgt)"
         content.sound = .default

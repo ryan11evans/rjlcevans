@@ -1,14 +1,24 @@
 import SwiftUI
+import Foundation
 
 struct RoundNumberProgressView: View {
     let price: Double
 
-    private let milestones: [Double] = [
-        10_000, 15_000, 20_000, 25_000, 30_000, 40_000, 50_000,
-        60_000, 70_000, 75_000, 80_000, 90_000, 100_000, 110_000,
-        120_000, 125_000, 150_000, 175_000, 200_000, 250_000,
-        300_000, 400_000, 500_000, 750_000, 1_000_000
-    ]
+    // Round-number milestones generated algorithmically (1/1.5/2/2.5/3/4/5/6/
+    // 7/7.5/8/9 × each power of ten) rather than a fixed USD table — a fixed
+    // table topping out at 1,000,000 is wrong for JPY (BTC already trades at
+    // ¥15-20M) and would eventually go stale for every currency once BTC's
+    // price crosses its top rung.
+    private var milestones: [Double] {
+        let multipliers: [Double] = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 7.5, 8, 9]
+        let topExponent = max(6, Int(floor(log10(max(price, 1)))) + 2)
+        var result: [Double] = []
+        for exponent in 2...topExponent {
+            let base = pow(10.0, Double(exponent))
+            result.append(contentsOf: multipliers.map { $0 * base })
+        }
+        return result
+    }
 
     private var prev: Double { milestones.last  { $0 <  price } ?? milestones.first! }
     private var next: Double { milestones.first { $0 >= price } ?? milestones.last!  }

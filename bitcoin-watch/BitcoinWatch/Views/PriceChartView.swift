@@ -29,14 +29,14 @@ struct BitcoinInfoView: View {
                              subtitle: stats.map { athDateString($0.athDate) },
                              color: .orange)
                     StatTile(label: "Block Height",
-                             value: stats.map { "#\($0.blockHeight.formatted())" } ?? "—",
+                             value: stats?.blockHeight.map { "#\($0.formatted())" } ?? "—",
                              subtitle: nil,
                              color: .cyan)
                 }
                 HStack(spacing: 10) {
                     StatTile(label: "Next Halving",
-                             value: stats.map { halvingCountdown($0.blockHeight) } ?? "—",
-                             subtitle: stats.map { halvingSubtitle($0.blockHeight) },
+                             value: stats?.blockHeight.map(halvingCountdown) ?? "—",
+                             subtitle: stats?.blockHeight.map(halvingSubtitle),
                              color: .purple,
                              compact: true,
                              action: onTapHalving)

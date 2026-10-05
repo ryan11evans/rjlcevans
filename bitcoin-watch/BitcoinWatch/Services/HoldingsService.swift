@@ -1,22 +1,67 @@
 import Foundation
 import WidgetKit
 
-// One Bitcoin purchase (lot). `price` is the per-BTC cost in the app's display
-// currency at entry time; 0 means "cost unknown" (value tracked, no P&L).
+// One Bitcoin purchase (lot). `price` is the per-BTC cost in `currency` at
+// entry time; 0 means "cost unknown" (value tracked, no P&L). `currency` is
+// recorded so FIFO math stays correct even if the user changes their display
+// currency in Settings later — without it, old and new lots would silently
+// blend two currencies with no conversion or warning.
 struct Purchase: Codable, Identifiable, Equatable {
     var id = UUID()
     var amount: Double
     var price: Double
     var date: Date = Date()
+    var currency: AppCurrency = .current
+
+    private enum CodingKeys: String, CodingKey { case id, amount, price, date, currency }
+
+    init(id: UUID = UUID(), amount: Double, price: Double, date: Date = Date(), currency: AppCurrency = .current) {
+        self.id = id
+        self.amount = amount
+        self.price = price
+        self.date = date
+        self.currency = currency
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        amount = try c.decode(Double.self, forKey: .amount)
+        price = try c.decode(Double.self, forKey: .price)
+        date = try c.decode(Date.self, forKey: .date)
+        // Pre-fix lots predate per-lot currency tagging; best-effort default
+        // to whatever currency is selected now rather than fabricating history.
+        currency = try c.decodeIfPresent(AppCurrency.self, forKey: .currency) ?? .current
+    }
 }
 
-// One Bitcoin sale. `price` is the per-BTC proceeds in the app's display
-// currency at the time of sale.
+// One Bitcoin sale. `price` is the per-BTC proceeds in `currency` at the time
+// of sale. See `Purchase` for why `currency` is recorded per-entry.
 struct Sale: Codable, Identifiable, Equatable {
     var id = UUID()
     var amount: Double
     var price: Double
     var date: Date = Date()
+    var currency: AppCurrency = .current
+
+    private enum CodingKeys: String, CodingKey { case id, amount, price, date, currency }
+
+    init(id: UUID = UUID(), amount: Double, price: Double, date: Date = Date(), currency: AppCurrency = .current) {
+        self.id = id
+        self.amount = amount
+        self.price = price
+        self.date = date
+        self.currency = currency
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        amount = try c.decode(Double.self, forKey: .amount)
+        price = try c.decode(Double.self, forKey: .price)
+        date = try c.decode(Date.self, forKey: .date)
+        currency = try c.decodeIfPresent(AppCurrency.self, forKey: .currency) ?? .current
+    }
 }
 
 // Stores the user's Bitcoin holdings as a list of purchases and sales, locally
@@ -60,22 +105,27 @@ final class HoldingsService: ObservableObject {
     /// are the ones that still back current holdings / unrealized P&L; the
     /// consumed portions back realized P&L.
     private var fifoResult: (openLots: [OpenLot], realizedGain: Double, realizedCostBasis: Double) {
+        // Convert every lot/sale price into the *current* display currency up
+        // front, so the FIFO math below never blends currencies even if the
+        // user switched since some entries were recorded (see `Purchase`/`Sale`).
         var lots = purchases
             .filter { $0.amount > 0 }
             .sorted { $0.date < $1.date }
-            .map { OpenLot(amount: $0.amount, price: $0.price) }
+            .map { OpenLot(amount: $0.amount,
+                           price: CurrencyRates.shared.convert($0.price, from: $0.currency, to: .current)) }
 
         var realizedGain = 0.0
         var realizedCostBasis = 0.0
 
         for sale in sales.sorted(by: { $0.date < $1.date }) where sale.amount > 0 {
+            let salePrice = CurrencyRates.shared.convert(sale.price, from: sale.currency, to: .current)
             var remaining = sale.amount
             var i = 0
             while remaining > 0, i < lots.count {
                 guard lots[i].amount > 0 else { i += 1; continue }
                 let consumed = min(remaining, lots[i].amount)
                 if lots[i].price > 0 {
-                    realizedGain += consumed * (sale.price - lots[i].price)
+                    realizedGain += consumed * (salePrice - lots[i].price)
                     realizedCostBasis += consumed * lots[i].price
                 }
                 lots[i].amount -= consumed

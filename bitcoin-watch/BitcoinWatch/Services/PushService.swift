@@ -48,10 +48,17 @@ final class PushService: ObservableObject {
     func sync() async {
         guard let token = deviceToken else { return }
 
+        // The server stores one `currency` field per device and compares every
+        // alert's targetPrice against a price fetched in that currency — so
+        // every target we upload must already be expressed in the device's
+        // *current* display currency, even if the alert was created under a
+        // different one, or the server compares mismatched magnitudes.
         let alerts = AlertService.shared.alerts.map { a -> [String: Any] in
-            [
+            let normalizedTarget = CurrencyRates.shared.convert(
+                a.targetPrice, from: a.currency, to: .current)
+            return [
                 "id": a.id.uuidString,
-                "targetPrice": a.targetPrice,
+                "targetPrice": normalizedTarget,
                 "direction": a.direction.rawValue,
                 "label": a.label,
                 "repeating": a.isRepeating,

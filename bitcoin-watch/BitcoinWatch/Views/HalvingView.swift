@@ -119,7 +119,13 @@ struct HalvingView: View {
     }
 
     private func historyCard(_ event: Event) -> some View {
-        let pctSinceHalving = currentPrice.map { ($0 / event.priceAtHalving - 1) * 100 }
+        // `priceAtHalving` is a fixed USD historical fact; convert it into
+        // whatever currency the user has selected before comparing against
+        // `currentPrice` (which is already in the display currency) —
+        // otherwise a non-USD user sees a garbage number and % here.
+        let localizedPriceAtHalving = CurrencyRates.shared.convert(
+            event.priceAtHalving, from: .usd, to: .current)
+        let pctSinceHalving = currentPrice.map { ($0 / localizedPriceAtHalving - 1) * 100 }
 
         return HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
@@ -133,7 +139,7 @@ struct HalvingView: View {
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 3) {
-                Text("BTC was \(AppCurrency.current.format(event.priceAtHalving))")
+                Text("BTC was \(AppCurrency.current.format(localizedPriceAtHalving))")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
                 if let pct = pctSinceHalving {
                     Text("\(pct >= 0 ? "+" : "")\(pct.formatted(.number.precision(.fractionLength(0))))%")
