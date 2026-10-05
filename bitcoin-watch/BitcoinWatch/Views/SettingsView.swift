@@ -15,6 +15,7 @@ struct SettingsView: View {
 
                 ProAlertsSection()
                 DisplaySection()
+                LiveActivitySection()
                 NotificationsSection()
                 PrivacySection()
 
@@ -356,6 +357,41 @@ private struct DisplaySection: View {
             }
         }
         .onChange(of: sats) { _, _ in WidgetCenter.shared.reloadAllTimelines() }
+    }
+}
+
+// MARK: - Live Activity (Dynamic Island + Lock Screen)
+
+private struct LiveActivitySection: View {
+    @AppStorage("liveActivityEnabled", store: .shared) private var enabled = true
+
+    var body: some View {
+        Section {
+            HStack(spacing: 14) {
+                IconChip(systemName: "bolt.horizontal.circle.fill", color: Color(red: 0.40, green: 0.78, blue: 0.98))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Dynamic Island & Lock Screen")
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("Live price in the Dynamic Island and on your Lock Screen")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Toggle("", isOn: $enabled).labelsHidden().tint(.orange)
+            }
+            .padding(.vertical, 4)
+            .listRowBackground(rowTint)
+        } header: {
+            Text("Live Activity")
+        }
+        .onChange(of: enabled) { _, isOn in
+            if isOn {
+                Task { await PriceService.shared.fetchPrice() }
+            } else {
+                LiveActivityManager.shared.endAll()
+            }
+        }
     }
 }
 

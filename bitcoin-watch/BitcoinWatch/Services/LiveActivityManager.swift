@@ -20,7 +20,15 @@ class LiveActivityManager {
         }
     }
 
+    private var isEnabled: Bool {
+        (UserDefaults.shared.object(forKey: "liveActivityEnabled") as? Bool) ?? true
+    }
+
     func update(price: Double) {
+        guard isEnabled else {
+            endAll()
+            return
+        }
         let state = BTCLiveActivityAttributes.ContentState(
             price: price,
             change24h: UserDefaults.shared.loadChange24h(),
