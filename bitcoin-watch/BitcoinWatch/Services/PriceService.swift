@@ -71,9 +71,14 @@ class PriceService: ObservableObject {
             // Fire price alert if threshold crossed (works in foreground and background)
             AlertService.shared.checkAndFire(currentPrice: price.usd)
 
+            // Live Activity must keep updating in the background too — it's the whole
+            // point of the Dynamic Island / lock-screen card. Gating this to foreground
+            // only meant it went stale the moment the app was backgrounded, even though
+            // BackgroundRefresh was still fetching fresh prices every ~10-15 min.
+            LiveActivityManager.shared.update(price: price.usd)
+
             // Foreground-only side effects
             if UIApplication.shared.applicationState == .active {
-                LiveActivityManager.shared.update(price: price.usd)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 ConnectivityManager.shared.send(price: price)
             }
