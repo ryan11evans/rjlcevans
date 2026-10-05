@@ -91,7 +91,11 @@ class StatsService: ObservableObject {
         async let fng      = fetchFearGreed()
         let (m, b, fg) = await (market, block, fng)
         if let fg { fearGreed = fg }
-        guard let m, let b else { return }
+        // Only bail if the market fetch itself failed — blockstream.info
+        // timing out shouldn't also freeze the chart/ATH/24h/widget data,
+        // which depend on `m`, not `b`. Fall back to the last known block
+        // height (if any) rather than dropping the halving countdown too.
+        guard let m else { return }
 
         // Keep current price and 24h band consistent by clamping the band to include it
         let current = m.currentPrice
@@ -107,7 +111,7 @@ class StatsService: ObservableObject {
         stats = BitcoinStats(currentPrice: current,
                              high24h: high, low24h: low,
                              ath: m.ath, athDate: m.athDate,
-                             change24h: m.change24h, blockHeight: b)
+                             change24h: m.change24h, blockHeight: b ?? stats?.blockHeight)
 
         await fetchChart(range: chartRange)
         await saveSparkline()
@@ -181,6 +185,17 @@ class StatsService: ObservableObject {
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let date = df.date(from: md.ath_date[cur] ?? "") ?? Date()
+
+        // CoinGecko returns every supported currency in this one response —
+        // capture them all so cross-currency conversions (halving history,
+        // alerts, portfolio lots entered under a different display currency)
+        // stay correct without a second network call.
+        var rates: [AppCurrency: Double] = [:]
+        for c in AppCurrency.allCases {
+            if let p = md.current_price[c.rawValue] { rates[c] = p }
+        }
+        CurrencyRates.shared.update(rates)
+
         return MarketResult(currentPrice: current,
                             high24h:      md.high_24h[cur] ?? current,
                             low24h:       md.low_24h[cur] ?? current,
@@ -220,5 +235,5 @@ struct BitcoinStats {
     let ath:          Double
     let athDate:      Date
     let change24h:    Double
-    let blockHeight:  Int
+    let blockHeight:  Int?
 }

@@ -9,7 +9,11 @@ struct RefreshBTCIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult {
-        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-USD/spot"),
+        // Must match the user's selected display currency — the shared
+        // UserDefaults price store is read by the app/widget/Watch as-is, so
+        // a hardcoded USD fetch here would silently overwrite a EUR/GBP/JPY
+        // price with a raw USD number until the next real fetch corrects it.
+        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-\(AppCurrency.current.code)/spot"),
               let (data, _) = try? await URLSession.shared.data(from: url) else {
             return .result()
         }

@@ -88,6 +88,11 @@ final class CompareService: ObservableObject {
                 if let points, !points.isEmpty {
                     seriesByAsset[asset] = points
                 } else {
+                    // Drop any series left over from a previous fetch — otherwise
+                    // a failed fetch for this range leaves an older range's data
+                    // on screen, plotted alongside assets that did refresh, which
+                    // silently overlays two different time spans on one chart.
+                    seriesByAsset[asset] = nil
                     errorAssets.insert(asset)
                 }
             }

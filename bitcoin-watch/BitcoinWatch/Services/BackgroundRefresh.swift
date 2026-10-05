@@ -21,14 +21,32 @@ enum BackgroundRefresh {
     private static func handle(task: BGAppRefreshTask) {
         schedule()  // Re-schedule immediately so chain continues
 
+        // Guard against calling setTaskCompleted twice (once from the fetch
+        // finishing normally, once from expirationHandler firing around the
+        // same time) — iOS throttles future background budget for apps that
+        // double-complete a task.
+        let lock = NSLock()
+        var completed = false
+        let complete: (Bool) -> Void = { success in
+            lock.lock(); defer { lock.unlock() }
+            guard !completed else { return }
+            completed = true
+            task.setTaskCompleted(success: success)
+        }
+
         let fetchTask = Task { @MainActor in
+            // Pull the server's fired-state first — same reason as the
+            // foreground path in BitcoinWatchApp.swift: without this, an alert
+            // the server already pushed while the app was closed can fire a
+            // second, local notification here.
+            await PushService.shared.sync()
             await PriceService.shared.fetchPrice()
-            task.setTaskCompleted(success: true)
+            complete(true)
         }
 
         task.expirationHandler = {
             fetchTask.cancel()
-            task.setTaskCompleted(success: false)
+            complete(false)
         }
     }
 }

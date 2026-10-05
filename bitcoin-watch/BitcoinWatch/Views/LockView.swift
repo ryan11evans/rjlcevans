@@ -29,6 +29,13 @@ struct LockView: View {
                     Text("Authenticate to view your Bitcoin")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    if let authError = lock.authError {
+                        Text(authError)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
                 }
 
                 Button {

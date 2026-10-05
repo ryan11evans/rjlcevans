@@ -81,6 +81,12 @@ class PriceService: ObservableObject {
             if UIApplication.shared.applicationState == .active {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 ConnectivityManager.shared.send(price: price)
+                // Keep the 1D chart's right edge moving every 15s like the
+                // header price. This call went missing at some point (the
+                // function and its "called every 15s" doc comment were still
+                // sitting in StatsService with zero call sites) — without it
+                // the chart only moved on the 5-min auto-refresh.
+                StatsService.shared.updateLivePrice(price.usd)
             }
 
             return price
