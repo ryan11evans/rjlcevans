@@ -14,7 +14,14 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showHalving = false
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
+    @StateObject private var hingeObserver = HingeObserver()
     @Environment(\.requestReview) private var requestReview
+
+    /// Wide, two-pane layout when a foldable is unfolded, or on any device/window
+    /// wide enough to earn it (e.g. iPad) even without a hinge.
+    private func isWide(_ width: CGFloat) -> Bool {
+        hingeObserver.state == .fullyOpen || width > 900
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,40 +35,15 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        PriceHeaderView(price: service.currentPrice,
-                                       isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h)
-
-                        VStack(spacing: 8) {
-                            BTCChartView(statsService: statsService)
-                            PortfolioCardView(
-                                currentPrice: service.currentPrice?.usd,
-                                change24h: statsService.stats?.change24h
-                            )
-                            BitcoinInfoView(
-                                stats: statsService.stats,
-                                currentPrice: service.currentPrice?.usd,
-                                chartLow: statsService.chartData.map(\.price).min(),
-                                chartHigh: statsService.chartData.map(\.price).max(),
-                                fearGreed: statsService.fearGreed,
-                                onTapHalving: { showHalving = true }
-                            )
+                GeometryReader { geo in
+                    Group {
+                        if isWide(geo.size.width) {
+                            wideLayout
+                        } else {
+                            compactLayout
                         }
-                        .padding(.horizontal)
-
-                        RefreshStatusView(price: service.currentPrice, error: service.error)
-                            .padding(.top, 8)
-
-                        Spacer(minLength: 4)
                     }
-                }
-                .scrollIndicators(.hidden)
-                .scrollBounceBehavior(.basedOnSize)
-                .refreshable {
-                    await service.fetchPrice()
-                    await statsService.fetch()
+                    .background(HingeReader(observer: hingeObserver))
                 }
             }
             .navigationTitle("Bitcoin")
@@ -144,6 +126,98 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var compactLayout: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                PriceHeaderView(price: service.currentPrice,
+                               isLoading: service.isLoading,
+                               change24h: statsService.stats?.change24h)
+
+                VStack(spacing: 8) {
+                    BTCChartView(statsService: statsService)
+                    PortfolioCardView(
+                        currentPrice: service.currentPrice?.usd,
+                        change24h: statsService.stats?.change24h
+                    )
+                    BitcoinInfoView(
+                        stats: statsService.stats,
+                        currentPrice: service.currentPrice?.usd,
+                        chartLow: statsService.chartData.map(\.price).min(),
+                        chartHigh: statsService.chartData.map(\.price).max(),
+                        fearGreed: statsService.fearGreed,
+                        onTapHalving: { showHalving = true }
+                    )
+                }
+                .padding(.horizontal)
+
+                RefreshStatusView(price: service.currentPrice, error: service.error)
+                    .padding(.top, 8)
+
+                Spacer(minLength: 4)
+            }
+        }
+        .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize)
+        .refreshable {
+            await service.fetchPrice()
+            await statsService.fetch()
+        }
+    }
+
+    /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
+    private var wideLayout: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    PriceHeaderView(price: service.currentPrice,
+                                   isLoading: service.isLoading,
+                                   change24h: statsService.stats?.change24h)
+                        .scaleEffect(1.25)
+                        .padding(.top, 24)
+                        .padding(.bottom, 24)
+
+                    BTCChartView(statsService: statsService)
+                        .padding(.horizontal, 24)
+
+                    RefreshStatusView(price: service.currentPrice, error: service.error)
+                        .padding(.top, 12)
+
+                    Spacer(minLength: 4)
+                }
+            }
+            .scrollIndicators(.hidden)
+            .frame(maxWidth: .infinity)
+
+            Divider()
+                .overlay(Color.white.opacity(0.08))
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    PortfolioCardView(
+                        currentPrice: service.currentPrice?.usd,
+                        change24h: statsService.stats?.change24h
+                    )
+                    BitcoinInfoView(
+                        stats: statsService.stats,
+                        currentPrice: service.currentPrice?.usd,
+                        chartLow: statsService.chartData.map(\.price).min(),
+                        chartHigh: statsService.chartData.map(\.price).max(),
+                        fearGreed: statsService.fearGreed,
+                        onTapHalving: { showHalving = true }
+                    )
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 32)
+            }
+            .scrollIndicators(.hidden)
+            .frame(maxWidth: .infinity)
+        }
+        .refreshable {
+            await service.fetchPrice()
+            await statsService.fetch()
         }
     }
 

@@ -52,6 +52,7 @@
 		740E930547ABBC992B018B0D /* PushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388C849C78D428C6F48A879B /* PushService.swift */; };
 		752156B1B23CBA7EDBB9DE53 /* BitcoinWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */; };
 		77DE522F11100BCCD59DA368 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
+		7A376C6144F870DBEC51FA53 /* HingeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B39A0F76EEFBE7C0E64C75 /* HingeObserver.swift */; };
 		7A9CB6C47C696490E2C65EB1 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */; };
 		7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
 		7B2A63C9CBFDDDA2B4D995AF /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8E8AEE91FC9EDCEE86D183 /* WidgetTheme.swift */; };
@@ -232,6 +233,7 @@
 		ADB9D3AF9DFDCE9100F1E454 /* AppIcon-Rose-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Rose-76@2x.png"; sourceTree = "<group>"; };
 		ADF03608C3190FC8FF917634 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		AEA02D16D6C9EC8979D57986 /* AppIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon@3x.png"; sourceTree = "<group>"; };
+		B1B39A0F76EEFBE7C0E64C75 /* HingeObserver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HingeObserver.swift; sourceTree = "<group>"; };
 		B6D47F4EBCDE43B0ACD30DEC /* ConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityManager.swift; sourceTree = "<group>"; };
 		B7EB92BC34BE9CE68F138019 /* CompareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompareView.swift; sourceTree = "<group>"; };
 		B92509136B284F2A161A2872 /* AppIcon-Emerald@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Emerald@3x.png"; sourceTree = "<group>"; };
@@ -385,6 +387,7 @@
 				686A7534CA4BD1CD55DA5317 /* ShareCardView.swift */,
 				7F80EF02C75E11D1F28E690E /* YearInBitcoinView.swift */,
 				0BA00C5B1DBF03BC0EE2E7F7 /* HalvingView.swift */,
+				B1B39A0F76EEFBE7C0E64C75 /* HingeObserver.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -689,6 +692,7 @@
 				171C254656400AD92FDC6A76 /* YearInBitcoinView.swift in Sources */,
 				C4B89D228807319F7635D3BF /* HalvingView.swift in Sources */,
 				DB155BE828E8DC87C18A95FE /* CurrencyRates.swift in Sources */,
+				7A376C6144F870DBEC51FA53 /* HingeObserver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
