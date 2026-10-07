@@ -50,3 +50,25 @@ extension View {
         }
     }
 }
+
+/// Thin frosted seam between two wide-layout panes (e.g. the unfolded Duo's
+/// two-pane split) — a soft glass rule with a blurred glow either side,
+/// matching the `.glassCard()` material instead of a flat system `Divider`.
+struct GlassSeam: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [.clear, .white.opacity(0.08), .clear],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(width: 14)
+            .blur(radius: 6)
+
+            LinearGradient(
+                colors: [.white.opacity(0.03), .white.opacity(0.18), .white.opacity(0.03)],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(width: 1)
+        }
+    }
+}

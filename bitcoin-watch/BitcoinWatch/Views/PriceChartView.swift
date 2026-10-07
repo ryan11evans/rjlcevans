@@ -7,49 +7,75 @@ struct BitcoinInfoView: View {
     var chartHigh: Double? = nil
     var fearGreed: StatsService.FearGreedData? = nil
     var onTapHalving: (() -> Void)? = nil
+    /// Wide-pane layout (e.g. unfolded Duo): spread all six tiles across a
+    /// 3-column grid instead of stacking phone-width 2-up rows, so the extra
+    /// width actually gets used.
+    var wide: Bool = false
 
     var body: some View {
         VStack(spacing: 6) {
             BTCHeroAnimation()
 
-            VStack(spacing: 8) {
-                HStack(spacing: 10) {
-                    StatTile(label: "24h High",
-                             value: stats.map { shortPrice(high24h($0)) } ?? "—",
-                             subtitle: nil,
-                             color: .green)
-                    StatTile(label: "24h Low",
-                             value: stats.map { shortPrice(low24h($0)) } ?? "—",
-                             subtitle: nil,
-                             color: .red)
+            if wide {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                    tile24hHigh
+                    tile24hLow
+                    tileATH
+                    tileBlockHeight
+                    tileHalving
+                    tileFearGreed
                 }
-                HStack(spacing: 10) {
-                    StatTile(label: "All-Time High",
-                             value: stats.map { shortPrice($0.ath) } ?? "—",
-                             subtitle: stats.map { athDateString($0.athDate) },
-                             color: .orange)
-                    StatTile(label: "Block Height",
-                             value: stats?.blockHeight.map { "#\($0.formatted())" } ?? "—",
-                             subtitle: nil,
-                             color: .cyan)
+                .padding(.horizontal)
+            } else {
+                VStack(spacing: 8) {
+                    HStack(spacing: 10) { tile24hHigh; tile24hLow }
+                    HStack(spacing: 10) { tileATH; tileBlockHeight }
+                    HStack(spacing: 10) { tileHalving; tileFearGreed }
                 }
-                HStack(spacing: 10) {
-                    StatTile(label: "Next Halving",
-                             value: stats?.blockHeight.map(halvingCountdown) ?? "—",
-                             subtitle: stats?.blockHeight.map(halvingSubtitle),
-                             color: .purple,
-                             compact: true,
-                             action: onTapHalving)
-                    StatTile(label: "Fear & Greed",
-                             value: fearGreed.map { "\($0.value) · \($0.classification)" } ?? "—",
-                             subtitle: nil,
-                             color: fearGreed.map { fearGreedColor($0.value) } ?? .gray,
-                             compact: true)
-                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
         .padding(.top, 4)
+    }
+
+    private var tile24hHigh: some View {
+        StatTile(label: "24h High",
+                 value: stats.map { shortPrice(high24h($0)) } ?? "—",
+                 subtitle: nil,
+                 color: .green)
+    }
+    private var tile24hLow: some View {
+        StatTile(label: "24h Low",
+                 value: stats.map { shortPrice(low24h($0)) } ?? "—",
+                 subtitle: nil,
+                 color: .red)
+    }
+    private var tileATH: some View {
+        StatTile(label: "All-Time High",
+                 value: stats.map { shortPrice($0.ath) } ?? "—",
+                 subtitle: stats.map { athDateString($0.athDate) },
+                 color: .orange)
+    }
+    private var tileBlockHeight: some View {
+        StatTile(label: "Block Height",
+                 value: stats?.blockHeight.map { "#\($0.formatted())" } ?? "—",
+                 subtitle: nil,
+                 color: .cyan)
+    }
+    private var tileHalving: some View {
+        StatTile(label: "Next Halving",
+                 value: stats?.blockHeight.map(halvingCountdown) ?? "—",
+                 subtitle: stats?.blockHeight.map(halvingSubtitle),
+                 color: .purple,
+                 compact: true,
+                 action: onTapHalving)
+    }
+    private var tileFearGreed: some View {
+        StatTile(label: "Fear & Greed",
+                 value: fearGreed.map { "\($0.value) · \($0.classification)" } ?? "—",
+                 subtitle: nil,
+                 color: fearGreed.map { fearGreedColor($0.value) } ?? .gray,
+                 compact: true)
     }
 
     private func high24h(_ s: BitcoinStats) -> Double {

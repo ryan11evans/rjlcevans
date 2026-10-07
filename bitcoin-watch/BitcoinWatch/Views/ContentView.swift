@@ -111,22 +111,31 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    // Kept to 2 visible glyphs (icon + menu), mirroring the
+                    // leading bell/gear pair, so iOS 26 auto-groups both
+                    // sides into a matching Liquid Glass pill instead of the
+                    // leading side pilling up while 4 trailing icons float
+                    // ungrouped.
                     HStack(spacing: 16) {
                         Button { showCompare = true } label: {
                             Image(systemName: "chart.bar.xaxis")
                         }
-                        Button { showDCA = true } label: {
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                        }
-                        Button { showCalculator = true } label: {
-                            Image(systemName: "plusminus")
-                        }
-                        Button {
-                            renderAndShare()
+                        Menu {
+                            Button { showDCA = true } label: {
+                                Label("DCA Calculator", systemImage: "chart.line.uptrend.xyaxis")
+                            }
+                            Button { showCalculator = true } label: {
+                                Label("Satoshi Converter", systemImage: "plusminus")
+                            }
+                            Button {
+                                renderAndShare()
+                            } label: {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                            .disabled(service.currentPrice == nil)
                         } label: {
-                            Image(systemName: "square.and.arrow.up")
+                            Image(systemName: "ellipsis.circle")
                         }
-                        .disabled(service.currentPrice == nil)
                     }
                 }
             }
@@ -171,32 +180,47 @@ struct ContentView: View {
         }
     }
 
+    /// Shared top/side insets for both wide-layout panes, kept identical so
+    /// nothing drifts out of alignment across the divider.
+    private let wideTopPadding: CGFloat = 28
+    private let wideHorizontalPadding: CGFloat = 20
+
     /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
     private var wideLayout: some View {
         HStack(alignment: .top, spacing: 0) {
-            ScrollView {
-                VStack(spacing: 0) {
-                    PriceHeaderView(price: service.currentPrice,
-                                   isLoading: service.isLoading,
-                                   change24h: statsService.stats?.change24h)
-                        .scaleEffect(1.25)
-                        .padding(.top, 24)
-                        .padding(.bottom, 24)
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        PriceHeaderView(price: service.currentPrice,
+                                       isLoading: service.isLoading,
+                                       change24h: statsService.stats?.change24h)
+                            .scaleEffect(1.25)
+                            .padding(.top, wideTopPadding)
+                            .padding(.bottom, 24)
 
-                    BTCChartView(statsService: statsService)
-                        .padding(.horizontal, 24)
+                        // Chart grows to fill the pane's leftover height so the
+                        // left pane doesn't end in a dead void under a much
+                        // taller right pane.
+                        BTCChartView(statsService: statsService,
+                                     chartHeight: max(140, geo.size.height - 260))
 
-                    RefreshStatusView(price: service.currentPrice, error: service.error)
-                        .padding(.top, 12)
+                        RefreshStatusView(price: service.currentPrice, error: service.error)
+                            .padding(.top, 12)
 
-                    Spacer(minLength: 4)
+                        Spacer(minLength: 4)
+                    }
+                    .padding(.horizontal, wideHorizontalPadding)
+                    .frame(minHeight: geo.size.height)
+                }
+                .scrollIndicators(.hidden)
+                .refreshable {
+                    await service.fetchPrice()
+                    await statsService.fetch()
                 }
             }
-            .scrollIndicators(.hidden)
             .frame(maxWidth: .infinity)
 
-            Divider()
-                .overlay(Color.white.opacity(0.08))
+            GlassSeam()
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -204,24 +228,27 @@ struct ContentView: View {
                         currentPrice: service.currentPrice?.usd,
                         change24h: statsService.stats?.change24h
                     )
+                    .frame(maxWidth: 420)
+
                     BitcoinInfoView(
                         stats: statsService.stats,
                         currentPrice: service.currentPrice?.usd,
                         chartLow: statsService.chartData.map(\.price).min(),
                         chartHigh: statsService.chartData.map(\.price).max(),
                         fearGreed: statsService.fearGreed,
-                        onTapHalving: { showHalving = true }
+                        onTapHalving: { showHalving = true },
+                        wide: true
                     )
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 32)
+                .padding(.horizontal, wideHorizontalPadding)
+                .padding(.top, wideTopPadding)
             }
             .scrollIndicators(.hidden)
+            .refreshable {
+                await service.fetchPrice()
+                await statsService.fetch()
+            }
             .frame(maxWidth: .infinity)
-        }
-        .refreshable {
-            await service.fetchPrice()
-            await statsService.fetch()
         }
     }
 
@@ -295,7 +322,11 @@ struct PriceHeaderView: View {
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
-                        .foregroundStyle(flashColor ?? Color.primary)
+                        // Not `.primary`: this view always sits on our own
+                        // hardcoded dark gradient regardless of system
+                        // appearance, so `.primary` renders near-black (and
+                        // illegible) whenever the device is in light mode.
+                        .foregroundStyle(flashColor ?? Color.white)
                         .onChange(of: price.usd) { old, new in
                             let color = new > old ? upColor : downColor
                             withAnimation(.easeIn(duration: 0.1))  { flashColor = color }

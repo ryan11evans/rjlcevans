@@ -3,6 +3,7 @@ import Charts
 
 struct BTCChartView: View {
     @ObservedObject var statsService: StatsService
+    var chartHeight: CGFloat = 140
     @State private var selectedDate: Date? = nil
 
     private var data: [StatsService.ChartPoint] { statsService.chartData }
@@ -85,7 +86,7 @@ struct BTCChartView: View {
             if data.isEmpty {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.white.opacity(0.04))
-                    .frame(height: 140)
+                    .frame(height: chartHeight)
                     .overlay(ProgressView().tint(.orange))
             } else {
                 Chart {
@@ -154,7 +155,7 @@ struct BTCChartView: View {
                 .chartXAxis(.hidden)
                 .chartYAxis(.hidden)
                 .chartXSelection(value: $selectedDate)
-                .frame(height: 140)
+                .frame(height: chartHeight)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .onChange(of: statsService.chartData.last?.id) { _, _ in
                     selectedDate = nil
