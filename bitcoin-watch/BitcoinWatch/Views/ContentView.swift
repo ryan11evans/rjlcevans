@@ -16,11 +16,17 @@ struct ContentView: View {
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @StateObject private var hingeObserver = HingeObserver()
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     /// Wide, two-pane layout when a foldable is unfolded, or on any device/window
-    /// wide enough to earn it (e.g. iPad) even without a hinge.
-    private func isWide(_ width: CGFloat) -> Bool {
-        hingeObserver.state == .fullyOpen || width > 900
+    /// wide enough to earn it (e.g. iPad) even without a hinge. Driven by the
+    /// trait-collection size class rather than a raw point width: on the Duo's
+    /// unfolded display the GeometryReader content width (867pt, after safe-area
+    /// insets) never clears a fixed threshold like 900, but UIKit already reports
+    /// `.regular` for that display the same way it does for iPad/landscape-Plus,
+    /// so size class is the signal that actually matches the device.
+    private var isWide: Bool {
+        hingeObserver.state == .fullyOpen || horizontalSizeClass == .regular
     }
 
     var body: some View {
@@ -35,16 +41,14 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                GeometryReader { geo in
-                    Group {
-                        if isWide(geo.size.width) {
-                            wideLayout
-                        } else {
-                            compactLayout
-                        }
+                Group {
+                    if isWide {
+                        wideLayout
+                    } else {
+                        compactLayout
                     }
-                    .background(HingeReader(observer: hingeObserver))
                 }
+                .background(HingeReader(observer: hingeObserver))
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
