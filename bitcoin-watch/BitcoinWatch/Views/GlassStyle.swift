@@ -20,24 +20,33 @@ extension View {
         )
     }
 
-    /// Frosted "Liquid Glass" panel: a translucent material with a bright
-    /// top edge and soft shadow — echoes iOS 26's glass surfaces on iOS 17+.
+    /// Frosted "Liquid Glass" panel. On iOS 26+ this is the real system
+    /// `.glassEffect()` material (dynamic specular highlights, true
+    /// refraction) — the look the new iPhones are designed to show off.
+    /// iOS 17–25 fall back to a hand-rolled material approximation.
+    @ViewBuilder
     func glassCard(cornerRadius: CGFloat = 20, shadow: Bool = true) -> some View {
-        self
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [.white.opacity(0.22), .white.opacity(0.05)],
-                            startPoint: .top, endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-            )
-            .shadow(color: .black.opacity(shadow ? 0.28 : 0), radius: shadow ? 12 : 0, y: shadow ? 5 : 0)
+        if #available(iOS 26.0, *) {
+            self
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                .shadow(color: .black.opacity(shadow ? 0.28 : 0), radius: shadow ? 12 : 0, y: shadow ? 5 : 0)
+        } else {
+            self
+                .background(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [.white.opacity(0.22), .white.opacity(0.05)],
+                                startPoint: .top, endPoint: .bottom
+                            ),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: .black.opacity(shadow ? 0.28 : 0), radius: shadow ? 12 : 0, y: shadow ? 5 : 0)
+        }
     }
 }
