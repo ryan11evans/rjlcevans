@@ -53,6 +53,7 @@
 		752156B1B23CBA7EDBB9DE53 /* BitcoinWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */; };
 		77DE522F11100BCCD59DA368 /* BitcoinPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B3C80A0F8E7898676F81FD /* BitcoinPrice.swift */; };
 		7A376C6144F870DBEC51FA53 /* HingeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B39A0F76EEFBE7C0E64C75 /* HingeObserver.swift */; };
+		71AAE1E5D54C23C44CD31A06 /* DuoDisplayFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3158A5C6BBD97A3970F5EA04 /* DuoDisplayFix.swift */; };
 		7A9CB6C47C696490E2C65EB1 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */; };
 		7AD601F26B5DCAB114C11091 /* BTCAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B50CD9380066359C47A9DC /* BTCAppIntents.swift */; };
 		7B2A63C9CBFDDDA2B4D995AF /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8E8AEE91FC9EDCEE86D183 /* WidgetTheme.swift */; };
@@ -250,6 +251,7 @@
 		D479D6F84C6E4E884558AAED /* BTCWatchComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCWatchComplication.swift; sourceTree = "<group>"; };
 		D4E5561CF3C731DA2D7A5AF7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BitcoinWatchApp.swift; sourceTree = "<group>"; };
+		3158A5C6BBD97A3970F5EA04 /* DuoDisplayFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoDisplayFix.swift; sourceTree = "<group>"; };
 		DE1D287ED03EB2E29E7DF4B7 /* AppIcon-Silver@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver@2x.png"; sourceTree = "<group>"; };
 		E00F17F597850C90630FDBAE /* BTCChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTCChartView.swift; sourceTree = "<group>"; };
 		E9F12D503540ABB6B52F2CE3 /* WatchApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WatchApp.entitlements; sourceTree = "<group>"; };
@@ -266,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				DE1C05D1FCA966FB654D15FA /* BitcoinWatchApp.swift */,
+				3158A5C6BBD97A3970F5EA04 /* DuoDisplayFix.swift */,
 				D4E5561CF3C731DA2D7A5AF7 /* Info.plist */,
 			);
 			path = App;
@@ -664,6 +667,7 @@
 				AE45DA216DDA7BC82E485FF9 /* BackgroundRefresh.swift in Sources */,
 				8130DD0E1427539E0EEE30C8 /* BitcoinPrice.swift in Sources */,
 				752156B1B23CBA7EDBB9DE53 /* BitcoinWatchApp.swift in Sources */,
+				71AAE1E5D54C23C44CD31A06 /* DuoDisplayFix.swift in Sources */,
 				5C5ACB5DD7093E1E6F30ABB2 /* CompareService.swift in Sources */,
 				DD51D983ACEB4D38A7246033 /* CompareView.swift in Sources */,
 				65A97B25FE47367308C3204D /* ConnectivityManager.swift in Sources */,
