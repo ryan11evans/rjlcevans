@@ -70,6 +70,11 @@ fileprivate func presentShare(_ item: BTCShareItem) {
     var top = root
     while let next = top.presentedViewController { top = next }
     let vc = UIActivityViewController(activityItems: [item], applicationActivities: nil)
+    if let popover = vc.popoverPresentationController {
+        popover.sourceView = top.view
+        popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
+        popover.permittedArrowDirections = []
+    }
     top.present(vc, animated: true)
 }
 
