@@ -14,19 +14,17 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showHalving = false
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
-    @StateObject private var hingeObserver = HingeObserver()
     @Environment(\.requestReview) private var requestReview
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    /// Wide, two-pane layout when a foldable is unfolded, or on any device/window
-    /// wide enough to earn it (e.g. iPad) even without a hinge. Driven by the
-    /// trait-collection size class rather than a raw point width: on the Duo's
-    /// unfolded display the GeometryReader content width (867pt, after safe-area
-    /// insets) never clears a fixed threshold like 900, but UIKit already reports
-    /// `.regular` for that display the same way it does for iPad/landscape-Plus,
-    /// so size class is the signal that actually matches the device.
+    /// Wide, two-pane layout whenever the window's horizontal size class is
+    /// `.regular` (unfolded iPhone Duo inner display, iPad, landscape Plus/Max).
+    /// Driven purely by size class, never by hinge state or screen size: per
+    /// Apple's iPhone Duo guidance the hinge is an interaction signal, not a
+    /// layout input, and a compact window (e.g. side-by-side multitasking on the
+    /// unfolded Duo, iPad Split View) must get the single-pane layout.
     private var isWide: Bool {
-        hingeObserver.state == .fullyOpen || horizontalSizeClass == .regular
+        horizontalSizeClass == .regular
     }
 
     var body: some View {
@@ -41,14 +39,11 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                Group {
-                    if isWide {
-                        wideLayout
-                    } else {
-                        compactLayout
-                    }
+                if isWide {
+                    wideLayout
+                } else {
+                    compactLayout
                 }
-                .background(HingeReader(observer: hingeObserver))
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
