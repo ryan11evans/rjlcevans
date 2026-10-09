@@ -1,5 +1,4 @@
 import SwiftUI
-import LinkPresentation
 
 // MARK: - Container shell
 
@@ -78,29 +77,6 @@ fileprivate func chip(_ title: String, active: Bool, action: @escaping () -> Voi
             RoundedRectangle(cornerRadius: 8)
                 .fill(active ? Color.orange.opacity(0.15) : Color.white.opacity(0.06))
         )
-}
-
-@MainActor
-fileprivate func presentShare(_ item: BTCShareItem) {
-    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-          let root = scene.windows.first?.rootViewController else { return }
-    var top = root
-    while let next = top.presentedViewController { top = next }
-    let vc = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-    if let popover = vc.popoverPresentationController {
-        popover.sourceView = top.view
-        popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-        popover.permittedArrowDirections = []
-    }
-    top.present(vc, animated: true)
-}
-
-fileprivate extension Double {
-    var btcFormatted: String {
-        if self >= 1     { return String(format: "%.4f BTC", self) }
-        if self >= 0.001 { return String(format: "%.6f BTC", self) }
-        return               String(format: "%.8f BTC", self)
-    }
 }
 
 // MARK: - DCA Tab
@@ -192,7 +168,10 @@ private struct DCATab: View {
                 }
 
                 Section {
-                    Button { doShare() } label: {
+                    ShareLink(item: RenderedShareImage { renderShareCard() },
+                              subject: Text(shareTitle),
+                              message: Text(verbatim: RenderedShareImage.appLink),
+                              preview: SharePreview(shareTitle)) {
                         Label("Share DCA Plan", systemImage: "square.and.arrow.up")
                             .font(.system(.subheadline, weight: .semibold)).foregroundStyle(.black)
                             .frame(maxWidth: .infinity).padding(.vertical, 14)
@@ -209,19 +188,18 @@ private struct DCATab: View {
         .nativeListBackground()
     }
 
-    @MainActor private func doShare() {
-        guard let price = currentPrice else { return }
+    private var shareTitle: String {
+        "I stack \(AppCurrency.current.symbol)\(Int(amount)) in Bitcoin every \(freq.perLabel) with TapBTC"
+    }
+
+    @MainActor private func renderShareCard() -> UIImage? {
+        guard let price = currentPrice else { return nil }
         let card = DCAShareCard(amount: amount, freqLabel: freq.perLabel,
                                 btcPer: btcPer, price: price,
                                 rows: rows.map { (label: $0.0, btc: btcPer * freq.perYear * $0.1, invested: amount * freq.perYear * $0.1) })
             .environment(\.colorScheme, .dark)
         let r = ImageRenderer(content: card); r.scale = 3
-        guard let img = r.uiImage else { return }
-        let meta = LPLinkMetadata()
-        meta.url = URL(string: "https://rjlcevans.com/tapbtc")
-        meta.title = "I stack \(AppCurrency.current.symbol)\(Int(amount)) in Bitcoin every \(freq.perLabel) with TapBTC"
-        meta.imageProvider = NSItemProvider(object: img)
-        presentShare(BTCShareItem(metadata: meta))
+        return r.uiImage
     }
 }
 

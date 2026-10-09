@@ -1,5 +1,4 @@
 import SwiftUI
-import LinkPresentation
 
 private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
@@ -7,6 +6,7 @@ private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 struct YearInBitcoinView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
     @ObservedObject private var holdings = HoldingsService.shared
     let currentPrice: Double?
 
@@ -62,7 +62,12 @@ struct YearInBitcoinView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
                 if firstDate != nil {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Share", systemImage: "square.and.arrow.up") { renderAndShare() }
+                        ShareLink(item: RenderedShareImage { renderShareCard() },
+                                  subject: Text("My Year in Bitcoin"),
+                                  message: Text(verbatim: RenderedShareImage.appLink),
+                                  preview: SharePreview("My Year in Bitcoin")) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
                     }
                 }
             }
@@ -194,29 +199,10 @@ struct YearInBitcoinView: View {
     // MARK: - Share
 
     @MainActor
-    private func renderAndShare() {
-        let card = recapShareCard
-        let renderer = ImageRenderer(content: card)
-        renderer.scale = UIScreen.main.scale
-        guard let image = renderer.uiImage,
-              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first?.rootViewController else { return }
-
-        let metadata = LPLinkMetadata()
-        metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-        metadata.title = "My Year in Bitcoin"
-        metadata.imageProvider = NSItemProvider(object: image)
-        let shareItem = BTCShareItem(metadata: metadata)
-
-        var top = root
-        while let next = top.presentedViewController { top = next }
-        let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-        if let popover = vc.popoverPresentationController {
-            popover.sourceView = top.view
-            popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-        top.present(vc, animated: true)
+    private func renderShareCard() -> UIImage? {
+        let renderer = ImageRenderer(content: recapShareCard)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 
     private var recapShareCard: some View {

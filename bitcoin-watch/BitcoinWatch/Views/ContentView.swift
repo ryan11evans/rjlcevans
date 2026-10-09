@@ -1,6 +1,6 @@
 import SwiftUI
 import StoreKit
-import LinkPresentation
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
 
     /// Wide, two-pane layout whenever the window's horizontal size class is
     /// `.regular` (unfolded iPhone Duo inner display, iPad, landscape Plus/Max).
@@ -135,10 +136,20 @@ struct ContentView: View {
                         Button("Satoshi Converter", systemImage: "plusminus") {
                             showCalculator = true
                         }
-                        Button("Share", systemImage: "square.and.arrow.up") {
-                            renderAndShare()
+                        // ShareLink lets the system anchor the share sheet to
+                        // this control (popover on wide screens) instead of a
+                        // hand-placed popover in the middle of the window.
+                        if let price = service.currentPrice {
+                            ShareLink(item: RenderedShareImage { renderShareCard(price: price) },
+                                      subject: Text("Bitcoin is \(price.formatted)"),
+                                      message: Text(verbatim: RenderedShareImage.appLink),
+                                      preview: SharePreview("Bitcoin is \(price.formatted)")) {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                        } else {
+                            Button("Share", systemImage: "square.and.arrow.up") {}
+                                .disabled(true)
                         }
-                        .disabled(service.currentPrice == nil)
                     }
                 }
             }
@@ -299,45 +310,24 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// Renders the price share card at the current display's scale. Called
+    /// lazily by ShareLink when the user actually shares.
     @MainActor
-    private func renderAndShare() {
-        guard let price = service.currentPrice else { return }
-        let stats = statsService.stats
-        Task { @MainActor in
-            await Task.yield()
-            // Include the user's P&L brag on the card, Pro + cost basis only.
-            let gainPct: Double? = ProService.shared.isPro
-                ? HoldingsService.shared.gain(at: price.usd)?.pct
-                : nil
-            let card = ShareCardView(
-                price: price,
-                change24h: stats?.change24h,
-                chartPrices: statsService.chartData.map { $0.price },
-                holdingsGainPct: gainPct
-            )
-            .environment(\.colorScheme, .dark)
-            let renderer = ImageRenderer(content: card)
-            renderer.scale = UIScreen.main.scale
-            guard let image = renderer.uiImage,
-                  let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let root = scene.windows.first?.rootViewController else { return }
-
-            let metadata = LPLinkMetadata()
-            metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-            metadata.title = "Bitcoin is \(price.formatted)"
-            metadata.imageProvider = NSItemProvider(object: image)
-            let shareItem = BTCShareItem(metadata: metadata)
-
-            var top = root
-            while let next = top.presentedViewController { top = next }
-            let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-            if let popover = vc.popoverPresentationController {
-                popover.sourceView = top.view
-                popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
-            }
-            top.present(vc, animated: true)
-        }
+    private func renderShareCard(price: BitcoinPrice) -> UIImage? {
+        // Include the user's P&L brag on the card, Pro + cost basis only.
+        let gainPct: Double? = ProService.shared.isPro
+            ? HoldingsService.shared.gain(at: price.usd)?.pct
+            : nil
+        let card = ShareCardView(
+            price: price,
+            change24h: statsService.stats?.change24h,
+            chartPrices: statsService.chartData.map { $0.price },
+            holdingsGainPct: gainPct
+        )
+        .environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 }
 
@@ -426,15 +416,22 @@ struct ChangeBadge: View {
     }
 }
 
-class BTCShareItem: NSObject, UIActivityItemSource {
-    let metadata: LPLinkMetadata
-    init(metadata: LPLinkMetadata) { self.metadata = metadata }
+/// A share-card image for `ShareLink`, rendered only when the share sheet
+/// asks for it (so nothing is rendered on every price tick). Exported as PNG.
+struct RenderedShareImage: Transferable {
+    static let appLink = "https://rjlcevans.com/tapbtc"
 
-    func activityViewControllerPlaceholderItem(_ vc: UIActivityViewController) -> Any {
-        metadata.url ?? URL(string: "https://rjlcevans.com/tapbtc")!
+    let render: @MainActor @Sendable () -> UIImage?
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(exportedContentType: .png) { item in
+            guard let data = await item.render()?.pngData() else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            return data
+        }
+        .suggestedFileName("TapBTC.png")
     }
-    func activityViewController(_ vc: UIActivityViewController, itemForActivityType type: UIActivity.ActivityType?) -> Any? { metadata.url }
-    func activityViewControllerLinkMetadata(_ vc: UIActivityViewController) -> LPLinkMetadata? { metadata }
 }
 
 struct RefreshStatusView: View {

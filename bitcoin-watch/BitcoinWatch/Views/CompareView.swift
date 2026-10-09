@@ -1,6 +1,5 @@
 import SwiftUI
 import Charts
-import LinkPresentation
 
 private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
@@ -8,6 +7,7 @@ private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 struct CompareView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
     @StateObject private var service = CompareService.shared
 
     @State private var range: CompareRange = .oneYear
@@ -74,7 +74,12 @@ struct CompareView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Share", systemImage: "square.and.arrow.up") { renderAndShare() }
+                    ShareLink(item: RenderedShareImage { renderShareCard() },
+                              subject: Text("Bitcoin vs. Everything"),
+                              message: Text(verbatim: RenderedShareImage.appLink),
+                              preview: SharePreview("Bitcoin vs. Everything")) {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
                 }
             }
             .preferredColorScheme(.dark)
@@ -83,7 +88,7 @@ struct CompareView: View {
     }
 
     @MainActor
-    private func renderAndShare() {
+    private func renderShareCard() -> UIImage? {
         let card = VStack(alignment: .leading, spacing: 16) {
             Text("Bitcoin vs. Everything")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
@@ -99,26 +104,8 @@ struct CompareView: View {
         .environment(\.colorScheme, .dark)
 
         let renderer = ImageRenderer(content: card)
-        renderer.scale = UIScreen.main.scale
-        guard let image = renderer.uiImage,
-              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first?.rootViewController else { return }
-
-        let metadata = LPLinkMetadata()
-        metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-        metadata.title = "Bitcoin vs. Everything"
-        metadata.imageProvider = NSItemProvider(object: image)
-        let shareItem = BTCShareItem(metadata: metadata)
-
-        var top = root
-        while let next = top.presentedViewController { top = next }
-        let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-        if let popover = vc.popoverPresentationController {
-            popover.sourceView = top.view
-            popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-        top.present(vc, animated: true)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 
     private var assetChips: some View {
