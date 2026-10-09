@@ -198,80 +198,105 @@ struct ContentView: View {
     /// scaleEffect, which doesn't affect layout and can soften the glyphs).
     private let widePriceFontSize: CGFloat = 65
 
-    /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
+    /// Two-pane layout for the unfolded iPhone Duo main display (and other
+    /// wide/regular-width screens).
+    ///
+    /// iOS 27.1+: `ArrangementView` with the `.split` style puts the panes side
+    /// by side when the window is wider than tall (stacked when taller) and,
+    /// when the Duo is partially folded, moves them to either side of the
+    /// fold (an active "division" reserved region) so nothing sits in it.
+    /// Earlier iOS (iPad, landscape Plus/Max): the original HStack + seam.
+    @ViewBuilder
     private var wideLayout: some View {
-        HStack(alignment: .top, spacing: 0) {
-            GeometryReader { geo in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        PriceHeaderView(price: service.currentPrice,
-                                       isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h,
-                                       priceFontSize: widePriceFontSize)
-                            .padding(.top, wideTopPadding)
-                            .padding(.bottom, 24)
-
-                        // Chart grows to fill the pane's leftover height so the
-                        // left pane doesn't end in a dead void under a much
-                        // taller right pane — but never taller than 0.75× its
-                        // width, so a tall pane doesn't give a narrow, tall
-                        // price chart. Never shorter than the phone's 140pt.
-                        BTCChartView(statsService: statsService,
-                                     chartHeight: max(140, min(geo.size.height - 260,
-                                                               (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
-
-                        RefreshStatusView(price: service.currentPrice, error: service.error)
-                            .padding(.top, 12)
-
-                        Spacer(minLength: 4)
-                    }
-                    .padding(.horizontal, wideHorizontalPadding)
-                    .frame(minHeight: geo.size.height)
-                }
-                .scrollIndicators(.hidden)
-                .refreshable {
-                    await service.fetchPrice()
-                    await statsService.fetch()
-                }
+        if #available(iOS 27.1, *) {
+            ArrangementView {
+                wideLeftPane
+            } secondary: {
+                wideRightPane
             }
-            .frame(maxWidth: .infinity)
-
-            GlassSeam()
-
-            GeometryReader { geo in
-                ScrollView {
-                    // Card and stat grid share one width cap and one set of
-                    // side insets so their edges align.
-                    VStack(spacing: 8) {
-                        PortfolioCardView(
-                            currentPrice: service.currentPrice?.usd,
-                            change24h: statsService.stats?.change24h
-                        )
-
-                        BitcoinInfoView(
-                            stats: statsService.stats,
-                            currentPrice: service.currentPrice?.usd,
-                            chartLow: statsService.chartData.map(\.price).min(),
-                            chartHigh: statsService.chartData.map(\.price).max(),
-                            fearGreed: statsService.fearGreed,
-                            onTapHalving: { showHalving = true },
-                            wide: geo.size.width >= wideStatGridMinPaneWidth,
-                            tileInset: 0
-                        )
-                    }
-                    .frame(maxWidth: wideRightColumnMaxWidth)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, wideHorizontalPadding)
-                    .padding(.top, wideTopPadding)
-                }
-                .scrollIndicators(.hidden)
-                .refreshable {
-                    await service.fetchPrice()
-                    await statsService.fetch()
-                }
+            .arrangementViewStyle(.split)
+        } else {
+            HStack(alignment: .top, spacing: 0) {
+                wideLeftPane
+                GlassSeam()
+                wideRightPane
             }
-            .frame(maxWidth: .infinity)
         }
+    }
+
+    /// Price + chart pane of the wide layout.
+    private var wideLeftPane: some View {
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 0) {
+                    PriceHeaderView(price: service.currentPrice,
+                                   isLoading: service.isLoading,
+                                   change24h: statsService.stats?.change24h,
+                                   priceFontSize: widePriceFontSize)
+                        .padding(.top, wideTopPadding)
+                        .padding(.bottom, 24)
+
+                    // Chart grows to fill the pane's leftover height so the
+                    // left pane doesn't end in a dead void under a much
+                    // taller right pane — but never taller than 0.75× its
+                    // width, so a tall pane doesn't give a narrow, tall
+                    // price chart. Never shorter than the phone's 140pt.
+                    BTCChartView(statsService: statsService,
+                                 chartHeight: max(140, min(geo.size.height - 260,
+                                                           (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
+
+                    RefreshStatusView(price: service.currentPrice, error: service.error)
+                        .padding(.top, 12)
+
+                    Spacer(minLength: 4)
+                }
+                .padding(.horizontal, wideHorizontalPadding)
+                .frame(minHeight: geo.size.height)
+            }
+            .scrollIndicators(.hidden)
+            .refreshable {
+                await service.fetchPrice()
+                await statsService.fetch()
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Portfolio + stats pane of the wide layout.
+    private var wideRightPane: some View {
+        GeometryReader { geo in
+            ScrollView {
+                // Card and stat grid share one width cap and one set of
+                // side insets so their edges align.
+                VStack(spacing: 8) {
+                    PortfolioCardView(
+                        currentPrice: service.currentPrice?.usd,
+                        change24h: statsService.stats?.change24h
+                    )
+
+                    BitcoinInfoView(
+                        stats: statsService.stats,
+                        currentPrice: service.currentPrice?.usd,
+                        chartLow: statsService.chartData.map(\.price).min(),
+                        chartHigh: statsService.chartData.map(\.price).max(),
+                        fearGreed: statsService.fearGreed,
+                        onTapHalving: { showHalving = true },
+                        wide: geo.size.width >= wideStatGridMinPaneWidth,
+                        tileInset: 0
+                    )
+                }
+                .frame(maxWidth: wideRightColumnMaxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, wideHorizontalPadding)
+                .padding(.top, wideTopPadding)
+            }
+            .scrollIndicators(.hidden)
+            .refreshable {
+                await service.fetchPrice()
+                await statsService.fetch()
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     @MainActor
