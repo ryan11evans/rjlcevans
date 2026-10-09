@@ -79,6 +79,14 @@ fileprivate func chip(_ title: String, active: Bool, action: @escaping () -> Voi
         )
 }
 
+fileprivate extension Double {
+    var btcFormatted: String {
+        if self >= 1     { return String(format: "%.4f BTC", self) }
+        if self >= 0.001 { return String(format: "%.6f BTC", self) }
+        return               String(format: "%.8f BTC", self)
+    }
+}
+
 // MARK: - DCA Tab
 
 private struct DCATab: View {
