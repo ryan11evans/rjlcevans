@@ -29,6 +29,7 @@ struct CalculatorsView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .background(Color(red: 0.05, green: 0.04, blue: 0.04).ignoresSafeArea())
+            .adaptiveSheetSizing(.page)
             .navigationTitle(titles[tab])
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

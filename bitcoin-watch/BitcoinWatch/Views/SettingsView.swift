@@ -41,6 +41,7 @@ struct SettingsView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .nativeListBackground()
+            .adaptiveSheetSizing(.form)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

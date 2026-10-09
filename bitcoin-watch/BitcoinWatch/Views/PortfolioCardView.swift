@@ -140,8 +140,10 @@ struct HoldingsEntryView: View {
                         if !pro.isPro { proUpsell }
                     }
                     .padding(20)
+                    .readableWidth()
                 }
             }
+            .adaptiveSheetSizing(.form)
             .navigationTitle("Your Holdings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

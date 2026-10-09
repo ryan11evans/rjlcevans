@@ -49,6 +49,7 @@ struct CompareView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .nativeListBackground()
+            .adaptiveSheetSizing(.page)
             .navigationTitle("Bitcoin vs. Everything")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

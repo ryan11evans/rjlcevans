@@ -31,6 +31,7 @@ struct PriceAlertView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
+            .adaptiveSheetSizing(.form)
             .navigationTitle("Price Alerts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -85,6 +86,7 @@ struct PriceAlertView: View {
                 .multilineTextAlignment(.center)
         }
         .padding()
+        .readableWidth()
     }
 }
 
@@ -287,11 +289,13 @@ struct AddAlertView: View {
                         .foregroundStyle(.black)
                 }
                 .disabled(targetPrice == nil)
+                .readableWidth()
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
                 .padding(.bottom, 8)
                 .background(.ultraThinMaterial)
             }
+            .adaptiveSheetSizing(.form)
             .navigationTitle(isEditing ? "Edit Alert" : "New Alert")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

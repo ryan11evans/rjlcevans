@@ -74,6 +74,7 @@ struct HalvingView: View {
                     .padding(20)
                 }
             }
+            .adaptiveSheetSizing(.page)
             .navigationTitle("Halving")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

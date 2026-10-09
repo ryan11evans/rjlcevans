@@ -81,6 +81,7 @@ struct YearInBitcoinView: View {
                     }
                 }
             }
+            .adaptiveSheetSizing(.page)
             .navigationTitle("Your Year in Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

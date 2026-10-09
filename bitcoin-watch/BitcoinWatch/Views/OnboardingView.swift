@@ -149,5 +149,8 @@ struct OnboardingView: View {
 
             Spacer().frame(height: 56)
         }
+        // Keeps the copy and the Continue button from stretching edge-to-edge
+        // on wide screens (unfolded Duo, iPad); no effect on phones.
+        .readableWidth(560)
     }
 }

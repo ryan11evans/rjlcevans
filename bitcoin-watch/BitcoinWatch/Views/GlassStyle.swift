@@ -72,3 +72,36 @@ struct GlassSeam: View {
         }
     }
 }
+
+/// How a sheet should size itself when there's room for something smaller
+/// than full width (iPad, unfolded iPhone Duo, landscape Plus/Max).
+enum AdaptiveSheetSize {
+    /// Compact, centered form sheet — settings-style and single-column sheets.
+    case form
+    /// Larger page sheet — content-rich sheets with a two-column wide layout.
+    case page
+}
+
+extension View {
+    /// `.presentationSizing` on iOS 18+ (no-op on 17, where iPad already uses
+    /// form sheets). On compact-width iPhones sheets look the same as before.
+    @ViewBuilder
+    func adaptiveSheetSizing(_ size: AdaptiveSheetSize = .form) -> some View {
+        if #available(iOS 18.0, *) {
+            switch size {
+            case .form: self.presentationSizing(.form)
+            case .page: self.presentationSizing(.page)
+            }
+        } else {
+            self
+        }
+    }
+
+    /// Caps content at a readable width and centers it, so text lines, cards
+    /// and buttons don't stretch edge-to-edge on wide screens. No effect on
+    /// phone-width screens (narrower than `maxWidth`).
+    func readableWidth(_ maxWidth: CGFloat = 580) -> some View {
+        frame(maxWidth: maxWidth)
+            .frame(maxWidth: .infinity)
+    }
+}

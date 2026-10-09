@@ -61,6 +61,7 @@ struct PaywallView: View {
                             .glassCard(cornerRadius: 18)
                             .padding(.horizontal, 20)
                         }
+                        .readableWidth()
                     }
 
                     // Purchase area pinned at bottom
@@ -98,8 +99,10 @@ struct PaywallView: View {
                         .foregroundStyle(.secondary)
                     }
                     .padding(20)
+                    .readableWidth()
                 }
             }
+            .adaptiveSheetSizing(.form)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

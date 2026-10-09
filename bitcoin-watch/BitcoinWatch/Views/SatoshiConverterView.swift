@@ -79,6 +79,7 @@ struct SatoshiConverterView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .nativeListBackground()
+            .adaptiveSheetSizing(.form)
             .navigationTitle("Satoshi Calculator")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
