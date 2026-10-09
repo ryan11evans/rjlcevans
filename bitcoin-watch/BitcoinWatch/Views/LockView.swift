@@ -24,7 +24,7 @@ struct LockView: View {
 
                 VStack(spacing: 6) {
                     Text("TapBTC is Locked")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .foregroundStyle(.white)
                     Text("Authenticate to view your Bitcoin")
                         .font(.subheadline)
@@ -42,7 +42,7 @@ struct LockView: View {
                     lock.authenticate()
                 } label: {
                     Label("Unlock", systemImage: "faceid")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(.callout, weight: .bold))
                         .padding(.horizontal, 28)
                         .padding(.vertical, 14)
                         .background(RoundedRectangle(cornerRadius: 14).fill(.orange))

@@ -1,12 +1,13 @@
 import SwiftUI
 import Charts
-import LinkPresentation
 
 private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
 struct CompareView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
     @StateObject private var service = CompareService.shared
 
     @State private var range: CompareRange = .oneYear
@@ -18,44 +19,67 @@ struct CompareView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Picker("", selection: $range) {
-                        ForEach(CompareRange.allCases, id: \.self) { r in
-                            Text(r.rawValue).tag(r)
+            GeometryReader { geo in
+                // Wide sheet (regular width, ≥ 700pt): chart and returns list side
+                // by side. Phones keep the stacked sections.
+                let sideBySide = horizontalSizeClass == .regular && geo.size.width >= 700
+                List {
+                    Section {
+                        Picker("", selection: $range) {
+                            ForEach(CompareRange.allCases, id: \.self) { r in
+                                Text(r.rawValue).tag(r)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .listRowBackground(Color.clear)
+                    }
+
+                    Section("Assets") {
+                        assetChips
+                            .listRowBackground(Color.clear)
+                    }
+
+                    if sideBySide {
+                        Section("% Return") {
+                            HStack(alignment: .top, spacing: 16) {
+                                chartCard
+                                returnSummary
+                                    .frame(width: 300)
+                            }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                        }
+                    } else {
+                        Section("% Return") {
+                            chartCard
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
+                        }
+
+                        Section("Returns") {
+                            returnSummary
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
                         }
                     }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                }
-
-                Section("Assets") {
-                    assetChips
-                        .listRowBackground(Color.clear)
-                }
-
-                Section("% Return") {
-                    chartCard
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
-
-                Section("Returns") {
-                    returnSummary
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
                 }
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .nativeListBackground()
+            .adaptiveSheetSizing(.page)
             .navigationTitle("Bitcoin vs. Everything")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Share", systemImage: "square.and.arrow.up") { renderAndShare() }
+                    ShareLink(item: RenderedShareImage { renderShareCard() },
+                              subject: Text("Bitcoin vs. Everything"),
+                              message: Text(verbatim: RenderedShareImage.appLink),
+                              preview: SharePreview("Bitcoin vs. Everything")) {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
                 }
             }
             .preferredColorScheme(.dark)
@@ -64,7 +88,7 @@ struct CompareView: View {
     }
 
     @MainActor
-    private func renderAndShare() {
+    private func renderShareCard() -> UIImage? {
         let card = VStack(alignment: .leading, spacing: 16) {
             Text("Bitcoin vs. Everything")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
@@ -80,26 +104,8 @@ struct CompareView: View {
         .environment(\.colorScheme, .dark)
 
         let renderer = ImageRenderer(content: card)
-        renderer.scale = UIScreen.main.scale
-        guard let image = renderer.uiImage,
-              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first?.rootViewController else { return }
-
-        let metadata = LPLinkMetadata()
-        metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-        metadata.title = "Bitcoin vs. Everything"
-        metadata.imageProvider = NSItemProvider(object: image)
-        let shareItem = BTCShareItem(metadata: metadata)
-
-        var top = root
-        while let next = top.presentedViewController { top = next }
-        let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-        if let popover = vc.popoverPresentationController {
-            popover.sourceView = top.view
-            popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-        top.present(vc, animated: true)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 
     private var assetChips: some View {
@@ -112,7 +118,7 @@ struct CompareView: View {
                     HStack(spacing: 6) {
                         Circle().fill(asset.color).frame(width: 8, height: 8)
                         Text(asset.displayName)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(.footnote, weight: .semibold))
                     }
                     .foregroundStyle(isOn ? .primary : .secondary)
                     .frame(maxWidth: .infinity)
@@ -129,7 +135,7 @@ struct CompareView: View {
     @ViewBuilder private var chartCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("% RETURN")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(.caption2, weight: .medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(0.3)
@@ -197,14 +203,14 @@ struct CompareView: View {
         HStack(spacing: 12) {
             Circle().fill(asset.color).frame(width: 10, height: 10)
             Text(asset.displayName)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(.subheadline, weight: .semibold))
             Spacer()
             if let pct = service.seriesByAsset[asset]?.last?.pctChange {
                 Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct))%")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(pct >= 0 ? upColor : downColor)
             } else if service.errorAssets.contains(asset) {
-                Text("Unavailable").font(.system(size: 12)).foregroundStyle(.tertiary)
+                Text("Unavailable").font(.system(.caption)).foregroundStyle(.tertiary)
             } else {
                 ProgressView().controlSize(.small)
             }

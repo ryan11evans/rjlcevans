@@ -41,6 +41,7 @@ struct SettingsView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .nativeListBackground()
+            .adaptiveSheetSizing(.form)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -108,10 +109,10 @@ private struct ProCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
                             Text("TapBTC Pro")
-                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .font(.system(.body, design: .rounded, weight: .bold))
                                 .foregroundStyle(.white)
                             Text("UNLOCKED")
-                                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                .font(.system(.caption2, design: .rounded, weight: .heavy))
                                 .tracking(0.8)
                                 .foregroundStyle(.orange)
                                 .padding(.horizontal, 6)
@@ -119,7 +120,7 @@ private struct ProCard: View {
                                 .background(Capsule().fill(.white))
                         }
                         Text("Unlimited alerts — thanks for the support 🧡")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(.caption, weight: .medium))
                             .foregroundStyle(.white.opacity(0.85))
                     }
                     Spacer()
@@ -142,10 +143,10 @@ private struct ProCard: View {
                         }
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Unlock TapBTC Pro")
-                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .font(.system(.body, design: .rounded, weight: .bold))
                                 .foregroundStyle(.white)
                             Text("Unlimited price alerts · one-time \(pro.priceText)")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(.caption, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.85))
                         }
                         Spacer()
@@ -204,12 +205,12 @@ private struct ProAlertsSection: View {
                 IconChip(systemName: "waveform.path.ecg", color: Color(red: 1.0, green: 0.45, blue: 0.35))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Volatility Alerts")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text(pro.isPro
                          ? "Push when BTC moves ±\(Int(volThreshold))% in 24h"
                          : "Get pinged on big 24h swings")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -221,7 +222,7 @@ private struct ProAlertsSection: View {
                             }
                         } label: {
                             Text("±\(Int(volThreshold))%")
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded, weight: .bold))
                                 .foregroundStyle(.orange)
                         }
                         .padding(.trailing, 4)
@@ -241,12 +242,12 @@ private struct ProAlertsSection: View {
                 IconChip(systemName: "sun.max.fill", color: Color(red: 1.0, green: 0.78, blue: 0.25))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Daily Briefing")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text(pro.isPro
                          ? "One push each morning with price & your stack"
                          : "A morning summary, delivered daily")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -258,7 +259,7 @@ private struct ProAlertsSection: View {
                             }
                         } label: {
                             Text(hourLabel(briefHour))
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded, weight: .bold))
                                 .foregroundStyle(.orange)
                         }
                         .padding(.trailing, 4)
@@ -278,7 +279,7 @@ private struct ProAlertsSection: View {
                 Spacer()
                 if !pro.isPro {
                     Text("PRO")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .font(.system(.caption2, design: .rounded, weight: .heavy))
                         .tracking(0.8)
                         .foregroundStyle(.black)
                         .padding(.horizontal, 6).padding(.vertical, 3)
@@ -317,10 +318,10 @@ private struct DisplaySection: View {
                 IconChip(systemName: "dollarsign.circle.fill", color: Color(red: 0.19, green: 0.82, blue: 0.35))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Currency")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text("Show prices in your local currency")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -330,7 +331,7 @@ private struct DisplaySection: View {
                     }
                 } label: {
                     Text(selected.pickerLabel)
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(.orange)
                 }
             }
@@ -341,10 +342,10 @@ private struct DisplaySection: View {
                 IconChip(systemName: "bitcoinsign.circle.fill", color: .orange)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Denominate in Sats")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text("Show holdings in satoshis instead of BTC")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -377,10 +378,10 @@ private struct LiveActivitySection: View {
                 IconChip(systemName: "bolt.horizontal.circle.fill", color: Color(red: 0.40, green: 0.78, blue: 0.98))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Dynamic Island & Lock Screen")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text("Live price in the Dynamic Island and on your Lock Screen")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -428,10 +429,10 @@ private struct NotificationsSection: View {
             IconChip(systemName: icon, color: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(.white)
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(.system(.caption))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -455,10 +456,10 @@ private struct RecapSection: View {
                     IconChip(systemName: "sparkles", color: .orange)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Your Year in Bitcoin")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.white)
                         Text("Your stack's story — buys, P&L, biggest days")
-                            .font(.system(size: 12))
+                            .font(.system(.caption))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -476,10 +477,10 @@ private struct RecapSection: View {
                     IconChip(systemName: "square.split.2x1", color: Color(red: 0.6, green: 0.4, blue: 1.0))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("The Halving")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(.white)
                         Text("Countdown, history, and why supply gets cut in half")
-                            .font(.system(size: 12))
+                            .font(.system(.caption))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -504,10 +505,10 @@ private struct PrivacySection: View {
                 IconChip(systemName: "faceid", color: Color(red: 0.19, green: 0.82, blue: 0.35))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Require Face ID")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text("Lock the app so only you can see your holdings")
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -699,7 +700,7 @@ private struct IconTile: View {
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
 
             Text(icon.displayName)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .rounded))
+                .font(.system(.caption, design: .rounded, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? .orange : .secondary)
         }
         .onTapGesture(perform: onTap)
@@ -780,7 +781,7 @@ private struct WidgetThemeSwatch: View {
             .frame(width: 64, height: 64)
 
             Text(theme.displayName)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .rounded))
+                .font(.system(.caption, design: .rounded, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? .orange : .secondary)
         }
         .onTapGesture(perform: onTap)
@@ -803,10 +804,10 @@ private struct VersionFooter: View {
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(.orange.opacity(0.5))
             Text(versionText)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .medium))
                 .foregroundStyle(.tertiary)
             Text("No accounts. No ads. Just Bitcoin.")
-                .font(.system(size: 10))
+                .font(.system(.caption2))
                 .foregroundStyle(.quaternary)
         }
         .frame(maxWidth: .infinity)

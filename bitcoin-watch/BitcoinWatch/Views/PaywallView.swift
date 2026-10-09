@@ -25,7 +25,7 @@ struct PaywallView: View {
                                         .foregroundStyle(.orange)
                                 }
                                 Text("TapBTC Pro")
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .font(.system(.title, design: .rounded, weight: .bold))
                                 Text("One-time purchase. Yours forever.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
@@ -61,6 +61,7 @@ struct PaywallView: View {
                             .glassCard(cornerRadius: 18)
                             .padding(.horizontal, 20)
                         }
+                        .readableWidth()
                     }
 
                     // Purchase area pinned at bottom
@@ -78,7 +79,7 @@ struct PaywallView: View {
                                     ProgressView().tint(.black)
                                 } else {
                                     Text("Unlock Pro · \(pro.priceText)")
-                                        .font(.system(size: 17, weight: .bold))
+                                        .font(.system(.body, weight: .bold))
                                 }
                             }
                             .frame(maxWidth: .infinity)
@@ -98,8 +99,10 @@ struct PaywallView: View {
                         .foregroundStyle(.secondary)
                     }
                     .padding(20)
+                    .readableWidth()
                 }
             }
+            .adaptiveSheetSizing(.form)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -123,7 +126,7 @@ struct PaywallView: View {
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)

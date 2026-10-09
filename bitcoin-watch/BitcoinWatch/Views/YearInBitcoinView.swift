@@ -1,11 +1,12 @@
 import SwiftUI
-import LinkPresentation
 
 private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
 struct YearInBitcoinView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
     @ObservedObject private var holdings = HoldingsService.shared
     let currentPrice: Double?
 
@@ -32,55 +33,28 @@ struct YearInBitcoinView: View {
                 if firstDate == nil {
                     emptyState
                 } else {
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            headline
-                            statCard(icon: "calendar", label: "STACKING SINCE",
-                                     value: firstDate.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "—",
-                                     detail: "\(daysStacking) days and counting")
-
-                            if let price = currentPrice, let gain = holdings.gain(at: price) {
-                                statCard(icon: "chart.line.uptrend.xyaxis",
-                                         label: "UNREALIZED RETURN",
-                                         value: "\(gain.pct >= 0 ? "+" : "")\(String(format: "%.1f", gain.pct * 100))%",
-                                         detail: "Avg cost \(holdings.avgCost.map { AppCurrency.current.format($0) } ?? "—") → now \(AppCurrency.current.format(price))",
-                                         valueColor: gain.pct >= 0 ? upColor : downColor)
-                            }
-
-                            if holdings.hasSales, let pct = holdings.realizedPct {
-                                statCard(icon: "checkmark.seal",
-                                         label: "REALIZED P&L",
-                                         value: "\(holdings.realizedGain >= 0 ? "+" : "-")\(AppCurrency.current.format(abs(holdings.realizedGain)))",
-                                         detail: "\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% on what you sold",
-                                         valueColor: holdings.realizedGain >= 0 ? upColor : downColor)
-                            }
-
-                            statCard(icon: "bag", label: "ACTIVITY",
-                                     value: "\(holdings.purchases.count)",
-                                     detail: holdings.purchases.count == 1 ? "buy logged" : "buys logged"
-                                        + (holdings.sales.isEmpty ? "" : " · \(holdings.sales.count) sell\(holdings.sales.count == 1 ? "" : "s")"))
-
-                            if isLoadingHistory {
-                                ProgressView().padding(.vertical, 20)
-                            } else {
-                                if let big = biggestGainDay {
-                                    statCard(icon: "bolt.fill", label: "BIGGEST DAY YOU HELD THROUGH",
-                                              value: "+\(String(format: "%.1f", big.pct))%",
-                                              detail: big.date.formatted(date: .abbreviated, time: .omitted),
-                                              valueColor: upColor)
-                                }
-                                if let dip = maxDrawdown {
-                                    statCard(icon: "arrow.down.right", label: "DEEPEST DIP YOU HELD THROUGH",
-                                              value: "\(String(format: "%.1f", dip.pct))%",
-                                              detail: "from peak, around \(dip.date.formatted(date: .abbreviated, time: .omitted))",
-                                              valueColor: downColor)
+                    GeometryReader { geo in
+                        let twoColumn = horizontalSizeClass == .regular && geo.size.width >= 640
+                        ScrollView {
+                            VStack(spacing: 14) {
+                                headline
+                                // Wide sheet (regular width, ≥ 640pt): recap cards
+                                // in a 2-column grid. Phones keep one column.
+                                if twoColumn {
+                                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: 2), spacing: 14) {
+                                        recapCards
+                                    }
+                                } else {
+                                    recapCards
                                 }
                             }
+                            .padding(20)
+                            .readableWidth(twoColumn ? 900 : 580)
                         }
-                        .padding(20)
                     }
                 }
             }
+            .adaptiveSheetSizing(.page)
             .navigationTitle("Your Year in Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -88,7 +62,12 @@ struct YearInBitcoinView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
                 if firstDate != nil {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Share", systemImage: "square.and.arrow.up") { renderAndShare() }
+                        ShareLink(item: RenderedShareImage { renderShareCard() },
+                                  subject: Text("My Year in Bitcoin"),
+                                  message: Text(verbatim: RenderedShareImage.appLink),
+                                  preview: SharePreview("My Year in Bitcoin")) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
                     }
                 }
             }
@@ -97,10 +76,57 @@ struct YearInBitcoinView: View {
         }
     }
 
+    /// The recap stat cards, laid out by the caller as one column (phone)
+    /// or a 2-column grid (wide sheets).
+    @ViewBuilder
+    private var recapCards: some View {
+        statCard(icon: "calendar", label: "STACKING SINCE",
+                 value: firstDate.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "—",
+                 detail: "\(daysStacking) days and counting")
+
+        if let price = currentPrice, let gain = holdings.gain(at: price) {
+            statCard(icon: "chart.line.uptrend.xyaxis",
+                     label: "UNREALIZED RETURN",
+                     value: "\(gain.pct >= 0 ? "+" : "")\(String(format: "%.1f", gain.pct * 100))%",
+                     detail: "Avg cost \(holdings.avgCost.map { AppCurrency.current.format($0) } ?? "—") → now \(AppCurrency.current.format(price))",
+                     valueColor: gain.pct >= 0 ? upColor : downColor)
+        }
+
+        if holdings.hasSales, let pct = holdings.realizedPct {
+            statCard(icon: "checkmark.seal",
+                     label: "REALIZED P&L",
+                     value: "\(holdings.realizedGain >= 0 ? "+" : "-")\(AppCurrency.current.format(abs(holdings.realizedGain)))",
+                     detail: "\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% on what you sold",
+                     valueColor: holdings.realizedGain >= 0 ? upColor : downColor)
+        }
+
+        statCard(icon: "bag", label: "ACTIVITY",
+                 value: "\(holdings.purchases.count)",
+                 detail: holdings.purchases.count == 1 ? "buy logged" : "buys logged"
+                    + (holdings.sales.isEmpty ? "" : " · \(holdings.sales.count) sell\(holdings.sales.count == 1 ? "" : "s")"))
+
+        if isLoadingHistory {
+            ProgressView().padding(.vertical, 20)
+        } else {
+            if let big = biggestGainDay {
+                statCard(icon: "bolt.fill", label: "BIGGEST DAY YOU HELD THROUGH",
+                          value: "+\(String(format: "%.1f", big.pct))%",
+                          detail: big.date.formatted(date: .abbreviated, time: .omitted),
+                          valueColor: upColor)
+            }
+            if let dip = maxDrawdown {
+                statCard(icon: "arrow.down.right", label: "DEEPEST DIP YOU HELD THROUGH",
+                          value: "\(String(format: "%.1f", dip.pct))%",
+                          detail: "from peak, around \(dip.date.formatted(date: .abbreviated, time: .omitted))",
+                          valueColor: downColor)
+            }
+        }
+    }
+
     private var headline: some View {
         VStack(spacing: 4) {
             Text("₿").font(.system(size: 40, weight: .bold)).foregroundStyle(.orange)
-            Text("Your Stack's Story").font(.system(size: 22, weight: .bold, design: .rounded))
+            Text("Your Stack's Story").font(.system(.title2, design: .rounded, weight: .bold))
         }
         .padding(.bottom, 6)
     }
@@ -108,9 +134,9 @@ struct YearInBitcoinView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "bitcoinsign.circle").font(.system(size: 44)).foregroundStyle(.orange)
-            Text("No story yet").font(.system(size: 18, weight: .bold, design: .rounded))
+            Text("No story yet").font(.system(.title3, design: .rounded, weight: .bold))
             Text("Log your first buy in Your Holdings to start your recap.")
-                .font(.system(size: 13)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .font(.system(.footnote)).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
     }
@@ -123,13 +149,13 @@ struct YearInBitcoinView: View {
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary).tracking(0.4)
                 Text(value)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(valueColor)
                 Text(detail)
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.system(.caption)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
@@ -173,29 +199,10 @@ struct YearInBitcoinView: View {
     // MARK: - Share
 
     @MainActor
-    private func renderAndShare() {
-        let card = recapShareCard
-        let renderer = ImageRenderer(content: card)
-        renderer.scale = UIScreen.main.scale
-        guard let image = renderer.uiImage,
-              let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first?.rootViewController else { return }
-
-        let metadata = LPLinkMetadata()
-        metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-        metadata.title = "My Year in Bitcoin"
-        metadata.imageProvider = NSItemProvider(object: image)
-        let shareItem = BTCShareItem(metadata: metadata)
-
-        var top = root
-        while let next = top.presentedViewController { top = next }
-        let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-        if let popover = vc.popoverPresentationController {
-            popover.sourceView = top.view
-            popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-        top.present(vc, animated: true)
+    private func renderShareCard() -> UIImage? {
+        let renderer = ImageRenderer(content: recapShareCard)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 
     private var recapShareCard: some View {

@@ -339,7 +339,7 @@ private struct FearGreedTile: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Fear & Greed")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(.caption2, weight: .medium))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
                     .tracking(0.3)
@@ -400,20 +400,20 @@ private struct StatTile: View {
     private var content: some View {
         VStack(alignment: .leading, spacing: compact ? 1 : 3) {
             Text(label)
-                .font(.system(size: compact ? 9 : 10, weight: .medium))
+                .font(.system(.caption2, weight: .medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(0.3)
             Text(value)
                 .font(compact
-                      ? .system(size: 16, weight: .bold, design: .rounded)
+                      ? .system(.callout, design: .rounded, weight: .bold)
                       : .system(.title3, design: .rounded, weight: .bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             if let subtitle {
                 Text(subtitle)
-                    .font(.system(size: compact ? 9 : 11))
+                    .font(.system(.caption2))
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

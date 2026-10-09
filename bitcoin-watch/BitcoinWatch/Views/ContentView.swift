@@ -1,6 +1,6 @@
 import SwiftUI
 import StoreKit
-import LinkPresentation
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
     @Environment(\.requestReview) private var requestReview
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.displayScale) private var displayScale
 
     /// Wide, two-pane layout whenever the window's horizontal size class is
     /// `.regular` (unfolded iPhone Duo inner display, iPad, landscape Plus/Max).
@@ -101,10 +102,20 @@ struct ContentView: View {
                 // Adjacent items in the same placement still auto-group into a
                 // shared Liquid Glass pill on iOS 26.
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Alerts", systemImage: alertService.alertEnabled ? "bell.fill" : "bell") {
+                    Button {
                         showAlertSheet = true
+                    } label: {
+                        // Explicit Label (title + icon) keeps the button visible in
+                        // vertical bars; styling the icon itself survives iOS 26
+                        // toolbar glass, which ignores foregroundStyle on the Button.
+                        Label {
+                            Text("Alerts")
+                        } icon: {
+                            Image(systemName: alertService.alertEnabled ? "bell.fill" : "bell")
+                                .foregroundStyle(alertService.alertEnabled ? Color.orange : Color.secondary)
+                        }
                     }
-                    .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
+                    .tint(alertService.alertEnabled ? .orange : nil)
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Settings", systemImage: "gearshape") {
@@ -125,10 +136,20 @@ struct ContentView: View {
                         Button("Satoshi Converter", systemImage: "plusminus") {
                             showCalculator = true
                         }
-                        Button("Share", systemImage: "square.and.arrow.up") {
-                            renderAndShare()
+                        // ShareLink lets the system anchor the share sheet to
+                        // this control (popover on wide screens) instead of a
+                        // hand-placed popover in the middle of the window.
+                        if let price = service.currentPrice {
+                            ShareLink(item: RenderedShareImage { renderShareCard(price: price) },
+                                      subject: Text("Bitcoin is \(price.formatted)"),
+                                      message: Text(verbatim: RenderedShareImage.appLink),
+                                      preview: SharePreview("Bitcoin is \(price.formatted)")) {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                        } else {
+                            Button("Share", systemImage: "square.and.arrow.up") {}
+                                .disabled(true)
                         }
-                        .disabled(service.currentPrice == nil)
                     }
                 }
             }
@@ -188,121 +209,125 @@ struct ContentView: View {
     /// scaleEffect, which doesn't affect layout and can soften the glyphs).
     private let widePriceFontSize: CGFloat = 65
 
-    /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
+    /// Two-pane layout for the unfolded iPhone Duo main display (and other
+    /// wide/regular-width screens).
+    ///
+    /// iOS 27.1+: `ArrangementView` with the `.split` style puts the panes side
+    /// by side when the window is wider than tall (stacked when taller) and,
+    /// when the Duo is partially folded, moves them to either side of the
+    /// fold (an active "division" reserved region) so nothing sits in it.
+    /// Earlier iOS (iPad, landscape Plus/Max): the original HStack + seam.
+    @ViewBuilder
     private var wideLayout: some View {
-        HStack(alignment: .top, spacing: 0) {
-            GeometryReader { geo in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        PriceHeaderView(price: service.currentPrice,
-                                       isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h,
-                                       priceFontSize: widePriceFontSize)
-                            .padding(.top, wideTopPadding)
-                            .padding(.bottom, 24)
-
-                        // Chart grows to fill the pane's leftover height so the
-                        // left pane doesn't end in a dead void under a much
-                        // taller right pane — but never taller than 0.75× its
-                        // width, so a tall pane doesn't give a narrow, tall
-                        // price chart. Never shorter than the phone's 140pt.
-                        BTCChartView(statsService: statsService,
-                                     chartHeight: max(140, min(geo.size.height - 260,
-                                                               (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
-
-                        RefreshStatusView(price: service.currentPrice, error: service.error)
-                            .padding(.top, 12)
-
-                        Spacer(minLength: 4)
-                    }
-                    .padding(.horizontal, wideHorizontalPadding)
-                    .frame(minHeight: geo.size.height)
-                }
-                .scrollIndicators(.hidden)
-                .refreshable {
-                    await service.fetchPrice()
-                    await statsService.fetch()
-                }
+        if #available(iOS 27.1, *) {
+            ArrangementView {
+                wideLeftPane
+            } secondary: {
+                wideRightPane
             }
-            .frame(maxWidth: .infinity)
-
-            GlassSeam()
-
-            GeometryReader { geo in
-                ScrollView {
-                    // Card and stat grid share one width cap and one set of
-                    // side insets so their edges align.
-                    VStack(spacing: 8) {
-                        PortfolioCardView(
-                            currentPrice: service.currentPrice?.usd,
-                            change24h: statsService.stats?.change24h
-                        )
-
-                        BitcoinInfoView(
-                            stats: statsService.stats,
-                            currentPrice: service.currentPrice?.usd,
-                            chartLow: statsService.chartData.map(\.price).min(),
-                            chartHigh: statsService.chartData.map(\.price).max(),
-                            fearGreed: statsService.fearGreed,
-                            onTapHalving: { showHalving = true },
-                            wide: geo.size.width >= wideStatGridMinPaneWidth,
-                            tileInset: 0
-                        )
-                    }
-                    .frame(maxWidth: wideRightColumnMaxWidth)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, wideHorizontalPadding)
-                    .padding(.top, wideTopPadding)
-                }
-                .scrollIndicators(.hidden)
-                .refreshable {
-                    await service.fetchPrice()
-                    await statsService.fetch()
-                }
+            .arrangementViewStyle(.split)
+        } else {
+            HStack(alignment: .top, spacing: 0) {
+                wideLeftPane
+                GlassSeam()
+                wideRightPane
             }
-            .frame(maxWidth: .infinity)
         }
     }
 
-    @MainActor
-    private func renderAndShare() {
-        guard let price = service.currentPrice else { return }
-        let stats = statsService.stats
-        Task { @MainActor in
-            await Task.yield()
-            // Include the user's P&L brag on the card, Pro + cost basis only.
-            let gainPct: Double? = ProService.shared.isPro
-                ? HoldingsService.shared.gain(at: price.usd)?.pct
-                : nil
-            let card = ShareCardView(
-                price: price,
-                change24h: stats?.change24h,
-                chartPrices: statsService.chartData.map { $0.price },
-                holdingsGainPct: gainPct
-            )
-            .environment(\.colorScheme, .dark)
-            let renderer = ImageRenderer(content: card)
-            renderer.scale = UIScreen.main.scale
-            guard let image = renderer.uiImage,
-                  let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let root = scene.windows.first?.rootViewController else { return }
+    /// Price + chart pane of the wide layout.
+    private var wideLeftPane: some View {
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 0) {
+                    PriceHeaderView(price: service.currentPrice,
+                                   isLoading: service.isLoading,
+                                   change24h: statsService.stats?.change24h,
+                                   priceFontSize: widePriceFontSize)
+                        .padding(.top, wideTopPadding)
+                        .padding(.bottom, 24)
 
-            let metadata = LPLinkMetadata()
-            metadata.url = URL(string: "https://rjlcevans.com/tapbtc")
-            metadata.title = "Bitcoin is \(price.formatted)"
-            metadata.imageProvider = NSItemProvider(object: image)
-            let shareItem = BTCShareItem(metadata: metadata)
+                    // Chart grows to fill the pane's leftover height so the
+                    // left pane doesn't end in a dead void under a much
+                    // taller right pane — but never taller than 0.75× its
+                    // width, so a tall pane doesn't give a narrow, tall
+                    // price chart. Never shorter than the phone's 140pt.
+                    BTCChartView(statsService: statsService,
+                                 chartHeight: max(140, min(geo.size.height - 260,
+                                                           (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
 
-            var top = root
-            while let next = top.presentedViewController { top = next }
-            let vc = UIActivityViewController(activityItems: [shareItem], applicationActivities: nil)
-            if let popover = vc.popoverPresentationController {
-                popover.sourceView = top.view
-                popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
+                    RefreshStatusView(price: service.currentPrice, error: service.error)
+                        .padding(.top, 12)
+
+                    Spacer(minLength: 4)
+                }
+                .padding(.horizontal, wideHorizontalPadding)
+                .frame(minHeight: geo.size.height)
             }
-            top.present(vc, animated: true)
+            .scrollIndicators(.hidden)
+            .refreshable {
+                await service.fetchPrice()
+                await statsService.fetch()
+            }
         }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Portfolio + stats pane of the wide layout.
+    private var wideRightPane: some View {
+        GeometryReader { geo in
+            ScrollView {
+                // Card and stat grid share one width cap and one set of
+                // side insets so their edges align.
+                VStack(spacing: 8) {
+                    PortfolioCardView(
+                        currentPrice: service.currentPrice?.usd,
+                        change24h: statsService.stats?.change24h
+                    )
+
+                    BitcoinInfoView(
+                        stats: statsService.stats,
+                        currentPrice: service.currentPrice?.usd,
+                        chartLow: statsService.chartData.map(\.price).min(),
+                        chartHigh: statsService.chartData.map(\.price).max(),
+                        fearGreed: statsService.fearGreed,
+                        onTapHalving: { showHalving = true },
+                        wide: geo.size.width >= wideStatGridMinPaneWidth,
+                        tileInset: 0
+                    )
+                }
+                .frame(maxWidth: wideRightColumnMaxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, wideHorizontalPadding)
+                .padding(.top, wideTopPadding)
+            }
+            .scrollIndicators(.hidden)
+            .refreshable {
+                await service.fetchPrice()
+                await statsService.fetch()
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Renders the price share card at the current display's scale. Called
+    /// lazily by ShareLink when the user actually shares.
+    @MainActor
+    private func renderShareCard(price: BitcoinPrice) -> UIImage? {
+        // Include the user's P&L brag on the card, Pro + cost basis only.
+        let gainPct: Double? = ProService.shared.isPro
+            ? HoldingsService.shared.gain(at: price.usd)?.pct
+            : nil
+        let card = ShareCardView(
+            price: price,
+            change24h: statsService.stats?.change24h,
+            chartPrices: statsService.chartData.map { $0.price },
+            holdingsGainPct: gainPct
+        )
+        .environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = displayScale
+        return renderer.uiImage
     }
 }
 
@@ -314,6 +339,9 @@ struct PriceHeaderView: View {
     var priceFontSize: CGFloat = 52
 
     @State private var flashColor: Color? = nil
+    /// Scales the hero price with Dynamic Type (1.0 at the default size);
+    /// `.minimumScaleFactor` below keeps it on one line at large sizes.
+    @ScaledMetric(relativeTo: .largeTitle) private var priceScale: CGFloat = 1
 
     private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
@@ -333,7 +361,7 @@ struct PriceHeaderView: View {
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 if let price {
                     Text(price.formatted)
-                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize * priceScale, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         // Not `.primary`: this view always sits on our own
@@ -348,7 +376,7 @@ struct PriceHeaderView: View {
                         }
                 } else {
                     Text("---")
-                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize * priceScale, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
 
@@ -375,7 +403,7 @@ struct ChangeBadge: View {
 
     var body: some View {
         Text(String(format: "%+.1f%%", change))
-            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
             .foregroundStyle(isUp ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -388,15 +416,22 @@ struct ChangeBadge: View {
     }
 }
 
-class BTCShareItem: NSObject, UIActivityItemSource {
-    let metadata: LPLinkMetadata
-    init(metadata: LPLinkMetadata) { self.metadata = metadata }
+/// A share-card image for `ShareLink`, rendered only when the share sheet
+/// asks for it (so nothing is rendered on every price tick). Exported as PNG.
+struct RenderedShareImage: Transferable {
+    static let appLink = "https://rjlcevans.com/tapbtc"
 
-    func activityViewControllerPlaceholderItem(_ vc: UIActivityViewController) -> Any {
-        metadata.url ?? URL(string: "https://rjlcevans.com/tapbtc")!
+    let render: @MainActor @Sendable () -> UIImage?
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(exportedContentType: .png) { item in
+            guard let data = await item.render()?.pngData() else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            return data
+        }
+        .suggestedFileName("TapBTC.png")
     }
-    func activityViewController(_ vc: UIActivityViewController, itemForActivityType type: UIActivity.ActivityType?) -> Any? { metadata.url }
-    func activityViewControllerLinkMetadata(_ vc: UIActivityViewController) -> LPLinkMetadata? { metadata }
 }
 
 struct RefreshStatusView: View {

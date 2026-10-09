@@ -1,5 +1,4 @@
 import SwiftUI
-import LinkPresentation
 
 // MARK: - Container shell
 
@@ -7,29 +6,46 @@ struct CalculatorsView: View {
     let currentPrice: Double?
     @State private var tab = 0
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let titles = ["DCA Calculator", "Goal Tracker"]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("", selection: $tab) {
-                    Text("DCA").tag(0)
-                    Text("Goal").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
+            GeometryReader { geo in
+                // Wide sheet (regular width, ≥ 700pt): DCA and Goal side by
+                // side instead of paging. Phones keep the picker + pager.
+                let sideBySide = horizontalSizeClass == .regular && geo.size.width >= 700
+                Group {
+                    if sideBySide {
+                        HStack(spacing: 0) {
+                            DCATab(currentPrice: currentPrice)
+                            Divider().overlay(Color.white.opacity(0.08))
+                            GoalTab(currentPrice: currentPrice)
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            Picker("", selection: $tab) {
+                                Text("DCA").tag(0)
+                                Text("Goal").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 12)
+                            .padding(.bottom, 4)
 
-                TabView(selection: $tab) {
-                    DCATab(currentPrice: currentPrice).tag(0)
-                    GoalTab(currentPrice: currentPrice).tag(1)
+                            TabView(selection: $tab) {
+                                DCATab(currentPrice: currentPrice).tag(0)
+                                GoalTab(currentPrice: currentPrice).tag(1)
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .never))
+                        }
+                    }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
+                .navigationTitle(sideBySide ? "DCA & Goal Tracker" : titles[tab])
             }
             .background(Color(red: 0.05, green: 0.04, blue: 0.04).ignoresSafeArea())
-            .navigationTitle(titles[tab])
+            .adaptiveSheetSizing(.page)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
@@ -46,14 +62,14 @@ struct CalculatorsView: View {
 
 fileprivate func lbl(_ text: String) -> some View {
     Text(text)
-        .font(.system(size: 11, weight: .semibold))
+        .font(.system(.caption2, weight: .semibold))
         .foregroundStyle(.secondary)
         .tracking(0.5)
 }
 
 fileprivate func chip(_ title: String, active: Bool, action: @escaping () -> Void) -> some View {
     Button(title, action: action)
-        .font(.system(size: 13, weight: .semibold))
+        .font(.system(.footnote, weight: .semibold))
         .foregroundStyle(active ? .orange : .secondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 7)
@@ -61,21 +77,6 @@ fileprivate func chip(_ title: String, active: Bool, action: @escaping () -> Voi
             RoundedRectangle(cornerRadius: 8)
                 .fill(active ? Color.orange.opacity(0.15) : Color.white.opacity(0.06))
         )
-}
-
-@MainActor
-fileprivate func presentShare(_ item: BTCShareItem) {
-    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-          let root = scene.windows.first?.rootViewController else { return }
-    var top = root
-    while let next = top.presentedViewController { top = next }
-    let vc = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-    if let popover = vc.popoverPresentationController {
-        popover.sourceView = top.view
-        popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
-        popover.permittedArrowDirections = []
-    }
-    top.present(vc, animated: true)
 }
 
 fileprivate extension Double {
@@ -110,9 +111,9 @@ private struct DCATab: View {
         List {
             Section("Invest Per Period") {
                 HStack(spacing: 8) {
-                    Text(AppCurrency.current.symbol).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                    Text(AppCurrency.current.symbol).font(.system(.title2, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                     TextField("100", text: $amountText)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
                 }
                 .listRowBackground(Color.listRowTint)
@@ -142,14 +143,14 @@ private struct DCATab: View {
                         VStack(alignment: .leading, spacing: 4) {
                             lbl("PER PURCHASE")
                             Text(btcPer.btcFormatted)
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(.orange).minimumScaleFactor(0.6).lineLimit(1)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 4) {
                             lbl("BTC PRICE")
                             Text(BitcoinPrice(usd: price, timestamp: Date()).formatted)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded, weight: .semibold))
                         }
                     }
                     .listRowBackground(Color.listRowTint)
@@ -160,14 +161,14 @@ private struct DCATab: View {
                         let btc = btcPer * freq.perYear * row.1
                         let inv = amount * freq.perYear * row.1
                         HStack {
-                            Text(row.0).font(.system(size: 14, weight: .medium))
+                            Text(row.0).font(.system(.subheadline, weight: .medium))
                                 .frame(width: 85, alignment: .leading)
                             Spacer()
                             VStack(alignment: .trailing, spacing: 3) {
                                 Text(btc.btcFormatted)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                                    .font(.system(.subheadline, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                                 Text("\(AppCurrency.current.format(inv)) in")
-                                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                                    .font(.system(.caption2)).foregroundStyle(.secondary)
                             }
                         }
                         .listRowBackground(Color.listRowTint)
@@ -175,9 +176,12 @@ private struct DCATab: View {
                 }
 
                 Section {
-                    Button { doShare() } label: {
+                    ShareLink(item: RenderedShareImage { renderShareCard() },
+                              subject: Text(shareTitle),
+                              message: Text(verbatim: RenderedShareImage.appLink),
+                              preview: SharePreview(shareTitle)) {
                         Label("Share DCA Plan", systemImage: "square.and.arrow.up")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.black)
+                            .font(.system(.subheadline, weight: .semibold)).foregroundStyle(.black)
                             .frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.orange, in: RoundedRectangle(cornerRadius: 12))
                     }
@@ -192,19 +196,18 @@ private struct DCATab: View {
         .nativeListBackground()
     }
 
-    @MainActor private func doShare() {
-        guard let price = currentPrice else { return }
+    private var shareTitle: String {
+        "I stack \(AppCurrency.current.symbol)\(Int(amount)) in Bitcoin every \(freq.perLabel) with TapBTC"
+    }
+
+    @MainActor private func renderShareCard() -> UIImage? {
+        guard let price = currentPrice else { return nil }
         let card = DCAShareCard(amount: amount, freqLabel: freq.perLabel,
                                 btcPer: btcPer, price: price,
                                 rows: rows.map { (label: $0.0, btc: btcPer * freq.perYear * $0.1, invested: amount * freq.perYear * $0.1) })
             .environment(\.colorScheme, .dark)
         let r = ImageRenderer(content: card); r.scale = 3
-        guard let img = r.uiImage else { return }
-        let meta = LPLinkMetadata()
-        meta.url = URL(string: "https://rjlcevans.com/tapbtc")
-        meta.title = "I stack \(AppCurrency.current.symbol)\(Int(amount)) in Bitcoin every \(freq.perLabel) with TapBTC"
-        meta.imageProvider = NSItemProvider(object: img)
-        presentShare(BTCShareItem(metadata: meta))
+        return r.uiImage
     }
 }
 
@@ -228,9 +231,9 @@ private struct GoalTab: View {
             Section("My Target") {
                 HStack(spacing: 8) {
                     TextField("1.0", text: $targetStr)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
-                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                    Text("BTC").font(.system(.title3, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                 }
                 .listRowBackground(Color.listRowTint)
 
@@ -246,9 +249,9 @@ private struct GoalTab: View {
             Section("I Currently Hold") {
                 HStack(spacing: 8) {
                     TextField("0", text: $heldStr)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
-                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
+                    Text("BTC").font(.system(.title3, design: .rounded, weight: .bold)).foregroundStyle(.secondary)
                 }
                 .listRowBackground(Color.listRowTint)
             }
@@ -267,8 +270,8 @@ private struct GoalTab: View {
                             .animation(.easeOut(duration: 0.6), value: progress)
                         VStack(spacing: 4) {
                             Text(String(format: "%.1f%%", progress * 100))
-                                .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            Text("of goal").font(.system(size: 13)).foregroundStyle(.secondary)
+                                .font(.system(.title, design: .rounded, weight: .heavy))
+                            Text("of goal").font(.system(.footnote)).foregroundStyle(.secondary)
                         }
                     }
                     .frame(width: 130, height: 130)
@@ -294,7 +297,7 @@ private struct GoalTab: View {
                         HStack {
                             Spacer()
                             Text("Goal reached! 🎉")
-                                .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                                .font(.system(.callout, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                             Spacer()
                         }
                         .listRowBackground(Color.orange.opacity(0.15))
@@ -309,9 +312,9 @@ private struct GoalTab: View {
 
     private func goalRow(_ label: String, _ value: String, _ color: Color) -> some View {
         HStack {
-            Text(label).font(.system(size: 14)).foregroundStyle(.secondary)
+            Text(label).font(.system(.subheadline)).foregroundStyle(.secondary)
             Spacer()
-            Text(value).font(.system(size: 14, weight: .semibold)).foregroundStyle(color)
+            Text(value).font(.system(.subheadline, weight: .semibold)).foregroundStyle(color)
         }
         .listRowBackground(Color.listRowTint)
     }
