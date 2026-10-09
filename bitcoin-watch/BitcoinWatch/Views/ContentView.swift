@@ -101,10 +101,20 @@ struct ContentView: View {
                 // Adjacent items in the same placement still auto-group into a
                 // shared Liquid Glass pill on iOS 26.
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Alerts", systemImage: alertService.alertEnabled ? "bell.fill" : "bell") {
+                    Button {
                         showAlertSheet = true
+                    } label: {
+                        // Explicit Label (title + icon) keeps the button visible in
+                        // vertical bars; styling the icon itself survives iOS 26
+                        // toolbar glass, which ignores foregroundStyle on the Button.
+                        Label {
+                            Text("Alerts")
+                        } icon: {
+                            Image(systemName: alertService.alertEnabled ? "bell.fill" : "bell")
+                                .foregroundStyle(alertService.alertEnabled ? Color.orange : Color.secondary)
+                        }
                     }
-                    .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
+                    .tint(alertService.alertEnabled ? .orange : nil)
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Settings", systemImage: "gearshape") {
