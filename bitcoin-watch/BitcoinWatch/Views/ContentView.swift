@@ -177,6 +177,16 @@ struct ContentView: View {
     /// nothing drifts out of alignment across the divider.
     private let wideTopPadding: CGFloat = 28
     private let wideHorizontalPadding: CGFloat = 20
+    /// Shared max width for the right pane's portfolio card + stat grid, so
+    /// their edges line up instead of the card and tiles using different caps.
+    private let wideRightColumnMaxWidth: CGFloat = 560
+    /// Below this pane width (e.g. ~470pt panes on the unfolded Duo) the stat
+    /// tiles keep the phone's 2-up rows; 3 columns there would be narrower
+    /// than on a regular iPhone.
+    private let wideStatGridMinPaneWidth: CGFloat = 560
+    /// Price size in the wide layout (was the 52pt phone size × 1.25 via
+    /// scaleEffect, which doesn't affect layout and can soften the glyphs).
+    private let widePriceFontSize: CGFloat = 65
 
     /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
     private var wideLayout: some View {
@@ -186,16 +196,19 @@ struct ContentView: View {
                     VStack(spacing: 0) {
                         PriceHeaderView(price: service.currentPrice,
                                        isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h)
-                            .scaleEffect(1.25)
+                                       change24h: statsService.stats?.change24h,
+                                       priceFontSize: widePriceFontSize)
                             .padding(.top, wideTopPadding)
                             .padding(.bottom, 24)
 
                         // Chart grows to fill the pane's leftover height so the
                         // left pane doesn't end in a dead void under a much
-                        // taller right pane.
+                        // taller right pane — but never taller than 0.75× its
+                        // width, so a tall pane doesn't give a narrow, tall
+                        // price chart. Never shorter than the phone's 140pt.
                         BTCChartView(statsService: statsService,
-                                     chartHeight: max(140, geo.size.height - 260))
+                                     chartHeight: max(140, min(geo.size.height - 260,
+                                                               (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
 
                         RefreshStatusView(price: service.currentPrice, error: service.error)
                             .padding(.top, 12)
@@ -215,31 +228,37 @@ struct ContentView: View {
 
             GlassSeam()
 
-            ScrollView {
-                VStack(spacing: 8) {
-                    PortfolioCardView(
-                        currentPrice: service.currentPrice?.usd,
-                        change24h: statsService.stats?.change24h
-                    )
-                    .frame(maxWidth: 420)
+            GeometryReader { geo in
+                ScrollView {
+                    // Card and stat grid share one width cap and one set of
+                    // side insets so their edges align.
+                    VStack(spacing: 8) {
+                        PortfolioCardView(
+                            currentPrice: service.currentPrice?.usd,
+                            change24h: statsService.stats?.change24h
+                        )
 
-                    BitcoinInfoView(
-                        stats: statsService.stats,
-                        currentPrice: service.currentPrice?.usd,
-                        chartLow: statsService.chartData.map(\.price).min(),
-                        chartHigh: statsService.chartData.map(\.price).max(),
-                        fearGreed: statsService.fearGreed,
-                        onTapHalving: { showHalving = true },
-                        wide: true
-                    )
+                        BitcoinInfoView(
+                            stats: statsService.stats,
+                            currentPrice: service.currentPrice?.usd,
+                            chartLow: statsService.chartData.map(\.price).min(),
+                            chartHigh: statsService.chartData.map(\.price).max(),
+                            fearGreed: statsService.fearGreed,
+                            onTapHalving: { showHalving = true },
+                            wide: geo.size.width >= wideStatGridMinPaneWidth,
+                            tileInset: 0
+                        )
+                    }
+                    .frame(maxWidth: wideRightColumnMaxWidth)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, wideHorizontalPadding)
+                    .padding(.top, wideTopPadding)
                 }
-                .padding(.horizontal, wideHorizontalPadding)
-                .padding(.top, wideTopPadding)
-            }
-            .scrollIndicators(.hidden)
-            .refreshable {
-                await service.fetchPrice()
-                await statsService.fetch()
+                .scrollIndicators(.hidden)
+                .refreshable {
+                    await service.fetchPrice()
+                    await statsService.fetch()
+                }
             }
             .frame(maxWidth: .infinity)
         }
@@ -291,6 +310,8 @@ struct PriceHeaderView: View {
     let price: BitcoinPrice?
     let isLoading: Bool
     let change24h: Double?
+    /// 52pt on phones; the wide (two-pane) layout passes a larger size.
+    var priceFontSize: CGFloat = 52
 
     @State private var flashColor: Color? = nil
 
@@ -312,7 +333,7 @@ struct PriceHeaderView: View {
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 if let price {
                     Text(price.formatted)
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         // Not `.primary`: this view always sits on our own
@@ -327,7 +348,7 @@ struct PriceHeaderView: View {
                         }
                 } else {
                     Text("---")
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
 
