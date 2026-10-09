@@ -4,6 +4,7 @@ private let upColor = Color(red: 0.19, green: 0.82, blue: 0.35)
 
 struct HalvingView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ObservedObject private var statsService = StatsService.shared
     let currentPrice: Double?
 
@@ -57,21 +58,35 @@ struct HalvingView: View {
                 )
                 .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 14) {
-                        headline
+                GeometryReader { geo in
+                    // Wide sheet (regular width, ≥ 640pt): past halvings as a
+                    // 2-column card grid. Phones keep the single column.
+                    let twoColumn = horizontalSizeClass == .regular && geo.size.width >= 640
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            headline
 
-                        if let blockHeight = statsService.stats?.blockHeight {
-                            countdownCard(blockHeight)
+                            if let blockHeight = statsService.stats?.blockHeight {
+                                countdownCard(blockHeight)
+                            }
+
+                            if twoColumn {
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: 2), spacing: 14) {
+                                    ForEach(history) { event in
+                                        historyCard(event)
+                                    }
+                                }
+                            } else {
+                                ForEach(history) { event in
+                                    historyCard(event)
+                                }
+                            }
+
+                            aboutCard
                         }
-
-                        ForEach(history) { event in
-                            historyCard(event)
-                        }
-
-                        aboutCard
+                        .padding(20)
+                        .readableWidth(twoColumn ? 900 : 580)
                     }
-                    .padding(20)
                 }
             }
             .adaptiveSheetSizing(.page)

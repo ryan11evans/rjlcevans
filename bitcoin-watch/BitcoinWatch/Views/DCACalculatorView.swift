@@ -7,30 +7,46 @@ struct CalculatorsView: View {
     let currentPrice: Double?
     @State private var tab = 0
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let titles = ["DCA Calculator", "Goal Tracker"]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("", selection: $tab) {
-                    Text("DCA").tag(0)
-                    Text("Goal").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
+            GeometryReader { geo in
+                // Wide sheet (regular width, ≥ 700pt): DCA and Goal side by
+                // side instead of paging. Phones keep the picker + pager.
+                let sideBySide = horizontalSizeClass == .regular && geo.size.width >= 700
+                Group {
+                    if sideBySide {
+                        HStack(spacing: 0) {
+                            DCATab(currentPrice: currentPrice)
+                            Divider().overlay(Color.white.opacity(0.08))
+                            GoalTab(currentPrice: currentPrice)
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            Picker("", selection: $tab) {
+                                Text("DCA").tag(0)
+                                Text("Goal").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 12)
+                            .padding(.bottom, 4)
 
-                TabView(selection: $tab) {
-                    DCATab(currentPrice: currentPrice).tag(0)
-                    GoalTab(currentPrice: currentPrice).tag(1)
+                            TabView(selection: $tab) {
+                                DCATab(currentPrice: currentPrice).tag(0)
+                                GoalTab(currentPrice: currentPrice).tag(1)
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .never))
+                        }
+                    }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
+                .navigationTitle(sideBySide ? "DCA & Goal Tracker" : titles[tab])
             }
             .background(Color(red: 0.05, green: 0.04, blue: 0.04).ignoresSafeArea())
             .adaptiveSheetSizing(.page)
-            .navigationTitle(titles[tab])
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)

@@ -6,6 +6,7 @@ private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
 struct YearInBitcoinView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ObservedObject private var holdings = HoldingsService.shared
     let currentPrice: Double?
 
@@ -32,52 +33,24 @@ struct YearInBitcoinView: View {
                 if firstDate == nil {
                     emptyState
                 } else {
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            headline
-                            statCard(icon: "calendar", label: "STACKING SINCE",
-                                     value: firstDate.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "—",
-                                     detail: "\(daysStacking) days and counting")
-
-                            if let price = currentPrice, let gain = holdings.gain(at: price) {
-                                statCard(icon: "chart.line.uptrend.xyaxis",
-                                         label: "UNREALIZED RETURN",
-                                         value: "\(gain.pct >= 0 ? "+" : "")\(String(format: "%.1f", gain.pct * 100))%",
-                                         detail: "Avg cost \(holdings.avgCost.map { AppCurrency.current.format($0) } ?? "—") → now \(AppCurrency.current.format(price))",
-                                         valueColor: gain.pct >= 0 ? upColor : downColor)
-                            }
-
-                            if holdings.hasSales, let pct = holdings.realizedPct {
-                                statCard(icon: "checkmark.seal",
-                                         label: "REALIZED P&L",
-                                         value: "\(holdings.realizedGain >= 0 ? "+" : "-")\(AppCurrency.current.format(abs(holdings.realizedGain)))",
-                                         detail: "\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% on what you sold",
-                                         valueColor: holdings.realizedGain >= 0 ? upColor : downColor)
-                            }
-
-                            statCard(icon: "bag", label: "ACTIVITY",
-                                     value: "\(holdings.purchases.count)",
-                                     detail: holdings.purchases.count == 1 ? "buy logged" : "buys logged"
-                                        + (holdings.sales.isEmpty ? "" : " · \(holdings.sales.count) sell\(holdings.sales.count == 1 ? "" : "s")"))
-
-                            if isLoadingHistory {
-                                ProgressView().padding(.vertical, 20)
-                            } else {
-                                if let big = biggestGainDay {
-                                    statCard(icon: "bolt.fill", label: "BIGGEST DAY YOU HELD THROUGH",
-                                              value: "+\(String(format: "%.1f", big.pct))%",
-                                              detail: big.date.formatted(date: .abbreviated, time: .omitted),
-                                              valueColor: upColor)
-                                }
-                                if let dip = maxDrawdown {
-                                    statCard(icon: "arrow.down.right", label: "DEEPEST DIP YOU HELD THROUGH",
-                                              value: "\(String(format: "%.1f", dip.pct))%",
-                                              detail: "from peak, around \(dip.date.formatted(date: .abbreviated, time: .omitted))",
-                                              valueColor: downColor)
+                    GeometryReader { geo in
+                        let twoColumn = horizontalSizeClass == .regular && geo.size.width >= 640
+                        ScrollView {
+                            VStack(spacing: 14) {
+                                headline
+                                // Wide sheet (regular width, ≥ 640pt): recap cards
+                                // in a 2-column grid. Phones keep one column.
+                                if twoColumn {
+                                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: 2), spacing: 14) {
+                                        recapCards
+                                    }
+                                } else {
+                                    recapCards
                                 }
                             }
+                            .padding(20)
+                            .readableWidth(twoColumn ? 900 : 580)
                         }
-                        .padding(20)
                     }
                 }
             }
@@ -95,6 +68,53 @@ struct YearInBitcoinView: View {
             }
             .preferredColorScheme(.dark)
             .task { await loadHistory() }
+        }
+    }
+
+    /// The recap stat cards, laid out by the caller as one column (phone)
+    /// or a 2-column grid (wide sheets).
+    @ViewBuilder
+    private var recapCards: some View {
+        statCard(icon: "calendar", label: "STACKING SINCE",
+                 value: firstDate.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "—",
+                 detail: "\(daysStacking) days and counting")
+
+        if let price = currentPrice, let gain = holdings.gain(at: price) {
+            statCard(icon: "chart.line.uptrend.xyaxis",
+                     label: "UNREALIZED RETURN",
+                     value: "\(gain.pct >= 0 ? "+" : "")\(String(format: "%.1f", gain.pct * 100))%",
+                     detail: "Avg cost \(holdings.avgCost.map { AppCurrency.current.format($0) } ?? "—") → now \(AppCurrency.current.format(price))",
+                     valueColor: gain.pct >= 0 ? upColor : downColor)
+        }
+
+        if holdings.hasSales, let pct = holdings.realizedPct {
+            statCard(icon: "checkmark.seal",
+                     label: "REALIZED P&L",
+                     value: "\(holdings.realizedGain >= 0 ? "+" : "-")\(AppCurrency.current.format(abs(holdings.realizedGain)))",
+                     detail: "\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% on what you sold",
+                     valueColor: holdings.realizedGain >= 0 ? upColor : downColor)
+        }
+
+        statCard(icon: "bag", label: "ACTIVITY",
+                 value: "\(holdings.purchases.count)",
+                 detail: holdings.purchases.count == 1 ? "buy logged" : "buys logged"
+                    + (holdings.sales.isEmpty ? "" : " · \(holdings.sales.count) sell\(holdings.sales.count == 1 ? "" : "s")"))
+
+        if isLoadingHistory {
+            ProgressView().padding(.vertical, 20)
+        } else {
+            if let big = biggestGainDay {
+                statCard(icon: "bolt.fill", label: "BIGGEST DAY YOU HELD THROUGH",
+                          value: "+\(String(format: "%.1f", big.pct))%",
+                          detail: big.date.formatted(date: .abbreviated, time: .omitted),
+                          valueColor: upColor)
+            }
+            if let dip = maxDrawdown {
+                statCard(icon: "arrow.down.right", label: "DEEPEST DIP YOU HELD THROUGH",
+                          value: "\(String(format: "%.1f", dip.pct))%",
+                          detail: "from peak, around \(dip.date.formatted(date: .abbreviated, time: .omitted))",
+                          valueColor: downColor)
+            }
         }
     }
 

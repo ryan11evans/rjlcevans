@@ -7,6 +7,7 @@ private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
 
 struct CompareView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var service = CompareService.shared
 
     @State private var range: CompareRange = .oneYear
@@ -18,32 +19,49 @@ struct CompareView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Picker("", selection: $range) {
-                        ForEach(CompareRange.allCases, id: \.self) { r in
-                            Text(r.rawValue).tag(r)
+            GeometryReader { geo in
+                // Wide sheet (regular width, ≥ 700pt): chart and returns list side
+                // by side. Phones keep the stacked sections.
+                let sideBySide = horizontalSizeClass == .regular && geo.size.width >= 700
+                List {
+                    Section {
+                        Picker("", selection: $range) {
+                            ForEach(CompareRange.allCases, id: \.self) { r in
+                                Text(r.rawValue).tag(r)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .listRowBackground(Color.clear)
+                    }
+
+                    Section("Assets") {
+                        assetChips
+                            .listRowBackground(Color.clear)
+                    }
+
+                    if sideBySide {
+                        Section("% Return") {
+                            HStack(alignment: .top, spacing: 16) {
+                                chartCard
+                                returnSummary
+                                    .frame(width: 300)
+                            }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                        }
+                    } else {
+                        Section("% Return") {
+                            chartCard
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
+                        }
+
+                        Section("Returns") {
+                            returnSummary
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
                         }
                     }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                }
-
-                Section("Assets") {
-                    assetChips
-                        .listRowBackground(Color.clear)
-                }
-
-                Section("% Return") {
-                    chartCard
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
-
-                Section("Returns") {
-                    returnSummary
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
                 }
             }
             .listStyle(.insetGrouped)
