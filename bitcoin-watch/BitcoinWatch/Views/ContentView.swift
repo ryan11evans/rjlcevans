@@ -93,44 +93,42 @@ struct ContentView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 16) {
-                        Button { showAlertSheet = true } label: {
-                            Image(systemName: alertService.alertEnabled ? "bell.fill" : "bell")
-                                .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
-                        }
-                        Button { showSettings = true } label: {
-                            Image(systemName: "gearshape")
-                                .foregroundStyle(.secondary)
-                        }
+                // Separate items, each with a title + SF Symbol (not HStacks of
+                // bare Images): on iPhone Duo's folded outer display the system
+                // moves bars vertically down the side, and only shows items it
+                // can render as an icon — custom-view items are left out. The
+                // title also labels the item in overflow menus / VoiceOver.
+                // Adjacent items in the same placement still auto-group into a
+                // shared Liquid Glass pill on iOS 26.
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Alerts", systemImage: alertService.alertEnabled ? "bell.fill" : "bell") {
+                        showAlertSheet = true
+                    }
+                    .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Settings", systemImage: "gearshape") {
+                        showSettings = true
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Compare", systemImage: "chart.bar.xaxis") {
+                        showCompare = true
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    // Kept to 2 visible glyphs (icon + menu), mirroring the
-                    // leading bell/gear pair, so iOS 26 auto-groups both
-                    // sides into a matching Liquid Glass pill instead of the
-                    // leading side pilling up while 4 trailing icons float
-                    // ungrouped.
-                    HStack(spacing: 16) {
-                        Button { showCompare = true } label: {
-                            Image(systemName: "chart.bar.xaxis")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("More", systemImage: "ellipsis.circle") {
+                        Button("DCA Calculator", systemImage: "chart.line.uptrend.xyaxis") {
+                            showDCA = true
                         }
-                        Menu {
-                            Button { showDCA = true } label: {
-                                Label("DCA Calculator", systemImage: "chart.line.uptrend.xyaxis")
-                            }
-                            Button { showCalculator = true } label: {
-                                Label("Satoshi Converter", systemImage: "plusminus")
-                            }
-                            Button {
-                                renderAndShare()
-                            } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                            .disabled(service.currentPrice == nil)
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
+                        Button("Satoshi Converter", systemImage: "plusminus") {
+                            showCalculator = true
                         }
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            renderAndShare()
+                        }
+                        .disabled(service.currentPrice == nil)
                     }
                 }
             }

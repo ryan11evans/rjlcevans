@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SatoshiConverterView: View {
     let btcPrice: Double
+    @Environment(\.dismiss) private var dismiss
 
     @State private var usdText = ""
     @State private var satText = ""
@@ -81,6 +82,11 @@ struct SatoshiConverterView: View {
             .navigationTitle("Satoshi Calculator")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done", systemImage: "xmark") { dismiss() }
+                }
+            }
             .preferredColorScheme(.dark)
         }
     }
