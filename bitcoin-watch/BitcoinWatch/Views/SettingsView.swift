@@ -3,6 +3,7 @@ import WidgetKit
 
 struct SettingsView: View {
     @EnvironmentObject private var service: PriceService
+    @Environment(\.dismiss) private var dismiss
     @State private var showYearInBitcoin = false
     @State private var showHalving = false
 
@@ -43,6 +44,11 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done", systemImage: "xmark") { dismiss() }
+                }
+            }
             .preferredColorScheme(.dark)
             .sheet(isPresented: $showYearInBitcoin) {
                 YearInBitcoinView(currentPrice: service.currentPrice?.usd)

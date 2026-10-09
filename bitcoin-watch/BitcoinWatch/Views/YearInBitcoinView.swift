@@ -85,10 +85,10 @@ struct YearInBitcoinView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
                 if firstDate != nil {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button { renderAndShare() } label: { Image(systemName: "square.and.arrow.up") }
+                        Button("Share", systemImage: "square.and.arrow.up") { renderAndShare() }
                     }
                 }
             }

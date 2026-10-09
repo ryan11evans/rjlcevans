@@ -7,10 +7,13 @@ struct BitcoinInfoView: View {
     var chartHigh: Double? = nil
     var fearGreed: StatsService.FearGreedData? = nil
     var onTapHalving: (() -> Void)? = nil
-    /// Wide-pane layout (e.g. unfolded Duo): spread all six tiles across a
+    /// Wide pane (≥ ~560pt, e.g. iPad): spread all six tiles across a
     /// 3-column grid instead of stacking phone-width 2-up rows, so the extra
-    /// width actually gets used.
+    /// width actually gets used. Narrower panes keep the 2-up rows.
     var wide: Bool = false
+    /// Extra side inset around the tiles. 16pt matches the phone layout; the
+    /// two-pane layout passes 0 so tiles align with the portfolio card above.
+    var tileInset: CGFloat = 16
 
     var body: some View {
         VStack(spacing: 6) {
@@ -25,14 +28,14 @@ struct BitcoinInfoView: View {
                     tileHalving
                     tileFearGreed
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, tileInset)
             } else {
                 VStack(spacing: 8) {
                     HStack(spacing: 10) { tile24hHigh; tile24hLow }
                     HStack(spacing: 10) { tileATH; tileBlockHeight }
                     HStack(spacing: 10) { tileHalving; tileFearGreed }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, tileInset)
             }
         }
         .padding(.top, 4)

@@ -34,8 +34,8 @@ struct CalculatorsView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .preferredColorScheme(.dark)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(.orange)
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done", systemImage: "xmark") { dismiss() }.foregroundStyle(.orange)
                 }
             }
         }

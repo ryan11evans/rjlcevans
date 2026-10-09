@@ -146,7 +146,7 @@ struct HoldingsEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .onAppear { amountFocused = true }

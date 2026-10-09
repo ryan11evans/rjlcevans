@@ -36,9 +36,9 @@ struct PriceAlertView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done", systemImage: "xmark") { dismiss() }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         // Free tier: up to ProService.freeAlertLimit alerts.
                         if !pro.isPro && service.alerts.count >= ProService.freeAlertLimit {
@@ -49,7 +49,7 @@ struct PriceAlertView: View {
                             if await PushService.shared.enable() { showAdd = true }
                             else { permissionDenied = true }
                         }
-                    } label: { Image(systemName: "plus") }
+                    } label: { Label("Add Alert", systemImage: "plus") }
                 }
             }
             .sheet(isPresented: $showAdd) {
@@ -297,7 +297,7 @@ struct AddAlertView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
             }
             .onAppear {

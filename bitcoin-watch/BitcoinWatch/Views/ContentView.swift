@@ -14,19 +14,17 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showHalving = false
     @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
-    @StateObject private var hingeObserver = HingeObserver()
     @Environment(\.requestReview) private var requestReview
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    /// Wide, two-pane layout when a foldable is unfolded, or on any device/window
-    /// wide enough to earn it (e.g. iPad) even without a hinge. Driven by the
-    /// trait-collection size class rather than a raw point width: on the Duo's
-    /// unfolded display the GeometryReader content width (867pt, after safe-area
-    /// insets) never clears a fixed threshold like 900, but UIKit already reports
-    /// `.regular` for that display the same way it does for iPad/landscape-Plus,
-    /// so size class is the signal that actually matches the device.
+    /// Wide, two-pane layout whenever the window's horizontal size class is
+    /// `.regular` (unfolded iPhone Duo inner display, iPad, landscape Plus/Max).
+    /// Driven purely by size class, never by hinge state or screen size: per
+    /// Apple's iPhone Duo guidance the hinge is an interaction signal, not a
+    /// layout input, and a compact window (e.g. side-by-side multitasking on the
+    /// unfolded Duo, iPad Split View) must get the single-pane layout.
     private var isWide: Bool {
-        hingeObserver.state == .fullyOpen || horizontalSizeClass == .regular
+        horizontalSizeClass == .regular
     }
 
     var body: some View {
@@ -41,14 +39,11 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-                Group {
-                    if isWide {
-                        wideLayout
-                    } else {
-                        compactLayout
-                    }
+                if isWide {
+                    wideLayout
+                } else {
+                    compactLayout
                 }
-                .background(HingeReader(observer: hingeObserver))
             }
             .navigationTitle("Bitcoin")
             .navigationBarTitleDisplayMode(.inline)
@@ -98,44 +93,42 @@ struct ContentView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 16) {
-                        Button { showAlertSheet = true } label: {
-                            Image(systemName: alertService.alertEnabled ? "bell.fill" : "bell")
-                                .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
-                        }
-                        Button { showSettings = true } label: {
-                            Image(systemName: "gearshape")
-                                .foregroundStyle(.secondary)
-                        }
+                // Separate items, each with a title + SF Symbol (not HStacks of
+                // bare Images): on iPhone Duo's folded outer display the system
+                // moves bars vertically down the side, and only shows items it
+                // can render as an icon — custom-view items are left out. The
+                // title also labels the item in overflow menus / VoiceOver.
+                // Adjacent items in the same placement still auto-group into a
+                // shared Liquid Glass pill on iOS 26.
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Alerts", systemImage: alertService.alertEnabled ? "bell.fill" : "bell") {
+                        showAlertSheet = true
+                    }
+                    .foregroundStyle(alertService.alertEnabled ? .orange : .secondary)
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Settings", systemImage: "gearshape") {
+                        showSettings = true
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Compare", systemImage: "chart.bar.xaxis") {
+                        showCompare = true
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    // Kept to 2 visible glyphs (icon + menu), mirroring the
-                    // leading bell/gear pair, so iOS 26 auto-groups both
-                    // sides into a matching Liquid Glass pill instead of the
-                    // leading side pilling up while 4 trailing icons float
-                    // ungrouped.
-                    HStack(spacing: 16) {
-                        Button { showCompare = true } label: {
-                            Image(systemName: "chart.bar.xaxis")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("More", systemImage: "ellipsis.circle") {
+                        Button("DCA Calculator", systemImage: "chart.line.uptrend.xyaxis") {
+                            showDCA = true
                         }
-                        Menu {
-                            Button { showDCA = true } label: {
-                                Label("DCA Calculator", systemImage: "chart.line.uptrend.xyaxis")
-                            }
-                            Button { showCalculator = true } label: {
-                                Label("Satoshi Converter", systemImage: "plusminus")
-                            }
-                            Button {
-                                renderAndShare()
-                            } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                            .disabled(service.currentPrice == nil)
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
+                        Button("Satoshi Converter", systemImage: "plusminus") {
+                            showCalculator = true
                         }
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            renderAndShare()
+                        }
+                        .disabled(service.currentPrice == nil)
                     }
                 }
             }
@@ -184,6 +177,16 @@ struct ContentView: View {
     /// nothing drifts out of alignment across the divider.
     private let wideTopPadding: CGFloat = 28
     private let wideHorizontalPadding: CGFloat = 20
+    /// Shared max width for the right pane's portfolio card + stat grid, so
+    /// their edges line up instead of the card and tiles using different caps.
+    private let wideRightColumnMaxWidth: CGFloat = 560
+    /// Below this pane width (e.g. ~470pt panes on the unfolded Duo) the stat
+    /// tiles keep the phone's 2-up rows; 3 columns there would be narrower
+    /// than on a regular iPhone.
+    private let wideStatGridMinPaneWidth: CGFloat = 560
+    /// Price size in the wide layout (was the 52pt phone size × 1.25 via
+    /// scaleEffect, which doesn't affect layout and can soften the glyphs).
+    private let widePriceFontSize: CGFloat = 65
 
     /// Two-pane layout for the unfolded iPhone Duo main display (and other wide/regular-width screens).
     private var wideLayout: some View {
@@ -193,16 +196,19 @@ struct ContentView: View {
                     VStack(spacing: 0) {
                         PriceHeaderView(price: service.currentPrice,
                                        isLoading: service.isLoading,
-                                       change24h: statsService.stats?.change24h)
-                            .scaleEffect(1.25)
+                                       change24h: statsService.stats?.change24h,
+                                       priceFontSize: widePriceFontSize)
                             .padding(.top, wideTopPadding)
                             .padding(.bottom, 24)
 
                         // Chart grows to fill the pane's leftover height so the
                         // left pane doesn't end in a dead void under a much
-                        // taller right pane.
+                        // taller right pane — but never taller than 0.75× its
+                        // width, so a tall pane doesn't give a narrow, tall
+                        // price chart. Never shorter than the phone's 140pt.
                         BTCChartView(statsService: statsService,
-                                     chartHeight: max(140, geo.size.height - 260))
+                                     chartHeight: max(140, min(geo.size.height - 260,
+                                                               (geo.size.width - 2 * wideHorizontalPadding) * 0.75)))
 
                         RefreshStatusView(price: service.currentPrice, error: service.error)
                             .padding(.top, 12)
@@ -222,31 +228,37 @@ struct ContentView: View {
 
             GlassSeam()
 
-            ScrollView {
-                VStack(spacing: 8) {
-                    PortfolioCardView(
-                        currentPrice: service.currentPrice?.usd,
-                        change24h: statsService.stats?.change24h
-                    )
-                    .frame(maxWidth: 420)
+            GeometryReader { geo in
+                ScrollView {
+                    // Card and stat grid share one width cap and one set of
+                    // side insets so their edges align.
+                    VStack(spacing: 8) {
+                        PortfolioCardView(
+                            currentPrice: service.currentPrice?.usd,
+                            change24h: statsService.stats?.change24h
+                        )
 
-                    BitcoinInfoView(
-                        stats: statsService.stats,
-                        currentPrice: service.currentPrice?.usd,
-                        chartLow: statsService.chartData.map(\.price).min(),
-                        chartHigh: statsService.chartData.map(\.price).max(),
-                        fearGreed: statsService.fearGreed,
-                        onTapHalving: { showHalving = true },
-                        wide: true
-                    )
+                        BitcoinInfoView(
+                            stats: statsService.stats,
+                            currentPrice: service.currentPrice?.usd,
+                            chartLow: statsService.chartData.map(\.price).min(),
+                            chartHigh: statsService.chartData.map(\.price).max(),
+                            fearGreed: statsService.fearGreed,
+                            onTapHalving: { showHalving = true },
+                            wide: geo.size.width >= wideStatGridMinPaneWidth,
+                            tileInset: 0
+                        )
+                    }
+                    .frame(maxWidth: wideRightColumnMaxWidth)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, wideHorizontalPadding)
+                    .padding(.top, wideTopPadding)
                 }
-                .padding(.horizontal, wideHorizontalPadding)
-                .padding(.top, wideTopPadding)
-            }
-            .scrollIndicators(.hidden)
-            .refreshable {
-                await service.fetchPrice()
-                await statsService.fetch()
+                .scrollIndicators(.hidden)
+                .refreshable {
+                    await service.fetchPrice()
+                    await statsService.fetch()
+                }
             }
             .frame(maxWidth: .infinity)
         }
@@ -298,6 +310,8 @@ struct PriceHeaderView: View {
     let price: BitcoinPrice?
     let isLoading: Bool
     let change24h: Double?
+    /// 52pt on phones; the wide (two-pane) layout passes a larger size.
+    var priceFontSize: CGFloat = 52
 
     @State private var flashColor: Color? = nil
 
@@ -319,7 +333,7 @@ struct PriceHeaderView: View {
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 if let price {
                     Text(price.formatted)
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         // Not `.primary`: this view always sits on our own
@@ -334,7 +348,7 @@ struct PriceHeaderView: View {
                         }
                 } else {
                     Text("---")
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
 

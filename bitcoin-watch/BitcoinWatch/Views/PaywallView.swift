@@ -103,7 +103,7 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
+                    Button("Close", systemImage: "xmark") { dismiss() }
                 }
             }
             .alert("You're Pro! ⚡️", isPresented: $showThanks) {
