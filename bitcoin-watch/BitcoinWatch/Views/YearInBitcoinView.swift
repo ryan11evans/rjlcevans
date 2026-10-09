@@ -121,7 +121,7 @@ struct YearInBitcoinView: View {
     private var headline: some View {
         VStack(spacing: 4) {
             Text("₿").font(.system(size: 40, weight: .bold)).foregroundStyle(.orange)
-            Text("Your Stack's Story").font(.system(size: 22, weight: .bold, design: .rounded))
+            Text("Your Stack's Story").font(.system(.title2, design: .rounded, weight: .bold))
         }
         .padding(.bottom, 6)
     }
@@ -129,9 +129,9 @@ struct YearInBitcoinView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "bitcoinsign.circle").font(.system(size: 44)).foregroundStyle(.orange)
-            Text("No story yet").font(.system(size: 18, weight: .bold, design: .rounded))
+            Text("No story yet").font(.system(.title3, design: .rounded, weight: .bold))
             Text("Log your first buy in Your Holdings to start your recap.")
-                .font(.system(size: 13)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .font(.system(.footnote)).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
     }
@@ -144,13 +144,13 @@ struct YearInBitcoinView: View {
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary).tracking(0.4)
                 Text(value)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(valueColor)
                 Text(detail)
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.system(.caption)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }

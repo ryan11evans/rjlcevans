@@ -37,17 +37,17 @@ struct PortfolioCardView: View {
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text("YOUR HOLDINGS")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .tracking(0.5)
                 Text(holdings.formattedAmount)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(.footnote, weight: .medium))
                     .foregroundStyle(.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 3) {
                 Text(value.map { AppCurrency.current.format($0) } ?? "—")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(.white)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -64,14 +64,14 @@ struct PortfolioCardView: View {
         if let price = currentPrice, let gain = holdings.gain(at: price) {
             let up = gain.amount >= 0
             Text("\(up ? "+" : "-")\(AppCurrency.current.format(abs(gain.amount))) · \(up ? "+" : "")\(String(format: "%.1f", gain.pct * 100))%")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(up ? upColor : downColor)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
         } else if let change = change24h, let value {
             let delta = value * change / 100
             Text("\(change >= 0 ? "+" : "-")\(AppCurrency.current.format(abs(delta))) today")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(change >= 0 ? upColor : downColor)
         }
     }
@@ -83,10 +83,10 @@ struct PortfolioCardView: View {
                 .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Track your Bitcoin")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(.white)
                 Text("Add your holdings to see live value & profit")
-                    .font(.system(size: 12))
+                    .font(.system(.caption))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -161,13 +161,13 @@ struct HoldingsEntryView: View {
         VStack(spacing: 12) {
             VStack(spacing: 3) {
                 Text("PORTFOLIO VALUE")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary).tracking(0.5)
                 Text(currentPrice.map { cur.format(holdings.value(at: $0)) } ?? "—")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(.orange)
                 Text(holdings.formattedAmount)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(.footnote, weight: .medium))
                     .foregroundStyle(.secondary)
             }
 
@@ -211,10 +211,10 @@ struct HoldingsEntryView: View {
     private func metric(_ label: String, _ value: String, _ color: Color) -> some View {
         VStack(spacing: 3) {
             Text(label)
-                .font(.system(size: 8, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary).tracking(0.3)
             Text(value)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.6).lineLimit(1)
         }
@@ -239,7 +239,7 @@ struct HoldingsEntryView: View {
             Text(mode == .buy
                  ? "Leave buy price blank if you just want to track value."
                  : "Sell price is needed to calculate realized profit/loss.")
-                .font(.system(size: 11))
+                .font(.system(.caption2))
                 .foregroundStyle(.tertiary)
 
             Button {
@@ -255,7 +255,7 @@ struct HoldingsEntryView: View {
                 amountFocused = true
             } label: {
                 Text(mode == .buy ? "Add" : "Log Sale")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(.subheadline, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
                     .background(RoundedRectangle(cornerRadius: 12)
@@ -281,10 +281,10 @@ struct HoldingsEntryView: View {
         HStack(spacing: 4) {
             TextField(placeholder, text: text)
                 .keyboardType(.decimalPad)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(.white)
             Text(suffix)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(.caption2, weight: .semibold))
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 14).padding(.vertical, 13)
@@ -294,7 +294,7 @@ struct HoldingsEntryView: View {
     private var lotList: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("YOUR PURCHASES")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary).tracking(0.5)
 
             VStack(spacing: 0) {
@@ -302,10 +302,10 @@ struct HoldingsEntryView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(SatsDisplay.formatAmount(p.amount))
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.white)
                             Text(p.price > 0 ? "@ \(cur.format(p.price))" : "no cost basis")
-                                .font(.system(size: 11))
+                                .font(.system(.caption2))
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -331,7 +331,7 @@ struct HoldingsEntryView: View {
     private var salesList: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("YOUR SALES")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .foregroundStyle(.secondary).tracking(0.5)
 
             VStack(spacing: 0) {
@@ -339,10 +339,10 @@ struct HoldingsEntryView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(SatsDisplay.formatAmount(s.amount))
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.white)
                             Text("@ \(cur.format(s.price))")
-                                .font(.system(size: 11))
+                                .font(.system(.caption2))
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -371,10 +371,10 @@ struct HoldingsEntryView: View {
                 Image(systemName: "bolt.fill").foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Keep it on your Home Screen")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(.white)
                     Text("Pro shows your value & profit on the widget, Watch & a daily briefing")
-                        .font(.system(size: 11))
+                        .font(.system(.caption2))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                 }

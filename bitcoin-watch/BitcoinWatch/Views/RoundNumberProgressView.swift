@@ -28,18 +28,18 @@ struct RoundNumberProgressView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("NEXT MILESTONE")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(.caption2, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
 
             VStack(spacing: 10) {
                 HStack {
                     Text(milestoneLabel(prev))
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.system(.caption2, design: .rounded, weight: .medium))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(milestoneLabel(next))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(.system(.caption, design: .rounded, weight: .bold))
                         .foregroundStyle(.orange)
                 }
 
@@ -59,11 +59,11 @@ struct RoundNumberProgressView: View {
 
                 HStack {
                     Text(String(format: "%.0f%% of the way", progress * 100))
-                        .font(.system(size: 12))
+                        .font(.system(.caption))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text("\(AppCurrency.current.format(away)) away")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(.orange)
                 }
             }

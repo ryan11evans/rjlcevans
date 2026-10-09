@@ -47,17 +47,17 @@ struct BTCChartView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Price History")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(.caption2, weight: .medium))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
                         .tracking(0.3)
                     if let point = selectedPoint {
                         Text(BitcoinPrice(usd: point.price, timestamp: point.date).formatted)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.system(.title3, design: .rounded, weight: .bold))
                             .foregroundStyle(.primary)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                         Text(point.date, style: .time)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(.caption2, weight: .medium))
                             .foregroundStyle(.secondary)
                             .transition(.opacity)
                     }
@@ -68,17 +68,25 @@ struct BTCChartView: View {
 
                 HStack(spacing: 1) {
                     ForEach(StatsService.ChartRange.allCases, id: \.self) { range in
-                        Button(range.rawValue) {
+                        Button {
                             Task { await statsService.fetchChart(range: range) }
+                        } label: {
+                            Text(range.rawValue)
+                                .font(.system(.caption2, weight: statsService.chartRange == range ? .bold : .regular))
+                                .foregroundStyle(statsService.chartRange == range ? .primary : .secondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 4)
+                                .background(
+                                    statsService.chartRange == range ?
+                                    RoundedRectangle(cornerRadius: 6).fill(.white.opacity(0.12)) : nil
+                                )
+                                // Full 44pt-tall tap target (the pill stays
+                                // small). Width is 36pt so all six ranges plus
+                                // the title still fit on a 375pt-wide iPhone.
+                                .frame(minWidth: 36, minHeight: 44)
+                                .contentShape(Rectangle())
                         }
-                        .font(.system(size: 10, weight: statsService.chartRange == range ? .bold : .regular))
-                        .foregroundStyle(statsService.chartRange == range ? .primary : .secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
-                        .background(
-                            statsService.chartRange == range ?
-                            RoundedRectangle(cornerRadius: 6).fill(.white.opacity(0.12)) : nil
-                        )
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -119,7 +127,7 @@ struct BTCChartView: View {
                         .annotation(position: edgeAwarePosition(for: high.date, vertical: .top), spacing: 2,
                                     overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                             Text(shortPrice(high.price))
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .font(.system(.caption2, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.65))
                         }
                     }
@@ -133,7 +141,7 @@ struct BTCChartView: View {
                         .annotation(position: edgeAwarePosition(for: low.date, vertical: .bottom), spacing: 2,
                                     overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
                             Text(shortPrice(low.price))
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                .font(.system(.caption2, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.65))
                         }
                     }

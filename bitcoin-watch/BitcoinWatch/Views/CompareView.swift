@@ -131,7 +131,7 @@ struct CompareView: View {
                     HStack(spacing: 6) {
                         Circle().fill(asset.color).frame(width: 8, height: 8)
                         Text(asset.displayName)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(.footnote, weight: .semibold))
                     }
                     .foregroundStyle(isOn ? .primary : .secondary)
                     .frame(maxWidth: .infinity)
@@ -148,7 +148,7 @@ struct CompareView: View {
     @ViewBuilder private var chartCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("% RETURN")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(.caption2, weight: .medium))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .tracking(0.3)
@@ -216,14 +216,14 @@ struct CompareView: View {
         HStack(spacing: 12) {
             Circle().fill(asset.color).frame(width: 10, height: 10)
             Text(asset.displayName)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(.subheadline, weight: .semibold))
             Spacer()
             if let pct = service.seriesByAsset[asset]?.last?.pctChange {
                 Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct))%")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(pct >= 0 ? upColor : downColor)
             } else if service.errorAssets.contains(asset) {
-                Text("Unavailable").font(.system(size: 12)).foregroundStyle(.tertiary)
+                Text("Unavailable").font(.system(.caption)).foregroundStyle(.tertiary)
             } else {
                 ProgressView().controlSize(.small)
             }

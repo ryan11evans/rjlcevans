@@ -63,14 +63,14 @@ struct CalculatorsView: View {
 
 fileprivate func lbl(_ text: String) -> some View {
     Text(text)
-        .font(.system(size: 11, weight: .semibold))
+        .font(.system(.caption2, weight: .semibold))
         .foregroundStyle(.secondary)
         .tracking(0.5)
 }
 
 fileprivate func chip(_ title: String, active: Bool, action: @escaping () -> Void) -> some View {
     Button(title, action: action)
-        .font(.system(size: 13, weight: .semibold))
+        .font(.system(.footnote, weight: .semibold))
         .foregroundStyle(active ? .orange : .secondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 7)
@@ -127,9 +127,9 @@ private struct DCATab: View {
         List {
             Section("Invest Per Period") {
                 HStack(spacing: 8) {
-                    Text(AppCurrency.current.symbol).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                    Text(AppCurrency.current.symbol).font(.system(.title2, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                     TextField("100", text: $amountText)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
                 }
                 .listRowBackground(Color.listRowTint)
@@ -159,14 +159,14 @@ private struct DCATab: View {
                         VStack(alignment: .leading, spacing: 4) {
                             lbl("PER PURCHASE")
                             Text(btcPer.btcFormatted)
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.system(.title3, design: .rounded, weight: .bold))
                                 .foregroundStyle(.orange).minimumScaleFactor(0.6).lineLimit(1)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 4) {
                             lbl("BTC PRICE")
                             Text(BitcoinPrice(usd: price, timestamp: Date()).formatted)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded, weight: .semibold))
                         }
                     }
                     .listRowBackground(Color.listRowTint)
@@ -177,14 +177,14 @@ private struct DCATab: View {
                         let btc = btcPer * freq.perYear * row.1
                         let inv = amount * freq.perYear * row.1
                         HStack {
-                            Text(row.0).font(.system(size: 14, weight: .medium))
+                            Text(row.0).font(.system(.subheadline, weight: .medium))
                                 .frame(width: 85, alignment: .leading)
                             Spacer()
                             VStack(alignment: .trailing, spacing: 3) {
                                 Text(btc.btcFormatted)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                                    .font(.system(.subheadline, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                                 Text("\(AppCurrency.current.format(inv)) in")
-                                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                                    .font(.system(.caption2)).foregroundStyle(.secondary)
                             }
                         }
                         .listRowBackground(Color.listRowTint)
@@ -194,7 +194,7 @@ private struct DCATab: View {
                 Section {
                     Button { doShare() } label: {
                         Label("Share DCA Plan", systemImage: "square.and.arrow.up")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.black)
+                            .font(.system(.subheadline, weight: .semibold)).foregroundStyle(.black)
                             .frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.orange, in: RoundedRectangle(cornerRadius: 12))
                     }
@@ -245,9 +245,9 @@ private struct GoalTab: View {
             Section("My Target") {
                 HStack(spacing: 8) {
                     TextField("1.0", text: $targetStr)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
-                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                    Text("BTC").font(.system(.title3, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                 }
                 .listRowBackground(Color.listRowTint)
 
@@ -263,9 +263,9 @@ private struct GoalTab: View {
             Section("I Currently Hold") {
                 HStack(spacing: 8) {
                     TextField("0", text: $heldStr)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded, weight: .bold))
                         .keyboardType(.decimalPad)
-                    Text("BTC").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
+                    Text("BTC").font(.system(.title3, design: .rounded, weight: .bold)).foregroundStyle(.secondary)
                 }
                 .listRowBackground(Color.listRowTint)
             }
@@ -284,8 +284,8 @@ private struct GoalTab: View {
                             .animation(.easeOut(duration: 0.6), value: progress)
                         VStack(spacing: 4) {
                             Text(String(format: "%.1f%%", progress * 100))
-                                .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            Text("of goal").font(.system(size: 13)).foregroundStyle(.secondary)
+                                .font(.system(.title, design: .rounded, weight: .heavy))
+                            Text("of goal").font(.system(.footnote)).foregroundStyle(.secondary)
                         }
                     }
                     .frame(width: 130, height: 130)
@@ -311,7 +311,7 @@ private struct GoalTab: View {
                         HStack {
                             Spacer()
                             Text("Goal reached! 🎉")
-                                .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(.orange)
+                                .font(.system(.callout, design: .rounded, weight: .bold)).foregroundStyle(.orange)
                             Spacer()
                         }
                         .listRowBackground(Color.orange.opacity(0.15))
@@ -326,9 +326,9 @@ private struct GoalTab: View {
 
     private func goalRow(_ label: String, _ value: String, _ color: Color) -> some View {
         HStack {
-            Text(label).font(.system(size: 14)).foregroundStyle(.secondary)
+            Text(label).font(.system(.subheadline)).foregroundStyle(.secondary)
             Spacer()
-            Text(value).font(.system(size: 14, weight: .semibold)).foregroundStyle(color)
+            Text(value).font(.system(.subheadline, weight: .semibold)).foregroundStyle(color)
         }
         .listRowBackground(Color.listRowTint)
     }

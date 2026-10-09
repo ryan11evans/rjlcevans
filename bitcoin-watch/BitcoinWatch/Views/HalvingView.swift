@@ -103,9 +103,9 @@ struct HalvingView: View {
     private var headline: some View {
         VStack(spacing: 4) {
             Text("⛏️").font(.system(size: 36))
-            Text("The Halving").font(.system(size: 22, weight: .bold, design: .rounded))
+            Text("The Halving").font(.system(.title2, design: .rounded, weight: .bold))
             Text("Bitcoin's supply schedule, cut in half every 210,000 blocks")
-                .font(.system(size: 12)).foregroundStyle(.secondary)
+                .font(.system(.caption)).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
         }
@@ -122,12 +122,12 @@ struct HalvingView: View {
 
         return VStack(spacing: 10) {
             Text("NEXT HALVING")
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).tracking(0.5)
+                .font(.system(.caption2, weight: .semibold)).foregroundStyle(.secondary).tracking(0.5)
             Text(countdown)
-                .font(.system(size: 34, weight: .heavy, design: .rounded))
+                .font(.system(.largeTitle, design: .rounded, weight: .heavy))
                 .foregroundStyle(.orange)
             Text("Block #\(next.formatted()) · \(blocksLeft.formatted()) blocks left")
-                .font(.system(size: 12)).foregroundStyle(.secondary)
+                .font(.system(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(20)
@@ -146,22 +146,22 @@ struct HalvingView: View {
         return HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(event.label)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary).tracking(0.4)
                 Text(Self.displayDate(event.date))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(.system(.callout, design: .rounded, weight: .bold))
                 Text("Block #\(event.blockHeight.formatted()) · \(event.subsidyBefore.formatted())→\(event.subsidyAfter.formatted()) BTC")
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .font(.system(.caption2)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 3) {
                 Text("BTC was \(AppCurrency.current.format(localizedPriceAtHalving))")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.system(.caption)).foregroundStyle(.secondary)
                 if let pct = pctSinceHalving {
                     Text("\(pct >= 0 ? "+" : "")\(pct.formatted(.number.precision(.fractionLength(0))))%")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.system(.title3, design: .rounded, weight: .bold))
                         .foregroundStyle(pct >= 0 ? upColor : Color(red: 1, green: 0.27, blue: 0.23))
-                    Text("since").font(.system(size: 10)).foregroundStyle(.tertiary)
+                    Text("since").font(.system(.caption2)).foregroundStyle(.tertiary)
                 }
             }
         }
@@ -173,10 +173,10 @@ struct HalvingView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "info.circle.fill").foregroundStyle(.orange)
-                Text("Why it matters").font(.system(size: 14, weight: .semibold, design: .rounded))
+                Text("Why it matters").font(.system(.subheadline, design: .rounded, weight: .semibold))
             }
             Text("Every 210,000 blocks (~4 years), the reward miners earn for adding a new block is cut in half. That's the only way new bitcoin enters circulation — so a halving directly slows the pace of new supply. Total supply is capped at 21 million BTC, reached around the year 2140.")
-                .font(.system(size: 12.5)).foregroundStyle(.secondary)
+                .font(.system(.caption)).foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)

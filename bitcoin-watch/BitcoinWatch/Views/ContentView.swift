@@ -349,6 +349,9 @@ struct PriceHeaderView: View {
     var priceFontSize: CGFloat = 52
 
     @State private var flashColor: Color? = nil
+    /// Scales the hero price with Dynamic Type (1.0 at the default size);
+    /// `.minimumScaleFactor` below keeps it on one line at large sizes.
+    @ScaledMetric(relativeTo: .largeTitle) private var priceScale: CGFloat = 1
 
     private let upColor   = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let downColor = Color(red: 1, green: 0.27, blue: 0.23)
@@ -368,7 +371,7 @@ struct PriceHeaderView: View {
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 if let price {
                     Text(price.formatted)
-                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize * priceScale, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         // Not `.primary`: this view always sits on our own
@@ -383,7 +386,7 @@ struct PriceHeaderView: View {
                         }
                 } else {
                     Text("---")
-                        .font(.system(size: priceFontSize, weight: .bold, design: .rounded))
+                        .font(.system(size: priceFontSize * priceScale, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
 
@@ -410,7 +413,7 @@ struct ChangeBadge: View {
 
     var body: some View {
         Text(String(format: "%+.1f%%", change))
-            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
             .foregroundStyle(isUp ? Color(red: 0.19, green: 0.82, blue: 0.35) : Color(red: 1, green: 0.27, blue: 0.23))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)

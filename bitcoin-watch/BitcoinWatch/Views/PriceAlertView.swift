@@ -119,10 +119,10 @@ private struct AlertRow: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(BitcoinPrice(usd: alert.targetPrice, timestamp: .now).formatted)
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .font(.system(.callout, design: .rounded, weight: .bold))
                                 .foregroundStyle(alert.isEnabled ? .white : .secondary)
                             Text(alert.direction == .above ? "or higher" : "or lower")
-                                .font(.system(size: 12))
+                                .font(.system(.caption))
                                 .foregroundStyle(.tertiary)
                         }
                         HStack(spacing: 6) {
@@ -133,14 +133,14 @@ private struct AlertRow: View {
                             }
                             if alert.isRepeating {
                                 Label("Repeat", systemImage: "repeat")
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(.system(.caption2, weight: .semibold))
                                     .foregroundStyle(.orange)
                                     .padding(.horizontal, 6).padding(.vertical, 2)
                                     .background(Capsule().fill(Color.orange.opacity(0.15)))
                             }
                             if let fired = alert.lastFiredAt {
                                 Text("Fired \(fired, style: .relative) ago")
-                                    .font(.system(size: 10))
+                                    .font(.system(.caption2))
                                     .foregroundStyle(.tertiary)
                             }
                         }
@@ -208,10 +208,10 @@ struct AddAlertView: View {
                 Section("Target Price") {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(AppCurrency.current.symbol)
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded, weight: .bold))
                             .foregroundStyle(.secondary)
                         TextField("0", text: $targetText)
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded, weight: .bold))
                             .keyboardType(.numberPad)
                             .focused($priceFocused)
                     }
@@ -230,9 +230,9 @@ struct AddAlertView: View {
                                     } label: {
                                         VStack(spacing: 2) {
                                             Text(s.label)
-                                                .font(.system(size: 13, weight: .semibold))
+                                                .font(.system(.footnote, weight: .semibold))
                                             Text(AppCurrency.current.format(s.price))
-                                                .font(.system(size: 11))
+                                                .font(.system(.caption2))
                                                 .foregroundStyle(.secondary)
                                         }
                                         .padding(.horizontal, 14).padding(.vertical, 9)
@@ -281,7 +281,7 @@ struct AddAlertView: View {
                     dismiss()
                 } label: {
                     Text(isEditing ? "Save Changes" : "Add Alert")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(.callout, weight: .bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
                         .background(RoundedRectangle(cornerRadius: 14)
@@ -322,7 +322,7 @@ struct AddAlertView: View {
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title.uppercased())
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(.caption2, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
             content()
@@ -333,7 +333,7 @@ struct AddAlertView: View {
     private func dirButton(_ title: String, value: PriceAlert.Direction) -> some View {
         Button { direction = value } label: {
             Text(title)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(.subheadline, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
                 .background(direction == value ? Color.orange : Color.clear)

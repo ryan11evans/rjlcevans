@@ -37,7 +37,7 @@ struct SatoshiConverterView: View {
                                     recalcFromUSD(usdText)
                                 } label: {
                                     Text("\(cur.symbol)\(amount)")
-                                        .font(.system(size: 13, weight: .semibold))
+                                        .font(.system(.footnote, weight: .semibold))
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
@@ -58,18 +58,18 @@ struct SatoshiConverterView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Bitcoin price")
-                                .font(.system(size: 11))
+                                .font(.system(.caption2))
                                 .foregroundStyle(.secondary)
                             Text(cur.format(btcPrice))
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 3) {
                             Text("1 sat equals")
-                                .font(.system(size: 11))
+                                .font(.system(.caption2))
                                 .foregroundStyle(.secondary)
                             Text(oneSatFormatted())
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.orange)
                         }
                     }
@@ -97,14 +97,14 @@ struct SatoshiConverterView: View {
                           text: Binding<String>, field: Field) -> some View {
         HStack(spacing: 10) {
             Text(prefix)
-                .font(.system(size: field == .usd ? 20 : 15,
-                              weight: .semibold, design: .rounded))
+                .font(.system(field == .usd ? .title3 : .subheadline,
+                              design: .rounded, weight: .semibold))
                 .foregroundStyle(.orange)
                 .frame(minWidth: 28, alignment: .leading)
 
             TextField(placeholder, text: text)
                 .keyboardType(.decimalPad)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .focused($focus, equals: field)
                 .onChange(of: text.wrappedValue) { _, val in
                     guard focus == field else { return }

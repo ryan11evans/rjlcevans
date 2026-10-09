@@ -117,11 +117,11 @@ struct OnboardingView: View {
                 .frame(height: 180)
             Spacer().frame(height: 36)
             Text(title)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(.title, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
             Spacer().frame(height: 14)
             Text(subtitle)
-                .font(.system(size: 15))
+                .font(.system(.subheadline))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
@@ -130,7 +130,7 @@ struct OnboardingView: View {
 
             Button(action: action) {
                 Text(buttonTitle)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(.body, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(RoundedRectangle(cornerRadius: 14).fill(.orange))
