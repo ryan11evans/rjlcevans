@@ -119,7 +119,7 @@ private struct ProCard: View {
                                 .padding(.vertical, 3)
                                 .background(Capsule().fill(.white))
                         }
-                        Text("Unlimited alerts — thanks for the support 🧡")
+                        Text("Your stack on Home Screen, Watch & briefing — thanks for the support 🧡")
                             .font(.system(.caption, weight: .medium))
                             .foregroundStyle(.white.opacity(0.85))
                     }
@@ -145,7 +145,7 @@ private struct ProCard: View {
                             Text("Unlock TapBTC Pro")
                                 .font(.system(.body, design: .rounded, weight: .bold))
                                 .foregroundStyle(.white)
-                            Text("Unlimited price alerts · one-time \(pro.priceText)")
+                            Text(lockedProSubtitle)
                                 .font(.system(.caption, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.85))
                         }
@@ -162,7 +162,15 @@ private struct ProCard: View {
                 .padding(.vertical, 8)
             }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(trigger: .settings) }
+    }
+
+    private var lockedProSubtitle: String {
+        let lead = "Your stack on Home Screen, Watch & daily briefing"
+        if let price = pro.displayPrice {
+            return "\(lead) · one-time \(price)"
+        }
+        return lead
     }
 
     // Orange gradient with a glossy top highlight, rounded to match glass cards.
@@ -194,7 +202,7 @@ private struct ProAlertsSection: View {
     @AppStorage("volatilityThreshold", store: .shared) private var volThreshold = 5.0
     @AppStorage("dailyBriefingEnabled", store: .shared) private var briefEnabled = false
     @AppStorage("dailyBriefingHour", store: .shared) private var briefHour = 8
-    @State private var showPaywall = false
+    @State private var paywallTrigger: PaywallTrigger?
 
     private let thresholds = [3.0, 5.0, 10.0, 15.0]
 
@@ -234,7 +242,9 @@ private struct ProAlertsSection: View {
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())
-            .onTapGesture { if !pro.isPro { showPaywall = true } }
+            .onTapGesture {
+                if !pro.isPro { paywallTrigger = .volatility }
+            }
             .listRowBackground(rowTint)
 
             // Daily briefing
@@ -271,7 +281,9 @@ private struct ProAlertsSection: View {
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())
-            .onTapGesture { if !pro.isPro { showPaywall = true } }
+            .onTapGesture {
+                if !pro.isPro { paywallTrigger = .briefing }
+            }
             .listRowBackground(rowTint)
         } header: {
             HStack {
@@ -294,7 +306,9 @@ private struct ProAlertsSection: View {
             Task { await PushService.shared.sync() }
         }
         .onChange(of: briefHour) { _, _ in Task { await PushService.shared.sync() } }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(item: $paywallTrigger) { trigger in
+            PaywallView(trigger: trigger)
+        }
     }
 
     private func hourLabel(_ h: Int) -> String {
@@ -621,7 +635,7 @@ private struct IconPickerSection: View {
                     .padding(.horizontal, 24)
             }
         }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(trigger: .icon) }
     }
 
     private func applyIcon(_ icon: AppIcon) {
@@ -735,7 +749,7 @@ private struct WidgetThemePickerSection: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .sheet(isPresented: $showPaywall) { PaywallView(trigger: .theme) }
     }
 }
 

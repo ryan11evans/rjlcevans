@@ -10,6 +10,7 @@ struct PortfolioCardView: View {
     let currentPrice: Double?
     let change24h: Double?
     @ObservedObject private var holdings = HoldingsService.shared
+    @ObservedObject private var paywallRouter = PaywallRouter.shared
     @State private var showEntry = false
 
     private var value: Double? {
@@ -22,8 +23,14 @@ struct PortfolioCardView: View {
             if holdings.hasHoldings { filledCard } else { emptyCard }
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showEntry) {
+        .sheet(isPresented: $showEntry, onDismiss: {
+            paywallRouter.editorOpen = false
+        }) {
             HoldingsEntryView(currentPrice: currentPrice)
+                .onAppear { paywallRouter.editorOpen = true }
+        }
+        .onChange(of: paywallRouter.dismissEditorToken) { _, token in
+            if token > 0 { showEntry = false }
         }
     }
 
@@ -121,7 +128,9 @@ struct HoldingsEntryView: View {
     @State private var mode: TransactionMode = .buy
     @State private var amountText = ""
     @State private var priceText = ""
-    @State private var showPaywall = false
+    @State private var cover: EditorCover?
+    @State private var seenStackHandoff = 0
+    @ObservedObject private var stackPrompt = StackEverywherePrompt.shared
     @FocusState private var amountFocused: Bool
 
     private let cur = AppCurrency.current
@@ -150,10 +159,29 @@ struct HoldingsEntryView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done", systemImage: "xmark") { dismiss() } }
             }
-            .sheet(isPresented: $showPaywall) { PaywallView() }
-            .onAppear { amountFocused = true }
+            .sheet(item: $cover) { cover in
+                switch cover {
+                case .paywall: PaywallView(trigger: .holdings)
+                case .stack: StackEverywhereView()
+                }
+            }
+            .onChange(of: stackPrompt.handoffToken) { _, token in
+                guard token > seenStackHandoff else { return }
+                seenStackHandoff = token
+                cover = .stack
+            }
+            .onAppear {
+                amountFocused = true
+                stackPrompt.editorOnScreen = true
+            }
+            .onDisappear { stackPrompt.editorOnScreen = false }
         }
         .preferredColorScheme(.dark)
+    }
+
+    private enum EditorCover: Identifiable {
+        case paywall, stack
+        var id: Int { self == .paywall ? 0 : 1 }
     }
 
     // Live summary: value, avg cost, P&L
@@ -247,12 +275,18 @@ struct HoldingsEntryView: View {
                 switch mode {
                 case .buy:
                     holdings.add(Purchase(amount: amt, price: Double(priceText) ?? 0))
+                    amountText = ""; priceText = ""
+                    amountFocused = false
+                    // This editor is on screen even if onAppear/onDisappear
+                    // raced a sheet presentation — hand the full-screen prompt here.
+                    stackPrompt.editorOnScreen = true
+                    stackPrompt.noteSuccessfulSave()
                 case .sell:
                     guard let price = Double(priceText), price > 0 else { return }
                     holdings.addSale(Sale(amount: amt, price: price))
+                    amountText = ""; priceText = ""
+                    amountFocused = true
                 }
-                amountText = ""; priceText = ""
-                amountFocused = true
             } label: {
                 Text(mode == .buy ? "Add" : "Log Sale")
                     .font(.system(.subheadline, weight: .bold))
@@ -366,7 +400,7 @@ struct HoldingsEntryView: View {
     }
 
     private var proUpsell: some View {
-        Button { showPaywall = true } label: {
+        Button { cover = .paywall } label: {
             HStack(spacing: 12) {
                 Image(systemName: "bolt.fill").foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 2) {

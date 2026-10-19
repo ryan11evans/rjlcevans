@@ -3,8 +3,23 @@ import StoreKit
 import WidgetKit
 
 // TapBTC Pro — one-time unlock via StoreKit 2.
-// Free tier: up to `freeAlertLimit` custom price alerts.
-// Pro: unlimited alerts (+ future Pro features).
+// Free: the price widget, one custom price alert, and holdings inside the app.
+// Pro: your stack on the Home Screen widget, Apple Watch, and daily briefing,
+// plus unlimited price alerts, volatility alerts, exclusive icons, and widget themes.
+enum ProPurchaseResult: Equatable {
+    case success
+    case cancelled
+    case pending
+    case unavailable
+    case failed(String)
+}
+
+enum ProRestoreResult: Equatable {
+    case restored
+    case nothingToRestore
+    case failed(String)
+}
+
 @MainActor
 final class ProService: ObservableObject {
     static let shared = ProService()
@@ -14,6 +29,10 @@ final class ProService: ObservableObject {
 
     @Published private(set) var isPro: Bool
     @Published private(set) var product: Product?
+    /// True until the first StoreKit product fetch settles.
+    @Published private(set) var isLoadingProduct = true
+    /// True when the last fetch finished with no product to sell.
+    @Published private(set) var productLoadFailed = false
 
     private var updatesTask: Task<Void, Never>?
 
@@ -24,38 +43,60 @@ final class ProService: ObservableObject {
         Task { await refresh() }
     }
 
-    var priceText: String { product?.displayPrice ?? "$1.99" }
+    /// StoreKit's localized price, once the product has loaded. Nil until then
+    /// so the UI never invents a US "$1.99" for other storefronts.
+    var displayPrice: String? { product?.displayPrice }
 
     func refresh() async {
-        product = try? await Product.products(for: [Self.productID]).first
+        isLoadingProduct = true
+        defer { isLoadingProduct = false }
+        do {
+            let products = try await Product.products(for: [Self.productID])
+            if let found = products.first {
+                product = found
+                productLoadFailed = false
+            } else if product == nil {
+                productLoadFailed = true
+            }
+        } catch {
+            if product == nil { productLoadFailed = true }
+        }
         await updateEntitlement()
     }
 
-    /// Returns true if the purchase completed.
-    @discardableResult
-    func purchase() async -> Bool {
-        var product = self.product
-        if product == nil {
-            product = try? await Product.products(for: [Self.productID]).first
-        }
-        guard let product else { return false }
-        guard let result = try? await product.purchase() else { return false }
-        switch result {
-        case .success(let verification):
-            guard case .verified(let transaction) = verification else { return false }
-            await transaction.finish()
-            setPro(true)
-            return true
-        case .userCancelled, .pending:
-            return false
-        @unknown default:
-            return false
+    func purchase() async -> ProPurchaseResult {
+        if product == nil { await refresh() }
+        guard let product else { return .unavailable }
+        do {
+            let result = try await product.purchase()
+            switch result {
+            case .success(let verification):
+                guard case .verified(let transaction) = verification else {
+                    return .failed("The App Store couldn't verify this purchase.")
+                }
+                await transaction.finish()
+                setPro(true)
+                return .success
+            case .userCancelled:
+                return .cancelled
+            case .pending:
+                return .pending
+            @unknown default:
+                return .failed("Something went wrong with the purchase.")
+            }
+        } catch {
+            return .failed(error.localizedDescription)
         }
     }
 
-    func restore() async {
-        try? await AppStore.sync()
+    func restore() async -> ProRestoreResult {
+        do {
+            try await AppStore.sync()
+        } catch {
+            return .failed(error.localizedDescription)
+        }
         await updateEntitlement()
+        return isPro ? .restored : .nothingToRestore
     }
 
     private func updateEntitlement() async {

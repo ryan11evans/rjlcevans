@@ -57,7 +57,7 @@ struct PriceAlertView: View {
                 AddAlertView(currentBTCPrice: currentBTCPrice)
             }
             .sheet(isPresented: $showPaywall) {
-                PaywallView()
+                PaywallView(trigger: .alerts)
             }
             .alert("Notifications Disabled", isPresented: $permissionDenied) {
                 Button("Open Settings") {
