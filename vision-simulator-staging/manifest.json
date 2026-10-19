@@ -1,0 +1,15 @@
+{
+  "name": "Vision Impairment Simulator",
+  "short_name": "VisionSim",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f1620",
+  "theme_color": "#d4a574",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

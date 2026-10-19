@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1620">
+<title>Vision Impairment Simulator — Dr. Ryan Evans, OD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1620;
+    --panel: #161e2a;
+    --panel-2: #1d2733;
+    --line: #2a3543;
+    --ink: #eef2f7;
+    --ink-dim: #9aa7b8;
+    --ink-mute: #6b7888;
+    --accent: #d4a574;
+    --accent-2: #5a8fb8;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(90,143,184,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(212,165,116,0.06), transparent 60%);
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: calc(28px + env(safe-area-inset-top)) 18px 80px; }
+
+  header.hero { padding: 12px 4px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 10px; }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(28px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.01em;
+    margin: 0 0 8px; color: var(--ink);
+  }
+  h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .sub { color: var(--ink-dim); font-size: 14px; max-width: 60ch; line-height: 1.55; }
+  .credit {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--ink);
+    padding: 7px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  /* Inside the native app, the marketing header (eyebrow/H1/description/App
+     Store badge) makes way for a slim title bar — the website framing is
+     redundant once someone already has the app open. Tapping "About" reveals
+     the full text again without it costing space on every launch. */
+  .hero-app-bar { display: none; align-items: center; justify-content: space-between; gap: 10px; }
+  .hero-app-bar .hero-app-title { font-family: 'Fraunces', serif; font-size: 23px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+  .hero-app-bar .hero-info-btn {
+    appearance: none; border: 1px solid var(--line); background: none; color: var(--ink-mute);
+    font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  }
+  html.is-app .hero-app-bar { display: flex; }
+  html.is-app header.hero { padding: 10px 4px 12px; margin-bottom: 10px; }
+  html.is-app .eyebrow,
+  html.is-app h1,
+  html.is-app .sub,
+  html.is-app .credit { display: none; }
+  html.is-app.info-expanded .eyebrow,
+  html.is-app.info-expanded h1,
+  html.is-app.info-expanded .sub,
+  html.is-app.info-expanded .credit { display: block; margin-top: 12px; }
+  html.is-app.info-expanded .credit { display: inline-block; }
+
+  .stage-wrap { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 0 0 1px var(--line); }
+
+  /* On mobile, pin the video to the top so it stays visible while scrolling controls. */
+  @media (max-width: 900px) {
+    .stage-wrap {
+      position: sticky;
+      top: calc(8px + env(safe-area-inset-top));
+      z-index: 50;
+      aspect-ratio: 16/10;
+      max-height: 42vh;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px var(--line);
+    }
+    .wrap { padding-top: calc(16px + env(safe-area-inset-top)); }
+    header.hero { padding-bottom: 14px; margin-bottom: 14px; }
+    h1 { font-size: clamp(22px, 5vw, 32px); }
+    .sub { font-size: 13px; }
+    .section-title { margin: 18px 0 8px; font-size: 17px; }
+    .source-row { margin: 10px 0 4px; }
+    .conditions { gap: 6px; }
+    .cond { padding: 9px 10px; font-size: 12px; width: 108px; }
+    .controls { padding: 14px; margin-top: 8px; }
+  }
+  /* With the header collapsed to a slim bar in-app, give the camera more
+     room — closer to filling the top third of the screen. Breaking it out
+     of .wrap's side padding lets it run edge-to-edge instead of matching
+     the article-width column the rest of the page uses. */
+  @media (max-width: 900px) {
+    html.is-app .stage-wrap {
+      max-height: 48vh;
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      border-radius: 0;
+    }
+  }
+  .stage { position: absolute; inset: 0; display: grid; place-items: center; }
+  #video, #sourceCanvas { display: none; }
+  #stageCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  /* Divider line + labels shown when compare mode is on. Draggable. */
+  .compare-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.85); left: 50%; display: none; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,0.6); z-index: 6; }
+  .compare-line::after {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .compare-line::before {
+    content: '↔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 1; color: #0f1620; font-size: 18px; font-weight: 700;
+  }
+  .compare-tag { position: absolute; top: 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 999px; display: none; pointer-events: none; }
+  .compare-tag.left { left: 10px; }
+  .compare-tag.right { right: 10px; }
+  body.compare .compare-line, body.compare .compare-tag { display: block; }
+  .active-badge {
+    position: absolute; bottom: 10px; left: 10px; z-index: 5;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #fff; background: rgba(0,0,0,0.58); padding: 4px 10px;
+    border-radius: 999px; pointer-events: none; display: none;
+  }
+  .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 14px; padding: 20px; text-align: center; gap: 12px; }
+  .empty-state svg { opacity: 0.3; }
+
+  .source-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+  .samples-scroller { position: relative; }
+  #sampleRow {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding-bottom: 4px; margin-bottom: 2px;
+  }
+  #sampleRow::-webkit-scrollbar { display: none; }
+  #sampleRow > * { flex: 0 0 auto; }
+  #sampleRow button.btn { white-space: nowrap; }
+  /* Same edge-fade + arrow cue treatment as .conditions-scroller — only on
+     the side that actually has more to scroll to. */
+  .samples-scroller.can-scroll-left #sampleRow {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px);
+    mask-image: linear-gradient(to right, transparent, black 24px);
+  }
+  .samples-scroller.can-scroll-right #sampleRow {
+    -webkit-mask-image: linear-gradient(to left, transparent, black 36px);
+    mask-image: linear-gradient(to left, transparent, black 36px);
+  }
+  .samples-scroller.can-scroll-left.can-scroll-right #sampleRow {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+  }
+  .samples-scroller.can-scroll-right .scroll-cue { opacity: 1; }
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 11px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--panel-2); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #1a1208; border-color: var(--accent); }
+  .btn.primary:hover { background: #e0b483; }
+  .btn.ghost { background: transparent; }
+  .btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
+  .btn-file { position: relative; overflow: hidden; }
+  .btn-file input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  /* Compare: set apart from source-action buttons with a small leading icon. */
+  .btn .btn-ico { width: 16px; height: 16px; flex: 0 0 auto; }
+  /* Compare reads as a toggle: a pill with a switch-like outline when off,
+     filled/lit when on. */
+  .btn.toggle { border-radius: 999px; border-style: dashed; }
+  .btn.toggle[aria-pressed="true"] { border-style: solid; }
+  /* Flip Camera: icon-only, since it's a secondary action only shown while
+     the camera is actually the active source. */
+  .btn.icon-only { padding: 11px; }
+
+  .section-title {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; letter-spacing: -0.01em;
+    margin: 32px 0 12px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .conditions-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: -6px 0 10px; }
+  .conditions-hint { font-size: 11px; color: var(--ink-mute); margin: 0; }
+  .clear-conditions-btn {
+    appearance: none; border: none; background: none; color: var(--accent);
+    font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+    padding: 2px 0; flex: 0 0 auto; display: none;
+  }
+  .clear-conditions-btn.visible { display: inline-block; }
+  .clear-conditions-btn:hover { text-decoration: underline; }
+  /* Combine: pill toggle, same on/off language as the Compare button but
+     sized to sit in the slim conditions-header row. Off by default so a
+     plain tap always switches conditions instead of silently layering them
+     on top of whatever was already active. */
+  .combine-conditions-btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink-dim);
+    font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+    padding: 3px 10px; border-radius: 999px; flex: 0 0 auto;
+  }
+  .combine-conditions-btn[aria-pressed="true"] { background: var(--accent-2); color: #07121c; border-color: var(--accent-2); }
+  /* Pro upsell entry point + locked-condition badges. Pro gating only
+     exists inside the native app, and only once the IAP plugin has actually
+     confirmed itself present (html.pro-ready, set by JS) — never just off
+     window.Capacitor. That guards against gating a build that predates the
+     plugin: it would set html.is-app same as any newer build, but could
+     never satisfy a purchase, so it must never lock anything either. */
+  .unlock-pro-btn {
+    appearance: none; border: 1px solid var(--accent); background: rgba(212,165,116,0.12); color: var(--accent);
+    font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer;
+    padding: 3px 10px; border-radius: 999px; flex: 0 0 auto; display: none;
+  }
+  html.is-app.pro-ready:not(.is-pro) .unlock-pro-btn { display: inline-block; }
+  .pro-lock {
+    display: none; position: absolute; top: 6px; right: 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.03em; color: #1a1208;
+    background: var(--accent); padding: 1px 5px; border-radius: 999px;
+  }
+  html.is-app.pro-ready:not(.is-pro) .cond.locked { position: relative; opacity: 0.6; }
+  html.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock { display: inline-block; }
+  html.is-app.pro-ready:not(.is-pro) .btn.locked,
+  html.is-app.pro-ready:not(.is-pro) .combine-conditions-btn.locked { opacity: 0.6; }
+  .conditions-scroller { position: relative; }
+  /* Two rows sharing one horizontally-scrolling grid — grid-auto-flow: column
+     fills top-to-bottom then starts a new column, so a single swipe moves
+     both rows together (they're the same scroll container, not two synced
+     ones) while still showing twice as many conditions per screen. */
+  .conditions {
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto);
+    overflow-x: auto; gap: 8px;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px; margin-bottom: -4px;
+    scrollbar-width: none;
+  }
+  .conditions::-webkit-scrollbar { display: none; }
+  /* Fade masks only appear on the side that actually has more to scroll to —
+     toggled by JS based on scroll position, so "Normal Vision" at the very
+     start never looks artificially cut off. */
+  .conditions-scroller.can-scroll-left .conditions {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px);
+    mask-image: linear-gradient(to right, transparent, black 24px);
+  }
+  .conditions-scroller.can-scroll-right .conditions {
+    -webkit-mask-image: linear-gradient(to left, transparent, black 36px);
+    mask-image: linear-gradient(to left, transparent, black 36px);
+  }
+  .conditions-scroller.can-scroll-left.can-scroll-right .conditions {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 36px), transparent);
+  }
+  /* Prominent "more this way" cue on the right — a soft pulsing chevron,
+     only shown while there's actually more to reveal. */
+  .scroll-cue {
+    position: absolute; right: -2px; top: 0; bottom: 4px; width: 40px;
+    display: flex; align-items: center; justify-content: flex-end;
+    pointer-events: none; opacity: 0; transition: opacity 0.25s ease;
+  }
+  .conditions-scroller.can-scroll-right .scroll-cue { opacity: 1; }
+  .scroll-cue svg {
+    width: 22px; height: 22px; color: var(--accent);
+    filter: drop-shadow(0 0 6px rgba(212,165,116,0.5));
+    animation: scrollCuePulse 1.6s ease-in-out infinite;
+  }
+  @keyframes scrollCuePulse {
+    0%, 100% { transform: translateX(0); opacity: 0.55; }
+    50% { transform: translateX(4px); opacity: 1; }
+  }
+  .cond {
+    scroll-snap-align: start; width: 128px;
+    padding: 12px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-sm);
+    cursor: pointer; text-align: left; color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 500;
+    transition: border-color 0.22s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .cond:hover { border-color: var(--accent-2); }
+  .cond[aria-pressed="true"] { background: var(--panel-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cond .name { display: block; }
+  .cond .latin { display: block; font-family: 'Fraunces', serif; font-style: italic; font-size: 11px; color: var(--ink-mute); margin-top: 2px; font-weight: 400; }
+  .ctrl-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin: 4px 0 -4px; grid-column: 1 / -1;
+  }
+  .ctrl-group-label:first-child { margin-top: 0; }
+
+  .controls { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 12px; }
+  .ctrl-grid { display: grid; gap: 16px; }
+  @keyframes ctrlEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .ctrl-grid.entering { animation: ctrlEnter 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+  .ctrl { display: grid; gap: 6px; }
+  .ctrl label { font-size: 12px; color: var(--ink-dim); display: flex; justify-content: space-between; align-items: baseline; }
+  .ctrl label .val { font-family: 'Fraunces', serif; font-style: italic; color: var(--accent); font-size: 13px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: var(--line); border-radius: 4px; outline: none;
+    padding: 20px 0; margin: 0; background-clip: content-box; touch-action: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 5px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 8px rgba(0,0,0,0.45);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 5px solid var(--panel); box-shadow: 0 0 0 1px var(--line), 0 2px 8px rgba(0,0,0,0.45);
+  }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .preset {
+    padding: 6px 10px; border: 1px solid var(--line); background: transparent; color: var(--ink-dim);
+    border-radius: 999px; font-size: 11px; font-family: 'Fraunces', serif; font-style: italic; cursor: pointer; transition: all 0.15s;
+  }
+  .preset:hover { color: var(--ink); border-color: var(--accent-2); }
+  .preset[aria-pressed="true"] { background: var(--accent); color: #1a1208; border-color: var(--accent); font-style: normal; font-weight: 600; font-family: 'Inter Tight'; }
+
+  .clinical-note {
+    margin-top: 14px; padding: 12px 14px; background: rgba(90,143,184,0.06); border-left: 2px solid var(--accent-2);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--ink-dim); line-height: 1.55;
+  }
+  .clinical-note strong { color: var(--ink); font-weight: 600; }
+
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-mute); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* Sample-image buttons: visually distinct from action buttons — pill-shaped,
+     inset, with a little preview thumbnail of the scene on the left. */
+  #sampleRow .btn[data-sample] {
+    padding: 7px 14px 7px 8px; border-radius: 999px; background: var(--panel-2);
+    border-color: var(--line); color: var(--ink-dim); font-size: 13px; gap: 9px;
+  }
+  #sampleRow .btn[data-sample]:hover { color: var(--ink); border-color: var(--accent-2); background: var(--panel-2); }
+  .sample-thumb { width: 40px; height: 32px; border-radius: 6px; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); object-fit: cover; display: block; }
+
+  /* Paywall: a simple centered sheet, shown/hidden via .open rather than
+     mounted/unmounted, since it's rare enough not to need JS-driven layout. */
+  .paywall-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200; background: rgba(8,11,16,0.72);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .paywall-overlay.open { display: flex; }
+  .paywall-panel {
+    position: relative; max-width: 380px; width: 100%; background: var(--panel);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 24px 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  .paywall-close {
+    position: absolute; top: 10px; right: 10px; appearance: none; border: none; background: none;
+    color: var(--ink-mute); font-size: 22px; line-height: 1; cursor: pointer; padding: 6px;
+  }
+  .paywall-close:hover { color: var(--ink); }
+  .paywall-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .paywall-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; margin: 0 0 16px; color: var(--ink); }
+  .paywall-features { margin: 0 0 22px; padding: 0 0 0 18px; color: var(--ink-dim); font-size: 13px; line-height: 1.6; }
+  .paywall-features li + li { margin-top: 8px; }
+  .paywall-buy {
+    appearance: none; width: 100%; border: 1px solid var(--accent); background: var(--accent); color: #1a1208;
+    font-family: inherit; font-size: 15px; font-weight: 700; padding: 13px; border-radius: var(--radius-sm);
+    cursor: pointer; margin-bottom: 10px;
+  }
+  .paywall-buy:hover { background: #e0b483; }
+  .paywall-restore {
+    appearance: none; width: 100%; border: none; background: none; color: var(--ink-mute);
+    font-family: inherit; font-size: 12px; cursor: pointer; padding: 6px;
+  }
+  .paywall-restore:hover { color: var(--ink); text-decoration: underline; }
+  .paywall-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin: 8px 0 0; min-height: 1.4em; }
+</style>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
+  <meta property="og:title" content="Vision Impairment Simulator | rjlcevans.com">
+  <meta property="og:description" content="See the world through different eyes — experience cataracts, glaucoma, AMD, floaters, and refractive error in real time.">
+  <meta property="og:image" content="https://rjlcevans.com/family.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vision Impairment Simulator | rjlcevans.com">
+  <meta name="twitter:description" content="See the world through different eyes — experience cataracts, glaucoma, AMD, floaters, and refractive error in real time.">
+  <meta name="twitter:image" content="https://rjlcevans.com/family.jpg">
+</head>
+<body>
+<a href="/" id="backToSite" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-app-bar">
+      <span class="hero-app-title">Vision Simulator</span>
+      <button type="button" class="hero-info-btn" id="heroInfoBtn" aria-expanded="false">About</button>
+    </div>
+    <p class="eyebrow">Patient education · Educational use only</p>
+    <h1>How the World Looks <em>Through Other Eyes</em></h1>
+    <p class="sub">A clinically-informed simulator for refractive error, cataract, glaucoma, age-related macular degeneration, diabetic retinopathy, and vitreous floaters. Use the camera or upload an image to explore.</p>
+    <span class="credit">Built by Dr. Ryan Evans, OD</span>
+    <div id="appStoreBadge" style="margin-top:14px;">
+      <a href="https://apps.apple.com/app/vision-simulator-by-dr-evans/id6772865195" target="_blank" rel="noopener noreferrer">
+        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store" style="height:32px;display:inline-block;">
+      </a>
+    </div>
+  </header>
+
+  <div class="stage-wrap">
+    <div class="stage">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="sourceCanvas"></canvas>
+      <canvas id="stageCanvas"></canvas>
+      <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
+      <div class="compare-line" id="compareLine"></div>
+      <div class="compare-tag left" id="compareTagL">Normal</div>
+      <div class="compare-tag right" id="compareTagR">Impaired</div>
+      <div class="active-badge" id="activeBadge"></div>
+      <div class="empty-state" id="emptyState">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+        <div>Start the camera or upload an image to begin.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="source-row">
+    <button class="btn primary" id="camToggle">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      <span id="camToggleLabel">Start Camera</span>
+    </button>
+    <button class="btn ghost icon-only" id="flipCam" title="Flip Camera" style="display:none;">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+    <label class="btn btn-file">Upload Image
+      <input type="file" id="upload" accept="image/*">
+    </label>
+    <button class="btn ghost toggle" id="compareToggle" aria-pressed="false">
+      <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><path d="M7 9l-2 3 2 3M17 9l2 3-2 3"/></svg>
+      <span id="compareLabel">Compare: Off</span>
+    </button>
+  </div>
+
+  <div class="samples-scroller" id="samplesScroller">
+    <div class="source-row" id="sampleRow">
+      <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
+      <button class="btn ghost" data-sample="reading">
+        <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
+        Reading
+      </button>
+      <button class="btn ghost" data-sample="garden">
+        <img class="sample-thumb" src="samples/garden.jpg" alt="" style="object-position:center bottom;">
+        Color Garden
+      </button>
+      <button class="btn ghost" data-sample="chart">
+        <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#f4f1ea"/><text x="13" y="9" font-size="7" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">E</text><text x="13" y="16" font-size="4" font-weight="700" text-anchor="middle" fill="#1a1a1a" font-family="Arial">F P</text></svg>
+        Eye Chart
+      </button>
+      <button class="btn ghost" data-sample="street">
+        <img class="sample-thumb" src="samples/night-street.jpg" alt="" style="object-position:center 65%;">
+        Night Street
+      </button>
+      <button class="btn ghost" data-sample="face">
+        <img class="sample-thumb" src="samples/portrait.jpg" alt="">
+        Portrait
+      </button>
+      <button class="btn ghost" data-sample="grid">
+        <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#0b0b0b"/><g stroke="#fff" stroke-width="0.5"><path d="M4 0V20M9 0V20M13 0V20M17 0V20M22 0V20M0 4H26M0 9H26M0 13H26M0 17H26"/></g><circle cx="13" cy="10" r="1.3" fill="#fff"/></svg>
+        Amsler Grid
+      </button>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+
+  <h2 class="section-title">Select Condition</h2>
+  <div class="conditions-header">
+    <p class="conditions-hint">Swipe for all 11 · tap to switch · Combine to layer several</p>
+    <button type="button" class="combine-conditions-btn" id="combineConditionsBtn" aria-pressed="false">Combine: Off</button>
+    <button type="button" class="unlock-pro-btn" id="unlockProBtn">Unlock Pro</button>
+    <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
+  </div>
+  <div class="conditions-scroller" id="conditionsScroller">
+    <div class="conditions" id="conditions">
+      <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
+      <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
+      <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
+      <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
+      <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+    </div>
+    <div class="scroll-cue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+
+  <div class="controls" id="controlsPanel">
+    <div class="ctrl-grid" id="ctrlGrid"></div>
+    <div class="clinical-note" id="clinicalNote"></div>
+  </div>
+
+  <footer>
+    <span>© Dr. Ryan Evans, OD · For educational demonstration only · Not a diagnostic tool</span>
+    <a href="https://rjlcevans.com/" id="homeLink">← Return to Evans Family Home</a>
+    <a href="https://rjlcevans.com/privacy" id="privacyLink" style="display:none;">Privacy Policy</a>
+  </footer>
+</div>
+
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-panel">
+    <button type="button" class="paywall-close" id="paywallClose" aria-label="Close">&times;</button>
+    <p class="paywall-eyebrow">Vision Simulator Pro</p>
+    <h3 class="paywall-title">Unlock the full clinical set</h3>
+    <ul class="paywall-features">
+      <li>7 more conditions — Glaucoma, AMD, Diabetic Retinopathy, Color Blindness, Floaters/PVD, Retinitis Pigmentosa, Presbyopia</li>
+      <li>Combine multiple conditions at once</li>
+      <li>Compare mode — side-by-side normal vs. impaired</li>
+    </ul>
+    <button type="button" class="paywall-buy" id="paywallBuy">Unlock Pro</button>
+    <button type="button" class="paywall-restore" id="paywallRestore">Restore Purchases</button>
+    <p class="paywall-note" id="paywallNote"></p>
+  </div>
+</div>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="cvd-protan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-deutan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cvd-tritan" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<script>
+(() => {
+  'use strict';
+
+  const video = document.getElementById('video');
+  const sourceCanvas = document.getElementById('sourceCanvas');
+  const stageCanvas = document.getElementById('stageCanvas');
+  const overlay = document.getElementById('overlay');
+  const emptyState = document.getElementById('emptyState');
+  const camToggle = document.getElementById('camToggle');
+  const camToggleLabel = document.getElementById('camToggleLabel');
+  const flipBtn = document.getElementById('flipCam');
+  const ctrlGrid = document.getElementById('ctrlGrid');
+  const clinicalNote = document.getElementById('clinicalNote');
+  const conditionsEl = document.getElementById('conditions');
+  const conditionsScroller = document.getElementById('conditionsScroller');
+  const sampleRow = document.getElementById('sampleRow');
+  const samplesScroller = document.getElementById('samplesScroller');
+  const compareLine = document.getElementById('compareLine');
+  const compareBtn = document.getElementById('compareToggle');
+
+  // ===== Pro unlock (In-App Purchase via cordova-plugin-purchase) =====
+  // Gating only applies inside the native app — there's no purchase flow on
+  // the plain website, so it stays fully open there like it always has.
+  // NOTE: PRO_PRODUCT_ID must exactly match the non-consumable product ID
+  // registered in App Store Connect, or purchases will fail to resolve.
+  const PRO_PRODUCT_ID = 'com.rjlcevans.visionsim.pro';
+  const PRO_CONDITIONS = new Set(['glaucoma', 'amd', 'diabetic', 'colorblind', 'floaters', 'rp', 'presbyopia']);
+  const isNativeApp = !!window.Capacitor;
+  let isPro = false;
+  let iapStore = null;
+  // True only once deviceready has fired *and* the plugin is confirmed
+  // present. A build that predates this feature also sets window.Capacitor,
+  // so gating must never key off that alone — it'd lock out anyone still
+  // on an old binary with no way for them to actually purchase.
+  let pluginReady = false;
+
+  const paywallOverlay = document.getElementById('paywallOverlay');
+  const paywallNote = document.getElementById('paywallNote');
+  const paywallBuy = document.getElementById('paywallBuy');
+
+  function updateProUI() {
+    document.documentElement.classList.toggle('is-pro', isPro);
+    conditionsEl.querySelectorAll('.cond').forEach(b => {
+      b.classList.toggle('locked', pluginReady && !isPro && PRO_CONDITIONS.has(b.dataset.cond));
+    });
+    compareBtn.classList.toggle('locked', pluginReady && !isPro);
+    combineBtn.classList.toggle('locked', pluginReady && !isPro);
+  }
+  function setPro(owned) {
+    isPro = owned;
+    try { localStorage.setItem('vs_isPro', owned ? '1' : '0'); } catch (e) {}
+    updateProUI();
+  }
+  function openPaywall(note) {
+    paywallNote.textContent = note || '';
+    paywallOverlay.classList.add('open');
+  }
+  function closePaywall() { paywallOverlay.classList.remove('open'); }
+
+  document.getElementById('unlockProBtn').addEventListener('click', () => openPaywall());
+  document.getElementById('paywallClose').addEventListener('click', closePaywall);
+  paywallOverlay.addEventListener('click', e => { if (e.target === paywallOverlay) closePaywall(); });
+  document.getElementById('paywallBuy').addEventListener('click', () => {
+    if (!iapStore || !window.CdvPurchase) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    const { Platform } = window.CdvPurchase;
+    const product = iapStore.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
+    const offer = product && product.getOffer();
+    if (offer) offer.order();
+    else openPaywall('Purchase unavailable right now — try again shortly.');
+  });
+  document.getElementById('paywallRestore').addEventListener('click', () => {
+    if (!iapStore) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    paywallNote.textContent = 'Restoring…';
+    iapStore.restorePurchases();
+  });
+
+  if (isNativeApp) {
+    // Cache last-known state so gating is correct instantly once pluginReady
+    // flips true, before the store has a chance to check in over the network.
+    try { if (localStorage.getItem('vs_isPro') === '1') isPro = true; } catch (e) {}
+
+    document.addEventListener('deviceready', () => {
+      if (!window.CdvPurchase) return; // build predates the plugin — stay fully unlocked, same as before this feature existed
+      pluginReady = true;
+      document.documentElement.classList.add('pro-ready');
+      updateProUI(); // now that gating can actually be satisfied, lock by default until the store confirms ownership
+
+      const { store, ProductType, Platform } = window.CdvPurchase;
+      iapStore = store;
+      store.register([{ id: PRO_PRODUCT_ID, type: ProductType.NON_CONSUMABLE, platform: Platform.APPLE_APPSTORE }]);
+      // No receipt-validation server is configured (store.validator is unset), so
+      // .verify()/.verified() never fire — that event chain requires a validator
+      // per the plugin's docs. Finish transactions straight off Apple's own
+      // approval instead, and track ownership via receiptUpdated/productUpdated,
+      // which is the plugin's documented pattern for running without a validator.
+      store.when().approved(transaction => transaction.finish());
+      function syncProStatus() {
+        const product = store.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
+        if (product) {
+          setPro(store.owned(product));
+          // Show the real store-quoted price rather than a hardcoded guess, so it
+          // can never drift from what App Store Connect actually charges.
+          const price = product.pricing?.price;
+          if (price) paywallBuy.textContent = `Unlock Pro — ${price}`;
+        }
+        if (paywallOverlay.classList.contains('open')) paywallNote.textContent = store.owned(product) ? 'Unlocked — thanks!' : '';
+      }
+      store.when().productUpdated(syncProStatus);
+      store.when().receiptUpdated(syncProStatus);
+      store.initialize([Platform.APPLE_APPSTORE]);
+    });
+  }
+
+  // Toggle fade masks / scroll cue based on actual scroll position, so
+  // "Normal Vision" at the very start never looks cut off on the left,
+  // and the right-side cue disappears once you've reached the last chip.
+  function updateConditionsScrollState() {
+    const maxScroll = conditionsEl.scrollWidth - conditionsEl.clientWidth;
+    const atStart = conditionsEl.scrollLeft <= 2;
+    const atEnd = conditionsEl.scrollLeft >= maxScroll - 2;
+    conditionsScroller.classList.toggle('can-scroll-left', !atStart && maxScroll > 2);
+    conditionsScroller.classList.toggle('can-scroll-right', !atEnd && maxScroll > 2);
+  }
+  conditionsEl.addEventListener('scroll', updateConditionsScrollState, { passive: true });
+  window.addEventListener('resize', updateConditionsScrollState);
+  window.addEventListener('load', updateConditionsScrollState); // fonts can reflow chip widths after first paint
+
+  // Same treatment for the Samples row.
+  function updateSamplesScrollState() {
+    const maxScroll = sampleRow.scrollWidth - sampleRow.clientWidth;
+    const atStart = sampleRow.scrollLeft <= 2;
+    const atEnd = sampleRow.scrollLeft >= maxScroll - 2;
+    samplesScroller.classList.toggle('can-scroll-left', !atStart && maxScroll > 2);
+    samplesScroller.classList.toggle('can-scroll-right', !atEnd && maxScroll > 2);
+  }
+  sampleRow.addEventListener('scroll', updateSamplesScrollState, { passive: true });
+  window.addEventListener('resize', updateSamplesScrollState);
+  window.addEventListener('load', updateSamplesScrollState);
+
+  const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  const ctx = stageCanvas.getContext('2d');
+
+  let stream = null;
+  let rafId = null;
+  let currentSource = null;
+  let uploadedImage = null;
+  let currentSampleKind = null;   // which built-in sample is showing (null = upload/camera)
+  let facingMode = 'environment';
+  let activeConditions = new Set(['none']);
+  // Fixed compositing order when multiple conditions are combined — roughly
+  // optical (refractive) first, then media opacity, then field-loss, then overlays.
+  const CONDITION_ORDER = ['myopia', 'astigmatism', 'presbyopia', 'cataract', 'glaucoma', 'amd', 'diabetic', 'rp', 'colorblind', 'floaters'];
+  function activeConditionKeys() { return CONDITION_ORDER.filter(k => activeConditions.has(k)); }
+  let compareMode = false;
+  let compareSplit = 0.5;   // 0..1 position of the divider (draggable)
+
+  const defaults = {
+    myopia:      { blurSigma: 8 },
+    astigmatism: { astigMag: 1.5, axis: 180 },
+    cataract:    { cataractSev: 0.5 },
+    glaucoma:    { glaucomaStage: 2 },
+    amd:         { amdSize: 12, amdDistortion: 0.35 },
+    diabetic:    { drSeverity: 0.5 },
+    colorblind:  { cvdType: 'deutan', cvdSeverity: 1 },
+    floaters:    { floaterCount: 6 },
+    rp:          { rpStage: 2 },
+    presbyopia:  { presbySev: 2 }
+  };
+
+  const params = {
+    blurSigma: 8,
+    astigMag: 1.5,
+    axis: 180,
+    cataractSev: 0.5,
+    glaucomaStage: 2,
+    amdSize: 12,
+    amdDistortion: 0.35,
+    drSeverity: 0.5,
+    cvdType: 'deutan',
+    cvdSeverity: 1,
+    floaterCount: 6,
+    rpStage: 2,
+    presbySev: 2
+  };
+
+  const snellenBlur = {
+    '20/20': 0, '20/40': 4, '20/70': 8, '20/100': 12, '20/200': 20, '20/400': 32
+  };
+
+  function resizeStage() {
+    const rect = stageCanvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const newW = Math.max(1, Math.round(rect.width * dpr));
+    const newH = Math.max(1, Math.round(rect.height * dpr));
+    // Only resize the backing store if it actually changed — resizing clears the
+    // canvas to transparent/black, so we avoid needless clears (and redraw after).
+    if (newW !== stageCanvas.width || newH !== stageCanvas.height) {
+      stageCanvas.width = newW;
+      stageCanvas.height = newH;
+      // For a still image there's no animation loop to repaint, so redraw now.
+      if (currentSource === 'image' && !rafId) render();
+    }
+  }
+  window.addEventListener('resize', resizeStage);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeStage);
+  // While the stage is sticky-pinned during scroll, browsers can blank the canvas.
+  // Repaint a still image as the user scrolls (throttled via rAF). The camera path
+  // already repaints every frame, so this only matters for images.
+  let _scrollRaf = null;
+  window.addEventListener('scroll', () => {
+    if (currentSource !== 'image' || rafId) return;
+    if (_scrollRaf) return;
+    _scrollRaf = requestAnimationFrame(() => {
+      _scrollRaf = null;
+      render();
+    });
+  }, { passive: true });
+
+  // Start/Stop share one toggle button, and Flip only makes sense while the
+  // camera is actually the active source — keep them in sync here rather
+  // than duplicating this in every place currentSource can change.
+  function updateCamUI() {
+    const active = currentSource === 'camera';
+    camToggle.classList.toggle('primary', !active);
+    camToggle.classList.toggle('ghost', active);
+    camToggleLabel.textContent = active ? 'Stop Camera' : 'Start Camera';
+    flipBtn.style.display = active ? 'inline-flex' : 'none';
+  }
+  async function startCamera() {
+    try {
+      stopCamera();
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: facingMode } }, audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
+      currentSource = 'camera';
+      currentSampleKind = null;
+      uploadedImage = null;
+      emptyState.style.display = 'none';
+      resizeStage();
+      loop();
+      updateCamUI();
+    } catch (err) {
+      alert('Camera unavailable: ' + err.message);
+    }
+  }
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (currentSource === 'camera') {
+      currentSource = null;
+      ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+      emptyState.style.display = 'grid';
+    }
+    updateCamUI();
+  }
+  function flipCamera() {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (currentSource === 'camera') startCamera();
+  }
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    currentSampleKind = null;
+    stopCamera();
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      currentSource = 'image';
+      emptyState.style.display = 'none';
+      resizeStage();
+      drawOnce();
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function drawSourceToCanvas() {
+    let sw, sh;
+    if (currentSource === 'camera' && video.videoWidth) {
+      sw = video.videoWidth; sh = video.videoHeight;
+    } else if (currentSource === 'image' && uploadedImage) {
+      sw = uploadedImage.naturalWidth; sh = uploadedImage.naturalHeight;
+    } else return false;
+
+    const stageW = stageCanvas.width, stageH = stageCanvas.height;
+    sourceCanvas.width = stageW; sourceCanvas.height = stageH;
+
+    const stageRatio = stageW / stageH;
+    const srcRatio = sw / sh;
+    let cropW, cropH, cropX, cropY;
+    if (srcRatio > stageRatio) {
+      cropH = sh; cropW = sh * stageRatio; cropX = (sw - cropW) / 2; cropY = 0;
+    } else {
+      cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) / 2;
+    }
+    const src = currentSource === 'camera' ? video : uploadedImage;
+    sCtx.save();
+    if (currentSource === 'camera' && facingMode === 'user') {
+      sCtx.translate(stageW, 0); sCtx.scale(-1, 1);
+    }
+    sCtx.drawImage(src, cropX, cropY, cropW, cropH, 0, 0, stageW, stageH);
+    sCtx.restore();
+    return true;
+  }
+
+  // ===== Filters =====
+  // iOS WKWebView (the App Store app) ships with CanvasRenderingContext2D.filter
+  // turned off, so nothing here uses ctx.filter. Every effect is built from
+  // drawImage scaling, compositing modes, gradients and, where needed, a small
+  // getImageData pass. Radii are in "reference pixels" for an 840px-wide
+  // iPhone stage and scaled by viewK(), so iPad and iPhone look the same.
+  const _chainCanvas = document.createElement('canvas'); // holds intermediate result when chaining multiple conditions
+  function mkCanvas() { return document.createElement('canvas'); }
+  function sizeTo(c, w, h) {
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const x = c.getContext('2d');
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    return x;
+  }
+  // Blur/size scale relative to the iPhone stage (840×525). Photos are
+  // cover-fitted, so content scale follows whichever side is relatively larger
+  // (on a 4:3 iPad stage that is the height).
+  function viewK() {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    return w >= h ? Math.max(w / 840, h / 525) : Math.max(h / 840, w / 525);
+  }
+  function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+  function smooth(a, b, x) { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); }
+  // Small deterministic PRNG so spots/floaters/masks are identical every frame.
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  // Smooth 1-D periodic noise (for scalloped/uneven field edges).
+  function angNoise(seed, n) {
+    const r = mulberry32(seed), v = [];
+    for (let i = 0; i < n; i++) v.push(r());
+    return (a) => { // a in radians
+      const f = ((a / (Math.PI * 2)) % 1 + 1) % 1 * n, i = Math.floor(f), t = f - i;
+      const s = t * t * (3 - 2 * t);
+      return v[i % n] * (1 - s) + v[(i + 1) % n] * s;
+    };
+  }
+
+  // Gaussian-like blur without ctx.filter: progressive 2× reductions, then a
+  // two-step smooth enlargement. It always covers the whole destination, so
+  // there is no dark band at the frame edge. `radius` is in source pixels.
+  const _bl = [mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas()];
+  function _down(src, radius) {
+    const sw = src.width, sh = src.height;
+    if (!(radius > 0.5)) return [src, sw, sh];
+    const f = Math.max(0.008, Math.min(1, 1 / (radius * 0.6 + 1)));
+    const tw = Math.max(2, Math.round(sw * f)), th = Math.max(2, Math.round(sh * f));
+    let cur = src, cw = sw, ch = sh, i = 0;
+    while (cw / 2 > tw && i < 4) {
+      const nw = Math.max(tw, Math.round(cw / 2)), nh = Math.max(th, Math.round(ch / 2));
+      const x = sizeTo(_bl[i], nw, nh);
+      x.clearRect(0, 0, nw, nh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, nw, nh);
+      cur = _bl[i++]; cw = nw; ch = nh;
+    }
+    if (cw !== tw || ch !== th) {
+      const x = sizeTo(_bl[i], tw, th);
+      x.clearRect(0, 0, tw, th); x.drawImage(cur, 0, 0, cw, ch, 0, 0, tw, th);
+      cur = _bl[i]; cw = tw; ch = th;
+    }
+    return [cur, cw, ch];
+  }
+  function _up(cur, cw, ch, dctx, dw, dh, a) {
+    dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = 'high';
+    if (cw * 3 < dw) { // intermediate enlargement removes blocky bilinear artifacts
+      const mw = cw * 3, mh = ch * 3, x = sizeTo(_bl[5], mw, mh);
+      x.clearRect(0, 0, mw, mh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, mw, mh);
+      cur = _bl[5]; cw = mw; ch = mh;
+    }
+    dctx.globalAlpha = a; dctx.drawImage(cur, 0, 0, cw, ch, 0, 0, dw, dh); dctx.globalAlpha = 1;
+  }
+  function blurDraw(src, dctx, radius, alpha, dw, dh) {
+    dw = dw || stageCanvas.width; dh = dh || stageCanvas.height;
+    const [cur, cw, ch] = _down(src, radius);
+    _up(cur, cw, ch, dctx, dw, dh, alpha == null ? 1 : alpha);
+  }
+  // Blurred layer whose tinting/masking runs at the low blur resolution
+  // (cheap), then is enlarged once onto dctx. ops(x, lw, lh, sx, sy) works in
+  // low-res pixels; sx/sy convert stage coordinates.
+  const _sl = [mkCanvas(), mkCanvas()];
+  function softLayer(slot, src, radius, ops, dctx, alpha) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const [cur, cw, ch] = _down(src, Math.max(radius, 1.2));
+    const x = sizeTo(_sl[slot], cw, ch);
+    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+    x.clearRect(0, 0, cw, ch); x.drawImage(cur, 0, 0);
+    ops(x, cw, ch, cw / w, ch / h);
+    x.globalCompositeOperation = 'source-over';
+    _up(_sl[slot], cw, ch, dctx, w, h, alpha == null ? 1 : alpha);
+  }
+
+  function applyBlur(sigma) {
+    blurDraw(sourceCanvas, ctx, sigma * viewK());
+  }
+
+  // Low-resolution loss mask (alpha = how much of the field is lost), built
+  // once per stage and stage size, then enlarged smoothly for soft edges.
+  // fn(X, Y) gets visual-field degrees: X right (+), Y up (+), ±35° across.
+  const _maskCache = new Map();
+  function fieldMask(key, fn) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const mw = 160, mh = Math.max(2, Math.round(160 * h / w));
+    const ck = key + '|' + mw + 'x' + mh;
+    let c = _maskCache.get(ck);
+    if (c) return c;
+    if (_maskCache.size > 40) _maskCache.clear();
+    c = mkCanvas(); c.width = mw; c.height = mh;
+    const x = c.getContext('2d'), id = x.createImageData(mw, mh), d = id.data;
+    const half = 35;
+    for (let j = 0; j < mh; j++) {
+      for (let i = 0; i < mw; i++) {
+        const X = ((i + 0.5) / mw * 2 - 1) * half;
+        const Y = (1 - (j + 0.5) / mh * 2) * half * (mh / mw);
+        const p = (j * mw + i) * 4;
+        d[p] = d[p + 1] = d[p + 2] = 0;
+        d[p + 3] = Math.round(clamp01(fn(X, Y)) * 255);
+      }
+    }
+    x.putImageData(id, 0, 0);
+    _maskCache.set(ck, c);
+    return c;
+  }
+  // Draws a degraded (blurred, faded, desaturated) copy of the source only
+  // where `mask` says the field is lost. Lost field looks like a dim smudge
+  // that the brain "fills in", not a black hole.
+
+  function applyFieldLoss(mask, blurR, desat, veil) {
+    softLayer(0, sourceCanvas, blurR * viewK(), (x, lw, lh) => {
+      x.globalCompositeOperation = 'saturation';
+      x.fillStyle = `rgba(128,128,128,${desat})`; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = veil; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'destination-in';
+      x.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, lw, lh);
+    }, ctx);
+  }
+
+  // ===== Astigmatism =====
+  // Minus-cylinder convention. The meridian 90° away from the axis is out of
+  // focus, so points smear along that meridian. TABO axes are read by the
+  // examiner facing the patient; in the patient's own view that mirrors, so
+  // the smear runs at (90° − axis) counter-clockwise from 3 o'clock:
+  // axis 180 (with-the-rule) → vertical smear, 90 → horizontal, 45 → "/" .
+  const _astA = mkCanvas(), _astB = mkCanvas();
+  function applyAstigmatism(cyl, axisDeg) {
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    const c = Math.max(0, cyl);
+    const hw = Math.max(2, Math.round(w / 2)), hh = Math.max(2, Math.round(h / 2));
+    const a = sizeTo(_astA, hw, hh);
+    a.clearRect(0, 0, hw, hh);
+    blurDraw(sourceCanvas, a, 0.6 * c * k, 1, hw, hh);  // circle-of-least-confusion softening
+    const phi = (90 - axisDeg) * Math.PI / 180;
+    const ux = Math.cos(phi), uy = -Math.sin(phi);       // canvas y points down
+    const span = 3.4 * c * k;                            // half-length of smear, half-res px
+    const b = sizeTo(_astB, hw, hh);
+    b.globalCompositeOperation = 'source-over';
+    b.globalAlpha = 1; b.clearRect(0, 0, hw, hh); b.drawImage(_astA, 0, 0);
+    const n = Math.max(2, Math.min(18, Math.ceil(span / 1.1)));
+    let count = 1;
+    for (let i = 1; i <= n; i++) {
+      const t = (i / n) * span;
+      for (const sgn of [1, -1]) {
+        count++;
+        b.globalAlpha = 1 / count;                        // running average = smooth box blur
+        b.drawImage(_astA, ux * t * sgn, uy * t * sgn);
+      }
+    }
+    b.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(_astB, 0, 0, hw, hh, 0, 0, w, h);
+  }
+
+  // ===== Cataract =====
+  // Nuclear sclerotic cataract: graded blur, contrast loss from a milky
+  // scatter veil, yellow-brown absorption, and glare/halos around bright
+  // sources. Glare is measured on a small copy of the frame and scaled down
+  // when the whole frame is bright (a white page), so text stays readable.
+  const _glSmall = mkCanvas();
+  const _glCtx = _glSmall.getContext('2d', { willReadFrequently: true });
+  let _glN = 0, _glDark = 1;
+  function applyCataract(severity) {
+    const s = clamp01(severity);
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    if (s <= 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
+
+    // Glare: highlights only, scaled by how dark the scene is overall. On the
+    // live camera the 160px glare map is refreshed every 3rd frame.
+    const gw = 160, gh = Math.max(2, Math.round(160 * h / w));
+    if (currentSource !== 'camera' || (_glN++ % 3) === 0 || _glSmall.width !== gw || _glSmall.height !== gh) {
+      if (_glSmall.width !== gw || _glSmall.height !== gh) { _glSmall.width = gw; _glSmall.height = gh; }
+      _glCtx.imageSmoothingEnabled = true; _glCtx.imageSmoothingQuality = 'high';
+      _glCtx.clearRect(0, 0, gw, gh);
+      _glCtx.drawImage(sourceCanvas, 0, 0, gw, gh);
+      const id = _glCtx.getImageData(0, 0, gw, gh), d = id.data;
+      let sum = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        sum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const v = Math.max(r, g, b) / 255;
+        const t = v > 0.72 ? Math.pow((v - 0.72) / 0.28, 1.6) : 0;
+        d[i] = r * t; d[i + 1] = g * t; d[i + 2] = b * t; d[i + 3] = 255;
+      }
+      const mean = sum / (d.length / 4) / 255;
+      _glDark = 1 - smooth(0.3, 0.85, mean);              // 1 on a night street, ~0 on a white page
+      _glCtx.putImageData(id, 0, 0);
+    }
+    const darkness = _glDark;
+
+    // Blur, glare and tint all run at the blur's low resolution, then one
+    // smooth enlargement onto the stage.
+    softLayer(0, sourceCanvas, 9 * Math.pow(s, 1.2) * k, (x, lw, lh) => {
+      if (darkness > 0.01) {
+        x.globalCompositeOperation = 'lighter';
+        blurDraw(_glSmall, x, 1.2 + 2.0 * s, (0.30 + 0.55 * s) * darkness, lw, lh);
+        blurDraw(_glSmall, x, 5 + 9 * s, (0.30 + 0.70 * s) * darkness, lw, lh);
+      }
+      x.globalCompositeOperation = 'saturation';            // mild color washout
+      x.fillStyle = `rgba(128,128,128,${0.30 * s})`;
+      x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'multiply';              // yellowing (blue absorption)
+      x.fillStyle = `rgba(255,214,150,${0.15 + 0.55 * s})`;
+      x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = `rgba(214,196,160,${0.05 + 0.22 * s})`;  // milky scatter veil = contrast loss
+      x.fillRect(0, 0, lw, lh);
+      if (s > 0.6) {                                          // advanced brunescence: a little dimmer
+        x.fillStyle = `rgba(55,36,14,${(s - 0.6) * 0.45})`;
+        x.fillRect(0, 0, lw, lh);
+      }
+    }, ctx);
+  }
+
+  // ===== Glaucoma =====
+  // Right-eye field (nasal = left of the view). Early: superior nasal step and
+  // superior arcuate defect; then inferior defects and constriction; end stage
+  // leaves a central island plus a temporal island. Lost field is shown as a
+  // faded blur (filling-in), never pure black.
+  function glaucomaLoss(stage) {
+    const nz = angNoise(97 + stage, 9);
+    return (X, Y) => {
+      const r = Math.hypot(X, Y), th = Math.atan2(Y, X);
+      const wob = 0.75 + 0.5 * nz(th);
+      const nasal = smooth(0, 6, -X);
+      const sup = smooth(-2.5, 2.5, Y), inf = smooth(-2.5, 2.5, -Y);  // respects the horizontal meridian (softened)
+      const arcBand = smooth(8, 12, r) * (1 - smooth(22, 28, r));
+      const arcReach = smooth(-0.2, 0.9, Math.cos(th - Math.PI * 0.62)); // strongest superonasal
+      const arcSup = arcBand * sup * arcReach;
+      const arcInf = arcBand * inf * smooth(-0.2, 0.9, Math.cos(th + Math.PI * 0.62));
+      const stepSup = smooth(16, 26, r) * nasal * sup;
+      const stepInf = smooth(16, 26, r) * nasal * inf;
+      const periph = (r0) => smooth(r0, r0 + 12, r) * (X > 0 ? 0.65 : 1);
+      let L;
+      if (stage <= 1) L = Math.max(0.50 * stepSup, 0.30 * arcSup);
+      else if (stage === 2) L = Math.max(0.80 * stepSup, 0.75 * arcSup, 0.35 * stepInf, 0.30 * periph(30));
+      else if (stage === 3) L = Math.max(0.88 * smooth(6, 11, r) * sup, 0.75 * arcInf, 0.82 * stepInf, 0.55 * periph(22));
+      else {
+        const temporalIsland = 1 - smooth(0.55, 1.0, Math.hypot((X - 27) / 10, (Y + 3) / 12));
+        L = 0.95 * smooth(4, 8, r) * (1 - 0.8 * temporalIsland);
+      }
+      return Math.min(0.95, L * wob);
+    };
+  }
+  function applyGlaucoma(stage) {
+    ctx.drawImage(sourceCanvas, 0, 0);
+    const mask = fieldMask('glaucoma' + stage, glaucomaLoss(stage));
+    applyFieldLoss(mask, 16, 0.8, `rgba(78,80,86,${0.35 + stage * 0.08})`);
+  }
+
+  // ===== AMD =====
+  // Early: metamorphopsia (lines bow) plus central blur. Later: an irregular,
+  // blurry grey central smudge that is never fully opaque.
+  const _amdMaskCache = new Map();
+  function meshWarp(src, dctx, cx, cy, R, amt) {
+    const cells = 14, cs = (2 * R) / cells;
+    const A = amt * R * 0.2;
+    const disp = (x, y) => {
+      const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
+      if (rr >= 1 || rr === 0) return [0, 0];
+      const th = Math.atan2(dy, dx);
+      const g = Math.sin(Math.PI * rr) * (1 - rr * 0.5);
+      const irr = 1 + 0.35 * Math.sin(3 * th + 0.7) + 0.2 * Math.sin(5 * th + 2.1);
+      const m = A * g * irr / (rr * R);
+      return [dx * m + dy * m * 0.25, dy * m - dx * m * 0.25];   // bulge with a slight twist
+    };
+    const x0 = cx - R, y0 = cy - R;
+    for (let j = 0; j < cells; j++) {
+      for (let i = 0; i < cells; i++) {
+        const sx = x0 + i * cs, sy = y0 + j * cs;
+        const tl = disp(sx, sy), br = disp(sx + cs, sy + cs);
+        const dx0 = sx + tl[0], dy0 = sy + tl[1];
+        const dwid = cs + br[0] - tl[0], dhei = cs + br[1] - tl[1];
+        if (dwid <= 0.5 || dhei <= 0.5) continue;
+        dctx.drawImage(src, sx, sy, cs, cs, dx0 - 0.4, dy0 - 0.4, dwid + 0.8, dhei + 0.8);
+      }
+    }
+  }
+  function amdMask(sizePct, w, h) {
+    const key = sizePct + '|' + w + 'x' + h;
+    let c = _amdMaskCache.get(key);
+    if (c) return c;
+    if (_amdMaskCache.size > 12) _amdMaskCache.clear();
+    const mw = 200, mh = Math.max(2, Math.round(200 * h / w)), sc = mw / w;
+    c = mkCanvas(); c.width = mw; c.height = mh;
+    const x = c.getContext('2d'), rnd = mulberry32(2024);
+    const R = Math.min(w, h) * (sizePct / 100) * 1.05 * sc, cx = mw / 2, cy = mh / 2;
+    for (let i = 0; i < 6; i++) {            // overlapping soft blobs → irregular outline
+      const a = rnd() * Math.PI * 2, off = i === 0 ? 0 : R * (0.25 + rnd() * 0.35);
+      const bx = cx + Math.cos(a) * off, by = cy + Math.sin(a) * off * 0.8;
+      const br = R * (i === 0 ? 1 : 0.45 + rnd() * 0.35);
+      const g = x.createRadialGradient(bx, by, 0, bx, by, br);
+      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(bx - br, by - br, br * 2, br * 2);
+    }
+    _amdMaskCache.set(key, c);
+    return c;
+  }
+  function applyAMD(sizePct, distortion) {
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    const cx = w / 2, cy = h / 2, minDim = Math.min(w, h);
+    const sev = clamp01((sizePct - 12) / 48);           // Mild 0 … End stage 1
+
+    // 1. Warp (metamorphopsia) into an offscreen copy.
+    // Drawn straight onto the stage; the blur layers below read the unwarped
+    // source (the warp is invisible under that much blur) to save a full copy.
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    if (distortion > 0) {
+      ctx.imageSmoothingQuality = 'low';   // bilinear is enough for 1:1-ish cells and much cheaper
+      meshWarp(sourceCanvas, ctx, cx, cy, minDim * (0.24 + 0.22 * sev), distortion);
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    // 2. Central blur, soft-edged.
+    const rb = minDim * (0.16 + 0.22 * sev);
+    softLayer(0, sourceCanvas, (3 + 9 * sev) * k, (x, lw, lh, sx, sy) => {
+      x.globalCompositeOperation = 'destination-in';
+      x.setTransform(sx, 0, 0, sy, 0, 0);
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, rb);
+      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.6, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.setTransform(1, 0, 0, 1, 0, 0);
+    }, ctx);
+
+    // 3. Grey, faded central smudge (scotoma), never fully opaque.
+    const op = 0.12 + 0.68 * sev;
+    if (op > 0.01) {
+      const m = amdMask(sizePct, w, h);
+      softLayer(1, sourceCanvas, (10 + 14 * sev) * k, (x, lw, lh) => {
+        x.globalCompositeOperation = 'saturation';
+        x.fillStyle = 'rgba(128,128,128,0.85)'; x.fillRect(0, 0, lw, lh);
+        x.globalCompositeOperation = 'source-over';
+        x.fillStyle = `rgba(104,102,98,${0.35 + 0.35 * sev})`; x.fillRect(0, 0, lw, lh);
+        x.globalCompositeOperation = 'destination-in';
+        x.drawImage(m, 0, 0, m.width, m.height, 0, 0, lw, lh);
+      }, ctx, Math.min(0.95, op / 0.9));   // mask core alpha 0.9 → effective max ≈ 0.85
+    }
+  }
+
+  // ===== Diabetic retinopathy =====
+  // Scattered small, irregular, semi-transparent dot/blot hemorrhages that
+  // multiply with severity (same seeded positions, so they never jump),
+  // plus macular-edema haze and mild overall blur.
+  let drBlots = null;
+  const _drOverlay = mkCanvas();
+  let _drKey = '';
+  function initDR(severity) { _drKey = ''; }
+  function drSpots() {
+    if (drBlots) return drBlots;
+    const r = mulberry32(1337), gauss = () => {
+      const u = Math.max(1e-6, r()), v = r();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
+    drBlots = [];
+    for (let i = 0; i < 90; i++) {
+      const lobes = [];
+      const nl = 1 + Math.floor(r() * 3);
+      for (let j = 0; j < nl; j++) lobes.push({ dx: (r() - 0.5) * 1.2, dy: (r() - 0.5) * 1.2, s: 0.55 + r() * 0.5 });
+      drBlots.push({
+        x: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.24)),
+        y: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.22)),
+        u: r(), op: 0.25 + r() * 0.3, red: r() < 0.6, lobes
+      });
+    }
+    return drBlots;
+  }
+  function applyDiabetic(severity) {
+    const s = clamp01(severity);
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK(), minDim = Math.min(w, h);
+    blurDraw(sourceCanvas, ctx, (1 + 2.5 * s) * k);
+
+    // Macular edema haze (central, soft).
+    const R = minDim * (0.28 + 0.18 * s);
+    softLayer(0, sourceCanvas, (4 + 9 * s) * k, (x, lw, lh, sx, sy) => {
+      x.fillStyle = `rgba(196,188,160,${0.12 + 0.22 * s})`; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'destination-in';
+      x.setTransform(sx, 0, 0, sy, 0, 0);
+      const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, R);
+      g.addColorStop(0, `rgba(0,0,0,${0.35 + 0.5 * s})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.setTransform(1, 0, 0, 1, 0, 0);
+    }, ctx);
+
+    // Spots, cached per severity and size.
+    const key = w + 'x' + h + '|' + s.toFixed(2);
+    if (key !== _drKey) {
+      const o = sizeTo(_drOverlay, w, h);
+      o.clearRect(0, 0, w, h);
+      const spots = drSpots(), n = Math.round(8 + 72 * s);
+      for (let i = 0; i < n; i++) {
+        const b = spots[i];
+        const base = minDim * (0.009 + 0.026 * b.u) * (0.75 + 0.5 * s);
+        const op = b.op * (0.5 + 0.35 * s);
+        const col = b.red ? '62,30,28' : '44,40,40';
+        for (const l of b.lobes) {
+          const px = b.x * w + l.dx * base, py = b.y * h + l.dy * base, rr = base * l.s * 2.1;
+          const gg = o.createRadialGradient(px, py, 0, px, py, rr);
+          gg.addColorStop(0, `rgba(${col},${op * 0.85})`); gg.addColorStop(0.3, `rgba(${col},${op * 0.6})`); gg.addColorStop(0.65, `rgba(${col},${op * 0.22})`); gg.addColorStop(1, `rgba(${col},0)`);
+          o.fillStyle = gg; o.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+        }
+      }
+      _drKey = key;
+    }
+    ctx.drawImage(_drOverlay, 0, 0);
+    if (s > 0.6) {   // faint yellowish exudate haze in advanced disease
+      ctx.fillStyle = `rgba(200,180,90,${(s - 0.6) * 0.12})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+
+  // ===== Color vision deficiency =====
+  // Machado, Oliveira & Fernandes (2009) matrices, applied in linear RGB,
+  // severity 0.1–1.0 (1.0 = dichromacy). Per-pixel pass uses lookup tables;
+  // the live camera is processed at half resolution to stay fast.
+  const MACHADO = {
+    protan: [[1,0,0,0,1,0,0,0,1],[0.856167,0.182038,-0.038205,0.029342,0.955115,0.015544,-0.002880,-0.001563,1.004443],[0.734766,0.334872,-0.069637,0.051840,0.919198,0.028963,-0.004928,-0.004209,1.009137],[0.630323,0.465641,-0.095964,0.069181,0.890046,0.040773,-0.006308,-0.007724,1.014032],[0.539009,0.579343,-0.118352,0.082546,0.866121,0.051332,-0.007136,-0.011959,1.019095],[0.458064,0.679578,-0.137642,0.092785,0.846313,0.060902,-0.007494,-0.016807,1.024301],[0.385450,0.769005,-0.154455,0.100526,0.829802,0.069673,-0.007442,-0.022190,1.029632],[0.319627,0.849633,-0.169261,0.106241,0.815969,0.077790,-0.007025,-0.028051,1.035076],[0.259411,0.923008,-0.182420,0.110296,0.804340,0.085364,-0.006276,-0.034346,1.040622],[0.203876,0.990338,-0.194214,0.112975,0.794542,0.092483,-0.005222,-0.041043,1.046265],[0.152286,1.052583,-0.204868,0.114503,0.786281,0.099216,-0.003882,-0.048116,1.051998]],
+    deutan: [[1,0,0,0,1,0,0,0,1],[0.866435,0.177704,-0.044139,0.049567,0.939063,0.011370,-0.003453,0.007233,0.996220],[0.760729,0.319078,-0.079807,0.090568,0.889315,0.020117,-0.006027,0.013325,0.992702],[0.675425,0.433850,-0.109275,0.125303,0.847755,0.026942,-0.007950,0.018572,0.989378],[0.605511,0.528560,-0.134071,0.155318,0.812366,0.032316,-0.009376,0.023176,0.986200],[0.547494,0.607765,-0.155259,0.181692,0.781742,0.036566,-0.010410,0.027275,0.983136],[0.498864,0.674741,-0.173604,0.205199,0.754872,0.039929,-0.011131,0.030969,0.980162],[0.457771,0.731899,-0.189670,0.226409,0.731012,0.042579,-0.011595,0.034333,0.977261],[0.422823,0.781057,-0.203881,0.245752,0.709602,0.044646,-0.011843,0.037423,0.974421],[0.392952,0.823610,-0.216562,0.263559,0.690210,0.046232,-0.011910,0.040281,0.971630],[0.367322,0.860646,-0.227968,0.280085,0.672501,0.047413,-0.011820,0.042940,0.968881]],
+    tritan: [[1,0,0,0,1,0,0,0,1],[0.926670,0.092514,-0.019184,0.021191,0.964503,0.014306,0.008437,0.054813,0.936750],[0.895720,0.133330,-0.029050,0.029997,0.945400,0.024603,0.013027,0.104707,0.882266],[0.905871,0.127791,-0.033662,0.026856,0.941251,0.031893,0.013410,0.148296,0.838294],[0.948035,0.089490,-0.037526,0.014364,0.946792,0.038844,0.010853,0.193991,0.795156],[1.017277,0.027029,-0.044306,-0.006113,0.958479,0.047634,0.006379,0.248708,0.744913],[1.104996,-0.046633,-0.058363,-0.032137,0.971635,0.060503,0.001336,0.317922,0.680742],[1.193214,-0.109812,-0.083402,-0.058496,0.979410,0.079086,-0.002346,0.403492,0.598854],[1.257728,-0.139648,-0.118081,-0.078003,0.975409,0.102594,-0.003316,0.501214,0.502102],[1.278864,-0.125333,-0.153531,-0.084748,0.957674,0.127074,-0.000989,0.601151,0.399838],[1.255528,-0.076749,-0.178779,-0.078411,0.930809,0.147602,0.004733,0.691367,0.303900]]
+  };
+  const _toLin = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { const c = i / 255; _toLin[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  const _toSrgb = new Uint8ClampedArray(4096);
+  for (let i = 0; i < 4096; i++) { const c = i / 4095; _toSrgb[i] = Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055)); }
+  function cvdMatrix(type, sev) {
+    const t = MACHADO[type] || MACHADO.deutan;
+    const f = clamp01(sev) * 10, i = Math.min(9, Math.floor(f)), u = f - i;
+    return t[i].map((v, j) => v * (1 - u) + t[i + 1][j] * u);
+  }
+  const _cvdC = mkCanvas();
+  const _cvdCtx = _cvdC.getContext('2d', { willReadFrequently: true });
+  function applyColorBlind(type) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const sc = currentSource === 'camera' ? 0.5 : 1;
+    const cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+    if (_cvdC.width !== cw || _cvdC.height !== ch) { _cvdC.width = cw; _cvdC.height = ch; }
+    _cvdCtx.clearRect(0, 0, cw, ch);
+    _cvdCtx.drawImage(sourceCanvas, 0, 0, cw, ch);
+    const id = _cvdCtx.getImageData(0, 0, cw, ch), d = id.data;
+    const m = cvdMatrix(type, params.cvdSeverity == null ? 1 : params.cvdSeverity);
+    const m0 = m[0] * 4095, m1 = m[1] * 4095, m2 = m[2] * 4095, m3 = m[3] * 4095, m4 = m[4] * 4095,
+          m5 = m[5] * 4095, m6 = m[6] * 4095, m7 = m[7] * 4095, m8 = m[8] * 4095;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = _toLin[d[i]], g = _toLin[d[i + 1]], b = _toLin[d[i + 2]];
+      let R = m0 * r + m1 * g + m2 * b, G = m3 * r + m4 * g + m5 * b, B = m6 * r + m7 * g + m8 * b;
+      R = R < 0 ? 0 : R > 4095 ? 4095 : R; G = G < 0 ? 0 : G > 4095 ? 4095 : G; B = B < 0 ? 0 : B > 4095 ? 4095 : B;
+      d[i] = _toSrgb[R | 0]; d[i + 1] = _toSrgb[G | 0]; d[i + 2] = _toSrgb[B | 0];
+    }
+    _cvdCtx.putImageData(id, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(_cvdC, 0, 0, cw, ch, 0, 0, w, h);
+  }
+
+  // ===== Retinitis pigmentosa =====
+  // Early: mid-peripheral ring scotoma with preserved far periphery; then the
+  // ring widens and the field constricts to a tunnel. Soft scalloped edges,
+  // plus night-vision dimming and contrast loss. (Bone-spicule pigment is a
+  // fundus finding the doctor sees; patients don't see it, so it isn't drawn.)
+  let rpSpicules = null;
+  function initRP(stage) { rpSpicules = null; }
+  function rpLoss(stage) {
+    const rnd = mulberry32(311 + stage), a1 = rnd() * 6.28, a2 = rnd() * 6.28, a3 = rnd() * 6.28;
+    return (X, Y) => {
+      const th = Math.atan2(Y, X);
+      const scal = 1 + 0.05 * Math.sin(2 * th + a1) + 0.045 * Math.sin(3 * th + a2) + 0.025 * Math.sin(5 * th + a3);
+      const r = Math.hypot(X, Y) * scal;   // gently scalloped boundary
+      let L;
+      if (stage <= 1) L = 0.70 * smooth(13, 20, r) * (1 - smooth(26, 34, r));
+      else if (stage === 2) L = Math.max(0.85 * smooth(11, 15, r) * (1 - smooth(31, 36, r)), 0.45 * smooth(30, 38, r));
+      else if (stage === 3) L = 0.90 * smooth(8, 12, r) * (1 - 0.45 * (1 - smooth(0.5, 1, Math.hypot((X - 29) / 7, Y / 10))));   // small temporal island
+      else L = 0.94 * smooth(3.5, 6.5, r);
+      return L;
+    };
+  }
+  function applyRP(stage) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.fillStyle = `rgba(60,60,64,${0.02 + stage * 0.025})`;   // contrast loss
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = `rgba(0,0,0,${0.04 + stage * 0.035})`;      // night-vision dimming
+    ctx.fillRect(0, 0, w, h);
+    const mask = fieldMask('rp' + stage, rpLoss(stage));
+    applyFieldLoss(mask, 14, 0.9, `rgba(16,16,20,${0.46 + stage * 0.09})`);
+  }
+
+  // ===== Presbyopia =====
+  // Near focus only. Reading and Amsler samples are at reading distance, so
+  // the whole page blurs; the eye chart is a distance target and stays sharp.
+  // Photos and the camera: the lower part of the frame (usually nearer) blurs
+  // and the top (far) stays clear.
+  const NEAR_SAMPLES = { reading: true, grid: true };
+  const _prA = mkCanvas();
+  function applyPresbyopia(sev) {
+    const sigma = [0, 4, 11, 22][sev] || 11;
+    const w = stageCanvas.width, h = stageCanvas.height;
+    if (currentSource === 'image' && currentSampleKind && NEAR_SAMPLES[currentSampleKind]) { applyBlur(sigma); return; }
+    ctx.drawImage(sourceCanvas, 0, 0);
+    if (currentSource === 'image' && currentSampleKind === 'chart') return;
+    const x = sizeTo(_prA, w, h);
+    x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, w, h);
+    blurDraw(sourceCanvas, x, sigma * viewK());
+    x.globalCompositeOperation = 'destination-in';
+    const g = x.createLinearGradient(0, h * 0.42, 0, h * 0.9);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
+    ctx.drawImage(_prA, 0, 0);
+  }
+
+  // ===== Floaters / PVD =====
+  // Soft, translucent, curved strands and dots (plus a Weiss ring for PVD
+  // when there are several), drawn at 1/3 resolution and enlarged so they look
+  // like out-of-focus shadows. They drift slowly and sink.
+  let floaterState = null, _floT = 0;
+  const _flo = mkCanvas();
+  function initFloaters(count) {
+    const r = mulberry32(4242 + count);
+    floaterState = [];
+    for (let i = 0; i < count; i++) {
+      const type = (i === 0 && count >= 5) ? 'ring' : (r() < 0.65 ? 'strand' : 'dot');
+      const pts = [];
+      const segs = 3 + Math.floor(r() * 3);
+      let ang = r() * Math.PI * 2;
+      for (let j = 0; j < segs; j++) { ang += (r() - 0.5) * 1.0; pts.push([Math.cos(ang), Math.sin(ang)]); }
+      floaterState.push({
+        x: 12 + r() * 76, y: 8 + r() * 58,
+        vx: (r() - 0.5) * 0.03, vy: (r() - 0.5) * 0.015 + 0.004,
+        phase: r() * Math.PI * 2, size: 1.5 + r() * 3.5, type, pts,
+        opacity: 0.16 + r() * 0.2
+      });
+    }
+  }
+  function clearOverlay() { overlay.innerHTML = ''; }
+  function stepFloaters() {
+    if (!floaterState) return;
+    _floT++;
+    floaterState.forEach(f => {
+      f.x += f.vx + Math.sin(_floT * 0.012 + f.phase) * 0.02;
+      f.y += f.vy + Math.cos(_floT * 0.009 + f.phase) * 0.012;
+      if (f.x < -8) f.x = 108; if (f.x > 108) f.x = -8;
+      if (f.y < -8) f.y = 83; if (f.y > 83) f.y = -8;
+    });
+  }
+  function drawFloatersCanvas() {
+    if (!floaterState) return;
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const lw = Math.max(2, Math.round(w / 3)), lh = Math.max(2, Math.round(h / 3));
+    const x = sizeTo(_flo, lw, lh);
+    x.clearRect(0, 0, lw, lh);
+    const u = lw / 100;
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    floaterState.forEach(f => {
+      const px = (f.x / 100) * lw, py = (f.y / 75) * lh;
+      const col = `rgba(28,28,34,${f.opacity})`;
+      if (f.type === 'ring') {
+        for (const [wm, om] of [[3.2, 0.3], [1, 1]]) {   // soft halo, then core
+          x.strokeStyle = `rgba(28,28,34,${(f.opacity + 0.06) * om})`;
+          x.lineWidth = Math.max(1, u * 0.7 * wm);
+          x.beginPath(); x.ellipse(px, py, u * 4.5, u * 3.6, f.phase, 0, Math.PI * 2); x.stroke();
+        }
+      } else if (f.type === 'dot') {
+        const rr = u * f.size * 0.45;
+        const g = x.createRadialGradient(px, py, 0, px, py, rr);
+        g.addColorStop(0, col); g.addColorStop(1, 'rgba(28,28,34,0)');
+        x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+      } else {
+        const step = u * f.size * 1.5;
+        for (const [wm, om] of [[3.5, 0.28], [1, 0.85]]) {   // soft halo, then translucent core
+          x.strokeStyle = `rgba(28,28,34,${f.opacity * om})`;
+          x.lineWidth = Math.max(0.8, u * (0.3 + f.size * 0.09) * wm);
+          x.beginPath(); x.moveTo(px, py);
+          let cx0 = px, cy0 = py;
+          for (let j = 0; j < f.pts.length; j++) {
+            const p = f.pts[j];
+            const nx = cx0 + p[0] * step, ny = cy0 + p[1] * step;
+            x.quadraticCurveTo(cx0 + p[0] * step * 0.5 + p[1] * step * 0.3, cy0 + p[1] * step * 0.5 - p[0] * step * 0.3, nx, ny);
+            cx0 = nx; cy0 = ny;
+          }
+          x.stroke();
+        }
+      }
+    });
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(_flo, 0, 0, lw, lh, 0, 0, w, h);
+  }
+
+  // Render a single condition's filter onto the (already-clipped) canvas,
+  // reading from sourceCanvas and writing to ctx.
+  function applyConditionSingle(cond) {
+    switch (cond) {
+      case 'myopia':     applyBlur(params.blurSigma); break;
+      case 'astigmatism':applyAstigmatism(params.astigMag, params.axis); break;
+      case 'cataract':   applyCataract(params.cataractSev); break;
+      case 'glaucoma':   applyGlaucoma(params.glaucomaStage); break;
+      case 'amd':        applyAMD(params.amdSize, params.amdDistortion); break;
+      case 'diabetic':   applyDiabetic(params.drSeverity); break;
+      case 'colorblind': applyColorBlind(params.cvdType); break;
+      case 'floaters':   ctx.drawImage(sourceCanvas, 0, 0); drawFloatersCanvas(); break;
+      case 'rp':         applyRP(params.rpStage); break;
+      case 'presbyopia': applyPresbyopia(params.presbySev); break;
+    }
+  }
+
+  // Dispatch onto the (already-clipped) canvas. When multiple conditions are
+  // active, chain them: each one's rendered result becomes the next one's
+  // input, via sourceCanvas/_chainCanvas (sourceCanvas gets refreshed from
+  // the live camera/image again next frame, so overwriting it mid-chain here
+  // is safe).
+  function applyCondition() {
+    const active = activeConditionKeys();
+    if (active.length === 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
+    if (active.length === 1) { applyConditionSingle(active[0]); return; }
+
+    const w = stageCanvas.width, h = stageCanvas.height;
+    _chainCanvas.width = w; _chainCanvas.height = h;
+    const chainCtx = _chainCanvas.getContext('2d');
+    chainCtx.clearRect(0, 0, w, h);
+    chainCtx.drawImage(sourceCanvas, 0, 0);
+    for (const key of active) {
+      sCtx.clearRect(0, 0, w, h);
+      sCtx.drawImage(_chainCanvas, 0, 0);
+      applyConditionSingle(key);
+      chainCtx.clearRect(0, 0, w, h);
+      chainCtx.drawImage(stageCanvas, 0, 0);
+    }
+    // Final composited result is already in ctx from the last pass.
+  }
+
+  function render() {
+    if (!drawSourceToCanvas()) return;
+    ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+    clearOverlay();                 // we now draw floaters on the canvas, not SVG
+    if (activeConditions.has('floaters')) stepFloaters();
+
+    if (compareMode && !activeConditions.has('none')) {
+      const w = stageCanvas.width, h = stageCanvas.height;
+      const splitX = Math.round(w * compareSplit);
+      // Left side: normal (untouched source)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, splitX, h);
+      ctx.clip();
+      ctx.drawImage(sourceCanvas, 0, 0);
+      ctx.restore();
+      // Right side: impaired
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(splitX, 0, w - splitX, h);
+      ctx.clip();
+      applyCondition();
+      ctx.restore();
+    } else {
+      applyCondition();
+    }
+  }
+
+  function loop() {
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+  function drawOnce() {
+    if (rafId) cancelAnimationFrame(rafId);
+    if (activeConditions.has('floaters') || currentSource === 'camera') {
+      loop();
+    } else {
+      render();
+    }
+  }
+
+  const conditionMeta = {
+    none: {
+      title: 'Normal Vision (Emmetropia)',
+      note: 'A reference image with no simulated impairment. Light from a distant object focuses precisely on the retina, producing a clear image across the visual field.',
+      controls: () => []
+    },
+    myopia: {
+      title: 'Myopia (Nearsightedness)',
+      note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
+      controls: () => [
+        snellenPresetControl(),
+        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5)
+      ]
+    },
+    astigmatism: {
+      title: 'Astigmatism',
+      note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Cylinder and axis use minus-cylinder notation: axis 180 (with-the-rule) smears vertically, axis 90 (against-the-rule) smears horizontally, and oblique axes smear diagonally.',
+      controls: () => [
+        sliderControl('astigMag', 'Cylinder (minus cyl)', 0.25, 6, 0.25, ' D'),
+        sliderControl('axis', 'Axis', 0, 180, 1, '°')
+      ]
+    },
+    cataract: {
+      title: 'Cataract (Nuclear Sclerotic)',
+      note: 'Progressive lens opacity scatters and absorbs light, producing a yellow-brown tint, contrast loss, and disabling glare — especially against bright backgrounds or oncoming headlights. The most common age-related form is simulated here.',
+      controls: () => [
+        sliderControl('cataractSev', 'Severity', 0, 1, 0.05, '×')
+      ]
+    },
+    glaucoma: {
+      title: 'Glaucoma',
+      note: 'Progressive optic neuropathy producing characteristic peripheral field loss. <strong>Important:</strong> patients are often unaware until late stages because the brain fills in the missing field.',
+      controls: () => [glaucomaStageControl()]
+    },
+    amd: {
+      title: 'Age-Related Macular Degeneration',
+      note: 'Damage to the macula produces central field loss while peripheral vision is preserved. Patients often report difficulty recognizing faces, reading, and driving. Enable distortion to demonstrate metamorphopsia (wavy/bent straight lines on the Amsler grid).',
+      controls: () => [
+        amdStageControl(),
+        sliderControl('amdDistortion', 'Metamorphopsia', 0, 1, 0.05, '×')
+      ]
+    },
+    diabetic: {
+      title: 'Diabetic Retinopathy',
+      note: 'Damage to retinal blood vessels causes microaneurysms, hemorrhages, and exudates that cast scattered dark patches across vision, along with general blur from macular edema. <strong>Often asymptomatic early</strong> — which is why dilated exams matter for patients with diabetes.',
+      controls: () => [
+        sliderControl('drSeverity', 'Severity', 0.1, 1, 0.05, '×', () => initDR(params.drSeverity))
+      ]
+    },
+    colorblind: {
+      title: 'Color Vision Deficiency',
+      note: 'Inherited color blindness affects how cone cells distinguish hues. <strong>Red-green types (protan/deutan)</strong> are most common, affecting ~8% of men; <strong>blue-yellow (tritan)</strong> is rare. Severity 1.0 simulates dichromacy (the most complete form); lower values simulate anomalous trichromacy, the milder and more common form. Based on the Machado et al. (2009) model.',
+      controls: () => [
+        cvdTypeControl(),
+        sliderControl('cvdSeverity', 'Severity (1.0 = dichromacy)', 0.1, 1, 0.1, '×')
+      ]
+    },
+    floaters: {
+      title: 'Floaters & Posterior Vitreous Detachment',
+      note: 'Vitreous opacities — collagen condensations, often following posterior vitreous detachment — cast shadows on the retina. They drift with eye movement and are most visible against bright, uniform backgrounds.',
+      controls: () => [
+        sliderControl('floaterCount', 'Number of floaters', 1, 25, 1, '', () => initFloaters(params.floaterCount))
+      ]
+    },
+    rp: {
+      title: 'Retinitis Pigmentosa',
+      note: 'Progressive rod photoreceptor degeneration produces characteristic peripheral field loss with an irregular, scalloped boundary — distinct from the smoother gradient of glaucoma. Pathognomonic <strong>bone spicule pigment deposits</strong> form in the mid-periphery (seen by the doctor on exam, not by the patient). Early loss is often a mid-peripheral ring. Rod involvement causes significant night vision loss early. Central acuity is often preserved until late stages, which can delay diagnosis.',
+      controls: () => [rpStageControl()]
+    },
+    presbyopia: {
+      title: 'Presbyopia',
+      note: '<strong>Near vision only.</strong> The Reading and Amsler samples are shown at reading distance (~40 cm) without reading correction; on photos and the camera, the lower (nearer) part of the frame blurs while distance stays clear, and the eye chart (a distance target) stays sharp. Age-related loss of crystalline lens flexibility reduces the eye\'s accommodative amplitude through the 40s–60s. Unlike myopia, distance vision remains clear — only near focus is impaired. Nearly universal by age 50; corrected with reading glasses, bifocals, or progressive lenses.',
+      controls: () => [presbySevControl()]
+    }
+  };
+
+  function sliderControl(key, label, min, max, step, unit = '', onChange = null) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    const id = `ctrl_${key}`;
+    const initial = params[key];
+    wrap.innerHTML = `
+      <label for="${id}">${label} <span class="val" id="${id}_val"></span></label>
+      <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${initial}">
+    `;
+    const input = wrap.querySelector('input');
+    const val = wrap.querySelector('.val');
+    const update = () => {
+      params[key] = parseFloat(input.value);
+      val.textContent = `${params[key]}${unit}`;
+      if (onChange) onChange();
+      if (currentSource === 'image') drawOnce();
+    };
+    input.addEventListener('input', update);
+    update();
+    return wrap;
+  }
+
+  function snellenPresetControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Snellen acuity preset</label><div class="presets" id="snellenPresets"></div>`;
+    const presets = wrap.querySelector('#snellenPresets');
+    Object.entries(snellenBlur).forEach(([label, sigma]) => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = label;
+      b.dataset.sigma = sigma;
+      b.addEventListener('click', () => {
+        params.blurSigma = sigma;
+        const slider = document.getElementById('ctrl_blurSigma');
+        if (slider) { slider.value = sigma; slider.dispatchEvent(new Event('input')); }
+        wrap.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      if (sigma === params.blurSigma) b.setAttribute('aria-pressed', 'true');
+      presets.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function glaucomaStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="glaucomaStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Mild' },
+      { v: 2, label: 'Moderate' },
+      { v: 3, label: 'Severe' },
+      { v: 4, label: 'End Stage' }
+    ];
+    const host = wrap.querySelector('#glaucomaStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = s.label;
+      if (s.v === params.glaucomaStage) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.glaucomaStage = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function amdStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="amdStages"></div>`;
+    const stages = [
+      { v: 12, label: 'Mild',      distortion: 0.35 },
+      { v: 28, label: 'Moderate',  distortion: 0.45 },
+      { v: 44, label: 'Advanced',  distortion: 0.55 },
+      { v: 60, label: 'End Stage', distortion: 0.6 }
+    ];
+    const host = wrap.querySelector('#amdStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = s.label;
+      if (s.v === params.amdSize) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.amdSize = s.v;
+        // Also update the metamorphopsia slider to match the stage
+        params.amdDistortion = s.distortion;
+        const slider = document.getElementById('ctrl_amdDistortion');
+        if (slider) {
+          slider.value = s.distortion;
+          slider.dispatchEvent(new Event('input'));
+        }
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function cvdTypeControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Deficiency type</label><div class="presets" id="cvdTypes"></div>`;
+    const types = [
+      { v: 'protan', label: 'Protan (red)' },
+      { v: 'deutan', label: 'Deutan (green)' },
+      { v: 'tritan', label: 'Tritan (blue)' }
+    ];
+    const host = wrap.querySelector('#cvdTypes');
+    types.forEach(t => {
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.textContent = t.label;
+      if (t.v === params.cvdType) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.cvdType = t.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function rpStageControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="rpStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Early' }, { v: 2, label: 'Moderate' },
+      { v: 3, label: 'Advanced' }, { v: 4, label: 'End-stage' }
+    ];
+    const host = wrap.querySelector('#rpStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.rpStage) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.rpStage = s.v;
+        rpSpicules = null;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function presbySevControl() {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctrl';
+    wrap.innerHTML = `<label>Stage</label><div class="presets" id="presbyStages"></div>`;
+    const stages = [
+      { v: 1, label: 'Early (~45y)' }, { v: 2, label: 'Moderate (~55y)' }, { v: 3, label: 'Advanced (~65y+)' }
+    ];
+    const host = wrap.querySelector('#presbyStages');
+    stages.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'preset'; b.textContent = s.label;
+      if (s.v === params.presbySev) b.setAttribute('aria-pressed', 'true');
+      b.addEventListener('click', () => {
+        params.presbySev = s.v;
+        host.querySelectorAll('.preset').forEach(p => p.setAttribute('aria-pressed', 'false'));
+        b.setAttribute('aria-pressed', 'true');
+        if (currentSource === 'image') drawOnce();
+      });
+      host.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function shortTitle(key) { return conditionMeta[key].title.split(' (')[0].split(' — ')[0]; }
+
+  function buildControls() {
+    ctrlGrid.innerHTML = '';
+    ctrlGrid.classList.remove('entering');
+    void ctrlGrid.offsetWidth; // force reflow so animation restarts
+    ctrlGrid.classList.add('entering');
+
+    const active = activeConditionKeys();
+    const badge = document.getElementById('activeBadge');
+    const tagR = document.getElementById('compareTagR');
+
+    if (active.length === 0) {
+      const meta = conditionMeta.none;
+      clinicalNote.innerHTML = `<strong>${meta.title}.</strong> ${meta.note}`;
+      clearOverlay();
+      if (badge) badge.style.display = 'none';
+      if (tagR) tagR.textContent = 'Impaired';
+      return;
+    }
+
+    clinicalNote.innerHTML = active
+      .map(key => `<strong>${conditionMeta[key].title}.</strong> ${conditionMeta[key].note}`)
+      .join('<hr style="border:none;border-top:1px solid var(--line);margin:12px 0;">');
+
+    active.forEach(key => {
+      const label = document.createElement('div');
+      label.className = 'ctrl-group-label';
+      label.textContent = shortTitle(key);
+      ctrlGrid.appendChild(label);
+      conditionMeta[key].controls().forEach(node => ctrlGrid.appendChild(node));
+    });
+
+    if (activeConditions.has('floaters')) initFloaters(params.floaterCount);
+    if (activeConditions.has('diabetic')) initDR(params.drSeverity);
+    if (activeConditions.has('rp')) { rpSpicules = null; initRP(params.rpStage); }
+    clearOverlay();
+
+    if (badge) {
+      badge.textContent = active.map(shortTitle).join(' + ');
+      badge.style.display = '';
+    }
+    if (tagR) tagR.textContent = active.map(shortTitle).join(' + ');
+
+    const clearBtn = document.getElementById('clearConditionsBtn');
+    if (clearBtn) clearBtn.classList.toggle('visible', active.length > 0);
+
+    updateShareUrl();
+  }
+
+  // Tiny haptic tap when toggling a condition — only fires inside the native
+  // app (Capacitor injects window.Capacitor there); silently does nothing on
+  // the plain website, where that object never exists.
+  function hapticTap() {
+    try {
+      const haptics = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+      if (haptics) haptics.impact({ style: 'Light' });
+    } catch (_) { /* not running inside the app — ignore */ }
+  }
+
+  // Keep the URL in sync with the active combination so it can be copied
+  // and shared/bookmarked (e.g. for patient-education handouts) — loading
+  // that URL later reopens the same combo. No-op inside the native app
+  // (no address bar to copy from there), harmless either way.
+  function updateShareUrl() {
+    if (!window.history || !window.history.replaceState) return;
+    const active = activeConditionKeys();
+    const url = new URL(window.location.href);
+    if (active.length > 0) url.searchParams.set('cond', active.join(','));
+    else url.searchParams.delete('cond');
+    window.history.replaceState(null, '', url.toString());
+  }
+
+  // Apply a specific combination (used by the clear-all button and by the
+  // ?cond= deep link on load). Pass [] to reset to Normal Vision.
+  function setActiveConditions(keys) {
+    const valid = keys.filter(k => CONDITION_ORDER.includes(k));
+    conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    if (valid.length === 0) {
+      activeConditions = new Set(['none']);
+      const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
+      if (noneBtn) noneBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      activeConditions = new Set(valid);
+      valid.forEach(key => {
+        const b = conditionsEl.querySelector(`[data-cond="${key}"]`);
+        if (b) b.setAttribute('aria-pressed', 'true');
+        if (defaults[key]) Object.assign(params, defaults[key]);
+      });
+    }
+    buildControls();
+    if (currentSource === 'image') drawOnce();
+  }
+
+  document.getElementById('clearConditionsBtn').addEventListener('click', () => {
+    setActiveConditions([]);
+    hapticTap();
+  });
+
+  // Combine mode: off by default, so a plain tap on a new condition switches
+  // to it (like the old single-select behavior) instead of layering it onto
+  // whatever was already active. Layering multiple conditions is still
+  // available, but only once this is explicitly turned on — that was the
+  // fix for tapping Cataract while Myopia was active and getting an
+  // unexpected Pro paywall for a "combination" the user never intended.
+  let combineMode = false;
+  const combineBtn = document.getElementById('combineConditionsBtn');
+  function setCombineMode(on) {
+    combineMode = on;
+    combineBtn.setAttribute('aria-pressed', String(on));
+    combineBtn.textContent = on ? 'Combine: On' : 'Combine: Off';
+  }
+  combineBtn.addEventListener('click', () => {
+    if (pluginReady && !isPro) { openPaywall(); return; }
+    setCombineMode(!combineMode);
+    hapticTap();
+  });
+
+  conditionsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.cond');
+    if (!btn) return;
+    const key = btn.dataset.cond;
+    const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
+    const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
+
+    if (key === 'none') {
+      conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      activeConditions = new Set(['none']);
+      btn.setAttribute('aria-pressed', 'true');
+    } else if (alreadyOn) {
+      // Turning off an already-active condition is always allowed, whether
+      // it's the only one selected or part of a combined set.
+      activeConditions.delete(key);
+      btn.setAttribute('aria-pressed', 'false');
+      if (activeConditions.size === 0) {
+        activeConditions.add('none');
+        if (noneBtn) noneBtn.setAttribute('aria-pressed', 'true');
+      }
+    } else {
+      if (pluginReady && !isPro) {
+        if (PRO_CONDITIONS.has(key)) { openPaywall(); return; }
+        if (combineMode && activeConditions.size >= 1 && !activeConditions.has('none')) { openPaywall(); return; }
+      }
+      if (combineMode) {
+        activeConditions.delete('none');
+        if (noneBtn) noneBtn.setAttribute('aria-pressed', 'false');
+        activeConditions.add(key);
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        activeConditions = new Set([key]);
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      if (defaults[key]) Object.assign(params, defaults[key]);
+    }
+
+    hapticTap();
+    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    buildControls();
+    if (currentSource === 'image') drawOnce();
+  });
+
+  // ===== Built-in sample images (drawn procedurally — no external/copyright assets) =====
+  function makeSample(kind) {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 900;
+    const g = c.getContext('2d');
+
+    if (kind === 'chart') {
+      // Snellen-style eye chart. Rows shrink top-to-bottom, so the block of
+      // text is naturally top-heavy — center it vertically in the canvas
+      // rather than anchoring to a fixed y, so the "cover" crop that maps
+      // this onto the viewfinder doesn't leave it looking shifted up with
+      // blank space below.
+      g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#1a1a1a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const rows = [
+        { t: 'E', s: 150 }, { t: 'F P', s: 110 }, { t: 'T O Z', s: 80 },
+        { t: 'L P E D', s: 58 }, { t: 'P E C F D', s: 42 }, { t: 'E D F C Z P', s: 30 }
+      ];
+      let y = 0;
+      const positions = rows.map(r => { const py = y; y += r.s * 0.95 + 24; return py; });
+      const topExtent = positions[0] - rows[0].s * 0.55;
+      const bottomExtent = positions[positions.length - 1] + rows[rows.length - 1].s * 0.55;
+      const offset = (c.height - (bottomExtent - topExtent)) / 2 - topExtent;
+      rows.forEach((r, i) => {
+        g.font = `700 ${r.s}px Arial, sans-serif`;
+        g.fillText(r.t, c.width / 2, positions[i] + offset);
+      });
+    } else if (kind === 'grid') {
+      // Amsler grid with central dot
+      g.fillStyle = '#0b0b0b'; g.fillRect(0, 0, c.width, c.height);
+      g.strokeStyle = '#ffffff'; g.lineWidth = 2;
+      const step = 40, ox = (c.width % step) / 2, oy = (c.height % step) / 2;
+      g.beginPath();
+      for (let x = ox; x <= c.width; x += step) { g.moveTo(x, 0); g.lineTo(x, c.height); }
+      for (let y2 = oy; y2 <= c.height; y2 += step) { g.moveTo(0, y2); g.lineTo(c.width, y2); }
+      g.stroke();
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.arc(c.width / 2, c.height / 2, 9, 0, Math.PI * 2); g.fill();
+    } else if (kind === 'street') {
+      // Night driving scene built around glare: streetlamps down both
+      // sides, oncoming headlights, and receding taillights.
+      const horizonY = c.height * 0.4, vanishX = c.width * 0.5;
+      const sky = g.createLinearGradient(0, 0, 0, c.height);
+      sky.addColorStop(0, '#050810'); sky.addColorStop(0.55, '#0c1220'); sky.addColorStop(1, '#181e28');
+      g.fillStyle = sky; g.fillRect(0, 0, c.width, c.height);
+
+      // Distant skyline silhouettes with scattered lit windows, for depth.
+      g.fillStyle = '#0a0e18';
+      g.fillRect(0, horizonY - 260, c.width*0.30, c.height - (horizonY - 260));
+      g.fillRect(c.width*0.74, horizonY - 190, c.width*0.26, c.height - (horizonY - 190));
+      g.fillStyle = 'rgba(255,214,120,0.55)';
+      for (let i = 0; i < 46; i++) {
+        const onLeft = Math.random() < 0.5;
+        const bh = onLeft ? 260 : 190;
+        const bx = onLeft ? 8 + Math.random()*(c.width*0.30-16) : c.width*0.76 + Math.random()*(c.width*0.22);
+        const by = horizonY - bh + 12 + Math.random()*(bh-24);
+        if (Math.random() < 0.55) g.fillRect(bx, by, 7, 10);
+      }
+
+      // Road surface, converging to a vanishing point at the horizon.
+      g.fillStyle = '#1b1f27'; g.beginPath();
+      g.moveTo(vanishX - c.width*0.045, horizonY); g.lineTo(vanishX + c.width*0.045, horizonY);
+      g.lineTo(c.width*0.97, c.height); g.lineTo(c.width*0.03, c.height); g.closePath(); g.fill();
+
+      // Center lane dashes, thickening as they approach the viewer.
+      g.strokeStyle = '#c9b15a';
+      for (let t = 0; t < 1; t += 0.09) {
+        const y0 = horizonY + (c.height-horizonY)*t, y1 = horizonY + (c.height-horizonY)*Math.min(t+0.045, 1);
+        g.lineWidth = 2 + t*8;
+        g.beginPath(); g.moveTo(vanishX, y0); g.lineTo(vanishX, y1); g.stroke();
+      }
+
+      const perspX = (edge, t) => {
+        const nearX = edge < 0 ? c.width*0.03 : c.width*0.97;
+        const farX = vanishX + edge * c.width*0.045;
+        return nearX + (farX - nearX) * t;
+      };
+      const perspY = t => c.height - (c.height - horizonY) * t;
+      const glow = (x, y, r, rgb) => {
+        const gr = g.createRadialGradient(x,y,0,x,y,r*5.5);
+        gr.addColorStop(0, `rgba(${rgb},0.95)`); gr.addColorStop(0.32, `rgba(${rgb},0.5)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+        g.fillStyle = gr; g.fillRect(x-r*5.5, y-r*5.5, r*11, r*11);
+      };
+
+      // Streetlamps receding down both sides of the road.
+      [0.05, 0.28, 0.5, 0.7, 0.86].forEach(t => {
+        const scale = 1 - t*0.8, groundY = perspY(t);
+        [-1, 1].forEach(edge => {
+          const px = perspX(edge, t) + edge * (18*scale), lampY = groundY - 130*scale;
+          g.strokeStyle = 'rgba(15,17,22,0.9)'; g.lineWidth = Math.max(1, 4*scale);
+          g.beginPath(); g.moveTo(px, groundY); g.lineTo(px, lampY); g.stroke();
+          glow(px, lampY, 46*scale, '255,238,180');
+          g.fillStyle = '#fff8e0'; g.beginPath(); g.arc(px, lampY, 4*scale+1, 0, Math.PI*2); g.fill();
+        });
+      });
+
+      // Oncoming headlights, white, in the near (left) lane.
+      [0.08, 0.3, 0.55].forEach(t => {
+        const scale = 1 - t*0.75, laneX = vanishX - c.width*0.02 - (vanishX - perspX(-1,t))*0.35, y = perspY(t) - 10*scale;
+        [-1, 1].forEach(side => {
+          const x = laneX + side*10*scale, r = 22*scale;
+          glow(x, y, r, '255,248,215');
+          g.fillStyle = '#fffdf0'; g.beginPath(); g.arc(x, y, r*0.4, 0, Math.PI*2); g.fill();
+        });
+      });
+
+      // Receding taillights, red, in the far (right) lane.
+      [0.12, 0.35, 0.6].forEach(t => {
+        const scale = 1 - t*0.75, laneX = vanishX + c.width*0.02 + (perspX(1,t) - vanishX)*0.35, y = perspY(t) - 10*scale;
+        [-1, 1].forEach(side => {
+          const x = laneX + side*9*scale, r = 14*scale;
+          glow(x, y, r, '255,60,50');
+          g.fillStyle = '#ff6b5c'; g.beginPath(); g.arc(x, y, r*0.35, 0, Math.PI*2); g.fill();
+        });
+      });
+    } else if (kind === 'face') {
+      c.width = 900; c.height = 1100;
+      g.fillStyle = '#cfc4b4'; g.fillRect(0, 0, c.width, c.height);
+      const bgg = g.createRadialGradient(c.width/2, c.height*0.38, 0, c.width/2, c.height*0.38, c.width*0.9);
+      bgg.addColorStop(0, 'rgba(255,248,240,0.55)'); bgg.addColorStop(1, 'rgba(158,146,132,0.38)');
+      g.fillStyle = bgg; g.fillRect(0, 0, c.width, c.height);
+      const cx = c.width/2, hy = c.height*0.42;
+      // Neck
+      g.fillStyle = '#e8b080';
+      g.beginPath(); g.roundRect(cx-75, hy+235, 150, 220, 8); g.fill();
+      // Head
+      g.fillStyle = '#f2c085';
+      g.beginPath(); g.ellipse(cx, hy, 210, 260, 0, 0, Math.PI*2); g.fill();
+      // Hair
+      g.fillStyle = '#5c3a1e';
+      g.beginPath(); g.ellipse(cx, hy-130, 225, 155, 0, Math.PI, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx-200, hy+15, 35, 120, -0.25, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+200, hy+15, 35, 120, 0.25, 0, Math.PI*2); g.fill();
+      // Ears
+      g.fillStyle = '#e0a870';
+      g.beginPath(); g.ellipse(cx-208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+208, hy+18, 22, 32, 0, 0, Math.PI*2); g.fill();
+      // Eyebrows
+      g.strokeStyle='#4a2e18'; g.lineWidth=9; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-95, hy-64); g.quadraticCurveTo(cx-58, hy-80, cx-18, hy-68); g.stroke();
+      g.beginPath(); g.moveTo(cx+18, hy-68); g.quadraticCurveTo(cx+58, hy-80, cx+95, hy-64); g.stroke();
+      // Eye whites
+      g.fillStyle='#fff';
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, 0, Math.PI*2); g.fill();
+      // Iris
+      g.fillStyle='#3d6e8e';
+      g.beginPath(); g.arc(cx-62, hy-18, 15, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 15, 0, Math.PI*2); g.fill();
+      // Pupil
+      g.fillStyle='#160e0a';
+      g.beginPath(); g.arc(cx-62, hy-18, 7, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+62, hy-18, 7, 0, Math.PI*2); g.fill();
+      // Highlight
+      g.fillStyle='rgba(255,255,255,0.82)';
+      g.beginPath(); g.arc(cx-57, hy-24, 4, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+67, hy-24, 4, 0, Math.PI*2); g.fill();
+      // Upper lid
+      g.strokeStyle='#1e1008'; g.lineWidth=3;
+      g.beginPath(); g.ellipse(cx-62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      g.beginPath(); g.ellipse(cx+62, hy-18, 36, 21, 0, Math.PI, Math.PI*2); g.stroke();
+      // Nose
+      g.strokeStyle='#c47e50'; g.lineWidth=3.5; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-10,hy-8); g.lineTo(cx-18,hy+62); g.quadraticCurveTo(cx-32,hy+72,cx-28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx+10,hy-8); g.lineTo(cx+18,hy+62); g.quadraticCurveTo(cx+32,hy+72,cx+28,hy+82); g.stroke();
+      g.beginPath(); g.moveTo(cx-28,hy+82); g.quadraticCurveTo(cx,hy+92,cx+28,hy+82); g.stroke();
+      // Lips
+      g.fillStyle='#cc7060';
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx-24,hy+112,cx,hy+115); g.quadraticCurveTo(cx+24,hy+112,cx+48,hy+122); g.quadraticCurveTo(cx+30,hy+148,cx,hy+152); g.quadraticCurveTo(cx-30,hy+148,cx-48,hy+122); g.closePath(); g.fill();
+      g.strokeStyle='#a85045'; g.lineWidth=2;
+      g.beginPath(); g.moveTo(cx-48,hy+122); g.quadraticCurveTo(cx,hy+132,cx+48,hy+122); g.stroke();
+      // Clothing
+      g.fillStyle='#2e4f7a';
+      g.beginPath(); g.moveTo(0,c.height); g.lineTo(0,hy+360); g.quadraticCurveTo(cx-280,hy+290,cx-90,hy+240); g.lineTo(cx-78,hy+232); g.lineTo(cx+78,hy+232); g.lineTo(cx+90,hy+240); g.quadraticCurveTo(cx+280,hy+290,c.width,hy+360); g.lineTo(c.width,c.height); g.closePath(); g.fill();
+    } else if (kind === 'reading') {
+      // A book passage at a comfortable large-print size — good for testing
+      // presbyopia / near-vision acuity rather than a clinical form. Height
+      // is sized to the measured passage length (rather than a fixed tall
+      // canvas) so the "cover" crop that maps this onto the viewfinder
+      // shows the whole passage instead of blank page below it.
+      c.width = 900;
+      const marginX = 70, maxW = c.width - marginX*2;
+      const titleSize = 22, bodySize = 30, lineHeight = bodySize * 1.6, attribSize = 16;
+      const topPad = 56, titleToRule = 22, ruleToBody = 40, bodyToAttrib = lineHeight * 0.9, bottomPad = 56;
+
+      const passage = 'Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice, “without pictures or conversations?” So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.';
+
+      g.font = `400 ${bodySize}px Georgia, serif`;
+      const lines = [];
+      let line = '';
+      passage.split(' ').forEach(word => {
+        const test = line + (line ? ' ' : '') + word;
+        if (g.measureText(test).width > maxW && line) { lines.push(line); line = word; }
+        else line = test;
+      });
+      if (line) lines.push(line);
+
+      const contentH = titleSize*1.3 + titleToRule + ruleToBody + lines.length*lineHeight + bodyToAttrib + attribSize*1.3;
+      c.height = Math.round(topPad + contentH + bottomPad);
+
+      g.fillStyle = '#fbf6ec'; g.fillRect(0, 0, c.width, c.height);
+      g.textAlign = 'left'; g.textBaseline = 'top';
+
+      let ry = topPad;
+      g.fillStyle = '#2a2418'; g.font = `italic 400 ${titleSize}px Georgia, serif`;
+      g.fillText('Alice’s Adventures in Wonderland', marginX, ry);
+      ry += titleSize*1.3 + titleToRule;
+      g.strokeStyle = '#d8cdb0'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(marginX, ry); g.lineTo(c.width-marginX, ry); g.stroke();
+      ry += ruleToBody;
+
+      g.font = `400 ${bodySize}px Georgia, serif`; g.fillStyle = '#1c1810';
+      lines.forEach(l => { g.fillText(l, marginX, ry); ry += lineHeight; });
+      ry += bodyToAttrib;
+      g.font = `italic 400 ${attribSize}px Georgia, serif`; g.fillStyle = '#8a8066';
+      g.fillText('— Lewis Carroll', marginX, ry);
+    } else if (kind === 'garden') {
+      // Colorful flowers (great for color blindness + general)
+      g.fillStyle = '#bfe3f7'; g.fillRect(0,0,c.width,c.height);
+      g.fillStyle = '#6fae54'; g.fillRect(0, c.height*0.62, c.width, c.height*0.38);
+      const cols = ['#e0473e','#e8913a','#f0d33b','#d94f8a','#7d4fc0','#ffffff'];
+      for (let i=0;i<70;i++){
+        const x=Math.random()*c.width, y=c.height*0.62+Math.random()*c.height*0.36;
+        const col=cols[(Math.random()*cols.length)|0], pr=10+Math.random()*16;
+        g.strokeStyle='#3f7d36'; g.lineWidth=3; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+18+Math.random()*20); g.stroke();
+        for(let p=0;p<6;p++){const a=p/6*Math.PI*2;g.fillStyle=col;g.beginPath();g.ellipse(x+Math.cos(a)*pr*0.6,y+Math.sin(a)*pr*0.6,pr*0.5,pr*0.32,a,0,Math.PI*2);g.fill();}
+        g.fillStyle='#f5d23b'; g.beginPath(); g.arc(x,y,pr*0.4,0,Math.PI*2); g.fill();
+      }
+    }
+    return c;
+  }
+
+  // Real photos drop-in: place files in vision-simulator/samples/ and they
+  // override the procedural fallback automatically.
+  const PHOTO_SAMPLES = {
+    street: 'samples/night-street.jpg',
+    garden: 'samples/garden.jpg',
+    face:   'samples/portrait.jpg'
+  };
+
+  function loadSample(kind) {
+    stopCamera();
+    currentSampleKind = kind;
+    const photoPath = PHOTO_SAMPLES[kind];
+    if (photoPath) {
+      const img = new Image();
+      img.onload = () => {
+        uploadedImage = img;
+        currentSource = 'image';
+        emptyState.style.display = 'none';
+        resizeStage();
+        drawOnce();
+      };
+      img.onerror = () => _loadSampleProcedural(kind);
+      img.src = photoPath;
+      return;
+    }
+    _loadSampleProcedural(kind);
+  }
+
+  function _loadSampleProcedural(kind) {
+    const c = makeSample(kind);
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      currentSource = 'image';
+      emptyState.style.display = 'none';
+      resizeStage();
+      drawOnce();
+    };
+    img.src = c.toDataURL('image/png');
+  }
+
+  camToggle.addEventListener('click', () => {
+    if (currentSource === 'camera') stopCamera(); else startCamera();
+  });
+  flipBtn.addEventListener('click', flipCamera);
+  document.getElementById('upload').addEventListener('change', handleUpload);
+
+  sampleRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-sample]');
+    if (!btn) return;
+    loadSample(btn.dataset.sample);
+  });
+
+  function positionDivider() {
+    compareLine.style.left = (compareSplit * 100) + '%';
+    const tagL = document.getElementById('compareTagL');
+    const tagR = document.getElementById('compareTagR');
+    // hide a label if the divider gets too close to that edge
+    if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
+    if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
+  }
+  compareBtn.addEventListener('click', () => {
+    if (pluginReady && !isPro) { openPaywall(); return; }
+    compareMode = !compareMode;
+    compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
+    const lbl = document.getElementById('compareLabel');
+    if (lbl) lbl.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
+    document.body.classList.toggle('compare', compareMode);
+    positionDivider();
+    if (currentSource === 'image') drawOnce();
+  });
+
+  // Drag the compare divider across the stage (before/after wipe).
+  const stageWrap = document.querySelector('.stage-wrap');
+  let dragging = false;
+  function updateSplitFromEvent(clientX) {
+    const rect = stageWrap.getBoundingClientRect();
+    let t = (clientX - rect.left) / rect.width;
+    t = Math.max(0.02, Math.min(0.98, t));
+    compareSplit = t;
+    positionDivider();
+    if (currentSource === 'image') drawOnce();
+  }
+  stageWrap.addEventListener('pointerdown', (e) => {
+    if (!compareMode || activeConditions.has('none')) return;
+    dragging = true;
+    stageWrap.setPointerCapture(e.pointerId);
+    updateSplitFromEvent(e.clientX);
+    e.preventDefault();
+  });
+  stageWrap.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    updateSplitFromEvent(e.clientX);
+    e.preventDefault();
+  });
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { stageWrap.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  stageWrap.addEventListener('pointerup', endDrag);
+  stageWrap.addEventListener('pointercancel', endDrag);
+
+  resizeStage();
+  // Deep link: ?cond=cataract,glaucoma opens straight into that combination.
+  const urlConds = new URLSearchParams(window.location.search).get('cond');
+  if (urlConds) {
+    setActiveConditions(urlConds.split(',').map(s => s.trim()).filter(Boolean));
+  } else {
+    buildControls();
+  }
+  updateConditionsScrollState();
+  updateSamplesScrollState();
+
+  window.addEventListener('beforeunload', stopCamera);
+})();
+</script>
+
+<script>
+  // Hide web-only elements when running inside the Capacitor native app wrapper
+  if (window.Capacitor) {
+    document.getElementById('backToSite').style.display   = 'none';
+    document.getElementById('appStoreBadge').style.display = 'none';
+    document.getElementById('homeLink').style.display      = 'none';
+    document.getElementById('privacyLink').style.display   = 'inline';
+    document.documentElement.classList.add('is-app');
+  }
+
+  const heroInfoBtn = document.getElementById('heroInfoBtn');
+  if (heroInfoBtn) {
+    heroInfoBtn.addEventListener('click', () => {
+      const expanded = document.documentElement.classList.toggle('info-expanded');
+      heroInfoBtn.setAttribute('aria-expanded', String(expanded));
+      heroInfoBtn.textContent = expanded ? 'Hide' : 'About';
+    });
+  }
+</script>
+</body>
+</html>
