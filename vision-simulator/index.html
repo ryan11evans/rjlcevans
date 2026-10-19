@@ -687,6 +687,7 @@
   let rafId = null;
   let currentSource = null;
   let uploadedImage = null;
+  let currentSampleKind = null;   // which built-in sample is showing (null = upload/camera)
   let facingMode = 'environment';
   let activeConditions = new Set(['none']);
   // Fixed compositing order when multiple conditions are combined — roughly
@@ -698,12 +699,12 @@
 
   const defaults = {
     myopia:      { blurSigma: 8 },
-    astigmatism: { astigMag: 6, axis: 90 },
+    astigmatism: { astigMag: 1.5, axis: 180 },
     cataract:    { cataractSev: 0.5 },
     glaucoma:    { glaucomaStage: 2 },
-    amd:         { amdSize: 12, amdDistortion: 0 },
+    amd:         { amdSize: 12, amdDistortion: 0.35 },
     diabetic:    { drSeverity: 0.5 },
-    colorblind:  { cvdType: 'deutan' },
+    colorblind:  { cvdType: 'deutan', cvdSeverity: 1 },
     floaters:    { floaterCount: 6 },
     rp:          { rpStage: 2 },
     presbyopia:  { presbySev: 2 }
@@ -711,14 +712,15 @@
 
   const params = {
     blurSigma: 8,
-    astigMag: 6,
-    axis: 90,
+    astigMag: 1.5,
+    axis: 180,
     cataractSev: 0.5,
     glaucomaStage: 2,
     amdSize: 12,
-    amdDistortion: 0,
+    amdDistortion: 0.35,
     drSeverity: 0.5,
     cvdType: 'deutan',
+    cvdSeverity: 1,
     floaterCount: 6,
     rpStage: 2,
     presbySev: 2
@@ -776,6 +778,7 @@
       video.srcObject = stream;
       await video.play();
       currentSource = 'camera';
+      currentSampleKind = null;
       uploadedImage = null;
       emptyState.style.display = 'none';
       resizeStage();
@@ -802,6 +805,7 @@
   function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+    currentSampleKind = null;
     stopCamera();
     const img = new Image();
     img.onload = () => {
@@ -844,387 +848,611 @@
   }
 
   // ===== Filters =====
-  const _blurCanvasA = document.createElement('canvas');
-  const _blurCanvasB = document.createElement('canvas');
+  // iOS WKWebView (the App Store app) ships with CanvasRenderingContext2D.filter
+  // turned off, so nothing here uses ctx.filter. Every effect is built from
+  // drawImage scaling, compositing modes, gradients and, where needed, a small
+  // getImageData pass. Radii are in "reference pixels" for an 840px-wide
+  // iPhone stage and scaled by viewK(), so iPad and iPhone look the same.
   const _chainCanvas = document.createElement('canvas'); // holds intermediate result when chaining multiple conditions
-  function applyBlur(sigma) {
-    if (sigma <= 0) {
-      ctx.drawImage(sourceCanvas, 0, 0);
-      return;
-    }
-    const w = stageCanvas.width, h = stageCanvas.height;
-    const scale = Math.max(0.04, Math.min(1, 1 / (sigma * 0.6 + 1)));
-    const sw = Math.max(2, Math.round(w * scale));
-    const sh = Math.max(2, Math.round(h * scale));
-
-    _blurCanvasA.width = sw; _blurCanvasA.height = sh;
-    _blurCanvasB.width = sw; _blurCanvasB.height = sh;
-    const aCtx = _blurCanvasA.getContext('2d');
-
-    aCtx.imageSmoothingEnabled = true;
-    aCtx.imageSmoothingQuality = 'high';
-    aCtx.drawImage(sourceCanvas, 0, 0, sw, sh);
-
-    const passes = Math.min(3, Math.max(1, Math.round(sigma / 6)));
-    let src = _blurCanvasA, dst = _blurCanvasB;
-    for (let i = 0; i < passes; i++) {
-      const dCtx = dst.getContext('2d');
-      dCtx.imageSmoothingEnabled = true;
-      dCtx.imageSmoothingQuality = 'high';
-      dCtx.clearRect(0, 0, sw, sh);
-      dCtx.drawImage(src, 0, 0);
-      const tmp = src; src = dst; dst = tmp;
-    }
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(src, 0, 0, sw, sh, 0, 0, w, h);
+  function mkCanvas() { return document.createElement('canvas'); }
+  function sizeTo(c, w, h) {
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const x = c.getContext('2d');
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    return x;
   }
-
-  function applyAstigmatism(magnitude, axisDeg) {
-    ctx.filter = `blur(${Math.max(0.5, magnitude * 0.15)}px)`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
-
-    const rad = (axisDeg * Math.PI) / 180;
-    const dx = Math.cos(rad);
-    const dy = Math.sin(rad);
-    const steps = Math.max(4, Math.round(magnitude));
-    const span = magnitude * 1.2;
-    ctx.globalAlpha = 1 / (steps * 2 + 1);
-    for (let i = -steps; i <= steps; i++) {
-      const t = (i / steps) * span;
-      ctx.drawImage(sourceCanvas, dx * t, dy * t);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function applyCataract(severity) {
-    // Nuclear sclerotic cataract: gentle, clinically graded. Light scatter in
-    // the lens softens detail and lifts a warm veil over the scene (contrast
-    // loss), the nucleus yellows/browns (blue absorption), and bright sources
-    // bloom into glare and halos. Faces stay recognizable at mild severity;
-    // at severe the scene is hazy and dim but shapes remain discernible.
-    const s = Math.max(0, Math.min(1, severity));
+  // Blur/size scale relative to the iPhone stage (840×525). Photos are
+  // cover-fitted, so content scale follows whichever side is relatively larger
+  // (on a 4:3 iPad stage that is the height).
+  function viewK() {
     const w = stageCanvas.width, h = stageCanvas.height;
-    if (s <= 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
-    // Scale blur/halo radii to the canvas so the look matches on phone and iPad.
-    const k = Math.max(w, h) / 1000;
-
-    // 1. Unblurred base underneath, so the blurred layer's soft edges don't
-    //    fade to transparent/black at the frame border.
-    ctx.drawImage(sourceCanvas, 0, 0);
-
-    // 2. Blur + contrast loss + mild dimming + yellowing (sepia), all eased
-    //    so the low end of the slider stays subtle.
-    const blurPx = k * 10 * Math.pow(s, 1.2);
-    ctx.filter = `blur(${blurPx}px) contrast(${1 - 0.38 * s}) ` +
-                 `brightness(${1 - 0.10 * s}) saturate(${1 - 0.30 * s}) sepia(${0.30 * s})`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
-
-    // 3. Glare and halos: isolate only the brightest areas (lights, sky,
-    //    windows), blur them wide, and add them back. Mid-tones such as skin
-    //    are left out, so bright faces don't blow out.
-    ctx.globalCompositeOperation = 'lighter';
-    const halos = [
-      { blur: k * (4 + 10 * s),   a: 0.25 + 0.60 * s },
-      { blur: k * (16 + 40 * s),  a: 0.25 + 0.80 * s },
-      { blur: k * (16 + 40 * s),  a: 0.10 + 0.60 * s },
-      { blur: k * (50 + 100 * s), a: 0.10 + 0.75 * s },
-    ];
-    for (const p of halos) {
-      ctx.globalAlpha = p.a;
-      ctx.filter = `grayscale(0.4) brightness(0.55) contrast(10) blur(${p.blur}px)`;
-      ctx.drawImage(sourceCanvas, 0, 0);
-    }
-    ctx.filter = 'none';
-    ctx.globalAlpha = 1;
-
-    // 4. Amber multiply: absorbs blue so whites read cream/yellow and lights
-    //    turn amber, without the heavy darkening of a brown overlay.
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(255, 214, 150, ${0.15 + 0.55 * s})`;
-    ctx.fillRect(0, 0, w, h);
-    ctx.globalCompositeOperation = 'source-over';
-
-    // 5. Milky scatter veil (lifts blacks = classic cataract contrast loss).
-    ctx.fillStyle = `rgba(214, 196, 160, ${0.04 + 0.13 * s})`;
-    ctx.fillRect(0, 0, w, h);
-
-    // 6. Advanced only: a light brunescent dimming in the top third of the
-    //    slider. Kept low so shapes stay visible.
-    if (s > 0.6) {
-      ctx.fillStyle = `rgba(55, 36, 14, ${(s - 0.6) * 0.45})`;
-      ctx.fillRect(0, 0, w, h);
-    }
+    return w >= h ? Math.max(w / 840, h / 525) : Math.max(h / 840, w / 525);
   }
-
-  function applyGlaucoma(stage) {
-    const w = stageCanvas.width, h = stageCanvas.height;
-    ctx.filter = `blur(${0.5 + stage * 0.3}px)`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
-
-    const half = Math.hypot(w, h) / 2;
-    const stages = {
-      1: { clear: 0.78, fade: 0.95 },
-      2: { clear: 0.55, fade: 0.78 },
-      3: { clear: 0.32, fade: 0.55 },
-      4: { clear: 0.15, fade: 0.32 }
+  function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+  function smooth(a, b, x) { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); }
+  // Small deterministic PRNG so spots/floaters/masks are identical every frame.
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
-    const cfg = stages[stage] || stages[1];
-    const cx = w/2, cy = h/2;
-
-    const grad = ctx.createRadialGradient(cx, cy, half * cfg.clear, cx, cy, half * cfg.fade);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,1)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, w, h);
-    ctx.arc(cx, cy, half * cfg.fade, 0, Math.PI * 2, true);
-    ctx.fillStyle = '#000';
-    ctx.fill('evenodd');
-    ctx.restore();
+  }
+  // Smooth 1-D periodic noise (for scalloped/uneven field edges).
+  function angNoise(seed, n) {
+    const r = mulberry32(seed), v = [];
+    for (let i = 0; i < n; i++) v.push(r());
+    return (a) => { // a in radians
+      const f = ((a / (Math.PI * 2)) % 1 + 1) % 1 * n, i = Math.floor(f), t = f - i;
+      const s = t * t * (3 - 2 * t);
+      return v[i % n] * (1 - s) + v[(i + 1) % n] * s;
+    };
   }
 
-  function applyAMD(sizePct, distortion) {
+  // Gaussian-like blur without ctx.filter: progressive 2× reductions, then a
+  // two-step smooth enlargement. It always covers the whole destination, so
+  // there is no dark band at the frame edge. `radius` is in source pixels.
+  const _bl = [mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas(), mkCanvas()];
+  function _down(src, radius) {
+    const sw = src.width, sh = src.height;
+    if (!(radius > 0.5)) return [src, sw, sh];
+    const f = Math.max(0.008, Math.min(1, 1 / (radius * 0.6 + 1)));
+    const tw = Math.max(2, Math.round(sw * f)), th = Math.max(2, Math.round(sh * f));
+    let cur = src, cw = sw, ch = sh, i = 0;
+    while (cw / 2 > tw && i < 4) {
+      const nw = Math.max(tw, Math.round(cw / 2)), nh = Math.max(th, Math.round(ch / 2));
+      const x = sizeTo(_bl[i], nw, nh);
+      x.clearRect(0, 0, nw, nh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, nw, nh);
+      cur = _bl[i++]; cw = nw; ch = nh;
+    }
+    if (cw !== tw || ch !== th) {
+      const x = sizeTo(_bl[i], tw, th);
+      x.clearRect(0, 0, tw, th); x.drawImage(cur, 0, 0, cw, ch, 0, 0, tw, th);
+      cur = _bl[i]; cw = tw; ch = th;
+    }
+    return [cur, cw, ch];
+  }
+  function _up(cur, cw, ch, dctx, dw, dh, a) {
+    dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = 'high';
+    if (cw * 3 < dw) { // intermediate enlargement removes blocky bilinear artifacts
+      const mw = cw * 3, mh = ch * 3, x = sizeTo(_bl[5], mw, mh);
+      x.clearRect(0, 0, mw, mh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, mw, mh);
+      cur = _bl[5]; cw = mw; ch = mh;
+    }
+    dctx.globalAlpha = a; dctx.drawImage(cur, 0, 0, cw, ch, 0, 0, dw, dh); dctx.globalAlpha = 1;
+  }
+  function blurDraw(src, dctx, radius, alpha, dw, dh) {
+    dw = dw || stageCanvas.width; dh = dh || stageCanvas.height;
+    const [cur, cw, ch] = _down(src, radius);
+    _up(cur, cw, ch, dctx, dw, dh, alpha == null ? 1 : alpha);
+  }
+  // Blurred layer whose tinting/masking runs at the low blur resolution
+  // (cheap), then is enlarged once onto dctx. ops(x, lw, lh, sx, sy) works in
+  // low-res pixels; sx/sy convert stage coordinates.
+  const _sl = [mkCanvas(), mkCanvas()];
+  function softLayer(slot, src, radius, ops, dctx, alpha) {
     const w = stageCanvas.width, h = stageCanvas.height;
-    const cx = w/2, cy = h/2;
-    const scotomaR = Math.min(w, h) * (sizePct / 100);
+    const [cur, cw, ch] = _down(src, Math.max(radius, 1.2));
+    const x = sizeTo(_sl[slot], cw, ch);
+    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+    x.clearRect(0, 0, cw, ch); x.drawImage(cur, 0, 0);
+    ops(x, cw, ch, cw / w, ch / h);
+    x.globalCompositeOperation = 'source-over';
+    _up(_sl[slot], cw, ch, dctx, w, h, alpha == null ? 1 : alpha);
+  }
 
-    // Always draw the full image normally — peripheral vision is unaffected.
-    ctx.drawImage(sourceCanvas, 0, 0);
+  function applyBlur(sigma) {
+    blurDraw(sourceCanvas, ctx, sigma * viewK());
+  }
 
-    // Distortion is confined to the scotoma region only, falling off to zero
-    // at the scotoma edge (where it meets normal peripheral vision).
-    if (distortion > 0) {
-      const maxAmp = distortion * 22;
-      const sliceH = 2;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, scotomaR, 0, Math.PI * 2);
-      ctx.clip();
-      for (let y = Math.floor(cy - scotomaR); y < cy + scotomaR; y += sliceH) {
-        const r = Math.abs(y - cy) / scotomaR;       // 0 at center row, 1 at edge
-        const fade = 1 - r * r;                       // quadratic: strongest centrally
-        const dx = Math.sin(y * 0.05) * maxAmp * fade;
-        ctx.drawImage(sourceCanvas, 0, y, w, sliceH, dx, y, w, sliceH);
+  // Low-resolution loss mask (alpha = how much of the field is lost), built
+  // once per stage and stage size, then enlarged smoothly for soft edges.
+  // fn(X, Y) gets visual-field degrees: X right (+), Y up (+), ±35° across.
+  const _maskCache = new Map();
+  function fieldMask(key, fn) {
+    const w = stageCanvas.width, h = stageCanvas.height;
+    const mw = 160, mh = Math.max(2, Math.round(160 * h / w));
+    const ck = key + '|' + mw + 'x' + mh;
+    let c = _maskCache.get(ck);
+    if (c) return c;
+    if (_maskCache.size > 40) _maskCache.clear();
+    c = mkCanvas(); c.width = mw; c.height = mh;
+    const x = c.getContext('2d'), id = x.createImageData(mw, mh), d = id.data;
+    const half = 35;
+    for (let j = 0; j < mh; j++) {
+      for (let i = 0; i < mw; i++) {
+        const X = ((i + 0.5) / mw * 2 - 1) * half;
+        const Y = (1 - (j + 0.5) / mh * 2) * half * (mh / mw);
+        const p = (j * mw + i) * 4;
+        d[p] = d[p + 1] = d[p + 2] = 0;
+        d[p + 3] = Math.round(clamp01(fn(X, Y)) * 255);
       }
-      ctx.restore();
+    }
+    x.putImageData(id, 0, 0);
+    _maskCache.set(ck, c);
+    return c;
+  }
+  // Draws a degraded (blurred, faded, desaturated) copy of the source only
+  // where `mask` says the field is lost. Lost field looks like a dim smudge
+  // that the brain "fills in", not a black hole.
+
+  function applyFieldLoss(mask, blurR, desat, veil) {
+    softLayer(0, sourceCanvas, blurR * viewK(), (x, lw, lh) => {
+      x.globalCompositeOperation = 'saturation';
+      x.fillStyle = `rgba(128,128,128,${desat})`; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = veil; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'destination-in';
+      x.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, lw, lh);
+    }, ctx);
+  }
+
+  // ===== Astigmatism =====
+  // Minus-cylinder convention. The meridian 90° away from the axis is out of
+  // focus, so points smear along that meridian. TABO axes are read by the
+  // examiner facing the patient; in the patient's own view that mirrors, so
+  // the smear runs at (90° − axis) counter-clockwise from 3 o'clock:
+  // axis 180 (with-the-rule) → vertical smear, 90 → horizontal, 45 → "/" .
+  const _astA = mkCanvas(), _astB = mkCanvas();
+  function applyAstigmatism(cyl, axisDeg) {
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    const c = Math.max(0, cyl);
+    const hw = Math.max(2, Math.round(w / 2)), hh = Math.max(2, Math.round(h / 2));
+    const a = sizeTo(_astA, hw, hh);
+    a.clearRect(0, 0, hw, hh);
+    blurDraw(sourceCanvas, a, 0.6 * c * k, 1, hw, hh);  // circle-of-least-confusion softening
+    const phi = (90 - axisDeg) * Math.PI / 180;
+    const ux = Math.cos(phi), uy = -Math.sin(phi);       // canvas y points down
+    const span = 3.4 * c * k;                            // half-length of smear, half-res px
+    const b = sizeTo(_astB, hw, hh);
+    b.globalCompositeOperation = 'source-over';
+    b.globalAlpha = 1; b.clearRect(0, 0, hw, hh); b.drawImage(_astA, 0, 0);
+    const n = Math.max(2, Math.min(18, Math.ceil(span / 1.1)));
+    let count = 1;
+    for (let i = 1; i <= n; i++) {
+      const t = (i / n) * span;
+      for (const sgn of [1, -1]) {
+        count++;
+        b.globalAlpha = 1 / count;                        // running average = smooth box blur
+        b.drawImage(_astA, ux * t * sgn, uy * t * sgn);
+      }
+    }
+    b.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(_astB, 0, 0, hw, hh, 0, 0, w, h);
+  }
+
+  // ===== Cataract =====
+  // Nuclear sclerotic cataract: graded blur, contrast loss from a milky
+  // scatter veil, yellow-brown absorption, and glare/halos around bright
+  // sources. Glare is measured on a small copy of the frame and scaled down
+  // when the whole frame is bright (a white page), so text stays readable.
+  const _glSmall = mkCanvas();
+  const _glCtx = _glSmall.getContext('2d', { willReadFrequently: true });
+  let _glN = 0, _glDark = 1;
+  function applyCataract(severity) {
+    const s = clamp01(severity);
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    if (s <= 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
+
+    // Glare: highlights only, scaled by how dark the scene is overall. On the
+    // live camera the 160px glare map is refreshed every 3rd frame.
+    const gw = 160, gh = Math.max(2, Math.round(160 * h / w));
+    if (currentSource !== 'camera' || (_glN++ % 3) === 0 || _glSmall.width !== gw || _glSmall.height !== gh) {
+      if (_glSmall.width !== gw || _glSmall.height !== gh) { _glSmall.width = gw; _glSmall.height = gh; }
+      _glCtx.imageSmoothingEnabled = true; _glCtx.imageSmoothingQuality = 'high';
+      _glCtx.clearRect(0, 0, gw, gh);
+      _glCtx.drawImage(sourceCanvas, 0, 0, gw, gh);
+      const id = _glCtx.getImageData(0, 0, gw, gh), d = id.data;
+      let sum = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        sum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const v = Math.max(r, g, b) / 255;
+        const t = v > 0.72 ? Math.pow((v - 0.72) / 0.28, 1.6) : 0;
+        d[i] = r * t; d[i + 1] = g * t; d[i + 2] = b * t; d[i + 3] = 255;
+      }
+      const mean = sum / (d.length / 4) / 255;
+      _glDark = 1 - smooth(0.3, 0.85, mean);              // 1 on a night street, ~0 on a white page
+      _glCtx.putImageData(id, 0, 0);
+    }
+    const darkness = _glDark;
+
+    // Blur, glare and tint all run at the blur's low resolution, then one
+    // smooth enlargement onto the stage.
+    softLayer(0, sourceCanvas, 9 * Math.pow(s, 1.2) * k, (x, lw, lh) => {
+      if (darkness > 0.01) {
+        x.globalCompositeOperation = 'lighter';
+        blurDraw(_glSmall, x, 1.2 + 2.0 * s, (0.30 + 0.55 * s) * darkness, lw, lh);
+        blurDraw(_glSmall, x, 5 + 9 * s, (0.30 + 0.70 * s) * darkness, lw, lh);
+      }
+      x.globalCompositeOperation = 'saturation';            // mild color washout
+      x.fillStyle = `rgba(128,128,128,${0.30 * s})`;
+      x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'multiply';              // yellowing (blue absorption)
+      x.fillStyle = `rgba(255,214,150,${0.15 + 0.55 * s})`;
+      x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = `rgba(214,196,160,${0.05 + 0.22 * s})`;  // milky scatter veil = contrast loss
+      x.fillRect(0, 0, lw, lh);
+      if (s > 0.6) {                                          // advanced brunescence: a little dimmer
+        x.fillStyle = `rgba(55,36,14,${(s - 0.6) * 0.45})`;
+        x.fillRect(0, 0, lw, lh);
+      }
+    }, ctx);
+  }
+
+  // ===== Glaucoma =====
+  // Right-eye field (nasal = left of the view). Early: superior nasal step and
+  // superior arcuate defect; then inferior defects and constriction; end stage
+  // leaves a central island plus a temporal island. Lost field is shown as a
+  // faded blur (filling-in), never pure black.
+  function glaucomaLoss(stage) {
+    const nz = angNoise(97 + stage, 9);
+    return (X, Y) => {
+      const r = Math.hypot(X, Y), th = Math.atan2(Y, X);
+      const wob = 0.75 + 0.5 * nz(th);
+      const nasal = smooth(0, 6, -X);
+      const sup = smooth(-2.5, 2.5, Y), inf = smooth(-2.5, 2.5, -Y);  // respects the horizontal meridian (softened)
+      const arcBand = smooth(8, 12, r) * (1 - smooth(22, 28, r));
+      const arcReach = smooth(-0.2, 0.9, Math.cos(th - Math.PI * 0.62)); // strongest superonasal
+      const arcSup = arcBand * sup * arcReach;
+      const arcInf = arcBand * inf * smooth(-0.2, 0.9, Math.cos(th + Math.PI * 0.62));
+      const stepSup = smooth(16, 26, r) * nasal * sup;
+      const stepInf = smooth(16, 26, r) * nasal * inf;
+      const periph = (r0) => smooth(r0, r0 + 12, r) * (X > 0 ? 0.65 : 1);
+      let L;
+      if (stage <= 1) L = Math.max(0.50 * stepSup, 0.30 * arcSup);
+      else if (stage === 2) L = Math.max(0.80 * stepSup, 0.75 * arcSup, 0.35 * stepInf, 0.30 * periph(30));
+      else if (stage === 3) L = Math.max(0.88 * smooth(6, 11, r) * sup, 0.75 * arcInf, 0.82 * stepInf, 0.55 * periph(22));
+      else {
+        const temporalIsland = 1 - smooth(0.55, 1.0, Math.hypot((X - 27) / 10, (Y + 3) / 12));
+        L = 0.95 * smooth(4, 8, r) * (1 - 0.8 * temporalIsland);
+      }
+      return Math.min(0.95, L * wob);
+    };
+  }
+  function applyGlaucoma(stage) {
+    ctx.drawImage(sourceCanvas, 0, 0);
+    const mask = fieldMask('glaucoma' + stage, glaucomaLoss(stage));
+    applyFieldLoss(mask, 16, 0.8, `rgba(78,80,86,${0.35 + stage * 0.08})`);
+  }
+
+  // ===== AMD =====
+  // Early: metamorphopsia (lines bow) plus central blur. Later: an irregular,
+  // blurry grey central smudge that is never fully opaque.
+  const _amdMaskCache = new Map();
+  function meshWarp(src, dctx, cx, cy, R, amt) {
+    const cells = 14, cs = (2 * R) / cells;
+    const A = amt * R * 0.2;
+    const disp = (x, y) => {
+      const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
+      if (rr >= 1 || rr === 0) return [0, 0];
+      const th = Math.atan2(dy, dx);
+      const g = Math.sin(Math.PI * rr) * (1 - rr * 0.5);
+      const irr = 1 + 0.35 * Math.sin(3 * th + 0.7) + 0.2 * Math.sin(5 * th + 2.1);
+      const m = A * g * irr / (rr * R);
+      return [dx * m + dy * m * 0.25, dy * m - dx * m * 0.25];   // bulge with a slight twist
+    };
+    const x0 = cx - R, y0 = cy - R;
+    for (let j = 0; j < cells; j++) {
+      for (let i = 0; i < cells; i++) {
+        const sx = x0 + i * cs, sy = y0 + j * cs;
+        const tl = disp(sx, sy), br = disp(sx + cs, sy + cs);
+        const dx0 = sx + tl[0], dy0 = sy + tl[1];
+        const dwid = cs + br[0] - tl[0], dhei = cs + br[1] - tl[1];
+        if (dwid <= 0.5 || dhei <= 0.5) continue;
+        dctx.drawImage(src, sx, sy, cs, cs, dx0 - 0.4, dy0 - 0.4, dwid + 0.8, dhei + 0.8);
+      }
+    }
+  }
+  function amdMask(sizePct, w, h) {
+    const key = sizePct + '|' + w + 'x' + h;
+    let c = _amdMaskCache.get(key);
+    if (c) return c;
+    if (_amdMaskCache.size > 12) _amdMaskCache.clear();
+    const mw = 200, mh = Math.max(2, Math.round(200 * h / w)), sc = mw / w;
+    c = mkCanvas(); c.width = mw; c.height = mh;
+    const x = c.getContext('2d'), rnd = mulberry32(2024);
+    const R = Math.min(w, h) * (sizePct / 100) * 1.05 * sc, cx = mw / 2, cy = mh / 2;
+    for (let i = 0; i < 6; i++) {            // overlapping soft blobs → irregular outline
+      const a = rnd() * Math.PI * 2, off = i === 0 ? 0 : R * (0.25 + rnd() * 0.35);
+      const bx = cx + Math.cos(a) * off, by = cy + Math.sin(a) * off * 0.8;
+      const br = R * (i === 0 ? 1 : 0.45 + rnd() * 0.35);
+      const g = x.createRadialGradient(bx, by, 0, bx, by, br);
+      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(bx - br, by - br, br * 2, br * 2);
+    }
+    _amdMaskCache.set(key, c);
+    return c;
+  }
+  function applyAMD(sizePct, distortion) {
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
+    const cx = w / 2, cy = h / 2, minDim = Math.min(w, h);
+    const sev = clamp01((sizePct - 12) / 48);           // Mild 0 … End stage 1
+
+    // 1. Warp (metamorphopsia) into an offscreen copy.
+    // Drawn straight onto the stage; the blur layers below read the unwarped
+    // source (the warp is invisible under that much blur) to save a full copy.
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(sourceCanvas, 0, 0);
+    if (distortion > 0) {
+      ctx.imageSmoothingQuality = 'low';   // bilinear is enough for 1:1-ish cells and much cheaper
+      meshWarp(sourceCanvas, ctx, cx, cy, minDim * (0.24 + 0.22 * sev), distortion);
+      ctx.imageSmoothingQuality = 'high';
     }
 
-    // Scotoma opacity scales with size.
-    const sev = Math.min(1, (sizePct - 5) / 55);
-    const centerOp = 0.55 + sev * 0.45;
-    const midOp    = 0.35 + sev * 0.55;
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, scotomaR);
-    grad.addColorStop(0,    `rgba(12,12,16,${centerOp})`);
-    grad.addColorStop(0.55, `rgba(12,12,16,${midOp})`);
-    grad.addColorStop(1,    'rgba(12,12,16,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
+    // 2. Central blur, soft-edged.
+    const rb = minDim * (0.16 + 0.22 * sev);
+    softLayer(0, sourceCanvas, (3 + 9 * sev) * k, (x, lw, lh, sx, sy) => {
+      x.globalCompositeOperation = 'destination-in';
+      x.setTransform(sx, 0, 0, sy, 0, 0);
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, rb);
+      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.6, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.setTransform(1, 0, 0, 1, 0, 0);
+    }, ctx);
+
+    // 3. Grey, faded central smudge (scotoma), never fully opaque.
+    const op = 0.12 + 0.68 * sev;
+    if (op > 0.01) {
+      const m = amdMask(sizePct, w, h);
+      softLayer(1, sourceCanvas, (10 + 14 * sev) * k, (x, lw, lh) => {
+        x.globalCompositeOperation = 'saturation';
+        x.fillStyle = 'rgba(128,128,128,0.85)'; x.fillRect(0, 0, lw, lh);
+        x.globalCompositeOperation = 'source-over';
+        x.fillStyle = `rgba(104,102,98,${0.35 + 0.35 * sev})`; x.fillRect(0, 0, lw, lh);
+        x.globalCompositeOperation = 'destination-in';
+        x.drawImage(m, 0, 0, m.width, m.height, 0, 0, lw, lh);
+      }, ctx, Math.min(0.95, op / 0.9));   // mask core alpha 0.9 → effective max ≈ 0.85
+    }
   }
 
-  // Diabetic retinopathy: scattered dark blot scotomas (microaneurysm/hemorrhage
-  // shadows) plus mild overall blur and a few larger blocked patches. Severity
-  // scales the number and size of the blots. Positions are seeded so they stay
-  // stable frame-to-frame (they don't twinkle).
+  // ===== Diabetic retinopathy =====
+  // Scattered small, irregular, semi-transparent dot/blot hemorrhages that
+  // multiply with severity (same seeded positions, so they never jump),
+  // plus macular-edema haze and mild overall blur.
   let drBlots = null;
-  function initDR(severity) {
+  const _drOverlay = mkCanvas();
+  let _drKey = '';
+  function initDR(severity) { _drKey = ''; }
+  function drSpots() {
+    if (drBlots) return drBlots;
+    const r = mulberry32(1337), gauss = () => {
+      const u = Math.max(1e-6, r()), v = r();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
     drBlots = [];
-    const n = Math.round(6 + severity * 30);
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < 90; i++) {
+      const lobes = [];
+      const nl = 1 + Math.floor(r() * 3);
+      for (let j = 0; j < nl; j++) lobes.push({ dx: (r() - 0.5) * 1.2, dy: (r() - 0.5) * 1.2, s: 0.55 + r() * 0.5 });
       drBlots.push({
-        x: Math.random(),
-        y: Math.random(),
-        r: 0.01 + Math.random() * (0.02 + severity * 0.05),
-        op: 0.5 + Math.random() * 0.45
+        x: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.24)),
+        y: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.22)),
+        u: r(), op: 0.25 + r() * 0.3, red: r() < 0.6, lobes
       });
     }
+    return drBlots;
   }
   function applyDiabetic(severity) {
-    const w = stageCanvas.width, h = stageCanvas.height;
-    // mild blur + slight contrast loss
-    ctx.filter = `blur(${1 + severity * 3}px) contrast(${1 - severity * 0.15})`;
-    ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
-    if (!drBlots) initDR(severity);
-    // dark blots (blocked vision from hemorrhages)
-    drBlots.forEach(b => {
-      const cx = b.x * w, cy = b.y * h, r = b.r * Math.min(w, h) * 6;
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, `rgba(12,10,14,${b.op})`);
-      g.addColorStop(0.6, `rgba(12,10,14,${b.op * 0.8})`);
-      g.addColorStop(1, 'rgba(12,10,14,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-    });
-    // subtle yellowish exudate haze at high severity
-    if (severity > 0.5) {
-      ctx.fillStyle = `rgba(200,180,90,${(severity - 0.5) * 0.12})`;
+    const s = clamp01(severity);
+    const w = stageCanvas.width, h = stageCanvas.height, k = viewK(), minDim = Math.min(w, h);
+    blurDraw(sourceCanvas, ctx, (1 + 2.5 * s) * k);
+
+    // Macular edema haze (central, soft).
+    const R = minDim * (0.28 + 0.18 * s);
+    softLayer(0, sourceCanvas, (4 + 9 * s) * k, (x, lw, lh, sx, sy) => {
+      x.fillStyle = `rgba(196,188,160,${0.12 + 0.22 * s})`; x.fillRect(0, 0, lw, lh);
+      x.globalCompositeOperation = 'destination-in';
+      x.setTransform(sx, 0, 0, sy, 0, 0);
+      const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, R);
+      g.addColorStop(0, `rgba(0,0,0,${0.35 + 0.5 * s})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.setTransform(1, 0, 0, 1, 0, 0);
+    }, ctx);
+
+    // Spots, cached per severity and size.
+    const key = w + 'x' + h + '|' + s.toFixed(2);
+    if (key !== _drKey) {
+      const o = sizeTo(_drOverlay, w, h);
+      o.clearRect(0, 0, w, h);
+      const spots = drSpots(), n = Math.round(8 + 72 * s);
+      for (let i = 0; i < n; i++) {
+        const b = spots[i];
+        const base = minDim * (0.009 + 0.026 * b.u) * (0.75 + 0.5 * s);
+        const op = b.op * (0.5 + 0.35 * s);
+        const col = b.red ? '62,30,28' : '44,40,40';
+        for (const l of b.lobes) {
+          const px = b.x * w + l.dx * base, py = b.y * h + l.dy * base, rr = base * l.s * 2.1;
+          const gg = o.createRadialGradient(px, py, 0, px, py, rr);
+          gg.addColorStop(0, `rgba(${col},${op * 0.85})`); gg.addColorStop(0.3, `rgba(${col},${op * 0.6})`); gg.addColorStop(0.65, `rgba(${col},${op * 0.22})`); gg.addColorStop(1, `rgba(${col},0)`);
+          o.fillStyle = gg; o.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+        }
+      }
+      _drKey = key;
+    }
+    ctx.drawImage(_drOverlay, 0, 0);
+    if (s > 0.6) {   // faint yellowish exudate haze in advanced disease
+      ctx.fillStyle = `rgba(200,180,90,${(s - 0.6) * 0.12})`;
       ctx.fillRect(0, 0, w, h);
     }
   }
 
-  // Color vision deficiency — per-pixel color matrix (ctx.filter url() is
-  // unsupported in WKWebView/Safari). Processes on an offscreen canvas so
-  // ctx's active clip path is still respected in compare mode.
+  // ===== Color vision deficiency =====
+  // Machado, Oliveira & Fernandes (2009) matrices, applied in linear RGB,
+  // severity 0.1–1.0 (1.0 = dichromacy). Per-pixel pass uses lookup tables;
+  // the live camera is processed at half resolution to stay fast.
+  const MACHADO = {
+    protan: [[1,0,0,0,1,0,0,0,1],[0.856167,0.182038,-0.038205,0.029342,0.955115,0.015544,-0.002880,-0.001563,1.004443],[0.734766,0.334872,-0.069637,0.051840,0.919198,0.028963,-0.004928,-0.004209,1.009137],[0.630323,0.465641,-0.095964,0.069181,0.890046,0.040773,-0.006308,-0.007724,1.014032],[0.539009,0.579343,-0.118352,0.082546,0.866121,0.051332,-0.007136,-0.011959,1.019095],[0.458064,0.679578,-0.137642,0.092785,0.846313,0.060902,-0.007494,-0.016807,1.024301],[0.385450,0.769005,-0.154455,0.100526,0.829802,0.069673,-0.007442,-0.022190,1.029632],[0.319627,0.849633,-0.169261,0.106241,0.815969,0.077790,-0.007025,-0.028051,1.035076],[0.259411,0.923008,-0.182420,0.110296,0.804340,0.085364,-0.006276,-0.034346,1.040622],[0.203876,0.990338,-0.194214,0.112975,0.794542,0.092483,-0.005222,-0.041043,1.046265],[0.152286,1.052583,-0.204868,0.114503,0.786281,0.099216,-0.003882,-0.048116,1.051998]],
+    deutan: [[1,0,0,0,1,0,0,0,1],[0.866435,0.177704,-0.044139,0.049567,0.939063,0.011370,-0.003453,0.007233,0.996220],[0.760729,0.319078,-0.079807,0.090568,0.889315,0.020117,-0.006027,0.013325,0.992702],[0.675425,0.433850,-0.109275,0.125303,0.847755,0.026942,-0.007950,0.018572,0.989378],[0.605511,0.528560,-0.134071,0.155318,0.812366,0.032316,-0.009376,0.023176,0.986200],[0.547494,0.607765,-0.155259,0.181692,0.781742,0.036566,-0.010410,0.027275,0.983136],[0.498864,0.674741,-0.173604,0.205199,0.754872,0.039929,-0.011131,0.030969,0.980162],[0.457771,0.731899,-0.189670,0.226409,0.731012,0.042579,-0.011595,0.034333,0.977261],[0.422823,0.781057,-0.203881,0.245752,0.709602,0.044646,-0.011843,0.037423,0.974421],[0.392952,0.823610,-0.216562,0.263559,0.690210,0.046232,-0.011910,0.040281,0.971630],[0.367322,0.860646,-0.227968,0.280085,0.672501,0.047413,-0.011820,0.042940,0.968881]],
+    tritan: [[1,0,0,0,1,0,0,0,1],[0.926670,0.092514,-0.019184,0.021191,0.964503,0.014306,0.008437,0.054813,0.936750],[0.895720,0.133330,-0.029050,0.029997,0.945400,0.024603,0.013027,0.104707,0.882266],[0.905871,0.127791,-0.033662,0.026856,0.941251,0.031893,0.013410,0.148296,0.838294],[0.948035,0.089490,-0.037526,0.014364,0.946792,0.038844,0.010853,0.193991,0.795156],[1.017277,0.027029,-0.044306,-0.006113,0.958479,0.047634,0.006379,0.248708,0.744913],[1.104996,-0.046633,-0.058363,-0.032137,0.971635,0.060503,0.001336,0.317922,0.680742],[1.193214,-0.109812,-0.083402,-0.058496,0.979410,0.079086,-0.002346,0.403492,0.598854],[1.257728,-0.139648,-0.118081,-0.078003,0.975409,0.102594,-0.003316,0.501214,0.502102],[1.278864,-0.125333,-0.153531,-0.084748,0.957674,0.127074,-0.000989,0.601151,0.399838],[1.255528,-0.076749,-0.178779,-0.078411,0.930809,0.147602,0.004733,0.691367,0.303900]]
+  };
+  const _toLin = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { const c = i / 255; _toLin[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  const _toSrgb = new Uint8ClampedArray(4096);
+  for (let i = 0; i < 4096; i++) { const c = i / 4095; _toSrgb[i] = Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055)); }
+  function cvdMatrix(type, sev) {
+    const t = MACHADO[type] || MACHADO.deutan;
+    const f = clamp01(sev) * 10, i = Math.min(9, Math.floor(f)), u = f - i;
+    return t[i].map((v, j) => v * (1 - u) + t[i + 1][j] * u);
+  }
+  const _cvdC = mkCanvas();
+  const _cvdCtx = _cvdC.getContext('2d', { willReadFrequently: true });
   function applyColorBlind(type) {
     const w = stageCanvas.width, h = stageCanvas.height;
-    let r0,r1,r2, g0,g1,g2, b0,b1,b2;
-    if (type === 'protan') {
-      r0=0.567; r1=0.433; r2=0;
-      g0=0.558; g1=0.442; g2=0;
-      b0=0;     b1=0.242; b2=0.758;
-    } else if (type === 'tritan') {
-      r0=0.95;  r1=0.05;  r2=0;
-      g0=0;     g1=0.433; g2=0.567;
-      b0=0;     b1=0.475; b2=0.525;
-    } else {
-      r0=0.625; r1=0.375; r2=0;   // deutan
-      g0=0.7;   g1=0.3;   g2=0;
-      b0=0;     b1=0.3;   b2=0.7;
-    }
-    // Read from source (willReadFrequently canvas), apply matrix, draw back via ctx
-    const id = sCtx.getImageData(0, 0, w, h);
-    const d = id.data;
+    const sc = currentSource === 'camera' ? 0.5 : 1;
+    const cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+    if (_cvdC.width !== cw || _cvdC.height !== ch) { _cvdC.width = cw; _cvdC.height = ch; }
+    _cvdCtx.clearRect(0, 0, cw, ch);
+    _cvdCtx.drawImage(sourceCanvas, 0, 0, cw, ch);
+    const id = _cvdCtx.getImageData(0, 0, cw, ch), d = id.data;
+    const m = cvdMatrix(type, params.cvdSeverity == null ? 1 : params.cvdSeverity);
+    const m0 = m[0] * 4095, m1 = m[1] * 4095, m2 = m[2] * 4095, m3 = m[3] * 4095, m4 = m[4] * 4095,
+          m5 = m[5] * 4095, m6 = m[6] * 4095, m7 = m[7] * 4095, m8 = m[8] * 4095;
     for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], g = d[i+1], b = d[i+2];
-      d[i]   = r0*r + r1*g + r2*b;
-      d[i+1] = g0*r + g1*g + g2*b;
-      d[i+2] = b0*r + b1*g + b2*b;
+      const r = _toLin[d[i]], g = _toLin[d[i + 1]], b = _toLin[d[i + 2]];
+      let R = m0 * r + m1 * g + m2 * b, G = m3 * r + m4 * g + m5 * b, B = m6 * r + m7 * g + m8 * b;
+      R = R < 0 ? 0 : R > 4095 ? 4095 : R; G = G < 0 ? 0 : G > 4095 ? 4095 : G; B = B < 0 ? 0 : B > 4095 ? 4095 : B;
+      d[i] = _toSrgb[R | 0]; d[i + 1] = _toSrgb[G | 0]; d[i + 2] = _toSrgb[B | 0];
     }
-    _blurCanvasA.width = w; _blurCanvasA.height = h;
-    _blurCanvasA.getContext('2d').putImageData(id, 0, 0);
-    ctx.drawImage(_blurCanvasA, 0, 0);
+    _cvdCtx.putImageData(id, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(_cvdC, 0, 0, cw, ch, 0, 0, w, h);
   }
 
-  // Retinitis Pigmentosa — peripheral rod loss with scalloped irregular tunnel,
-  // bone-spicule deposits, and mild night-blindness darkening.
+  // ===== Retinitis pigmentosa =====
+  // Early: mid-peripheral ring scotoma with preserved far periphery; then the
+  // ring widens and the field constricts to a tunnel. Soft scalloped edges,
+  // plus night-vision dimming and contrast loss. (Bone-spicule pigment is a
+  // fundus finding the doctor sees; patients don't see it, so it isn't drawn.)
   let rpSpicules = null;
-  function initRP(stage) {
-    rpSpicules = [];
-    const n = 28 + stage * 14;
-    for (let i = 0; i < n; i++) {
-      const angle = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-      rpSpicules.push({
-        angle,
-        rFrac: 0.28 + Math.random() * 0.18,
-        size: 0.011 + Math.random() * 0.018,
-        opacity: 0.5 + Math.random() * 0.42
-      });
-    }
+  function initRP(stage) { rpSpicules = null; }
+  function rpLoss(stage) {
+    const rnd = mulberry32(311 + stage), a1 = rnd() * 6.28, a2 = rnd() * 6.28, a3 = rnd() * 6.28;
+    return (X, Y) => {
+      const th = Math.atan2(Y, X);
+      const scal = 1 + 0.05 * Math.sin(2 * th + a1) + 0.045 * Math.sin(3 * th + a2) + 0.025 * Math.sin(5 * th + a3);
+      const r = Math.hypot(X, Y) * scal;   // gently scalloped boundary
+      let L;
+      if (stage <= 1) L = 0.70 * smooth(13, 20, r) * (1 - smooth(26, 34, r));
+      else if (stage === 2) L = Math.max(0.85 * smooth(11, 15, r) * (1 - smooth(31, 36, r)), 0.45 * smooth(30, 38, r));
+      else if (stage === 3) L = 0.90 * smooth(8, 12, r) * (1 - 0.45 * (1 - smooth(0.5, 1, Math.hypot((X - 29) / 7, Y / 10))));   // small temporal island
+      else L = 0.94 * smooth(3.5, 6.5, r);
+      return L;
+    };
   }
   function applyRP(stage) {
     const w = stageCanvas.width, h = stageCanvas.height;
-    const cx = w / 2, cy = h / 2;
-    const minDim = Math.min(w, h);
-
-    ctx.filter = `brightness(${0.88 - stage * 0.07}) saturate(0.82)`;
     ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.filter = 'none';
-
-    if (!rpSpicules) initRP(stage);
-    const spRing = minDim * (0.32 - stage * 0.04);
-    rpSpicules.forEach(sp => {
-      const r = spRing * (0.88 + sp.rFrac);
-      const px = cx + Math.cos(sp.angle) * r;
-      const py = cy + Math.sin(sp.angle) * r;
-      const sz = sp.size * minDim;
-      ctx.fillStyle = `rgba(0,0,0,${sp.opacity})`;
-      ctx.beginPath();
-      ctx.ellipse(px, py, sz, sz * 0.5, sp.angle + 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    const halfDiag = Math.hypot(w, h) / 2;
-    const cfg = ({ 1:{c:0.56,e:0.73}, 2:{c:0.41,e:0.58}, 3:{c:0.26,e:0.42}, 4:{c:0.11,e:0.22} })[stage] || {c:0.41,e:0.58};
-    const grad = ctx.createRadialGradient(cx, cy, halfDiag * cfg.c, cx, cy, halfDiag * cfg.e);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,1)');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = `rgba(60,60,64,${0.02 + stage * 0.025})`;   // contrast loss
     ctx.fillRect(0, 0, w, h);
-
-    // Irregular (scalloped) hard edge via sin-wave perturbed circle
-    const perimR = halfDiag * cfg.e;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, w, h);
-    const steps = 52;
-    for (let i = 0; i <= steps; i++) {
-      const a = (i / steps) * Math.PI * 2;
-      const noise = 1 + Math.sin(a * 7 + 2.3) * 0.07 + Math.sin(a * 13 + 1.1) * 0.04 + Math.sin(a * 3 + 3.7) * 0.09;
-      const px2 = cx + Math.cos(a) * perimR * noise;
-      const py2 = cy + Math.sin(a) * perimR * noise;
-      if (i === 0) ctx.moveTo(px2, py2); else ctx.lineTo(px2, py2);
-    }
-    ctx.closePath();
-    ctx.fillStyle = '#000';
-    ctx.fill('evenodd');
-    ctx.restore();
+    ctx.fillStyle = `rgba(0,0,0,${0.04 + stage * 0.035})`;      // night-vision dimming
+    ctx.fillRect(0, 0, w, h);
+    const mask = fieldMask('rp' + stage, rpLoss(stage));
+    applyFieldLoss(mask, 14, 0.9, `rgba(16,16,20,${0.46 + stage * 0.09})`);
   }
 
-  // Presbyopia — loss of near accommodation. Simulates blur at reading distance.
+  // ===== Presbyopia =====
+  // Near focus only. Reading and Amsler samples are at reading distance, so
+  // the whole page blurs; the eye chart is a distance target and stays sharp.
+  // Photos and the camera: the lower part of the frame (usually nearer) blurs
+  // and the top (far) stays clear.
+  const NEAR_SAMPLES = { reading: true, grid: true };
+  const _prA = mkCanvas();
   function applyPresbyopia(sev) {
-    applyBlur([0, 4, 11, 22][sev] || 11);
+    const sigma = [0, 4, 11, 22][sev] || 11;
+    const w = stageCanvas.width, h = stageCanvas.height;
+    if (currentSource === 'image' && currentSampleKind && NEAR_SAMPLES[currentSampleKind]) { applyBlur(sigma); return; }
+    ctx.drawImage(sourceCanvas, 0, 0);
+    if (currentSource === 'image' && currentSampleKind === 'chart') return;
+    const x = sizeTo(_prA, w, h);
+    x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, w, h);
+    blurDraw(sourceCanvas, x, sigma * viewK());
+    x.globalCompositeOperation = 'destination-in';
+    const g = x.createLinearGradient(0, h * 0.42, 0, h * 0.9);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
+    ctx.drawImage(_prA, 0, 0);
   }
 
-  let floaterState = null;
+  // ===== Floaters / PVD =====
+  // Soft, translucent, curved strands and dots (plus a Weiss ring for PVD
+  // when there are several), drawn at 1/3 resolution and enlarged so they look
+  // like out-of-focus shadows. They drift slowly and sink.
+  let floaterState = null, _floT = 0;
+  const _flo = mkCanvas();
   function initFloaters(count) {
+    const r = mulberry32(4242 + count);
     floaterState = [];
     for (let i = 0; i < count; i++) {
+      const type = (i === 0 && count >= 5) ? 'ring' : (r() < 0.65 ? 'strand' : 'dot');
+      const pts = [];
+      const segs = 3 + Math.floor(r() * 3);
+      let ang = r() * Math.PI * 2;
+      for (let j = 0; j < segs; j++) { ang += (r() - 0.5) * 1.0; pts.push([Math.cos(ang), Math.sin(ang)]); }
       floaterState.push({
-        x: Math.random() * 100,
-        y: Math.random() * 75,
-        vx: (Math.random() - 0.5) * 0.04,
-        vy: (Math.random() - 0.5) * 0.03 + 0.005,
-        type: Math.random() < 0.5 ? 'strand' : 'blob',
-        size: 1 + Math.random() * 4,
-        rot: Math.random() * 360,
-        opacity: 0.18 + Math.random() * 0.25,
+        x: 12 + r() * 76, y: 8 + r() * 58,
+        vx: (r() - 0.5) * 0.03, vy: (r() - 0.5) * 0.015 + 0.004,
+        phase: r() * Math.PI * 2, size: 1.5 + r() * 3.5, type, pts,
+        opacity: 0.16 + r() * 0.2
       });
     }
   }
   function clearOverlay() { overlay.innerHTML = ''; }
-
-  // Floaters drawn directly on the canvas (respects clip regions, so compare works).
-  // We still advance the same floaterState so motion is consistent.
   function stepFloaters() {
     if (!floaterState) return;
+    _floT++;
     floaterState.forEach(f => {
-      f.x += f.vx; f.y += f.vy;
-      if (f.x < -5) f.x = 105; if (f.x > 105) f.x = -5;
-      if (f.y < -5) f.y = 80; if (f.y > 80) f.y = -5;
+      f.x += f.vx + Math.sin(_floT * 0.012 + f.phase) * 0.02;
+      f.y += f.vy + Math.cos(_floT * 0.009 + f.phase) * 0.012;
+      if (f.x < -8) f.x = 108; if (f.x > 108) f.x = -8;
+      if (f.y < -8) f.y = 83; if (f.y > 83) f.y = -8;
     });
   }
   function drawFloatersCanvas() {
     if (!floaterState) return;
     const w = stageCanvas.width, h = stageCanvas.height;
-    ctx.save();
+    const lw = Math.max(2, Math.round(w / 3)), lh = Math.max(2, Math.round(h / 3));
+    const x = sizeTo(_flo, lw, lh);
+    x.clearRect(0, 0, lw, lh);
+    const u = lw / 100;
+    x.lineCap = 'round'; x.lineJoin = 'round';
     floaterState.forEach(f => {
-      const px = (f.x / 100) * w;
-      const py = (f.y / 75) * h;
-      const sz = f.size * (Math.min(w, h) / 75);
-      ctx.fillStyle = `rgba(20,20,25,${f.opacity})`;
-      ctx.strokeStyle = `rgba(20,20,25,${f.opacity})`;
-      if (f.type === 'blob') {
-        ctx.beginPath();
-        ctx.ellipse(px, py, sz * 0.8, sz * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
+      const px = (f.x / 100) * lw, py = (f.y / 75) * lh;
+      const col = `rgba(28,28,34,${f.opacity})`;
+      if (f.type === 'ring') {
+        for (const [wm, om] of [[3.2, 0.3], [1, 1]]) {   // soft halo, then core
+          x.strokeStyle = `rgba(28,28,34,${(f.opacity + 0.06) * om})`;
+          x.lineWidth = Math.max(1, u * 0.7 * wm);
+          x.beginPath(); x.ellipse(px, py, u * 4.5, u * 3.6, f.phase, 0, Math.PI * 2); x.stroke();
+        }
+      } else if (f.type === 'dot') {
+        const rr = u * f.size * 0.45;
+        const g = x.createRadialGradient(px, py, 0, px, py, rr);
+        g.addColorStop(0, col); g.addColorStop(1, 'rgba(28,28,34,0)');
+        x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2);
       } else {
-        const x2 = px + Math.cos(f.rot) * sz * 2.5;
-        const y2 = py + Math.sin(f.rot) * sz * 2.5;
-        ctx.lineWidth = Math.max(1, sz * 0.3);
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(px, py); ctx.lineTo(x2, y2); ctx.stroke();
+        const step = u * f.size * 1.5;
+        for (const [wm, om] of [[3.5, 0.28], [1, 0.85]]) {   // soft halo, then translucent core
+          x.strokeStyle = `rgba(28,28,34,${f.opacity * om})`;
+          x.lineWidth = Math.max(0.8, u * (0.3 + f.size * 0.09) * wm);
+          x.beginPath(); x.moveTo(px, py);
+          let cx0 = px, cy0 = py;
+          for (let j = 0; j < f.pts.length; j++) {
+            const p = f.pts[j];
+            const nx = cx0 + p[0] * step, ny = cy0 + p[1] * step;
+            x.quadraticCurveTo(cx0 + p[0] * step * 0.5 + p[1] * step * 0.3, cy0 + p[1] * step * 0.5 - p[0] * step * 0.3, nx, ny);
+            cx0 = nx; cy0 = ny;
+          }
+          x.stroke();
+        }
       }
     });
-    ctx.restore();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(_flo, 0, 0, lw, lh, 0, 0, w, h);
   }
 
   // Render a single condition's filter onto the (already-clipped) canvas,
@@ -1326,9 +1554,9 @@
     },
     astigmatism: {
       title: 'Astigmatism',
-      note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Adjust the axis to demonstrate against-the-rule, with-the-rule, and oblique presentations.',
+      note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Cylinder and axis use minus-cylinder notation: axis 180 (with-the-rule) smears vertically, axis 90 (against-the-rule) smears horizontally, and oblique axes smear diagonally.',
       controls: () => [
-        sliderControl('astigMag', 'Severity', 2, 20, 1, 'D-equivalent'),
+        sliderControl('astigMag', 'Cylinder (minus cyl)', 0.25, 6, 0.25, ' D'),
         sliderControl('axis', 'Axis', 0, 180, 1, '°')
       ]
     },
@@ -1361,8 +1589,11 @@
     },
     colorblind: {
       title: 'Color Vision Deficiency',
-      note: 'Inherited color blindness affects how cone cells distinguish hues. <strong>Red-green types (protan/deutan)</strong> are most common, affecting ~8% of men; <strong>blue-yellow (tritan)</strong> is rare. This simulates dichromacy — the most complete form of each type.',
-      controls: () => [cvdTypeControl()]
+      note: 'Inherited color blindness affects how cone cells distinguish hues. <strong>Red-green types (protan/deutan)</strong> are most common, affecting ~8% of men; <strong>blue-yellow (tritan)</strong> is rare. Severity 1.0 simulates dichromacy (the most complete form); lower values simulate anomalous trichromacy, the milder and more common form. Based on the Machado et al. (2009) model.',
+      controls: () => [
+        cvdTypeControl(),
+        sliderControl('cvdSeverity', 'Severity (1.0 = dichromacy)', 0.1, 1, 0.1, '×')
+      ]
     },
     floaters: {
       title: 'Floaters & Posterior Vitreous Detachment',
@@ -1373,12 +1604,12 @@
     },
     rp: {
       title: 'Retinitis Pigmentosa',
-      note: 'Progressive rod photoreceptor degeneration produces characteristic peripheral field loss with an irregular, scalloped boundary — distinct from the smoother gradient of glaucoma. Pathognomonic <strong>bone spicule pigment deposits</strong> form in the mid-periphery. Rod involvement causes significant night vision loss early. Central acuity is often preserved until late stages, which can delay diagnosis.',
+      note: 'Progressive rod photoreceptor degeneration produces characteristic peripheral field loss with an irregular, scalloped boundary — distinct from the smoother gradient of glaucoma. Pathognomonic <strong>bone spicule pigment deposits</strong> form in the mid-periphery (seen by the doctor on exam, not by the patient). Early loss is often a mid-peripheral ring. Rod involvement causes significant night vision loss early. Central acuity is often preserved until late stages, which can delay diagnosis.',
       controls: () => [rpStageControl()]
     },
     presbyopia: {
       title: 'Presbyopia',
-      note: '<strong>This simulation represents near vision at reading distance (~40 cm)</strong> without reading correction. Age-related loss of crystalline lens flexibility reduces the eye\'s accommodative amplitude through the 40s–60s. Unlike myopia, distance vision remains clear — only near focus is impaired. Nearly universal by age 50; corrected with reading glasses, bifocals, or progressive lenses.',
+      note: '<strong>Near vision only.</strong> The Reading and Amsler samples are shown at reading distance (~40 cm) without reading correction; on photos and the camera, the lower (nearer) part of the frame blurs while distance stays clear, and the eye chart (a distance target) stays sharp. Age-related loss of crystalline lens flexibility reduces the eye\'s accommodative amplitude through the 40s–60s. Unlike myopia, distance vision remains clear — only near focus is impaired. Nearly universal by age 50; corrected with reading glasses, bifocals, or progressive lenses.',
       controls: () => [presbySevControl()]
     }
   };
@@ -1461,10 +1692,10 @@
     wrap.className = 'ctrl';
     wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="amdStages"></div>`;
     const stages = [
-      { v: 12, label: 'Mild',      distortion: 0.05 },
-      { v: 28, label: 'Moderate',  distortion: 0.15 },
-      { v: 44, label: 'Advanced',  distortion: 0.35 },
-      { v: 60, label: 'End Stage', distortion: 0.55 }
+      { v: 12, label: 'Mild',      distortion: 0.35 },
+      { v: 28, label: 'Moderate',  distortion: 0.45 },
+      { v: 44, label: 'Advanced',  distortion: 0.55 },
+      { v: 60, label: 'End Stage', distortion: 0.6 }
     ];
     const host = wrap.querySelector('#amdStages');
     stages.forEach(s => {
@@ -1968,6 +2199,7 @@
 
   function loadSample(kind) {
     stopCamera();
+    currentSampleKind = kind;
     const photoPath = PHOTO_SAMPLES[kind];
     if (photoPath) {
       const img = new Image();
