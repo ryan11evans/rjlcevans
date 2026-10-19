@@ -1124,28 +1124,61 @@
   // Early: metamorphopsia (lines bow) plus central blur. Later: an irregular,
   // blurry grey central smudge that is never fully opaque.
   const _amdMaskCache = new Map();
+  // Smooth warp drawn as a triangle mesh: each source triangle is mapped onto
+  // its displaced triangle with an affine transform, so neighbouring pieces
+  // share edges exactly and there are no tile seams.
+  let _warpKey = '', _warpGrid = null;
   function meshWarp(src, dctx, cx, cy, R, amt) {
-    const cells = 14, cs = (2 * R) / cells;
+    const cells = 12, cs = (2 * R) / cells, n = cells + 1;
     const A = amt * R * 0.2;
-    const disp = (x, y) => {
-      const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
-      if (rr >= 1 || rr === 0) return [0, 0];
-      const th = Math.atan2(dy, dx);
-      const g = Math.sin(Math.PI * rr) * (1 - rr * 0.5);
-      const irr = 1 + 0.35 * Math.sin(3 * th + 0.7) + 0.2 * Math.sin(5 * th + 2.1);
-      const m = A * g * irr / (rr * R);
-      return [dx * m + dy * m * 0.25, dy * m - dx * m * 0.25];   // bulge with a slight twist
-    };
     const x0 = cx - R, y0 = cy - R;
-    for (let j = 0; j < cells; j++) {
-      for (let i = 0; i < cells; i++) {
-        const sx = x0 + i * cs, sy = y0 + j * cs;
-        const tl = disp(sx, sy), br = disp(sx + cs, sy + cs);
-        const dx0 = sx + tl[0], dy0 = sy + tl[1];
-        const dwid = cs + br[0] - tl[0], dhei = cs + br[1] - tl[1];
-        if (dwid <= 0.5 || dhei <= 0.5) continue;
-        dctx.drawImage(src, sx, sy, cs, cs, dx0 - 0.4, dy0 - 0.4, dwid + 0.8, dhei + 0.8);
+    const key = [cx, cy, R, amt].map(v => v.toFixed(2)).join('|');
+    if (key !== _warpKey) {
+      const disp = (x, y) => {
+        const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
+        if (rr >= 1 || rr === 0) return [0, 0];
+        const th = Math.atan2(dy, dx);
+        const g = Math.sin(Math.PI * rr) * (1 - rr * 0.5);
+        const irr = 1 + 0.35 * Math.sin(3 * th + 0.7) + 0.2 * Math.sin(5 * th + 2.1);
+        const m = A * g * irr / (rr * R);
+        return [dx * m + dy * m * 0.25, dy * m - dx * m * 0.25];   // bulge with a slight twist
+      };
+      _warpGrid = new Float32Array(n * n * 4);   // sx, sy, dx, dy
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const sx = x0 + i * cs, sy = y0 + j * cs, d = disp(sx, sy), p = (j * n + i) * 4;
+        _warpGrid[p] = sx; _warpGrid[p + 1] = sy; _warpGrid[p + 2] = sx + d[0]; _warpGrid[p + 3] = sy + d[1];
       }
+      _warpKey = key;
+    }
+    const G = _warpGrid;
+    const tri = (p0, p1, p2) => {
+      const s0x = G[p0], s0y = G[p0 + 1], s1x = G[p1], s1y = G[p1 + 1], s2x = G[p2], s2y = G[p2 + 1];
+      const d0x = G[p0 + 2], d0y = G[p0 + 3], d1x = G[p1 + 2], d1y = G[p1 + 3], d2x = G[p2 + 2], d2y = G[p2 + 3];
+      if (d0x === s0x && d0y === s0y && d1x === s1x && d1y === s1y && d2x === s2x && d2y === s2y) return; // undisplaced
+      const ux = s1x - s0x, uy = s1y - s0y, vx = s2x - s0x, vy = s2y - s0y;
+      const den = ux * vy - vx * uy;
+      if (Math.abs(den) < 1e-6) return;
+      const a = ((d1x - d0x) * vy - (d2x - d0x) * uy) / den;
+      const c = ((d2x - d0x) * ux - (d1x - d0x) * vx) / den;
+      const b = ((d1y - d0y) * vy - (d2y - d0y) * uy) / den;
+      const d = ((d2y - d0y) * ux - (d1y - d0y) * vx) / den;
+      const e = d0x - a * s0x - c * s0y, f = d0y - b * s0x - d * s0y;
+      // Clip to the destination triangle, grown ~0.7px so edges overlap.
+      const mx = (d0x + d1x + d2x) / 3, my = (d0y + d1y + d2y) / 3;
+      const grow = (x, y) => { const L = Math.hypot(x - mx, y - my) || 1; return [x + (x - mx) / L * 0.7, y + (y - my) / L * 0.7]; };
+      const q0 = grow(d0x, d0y), q1 = grow(d1x, d1y), q2 = grow(d2x, d2y);
+      dctx.save();
+      dctx.beginPath(); dctx.moveTo(q0[0], q0[1]); dctx.lineTo(q1[0], q1[1]); dctx.lineTo(q2[0], q2[1]); dctx.closePath();
+      dctx.clip();
+      dctx.transform(a, b, c, d, e, f);
+      const bx = Math.max(0, Math.floor(Math.min(s0x, s1x, s2x)) - 2), by = Math.max(0, Math.floor(Math.min(s0y, s1y, s2y)) - 2);
+      const bw = Math.min(src.width, Math.ceil(Math.max(s0x, s1x, s2x)) + 2) - bx, bh = Math.min(src.height, Math.ceil(Math.max(s0y, s1y, s2y)) + 2) - by;
+      if (bw > 0 && bh > 0) dctx.drawImage(src, bx, by, bw, bh, bx, by, bw, bh);
+      dctx.restore();
+    };
+    for (let j = 0; j < cells; j++) for (let i = 0; i < cells; i++) {
+      const p00 = (j * n + i) * 4, p10 = p00 + 4, p01 = p00 + n * 4, p11 = p01 + 4;
+      tri(p00, p10, p11); tri(p00, p11, p01);
     }
   }
   function amdMask(sizePct, w, h) {
@@ -1179,7 +1212,7 @@
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(sourceCanvas, 0, 0);
     if (distortion > 0) {
-      ctx.imageSmoothingQuality = 'low';   // bilinear is enough for 1:1-ish cells and much cheaper
+      ctx.imageSmoothingQuality = 'low';   // bilinear is enough for near 1:1 mapping and much cheaper
       meshWarp(sourceCanvas, ctx, cx, cy, minDim * (0.24 + 0.22 * sev), distortion);
       ctx.imageSmoothingQuality = 'high';
     }
