@@ -900,44 +900,64 @@
   }
 
   function applyCataract(severity) {
-    const s = severity;
+    // Nuclear sclerotic cataract: gentle, clinically graded. Light scatter in
+    // the lens softens detail and lifts a warm veil over the scene (contrast
+    // loss), the nucleus yellows/browns (blue absorption), and bright sources
+    // bloom into glare and halos. Faces stay recognizable at mild severity;
+    // at severe the scene is hazy and dim but shapes remain discernible.
+    const s = Math.max(0, Math.min(1, severity));
     const w = stageCanvas.width, h = stageCanvas.height;
+    if (s <= 0) { ctx.drawImage(sourceCanvas, 0, 0); return; }
+    // Scale blur/halo radii to the canvas so the look matches on phone and iPad.
+    const k = Math.max(w, h) / 1000;
 
-    // Base: blur + darkening. Blur is strong enough to visibly impair text.
-    ctx.filter = `blur(${s * 35}px) contrast(${1 - s * 0.62}) brightness(${1 - s * 0.55})`;
+    // 1. Unblurred base underneath, so the blurred layer's soft edges don't
+    //    fade to transparent/black at the frame border.
+    ctx.drawImage(sourceCanvas, 0, 0);
+
+    // 2. Blur + contrast loss + mild dimming + yellowing (sepia), all eased
+    //    so the low end of the slider stays subtle.
+    const blurPx = k * 10 * Math.pow(s, 1.2);
+    ctx.filter = `blur(${blurPx}px) contrast(${1 - 0.38 * s}) ` +
+                 `brightness(${1 - 0.10 * s}) saturate(${1 - 0.30 * s}) sepia(${0.30 * s})`;
     ctx.drawImage(sourceCanvas, 0, 0);
     ctx.filter = 'none';
 
-    // Additive bloom FIRST — four stacked passes, heavy alpha/brightness so
-    // bright sources blow out into massive halos before the brown sits on top.
-    if (s > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      const passes = [
-        { con: 1.8 + s * 2,   bri: 1.5 + s * 2,   blur: 4  + s * 28,  a: Math.min(1, 0.7  * s) },
-        { con: 1.5 + s * 1.5, bri: 1.3 + s * 2.5,  blur: 18 + s * 80,  a: Math.min(1, 0.85 * s) },
-        { con: 1.3 + s,       bri: 1.2 + s * 3,    blur: 50 + s * 150, a: Math.min(1, 0.9  * s) },
-        { con: 1.2 + s * 0.8, bri: 1.1 + s * 3.5,  blur: 90 + s * 220, a: Math.min(1, 0.75 * s) },
-      ];
-      for (const p of passes) {
-        ctx.globalAlpha = p.a;
-        ctx.filter = `contrast(${p.con}) brightness(${p.bri}) blur(${p.blur}px)`;
-        ctx.drawImage(sourceCanvas, 0, 0);
-      }
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
+    // 3. Glare and halos: isolate only the brightest areas (lights, sky,
+    //    windows), blur them wide, and add them back. Mid-tones such as skin
+    //    are left out, so bright faces don't blow out.
+    ctx.globalCompositeOperation = 'lighter';
+    const halos = [
+      { blur: k * (4 + 10 * s),   a: 0.25 + 0.60 * s },
+      { blur: k * (16 + 40 * s),  a: 0.25 + 0.80 * s },
+      { blur: k * (16 + 40 * s),  a: 0.10 + 0.60 * s },
+      { blur: k * (50 + 100 * s), a: 0.10 + 0.75 * s },
+    ];
+    for (const p of halos) {
+      ctx.globalAlpha = p.a;
+      ctx.filter = `grayscale(0.4) brightness(0.55) contrast(10) blur(${p.blur}px)`;
+      ctx.drawImage(sourceCanvas, 0, 0);
     }
+    ctx.filter = 'none';
+    ctx.globalAlpha = 1;
 
-    // Brown multiply tint — warms the glare to amber and tints the scene.
+    // 4. Amber multiply: absorbs blue so whites read cream/yellow and lights
+    //    turn amber, without the heavy darkening of a brown overlay.
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(155, 88, 35, ${0.2 + s * 0.5})`;
+    ctx.fillStyle = `rgba(255, 214, 150, ${0.15 + 0.55 * s})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Dark brown veil — quadratic ramp so it stays lighter in the mid-range
-    // and only gets very dark near the top of the slider.
-    ctx.fillStyle = `rgba(38, 22, 8, ${s * s * 0.82})`;
+    // 5. Milky scatter veil (lifts blacks = classic cataract contrast loss).
+    ctx.fillStyle = `rgba(214, 196, 160, ${0.04 + 0.13 * s})`;
     ctx.fillRect(0, 0, w, h);
+
+    // 6. Advanced only: a light brunescent dimming in the top third of the
+    //    slider. Kept low so shapes stay visible.
+    if (s > 0.6) {
+      ctx.fillStyle = `rgba(55, 36, 14, ${(s - 0.6) * 0.45})`;
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   function applyGlaucoma(stage) {
