@@ -2,7 +2,7 @@
 
 Capacitor 6 shell for **Vision Simulator by Dr. Evans** (`com.rjlcevans.visionsim`). The app does not bundle the simulator. `capacitor.config.json` sets `server.url` to `https://rjlcevans.com/vision-simulator/`, and every installed copy — including older versions — loads that page.
 
-Version in this project: **4.1 (15)**. The live App Store build is 4.0. Build 4.1 (14) is already uploaded. The next upload must be build 15 or App Store Connect will reject it as a duplicate.
+Version in this project: **4.1 (16)**. The live App Store build is 4.0. Builds 4.1 (14) and 4.1 (15) may already be uploaded. The next upload must be build 16 or App Store Connect will reject it as a duplicate.
 
 ## How to safely ship changes
 
@@ -57,13 +57,15 @@ The browser gate is safe for installed apps: the page runs the simulator when it
 
    Xcode 27 only archives an iOS deployment target of 15.0 or newer. The App target is set to 15.0, and the Podfile `post_install` hook sets 15.0 on every pod target. The App target signing team is `9B9PTBR9A2`. A normal Archive in Xcode uses those settings; you do not need the `IPHONEOS_DEPLOYMENT_TARGET=15.0` and `DEVELOPMENT_TEAM=9B9PTBR9A2` overrides that were required to upload build 14. The next binary requires iOS 15 or later. Phones still on iOS 13 or 14 keep the already-installed app.
 
+   Build 14, linked with the iOS 27 SDK, crashed at launch on a real iPhone because the shell still used the AppDelegate `window` lifecycle. Info.plist now has a `UIApplicationSceneManifest`, and `SceneDelegate` hosts the Main storyboard (`CAPBridgeViewController`) and forwards URL opens and universal links to Capacitor's `ApplicationDelegateProxy`. This stays on Capacitor 6. A Capacitor upgrade was the riskier change: the crash is UIKit's scene check, and the Capacitor 6 bridge does not use the app delegate's window. StatusBar, Haptics, InAppReview, and cordova-plugin-purchase are unchanged. No `pod install` or `cap sync` is required for this fix. Archive scheme **App**, Release, as 4.1 (16).
+
 4. Scheme **App Staging** (configuration Staging) rewrites the bundled `server.url` to `https://rjlcevans.com/vision-simulator-staging/`. Run that on a device or upload it to TestFlight. Scheme **App**, Archive, configuration **Release**, stays on production. Do not upload an **App Staging** archive to the App Store.
 
 5. Test on iPhone and iPad: camera, a sample photo, free conditions, a Pro condition, Compare, Combine, purchase, and Restore. Then turn Compare on three separate times and confirm the system review dialog is allowed to appear (Apple may still choose not to show it).
 
 6. Promote. Copy `vision-simulator-staging/` back onto `vision-simulator/` (or merge the branch that already has the final `vision-simulator/` files) and push `main`. Tag that commit, for example `vision-simulator-web-YYYY-MM-DD`, so you can find it later.
 
-7. Ship the new binary from scheme **App**, Release. In App Store Connect the version is 4.1 and the build is 15 (build 14 is already uploaded). Add review notes that the app now asks for a rating with `SKStoreReviewController` after the third Compare use.
+7. Ship the new binary from scheme **App**, Release. In App Store Connect the version is 4.1 and the build is 16 (builds 14 and 15 may already be uploaded). Add review notes that the app now asks for a rating with `SKStoreReviewController` after the third Compare use, and that launch now uses the UIScene lifecycle.
 
 ### Roll back
 
