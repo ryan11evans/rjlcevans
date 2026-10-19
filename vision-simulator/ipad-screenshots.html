@@ -103,9 +103,10 @@ const SCREENS = [
     file: 'visionsim-ipad-5-free-pro.png',
     eyebrow: '11 CONDITIONS · FREE + PRO',
     headline: 'Every Condition. Every Stage.',
+    hMax: 32,
     sub: '4 common conditions free. Unlock 7 more, combining, and Compare for $1.99.',
     bullets: [
-      '· Free: Myopia, Astigmatism, Cataract & camera/upload',
+      '· Free: Normal, Myopia, Astigmatism, Cataract & camera/upload',
       '· Pro: Glaucoma, AMD, Diabetic Retinopathy, RP & more',
       '· One-time $1.99 unlock — no subscription',
     ],
@@ -166,7 +167,7 @@ function drawScreen(ctx, img, s) {
   // ── HEADLINE ───────────────────────────────────────────────────────────────
   ctx.fillStyle = INK;
   ctx.font = '500 88px "Fraunces", serif';
-  const hLines = wrapLines(s.headline, 28);
+  const hLines = wrapLines(s.headline, s.hMax || 28);
   const hLineH = 102;
   const hTop = 230;
   hLines.forEach((l, i) => ctx.fillText(l, W/2, hTop + i * hLineH));
