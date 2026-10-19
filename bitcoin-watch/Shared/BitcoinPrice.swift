@@ -67,3 +67,41 @@ enum WCMessageKey {
     static let isPro = "isPro"
     static let currency = "displayCurrency"
 }
+
+// Why a paywall was opened. Shared with the widget so a Home Screen tap can
+// deep-link straight to the matching benefit.
+enum PaywallTrigger: String, Identifiable {
+    case settings
+    case widget
+    case holdings
+    case alerts
+    case volatility
+    case briefing
+    case icon
+    case theme
+
+    var id: String { rawValue }
+}
+
+enum TapBTCLink {
+    static let scheme = "tapbtc"
+
+    static func paywall(_ trigger: PaywallTrigger) -> URL {
+        URL(string: "\(scheme)://pro?trigger=\(trigger.rawValue)")!
+    }
+
+    /// `tapbtc://pro?trigger=widget` (and the same host with any known trigger).
+    static func paywallTrigger(from url: URL) -> PaywallTrigger? {
+        guard url.scheme?.lowercased() == scheme else { return nil }
+        let host = url.host?.lowercased() ?? ""
+        let path = url.path.lowercased()
+        guard host == "pro" || path == "/pro" || path.hasSuffix("/pro") else { return nil }
+        let raw = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?
+            .first { $0.name == "trigger" }?
+            .value?
+            .lowercased()
+        if let raw, let trigger = PaywallTrigger(rawValue: raw) { return trigger }
+        return .widget
+    }
+}

@@ -79,7 +79,9 @@ struct BitcoinProvider: TimelineProvider {
             sparkline: UserDefaults.shared.loadSparkline(),
             high24h: stats?.high, low24h: stats?.low, ath: stats?.ath, fng: stats?.fng,
             holdingsValue: holdingsValue(at: price.usd),
-            holdingsGainPct: holdingsGainPct(at: price.usd)
+            holdingsGainPct: holdingsGainPct(at: price.usd),
+            holdingsAmount: UserDefaults.shared.double(forKey: "btcHoldings"),
+            isPro: UserDefaults.shared.bool(forKey: "isProUnlocked")
         )
     }
 
@@ -122,6 +124,10 @@ struct PriceEntry: TimelineEntry {
     var fng: Int? = nil
     var holdingsValue: Double? = nil
     var holdingsGainPct: Double? = nil
+    /// BTC on hand even when the user isn't Pro, so My Stack can tease the lock
+    /// instead of pretending they haven't added holdings.
+    var holdingsAmount: Double = 0
+    var isPro: Bool = false
 }
 
 // ── Sparkline ────────────────────────────────────────────────────────────────
@@ -299,6 +305,12 @@ struct PortfolioWidgetView: View {
     let entry: PriceEntry
     @Environment(\.widgetFamily) var family
 
+    /// Holdings exist, but Pro is what paints them. Free users were falling
+    /// through to "Add your holdings", which is the wrong ask.
+    private var showsLockedTeaser: Bool {
+        entry.holdingsValue == nil && entry.holdingsAmount > 0 && !entry.isPro
+    }
+
     var body: some View {
         if let stack = entry.holdingsValue {
             VStack(alignment: .leading, spacing: family == .systemSmall ? 3 : 5) {
@@ -327,8 +339,30 @@ struct PortfolioWidgetView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .containerBackground(for: .widget) { WidgetBackground(tint: trendColor(entry.holdingsGainPct ?? entry.change24h)) }
+        } else if showsLockedTeaser {
+            VStack(spacing: 8) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: family == .systemSmall ? 22 : 28, weight: .bold))
+                    .foregroundStyle(themeAccent)
+                Text("Your stack · Unlock with Pro")
+                    .font(.system(size: family == .systemSmall ? 14 : 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.7)
+                if family != .systemSmall {
+                    Text("Live value and profit, on your Home Screen")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .containerBackground(for: .widget) { WidgetBackground(tint: themeAccent) }
+            .widgetURL(TapBTCLink.paywall(.widget))
+            .accessibilityLabel("Your stack. Unlock with Pro")
         } else {
-            // No holdings / not Pro — invite them in.
+            // No holdings yet — invite them in. Pro or not, there's nothing to show.
             VStack(spacing: 6) {
                 Image(systemName: "bitcoinsign.circle.fill").font(.title).foregroundStyle(themeAccent)
                 Text("Track your Bitcoin")

@@ -9,6 +9,17 @@ final class ReviewManager: ObservableObject {
 
     @Published var shouldPrompt = false
 
+    /// Set once this launch has decided whether to ask for a review.
+    private(set) var didDecideReviewThisSession = false
+    /// True for the rest of the process after a review prompt is scheduled.
+    private(set) var promptedThisSession = false
+
+    /// The post-holdings sheet stays quiet until this launch's review decision
+    /// is in, and stays quiet for the whole session when a review will show.
+    var blocksStackPrompt: Bool {
+        !didDecideReviewThisSession || promptedThisSession || shouldPrompt
+    }
+
     private let d = UserDefaults.standard
     private let countKey = "appOpenCount"
     private let promptsKey = "reviewPromptDates"
@@ -39,5 +50,84 @@ final class ReviewManager: ObservableObject {
         guard eligible else { return }
         promptDates = promptDates + [Date().timeIntervalSince1970]
         shouldPrompt = true
+        promptedThisSession = true
+    }
+
+    /// ContentView calls this after the open-time review decision, including
+    /// when no prompt was earned, so other sheets know the session is free.
+    func noteReviewDecisionFinished() {
+        didDecideReviewThisSession = true
+        if shouldPrompt { promptedThisSession = true }
+    }
+}
+
+// One full-screen "put your stack everywhere" moment after the first holdings
+// save, plus a single later chance on a profitable open. Never shares a
+// session with ReviewManager's review prompt.
+@MainActor
+final class StackEverywherePrompt: ObservableObject {
+    static let shared = StackEverywherePrompt()
+
+    /// Drives the sheet on the main screen (deferred show, or a later profitable open).
+    @Published var isPresented = false
+    /// Bumped when the holdings editor is on screen and should present instead.
+    @Published var handoffToken = 0
+    /// True while the holdings editor sheet is on screen.
+    var editorOnScreen = false
+
+    private let countKey = "stackEverywhereShowCount"
+    private let deferredKey = "stackEverywhereDeferred"
+    private var presentedThisSession = false
+
+    private var showCount: Int {
+        get { UserDefaults.standard.integer(forKey: countKey) }
+        set { UserDefaults.standard.set(newValue, forKey: countKey) }
+    }
+
+    /// A buy just saved and the user still holds Bitcoin.
+    func noteSuccessfulSave() {
+        guard !ProService.shared.isPro else { return }
+        guard HoldingsService.shared.hasHoldings else { return }
+        guard showCount == 0, !presentedThisSession else { return }
+        guard !ReviewManager.shared.blocksStackPrompt else {
+            UserDefaults.standard.set(true, forKey: deferredKey)
+            return
+        }
+        present()
+    }
+
+    /// First show was postponed because a review prompt owned the session
+    /// (or the review decision hadn't finished yet).
+    func considerDeferredFirstShow() {
+        guard UserDefaults.standard.bool(forKey: deferredKey) else { return }
+        guard showCount == 0, !presentedThisSession else { return }
+        if ProService.shared.isPro {
+            UserDefaults.standard.set(false, forKey: deferredKey)
+            return
+        }
+        guard HoldingsService.shared.hasHoldings else { return }
+        guard !ReviewManager.shared.blocksStackPrompt else { return }
+        present()
+    }
+
+    /// One extra chance on a later profitable open. Skipped in the session
+    /// the sheet already appeared, and whenever a review prompt is due.
+    func considerProfitableOpen(isProfitable: Bool) {
+        guard isProfitable else { return }
+        guard showCount == 1, !presentedThisSession else { return }
+        guard !ProService.shared.isPro, HoldingsService.shared.hasHoldings else { return }
+        guard !ReviewManager.shared.blocksStackPrompt else { return }
+        present()
+    }
+
+    private func present() {
+        presentedThisSession = true
+        showCount += 1
+        UserDefaults.standard.set(false, forKey: deferredKey)
+        if editorOnScreen {
+            handoffToken += 1
+        } else {
+            isPresented = true
+        }
     }
 }

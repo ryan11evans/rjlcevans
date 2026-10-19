@@ -7,7 +7,11 @@ struct ContentView: View {
     @StateObject private var statsService = StatsService.shared
     @ObservedObject private var alertService = AlertService.shared
     @ObservedObject private var reviewManager = ReviewManager.shared
+    @ObservedObject private var appLock = AppLockService.shared
+    @ObservedObject private var stackPrompt = StackEverywherePrompt.shared
+    @ObservedObject private var paywallRouter = PaywallRouter.shared
     @State private var showAlertSheet = false
+    @State private var pendingPaywallTrigger: PaywallTrigger?
     @State private var showCalculator = false
     @State private var showDCA = false
     @State private var showCompare = false
@@ -52,14 +56,19 @@ struct ContentView: View {
             .task {
                 await statsService.fetch()
                 ReviewManager.shared.recordOpen()
+                let price = service.currentPrice?.usd
+                let gain = price.flatMap { HoldingsService.shared.gain(at: $0) }
                 // Good moment: opening to a meaningful profit. Fallback after
                 // enough opens so we still ask people who never hit one.
-                if let price = service.currentPrice?.usd,
-                   let gain = HoldingsService.shared.gain(at: price), gain.pct >= 0.05 {
+                if let gain, gain.pct >= 0.05 {
                     ReviewManager.shared.markGoodMoment()
                 } else if ReviewManager.shared.openCount == 10 {
                     ReviewManager.shared.markGoodMoment()
                 }
+                ReviewManager.shared.noteReviewDecisionFinished()
+                // Never the same session as the review dialog above.
+                StackEverywherePrompt.shared.considerDeferredFirstShow()
+                StackEverywherePrompt.shared.considerProfitableOpen(isProfitable: (gain?.pct ?? -1) > 0)
             }
             .onChange(of: reviewManager.shouldPrompt) { _, prompt in
                 guard prompt else { return }
@@ -92,6 +101,27 @@ struct ContentView: View {
                     UserDefaults.shared.set(true, forKey: "hasSeenOnboarding")
                     showOnboarding = false
                 }
+            }
+            .sheet(item: $paywallRouter.trigger) { trigger in
+                PaywallView(trigger: trigger)
+            }
+            .sheet(isPresented: $stackPrompt.isPresented) {
+                StackEverywhereView()
+            }
+            .onOpenURL { url in
+                guard let trigger = TapBTCLink.paywallTrigger(from: url) else { return }
+                // Face ID stays in front. Remember the tap and present after unlock
+                // so the paywall's stack preview isn't shown over the lock.
+                if appLock.isLocked {
+                    pendingPaywallTrigger = trigger
+                } else {
+                    presentPaywall(trigger)
+                }
+            }
+            .onChange(of: appLock.isLocked) { _, locked in
+                guard !locked, let trigger = pendingPaywallTrigger else { return }
+                pendingPaywallTrigger = nil
+                presentPaywall(trigger)
             }
             .toolbar {
                 // Separate items, each with a title + SF Symbol (not HStacks of
@@ -308,6 +338,33 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Opens the paywall, dismissing whatever sheet is up so the deep link
+    /// from My Stack isn't hidden underneath it.
+    private func presentPaywall(_ trigger: PaywallTrigger) {
+        let busy = showAlertSheet || showCalculator || showDCA || showCompare
+            || showSettings || showHalving || stackPrompt.isPresented
+            || paywallRouter.trigger != nil || paywallRouter.editorOpen
+        showAlertSheet = false
+        showCalculator = false
+        showDCA = false
+        showCompare = false
+        showSettings = false
+        showHalving = false
+        stackPrompt.isPresented = false
+        paywallRouter.trigger = nil
+        if paywallRouter.editorOpen {
+            paywallRouter.dismissEditorToken += 1
+        }
+        if busy {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 450_000_000)
+                paywallRouter.trigger = trigger
+            }
+        } else {
+            paywallRouter.trigger = trigger
+        }
     }
 
     /// Renders the price share card at the current display's scale. Called
