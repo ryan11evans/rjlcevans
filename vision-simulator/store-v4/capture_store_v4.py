@@ -10,8 +10,11 @@ FACE = "/workspace/vs-shots/vision-simulator/screens/src/hero-face.jpg"
 TMP = "/tmp/vs-store"; os.makedirs(TMP, exist_ok=True)
 DEVICES = [("", 420, 912, 3, False), ("ipad-", 1032, 1376, 2, True)]
 
+async def set_compare(p, on):
+    cur = await p.evaluate("document.getElementById('compareSwitch').getAttribute('aria-checked') === 'true'")
+    if cur != on: await p.evaluate("document.getElementById('compareSwitch').click()"); await p.wait_for_timeout(300)
 async def compare(p, split):
-    await p.evaluate("document.getElementById('hudCompare').click()"); await p.wait_for_timeout(300)
+    await set_compare(p, True)
     if abs(split-0.5) > 0.01:
         box = await p.locator('.stage-wrap').bounding_box(); y = box['y'] + box['height']*0.55
         await p.mouse.move(box['x']+box['width']*0.5, y); await p.mouse.down()
@@ -29,13 +32,14 @@ async def hero(p, ipad):
 async def amd(p, ipad):
     await sample(p, 'face'); await cond(p, 'amd'); await preset(p, 'Advanced'); await compare(p, 0.5)
 async def cataract(p, ipad):
-    await sample(p, 'street'); await cond(p, 'cataract'); await slider(p, 'ctrl_cataractSev', 0.48)
+    await sample(p, 'street'); await cond(p, 'cataract'); await slider(p, 'ctrl_cataractSev', 0.48); await set_compare(p, False)
 async def colorblind(p, ipad):
     await sample(p, 'garden'); await cond(p, 'colorblind'); await preset(p, 'Protan (red)'); await compare(p, 0.5); await immersive(p)
 async def freepro(p, ipad):
     await p.wait_for_timeout(600)
     await p.evaluate("document.querySelector('.cond[data-cond=\"glaucoma\"]').click()")   # free user taps a Pro condition
     await p.wait_for_timeout(700)
+ONLY = os.environ.get("ONLY")
 SHOTS = [("s1-hero.png", hero, True), ("s2-amd-compare.png", amd, True), ("s3-cataract-night.png", cataract, True),
          ("s5-colorblind-compare.png", colorblind, True), ("s4-conditions-freepro.png", freepro, False)]
 
@@ -43,7 +47,7 @@ async def main():
     os.makedirs(OUT, exist_ok=True)
     async with async_playwright() as pw:
         b = await pw.chromium.launch(); errors = []
-        for fname, fn, pro in SHOTS:
+        for fname, fn, pro in [x for x in SHOTS if not ONLY or x[0] in ONLY.split(',')]:
             for prefix, w, h, dpr, ipad in DEVICES:
                 top = 24 if ipad else STATUS_PT
                 ctx, p = await new_page(b, BASE, w, h-top, dpr=dpr, pro=pro, safe_bottom=20 if ipad else 34)
