@@ -475,6 +475,8 @@
   html.ui2 .compare-tag { top: 62px; }
   html.ui2 .active-badge { display: none; }
   html.ui2.immersive .active-badge { display: block; }
+  html.ui2.immersive .compare-tag { top: 16px; }
+  html.ui2.immersive body.compare .active-badge { display: none; }
   html.ui2 .empty-state { color: #c9d2de; }
 
   /* Tap the image → immersive: dock slides away, viewer fills the screen. */
@@ -586,6 +588,11 @@
   html.ui2 .paywall-row { display: flex; justify-content: center; gap: 18px; }
   html.ui2 .paywall-restore, html.ui2 .paywall-later { display: inline-block; width: auto; min-height: 44px; font-size: 14px; }
   html.ui2 .paywall-later { appearance: none; border: none; background: none; color: var(--ink-mute); font-family: inherit; cursor: pointer; }
+  /* iPad: a centered card reads better than a bottom sheet on a big screen. */
+  @media (min-width: 700px) {
+    html.ui2 .paywall-overlay { align-items: center; padding: 24px; }
+    html.ui2 .paywall-panel { border-radius: 24px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+  }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -2642,22 +2649,31 @@
     new MutationObserver(() => ctrlGrid.querySelectorAll('input[type=range]').forEach(paintRange))
       .observe(ctrlGrid, { childList: true });
     // Tap (not drag) on the picture toggles immersive full screen.
-    let downX = 0, downY = 0, downT = 0;
-    stageWrap.addEventListener('pointerdown', e => { downX = e.clientX; downY = e.clientY; downT = Date.now(); }, true);
+    let downX = 0, downY = 0, downT = 0, downSplit = 0.5;
+    stageWrap.addEventListener('pointerdown', e => { downX = e.clientX; downY = e.clientY; downT = Date.now(); downSplit = compareSplit; }, true);
     stageWrap.addEventListener('pointerup', e => {
       if (e.target.closest('.hud-btn')) return;
       const moved = Math.hypot(e.clientX - downX, e.clientY - downY) > 8;
       if (moved || Date.now() - downT > 400) return;
-      if (compareMode && !activeConditions.has('none')) return; // taps move the divider in compare
+      // In Compare, a drag moves the divider; a quick tap leaves it where it was.
+      if (compareMode && !activeConditions.has('none')) {
+        compareSplit = downSplit; positionDivider();
+        if (currentSource === 'image') drawOnce();
+      }
       root.classList.toggle('immersive');
       toast.classList.remove('show');
     });
     // First run: never open on an empty black box — show a real simulation.
-    if (!urlConds && !currentSource) {
+    // (A reload keeps ?cond= in the URL; still show a picture, just keep that condition.)
+    if (!currentSource) {
       loadSample('street');
-      setActiveConditions(['cataract']);
-      const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
-      if (on) conditionsEl.scrollLeft = on.offsetLeft - (conditionsEl.clientWidth - on.offsetWidth) / 2;
+      if (!urlConds) setActiveConditions(['cataract']);
+      const centerActive = () => {
+        const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
+        if (on) conditionsEl.scrollLeft = on.offsetLeft - (conditionsEl.clientWidth - on.offsetWidth) / 2;
+      };
+      centerActive();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(centerActive); // chip widths change once fonts load
       let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
       if (!seen) {
         setTimeout(() => toast.classList.add('show'), 600);
