@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f1620">
@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<script>if (window.Capacitor || /[?&]ui2=1/.test(location.search)) document.documentElement.classList.add('ui2');</script>
 <style>
   :root {
     --bg: #0f1620;
@@ -375,6 +376,216 @@
   }
   .paywall-restore:hover { color: var(--ink); text-decoration: underline; }
   .paywall-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin: 8px 0 0; min-height: 1.4em; }
+
+  /* ===================================================================
+     UI v2 (prototype, app only): full-bleed viewer + bottom control dock.
+     Applies when html.ui2 is set (native app, or ?ui2=1 for testing on the
+     web). The plain website layout is untouched.
+     =================================================================== */
+  html.ui2, html.ui2 body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  html.ui2 body { --dock-h: 40vh; background: #000; }
+  html.ui2 #backToSite, html.ui2 #appStoreBadge, html.ui2 #homeLink { display: none !important; }
+  html.ui2 .wrap {
+    position: fixed; left: 0; right: 0; bottom: 0; height: var(--dock-h);
+    max-width: none; margin: 0; padding: 6px 16px calc(24px + env(safe-area-inset-bottom));
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    background: rgba(20,26,36,0.97); border-top: 1px solid rgba(255,255,255,0.08);
+    border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.45);
+    display: flex; flex-direction: column; z-index: 60;
+    transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  }
+  html.ui2 .wrap::before { content: ''; flex: 0 0 auto; align-self: center; width: 38px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.22); margin: 2px 0 8px; }
+  /* Viewer: everything above the dock, edge to edge, no rounded card. */
+  html.ui2 .stage-wrap, html.ui2.is-app .stage-wrap {
+    position: fixed !important; top: 0; left: 0; right: 0; bottom: calc(var(--dock-h) - 22px);
+    width: auto; height: auto; max-height: none; margin: 0; aspect-ratio: auto;
+    border-radius: 0; box-shadow: none; z-index: 10;
+    transition: bottom 0.32s cubic-bezier(0.32,0.72,0,1);
+  }
+  /* Dock content order: condition chips → its controls → sources → about/footer. */
+  html.ui2 header.hero { order: 9; border: none; padding: 8px 0 0; margin: 0; }
+  html.ui2 .hero-app-bar { display: none; }
+  html.ui2 .conditions-header { order: 1; margin: 0 0 8px; align-items: center; }
+  html.ui2 .conditions-scroller { order: 2; }
+  html.ui2 .controls { order: 3; }
+  .section-title.try-title { display: none; }
+  html.ui2 .section-title.try-title { order: 4; display: flex; }
+  html.ui2 .samples-scroller { order: 5; }
+  html.ui2 .wrap > .source-row { order: 6; }
+  html.ui2 footer { order: 10; margin-top: 18px; }
+  html.ui2 .section-title:not(.try-title) { display: none; }
+  html.ui2 .section-title { font-family: 'Inter Tight', -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-dim); letter-spacing: 0; margin: 18px 0 8px; }
+  html.ui2 .conditions-hint { display: none; }
+  html.ui2 .conditions-header::before { content: 'Condition'; font-size: 13px; font-weight: 600; color: var(--ink-dim); margin-right: auto; }
+  html.ui2 .combine-conditions-btn, html.ui2 .unlock-pro-btn, html.ui2 .clear-conditions-btn {
+    min-height: 32px; padding: 6px 12px; font-size: 13px; border-radius: 999px;
+  }
+  html.ui2 .clear-conditions-btn { display: none !important; }
+  /* Conditions: one row of 44pt chips instead of a 2-row grid of cards. */
+  html.ui2 .conditions { grid-template-rows: auto; gap: 8px; padding: 2px 0 4px; }
+  html.ui2 .cond {
+    width: auto; min-height: 44px; padding: 0 16px; border-radius: 999px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600;
+    background: rgba(255,255,255,0.06); border-color: transparent;
+  }
+  html.ui2 .cond .latin { display: none; }
+  html.ui2 .cond[aria-pressed="true"] { background: var(--ink); color: #0f1620; border-color: var(--ink); box-shadow: none; }
+  html.ui2.is-app.pro-ready:not(.is-pro) .cond.locked { opacity: 1; color: var(--ink-dim); }
+  html.ui2.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock {
+    position: static; display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 6px;
+    background: rgba(212,165,116,0.18); color: var(--accent);
+  }
+  html.ui2 .pro-lock::before { content: ''; width: 8px; height: 9px; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M4 8V5a4 4 0 0 1 8 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zm2 0h4V5a2 2 0 0 0-4 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M4 8V5a4 4 0 0 1 8 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zm2 0h4V5a2 2 0 0 0-4 0z'/%3E%3C/svg%3E") center/contain no-repeat; }
+  html.ui2 .scroll-cue { display: none; }
+  /* Controls: flat, iOS-style segmented stages and a visible slider track. */
+  html.ui2 .controls { background: none; border: none; padding: 12px 0 0; margin: 0; }
+  html.ui2 .ctrl-grid { gap: 12px; }
+  html.ui2 .ctrl-group-label { display: none; }
+  html.ui2 .ctrl label { font-size: 13px; color: var(--ink-dim); }
+  html.ui2 .ctrl label .val { font-family: inherit; font-style: normal; font-weight: 600; color: var(--ink); }
+  html.ui2 .presets { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 2px; border-radius: 10px; background: rgba(255,255,255,0.07); }
+  html.ui2 .preset { min-height: 36px; border: none; border-radius: 8px; font-family: inherit; font-style: normal; font-size: 13px; font-weight: 500; color: var(--ink); padding: 0 4px; }
+  html.ui2 .preset[aria-pressed="true"] { background: #4a5566; color: #fff; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  /* Track fix: with global border-box, the old height:8px + 40px padding left a
+     0px content box, so the track never painted — only a floating thumb. */
+  html.ui2 input[type="range"] { height: 44px; padding: 19px 0;
+    background: linear-gradient(to right, var(--accent) var(--pct, 50%), rgba(255,255,255,0.16) var(--pct, 50%)); background-clip: content-box; }
+  html.ui2 input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; background: #fff; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(0,0,0,0.1); }
+  html.ui2 .clinical-note { background: rgba(255,255,255,0.04); border-left: none; border-radius: 12px; font-size: 13px; margin-top: 14px; }
+  /* Sources: Camera / Upload as two equal buttons. Compare moves onto the viewer. */
+  html.ui2 .wrap > .source-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 0; }
+  html.ui2 .wrap > .source-row .btn { justify-content: center; min-height: 44px; border-radius: 12px; font-size: 15px; }
+  html.ui2 #compareToggle, html.ui2 #flipCam { display: none !important; }
+  html.ui2 #sampleRow > span { display: none; }
+  html.ui2 #sampleRow .btn[data-sample] { min-height: 44px; }
+
+  /* Floating glass buttons on the viewer. */
+  .viewer-hud { display: none; }
+  html.ui2 .viewer-hud { display: flex; position: absolute; top: 12px; left: 12px; right: 12px; justify-content: space-between; z-index: 8; pointer-events: none; transition: opacity 0.25s; }
+  html.ui2 .viewer-hud > div { display: flex; gap: 8px; }
+  .hud-btn { pointer-events: auto; appearance: none; border: none; height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; font: 600 14px 'Inter Tight', -apple-system, sans-serif;
+    background: rgba(20,24,32,0.55); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+  .hud-btn svg { width: 18px; height: 18px; }
+  .hud-btn[aria-pressed="true"] { background: rgba(255,255,255,0.92); color: #0f1620; }
+  html.ui2 .active-badge { bottom: 34px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: 0.02em; text-transform: none; font-weight: 600;
+    padding: 7px 14px; background: rgba(20,24,32,0.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); white-space: nowrap; }
+  html.ui2 .compare-tag { top: 62px; }
+  html.ui2 .active-badge { display: none; }
+  html.ui2.immersive .active-badge { display: block; }
+  html.ui2 .empty-state { color: #c9d2de; }
+
+  /* Tap the image → immersive: dock slides away, viewer fills the screen. */
+  html.ui2.immersive .wrap { transform: translateY(calc(100% + 10px)); }
+  html.ui2.immersive .stage-wrap { bottom: 0; }
+  html.ui2.immersive .viewer-hud { opacity: 0; }
+  html.ui2.immersive .viewer-hud .hud-keep { opacity: 1; }
+  html.ui2.immersive .active-badge { bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .ui2-toast { display: none; }
+  html.ui2 .ui2-toast { display: block; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 9; pointer-events: none;
+    background: rgba(20,24,32,0.7); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; font-size: 14px; font-weight: 500;
+    padding: 10px 16px; border-radius: 14px; text-align: center; line-height: 1.4; opacity: 0; transition: opacity 0.4s; }
+  html.ui2 .ui2-toast.show { opacity: 1; }
+
+  /* Landscape phone / iPad landscape: viewer left, dock as a side panel. */
+  @media (orientation: landscape) {
+    html.ui2 .wrap { top: 0; bottom: 0; left: auto; right: 0; width: min(380px, 40vw); height: auto; border-radius: 0; border-top: none; border-left: 1px solid rgba(255,255,255,0.08);
+      padding: calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) 16px; }
+    html.ui2 .wrap::before { display: none; }
+    html.ui2 .stage-wrap, html.ui2.is-app .stage-wrap { bottom: 0 !important; right: min(380px, 40vw); }
+    html.ui2 .viewer-hud { left: calc(12px + env(safe-area-inset-left)); }
+    html.ui2.immersive .wrap { transform: translateX(calc(100% + 10px)); }
+    html.ui2.immersive .stage-wrap { right: 0; }
+  }
+  @media (orientation: portrait) and (min-width: 700px) { html.ui2 body { --dock-h: 36vh; } }
+
+
+  /* ===== UI v2 native polish ===== */
+  /* Fonts served from this site (no Google Fonts dependency inside the app). */
+  @font-face { font-family: 'VS Inter Tight'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(fonts/inter-tight-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'VS Fraunces'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(fonts/fraunces-latin.woff2) format('woff2'); }
+  html.ui2 { --ui-font: 'VS Inter Tight', 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif; --title-font: 'VS Fraunces', 'Fraunces', Georgia, serif; }
+  html.ui2 body, html.ui2 button, html.ui2 input, html.ui2 .hud-btn { font-family: var(--ui-font); }
+  html.ui2 h1, html.ui2 .paywall-title, html.ui2 .sheet-title { font-family: var(--title-font); }
+  html.ui2 h1 em { font-style: normal; }
+  /* Nothing below ~12 pt; no italic Latin labels. */
+  html.ui2 .eyebrow, html.ui2 .paywall-eyebrow { font-size: 12px; }
+  html.ui2 .compare-tag { font-size: 12px; letter-spacing: 0.04em; padding: 4px 10px; }
+  html.ui2.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock { font-size: 12px; padding: 2px 7px; }
+  html.ui2 .pro-lock::before { width: 9px; height: 10px; }
+  html.ui2 footer { font-size: 13px; }
+  html.ui2 .cond .latin { display: none !important; }
+  /* 44 pt touch targets. */
+  .hud-btn { height: 44px; min-width: 44px; }
+  html.ui2 .unlock-pro-btn { min-height: 44px; padding: 0 16px; }
+  html.ui2.is-app.pro-ready:not(.is-pro) .unlock-pro-btn { display: inline-flex; align-items: center; }
+  html.ui2 .preset { min-height: 44px; }
+  html.ui2 .presets { border-radius: 12px; }
+  html.ui2 .preset { border-radius: 10px; }
+  html.ui2 footer a { display: inline-flex; align-items: center; min-height: 44px; }
+  /* Combine is a real iOS-style switch. */
+  html.ui2 .combine-conditions-btn { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 2px 0 8px; border: none; background: none; color: var(--ink); font-size: 14px; font-weight: 500; }
+  html.ui2 .combine-conditions-btn[aria-pressed="true"], html.ui2 .combine-conditions-btn[aria-checked="true"] { background: none; color: var(--ink); }
+  .vs-switch { display: none; }
+  html.ui2 .vs-switch { display: inline-block; position: relative; width: 51px; height: 31px; border-radius: 16px; background: rgba(120,120,128,0.36); transition: background 0.2s; flex: 0 0 auto; }
+  html.ui2 .vs-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.16); transition: transform 0.2s; }
+  html.ui2 .combine-conditions-btn[aria-checked="true"] .vs-switch { background: #34c759; }
+  html.ui2 .combine-conditions-btn[aria-checked="true"] .vs-switch::after { transform: translateX(20px); }
+  html.ui2.is-app.pro-ready:not(.is-pro) .combine-conditions-btn.locked { opacity: 1; color: var(--ink-dim); }
+  html.ui2 .conditions-header { min-height: 44px; gap: 8px; }
+  html.ui2 .conditions-header::before { font-size: 15px; color: var(--ink); }
+  /* Home indicator: never let the last row sit under it. */
+  html.ui2 .wrap { padding-bottom: calc(20px + max(env(safe-area-inset-bottom), 12px)); scroll-padding-bottom: env(safe-area-inset-bottom); }
+  /* About lives in a sheet, not at the bottom of the dock. */
+  html.ui2 header.hero { display: none; }
+  .sheet-overlay { display: none; }
+  html.ui2 .sheet-overlay { position: fixed; inset: 0; z-index: 210; background: rgba(8,11,16,0.6); align-items: flex-end; justify-content: center; }
+  html.ui2 .sheet-overlay.open { display: flex; }
+  html.ui2 .sheet-panel { position: relative; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; background: var(--panel);
+    border-radius: 24px 24px 0 0; border: 1px solid var(--line); border-bottom: none; padding: 8px 20px calc(20px + max(env(safe-area-inset-bottom), 12px)); animation: sheetUp 0.32s cubic-bezier(0.32,0.72,0,1); }
+  html.ui2 .paywall-overlay.open .paywall-panel { animation: sheetUp 0.32s cubic-bezier(0.32,0.72,0,1); }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  html.ui2 .sheet-grab { width: 38px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.22); margin: 0 auto 6px; }
+  html.ui2 .sheet-done { position: absolute; top: 6px; right: 8px; min-height: 44px; min-width: 44px; padding: 0 12px; appearance: none; border: none; background: none; color: var(--accent); font: 600 17px var(--ui-font); cursor: pointer; }
+  html.ui2 .sheet-head { display: flex; align-items: center; gap: 14px; margin: 26px 0 16px; }
+  html.ui2 .sheet-head img { width: 64px; height: 64px; border-radius: 15px; }
+  html.ui2 .sheet-title { font-size: 26px; font-weight: 600; margin: 0; color: var(--ink); }
+  html.ui2 .sheet-by { margin: 2px 0 0; font-size: 15px; color: var(--ink-dim); }
+  html.ui2 .sheet-panel p.sheet-body { font-size: 15px; line-height: 1.5; color: var(--ink); margin: 0 0 14px; }
+  html.ui2 .sheet-note { font-size: 14px; line-height: 1.5; color: var(--ink-dim); background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px 14px; margin: 0 0 16px; }
+  html.ui2 .sheet-note strong { color: var(--ink); }
+  html.ui2 .sheet-list { border-radius: 12px; background: rgba(255,255,255,0.05); overflow: hidden; }
+  html.ui2 .sheet-list a, html.ui2 .sheet-list button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; padding: 0 14px;
+    appearance: none; border: none; background: none; color: var(--ink); font: 400 16px var(--ui-font); text-decoration: none; text-align: left; cursor: pointer; }
+  html.ui2 .sheet-list > * + * { border-top: 1px solid rgba(255,255,255,0.07); }
+  html.ui2 .sheet-list .chev { color: var(--ink-mute); }
+  /* Reduced motion: no slides, pulses or animated scrolling. */
+  @media (prefers-reduced-motion: reduce) {
+    html.ui2 *, html.ui2 *::before, html.ui2 *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  /* Paywall v2: bottom sheet with real simulator output, clear one-time terms. */
+  .paywall-hero, .paywall-terms, .paywall-later { display: none; }
+  html.ui2 .paywall-overlay { align-items: flex-end; padding: 0; }
+  html.ui2 .paywall-panel { max-width: 560px; border-radius: 24px 24px 0 0; padding: 0 20px calc(20px + env(safe-area-inset-bottom)); overflow: hidden; border-bottom: none; }
+  html.ui2 .paywall-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 -20px 18px; position: relative; }
+  html.ui2 .paywall-hero figure { margin: 0; position: relative; aspect-ratio: 1; background: url(samples/pro-hero.jpg) no-repeat; background-size: 300% 100%; }
+  html.ui2 .paywall-hero figure:nth-child(2) { background-position: 50% 0; }
+  html.ui2 .paywall-hero figure:nth-child(3) { background-position: 100% 0; }
+  html.ui2 .paywall-hero figcaption { z-index: 1; position: absolute; left: 8px; bottom: 8px; font-size: 12px; font-weight: 600; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+  html.ui2 .paywall-hero::after { content: ''; position: absolute; inset: auto 0 0; height: 22%; background: linear-gradient(transparent, var(--panel)); pointer-events: none; }
+  html.ui2 .paywall-close { z-index: 2; top: 8px; right: 8px; width: 44px; height: 44px; padding: 0; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; font-size: 20px; }
+  html.ui2 .paywall-title { font-size: 26px; margin-bottom: 14px; }
+  html.ui2 .paywall-features { list-style: none; padding: 0; font-size: 15px; color: var(--ink); }
+  html.ui2 .paywall-features li { display: flex; gap: 10px; align-items: flex-start; }
+  html.ui2 .paywall-features li::before { content: '✓'; flex: 0 0 22px; height: 22px; border-radius: 50%; background: rgba(212,165,116,0.18); color: var(--accent); font-size: 13px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+  html.ui2 .paywall-buy { min-height: 54px; border-radius: 14px; font-size: 17px; margin-bottom: 8px; }
+  html.ui2 .paywall-terms { display: block; text-align: center; font-size: 13px; color: var(--ink-dim); margin: 0 0 6px; }
+  html.ui2 .paywall-row { display: flex; justify-content: center; gap: 18px; }
+  html.ui2 .paywall-restore, html.ui2 .paywall-later { display: inline-block; width: auto; min-height: 44px; font-size: 14px; }
+  html.ui2 .paywall-later { appearance: none; border: none; background: none; color: var(--ink-mute); font-family: inherit; cursor: pointer; }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
@@ -410,12 +621,23 @@
     <div class="stage">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="sourceCanvas"></canvas>
-      <canvas id="stageCanvas"></canvas>
+      <canvas id="stageCanvas" role="img" aria-label="Simulated view: Normal vision"></canvas>
       <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
       <div class="compare-line" id="compareLine"></div>
       <div class="compare-tag left" id="compareTagL">Normal</div>
       <div class="compare-tag right" id="compareTagR">Impaired</div>
       <div class="active-badge" id="activeBadge"></div>
+      <div class="viewer-hud" id="viewerHud">
+        <div><button type="button" class="hud-btn" id="hudInfo" aria-label="About">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
+        <div>
+          <button type="button" class="hud-btn" id="hudCompare" aria-pressed="false" aria-label="Compare before and after">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg><span>Compare</span></button>
+          <button type="button" class="hud-btn" id="hudCamera" aria-label="Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+        </div>
+      </div>
+      <div class="ui2-toast" id="ui2Toast" role="status" aria-live="polite">Tap a condition below<br>Tap the picture for full screen</div>
       <div class="empty-state" id="emptyState">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
         <div>Start the camera or upload an image to begin.</div>
@@ -440,8 +662,9 @@
     </button>
   </div>
 
+  <h2 class="section-title try-title">Try it on</h2>
   <div class="samples-scroller" id="samplesScroller">
-    <div class="source-row" id="sampleRow">
+    <div class="source-row" id="sampleRow" role="group" aria-label="Sample scenes">
       <span style="align-self:center; font-size:12px; color:var(--ink-mute); margin-right:2px;">Samples:</span>
       <button class="btn ghost" data-sample="reading">
         <svg class="sample-thumb" viewBox="0 0 26 20"><rect width="26" height="20" fill="#fdfaf4"/><rect x="2" y="2" width="22" height="16" rx="1" fill="none" stroke="#d0c8b8" stroke-width="0.5"/><line x1="4" y1="5.5" x2="22" y2="5.5" stroke="#1a1a2a" stroke-width="1.6"/><line x1="4" y1="8.5" x2="21" y2="8.5" stroke="#1a1a2a" stroke-width="1"/><line x1="4" y1="11" x2="20" y2="11" stroke="#1a1a2a" stroke-width="0.7"/><line x1="4" y1="13.5" x2="22" y2="13.5" stroke="#1a1a2a" stroke-width="0.5"/><line x1="4" y1="15.5" x2="18" y2="15.5" stroke="#1a1a2a" stroke-width="0.35"/></svg>
@@ -481,7 +704,7 @@
     <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
   </div>
   <div class="conditions-scroller" id="conditionsScroller">
-    <div class="conditions" id="conditions">
+    <div class="conditions" id="conditions" role="group" aria-label="Eye condition">
       <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
       <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
       <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
@@ -511,9 +734,27 @@
   </footer>
 </div>
 
-<div class="paywall-overlay" id="paywallOverlay">
+
+<div class="sheet-overlay" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="sheet-panel">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <button type="button" class="sheet-done" id="aboutDone">Done</button>
+    <div class="sheet-head">
+      <img src="icon.svg" alt="">
+      <div><h3 class="sheet-title" id="aboutTitle">Vision Simulator</h3><p class="sheet-by">By Dr. Ryan Evans, OD</p></div>
+    </div>
+    <p class="sheet-body">See how 11 common eye conditions can change everyday vision, from cataract glare and glaucoma's tunnel vision to the central loss of macular degeneration. Use the live camera, a built-in scene, or your own photo.</p>
+    <p class="sheet-note"><strong>For education only.</strong> These simulations approximate how a condition can affect sight. They are not a diagnosis or a vision test. See an eye doctor about any change in your vision.</p>
+    <div class="sheet-list">
+      <button type="button" id="aboutRestore">Restore Purchases <span class="chev" aria-hidden="true">›</span></button>
+      <a href="https://rjlcevans.com/privacy" id="aboutPrivacy">Privacy Policy <span class="chev" aria-hidden="true">›</span></a>
+    </div>
+  </div>
+</div>
+<div class="paywall-overlay" id="paywallOverlay" role="dialog" aria-modal="true" aria-label="Vision Simulator Pro">
   <div class="paywall-panel">
     <button type="button" class="paywall-close" id="paywallClose" aria-label="Close">&times;</button>
+    <div class="paywall-hero" aria-hidden="true"><figure><figcaption>Glaucoma</figcaption></figure><figure><figcaption>AMD</figcaption></figure><figure><figcaption>Color Blindness</figcaption></figure></div>
     <p class="paywall-eyebrow">Vision Simulator Pro</p>
     <h3 class="paywall-title">Unlock the full clinical set</h3>
     <ul class="paywall-features">
@@ -522,7 +763,11 @@
       <li>Compare mode — side-by-side normal vs. impaired</li>
     </ul>
     <button type="button" class="paywall-buy" id="paywallBuy">Unlock Pro</button>
-    <button type="button" class="paywall-restore" id="paywallRestore">Restore Purchases</button>
+    <p class="paywall-terms">One-time purchase · No subscription · Family Sharing</p>
+    <div class="paywall-row">
+      <button type="button" class="paywall-restore" id="paywallRestore">Restore Purchases</button>
+      <button type="button" class="paywall-later" id="paywallLater">Not now</button>
+    </div>
     <p class="paywall-note" id="paywallNote"></p>
   </div>
 </div>
@@ -1939,7 +2184,13 @@
   function setCombineMode(on) {
     combineMode = on;
     combineBtn.setAttribute('aria-pressed', String(on));
-    combineBtn.textContent = on ? 'Combine: On' : 'Combine: Off';
+    if (document.documentElement.classList.contains('ui2')) {
+      combineBtn.setAttribute('role', 'switch');
+      combineBtn.setAttribute('aria-checked', String(on));
+      combineBtn.innerHTML = '<span>Combine</span><span class="vs-switch" aria-hidden="true"></span>';
+    } else {
+      combineBtn.textContent = on ? 'Combine: On' : 'Combine: Off';
+    }
   }
   combineBtn.addEventListener('click', () => {
     if (pluginReady && !isPro) { openPaywall(); return; }
@@ -1986,7 +2237,8 @@
     }
 
     hapticTap();
-    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
     buildControls();
     if (currentSource === 'image') drawOnce();
   });
@@ -2333,6 +2585,86 @@
     setActiveConditions(urlConds.split(',').map(s => s.trim()).filter(Boolean));
   } else {
     buildControls();
+  }
+
+  // ===== UI v2 (app only): full-bleed viewer, HUD, tap-for-full-screen =====
+  if (document.documentElement.classList.contains('ui2')) {
+    const root = document.documentElement;
+    const hudCompare = document.getElementById('hudCompare');
+    const hudCamera = document.getElementById('hudCamera');
+    const toast = document.getElementById('ui2Toast');
+    // The viewer must not live inside the scrolling/transforming dock.
+    document.body.insertBefore(stageWrap, document.querySelector('.wrap'));
+    const relayout = () => { resizeStage(); if (currentSource === 'image') drawOnce(); };
+    // The stage animates its size; repaint while it moves and once it settles.
+    stageWrap.addEventListener('transitionend', relayout);
+    const aboutOverlay = document.getElementById('aboutOverlay');
+    const closeAbout = () => aboutOverlay.classList.remove('open');
+    document.getElementById('hudInfo').addEventListener('click', e => {
+      e.stopPropagation();
+      aboutOverlay.classList.add('open');
+    });
+    document.getElementById('aboutDone').addEventListener('click', closeAbout);
+    aboutOverlay.addEventListener('click', e => { if (e.target === aboutOverlay) closeAbout(); });
+    document.getElementById('aboutRestore').addEventListener('click', () => {
+      closeAbout(); openPaywall();
+      document.getElementById('paywallRestore').click();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAbout(); closePaywall(); } });
+    setCombineMode(combineMode); // render the switch
+    document.querySelector('.wrap').setAttribute('aria-label', 'Controls');
+    document.querySelector('.wrap').setAttribute('role', 'region');
+    // Accessible name for the picture + labelled preset groups.
+    const labelStage = () => {
+      const keys = activeConditionKeys();
+      const stage = [...ctrlGrid.querySelectorAll('.preset[aria-pressed="true"]')].map(b => b.textContent.trim()).join(', ');
+      stageCanvas.setAttribute('aria-label', 'Simulated view: ' + (keys.length ? keys.map(shortTitle).join(' + ') : 'Normal vision') + (stage ? ' (' + stage + ')' : ''));
+      ctrlGrid.querySelectorAll('.presets').forEach(g => {
+        g.setAttribute('role', 'group');
+        const l = g.parentElement.querySelector('label'); if (l) g.setAttribute('aria-label', l.textContent.trim());
+      });
+    };
+    new MutationObserver(labelStage).observe(ctrlGrid, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+    labelStage();
+    hudCompare.addEventListener('click', e => {
+      e.stopPropagation();
+      compareBtn.click();
+      hudCompare.setAttribute('aria-pressed', compareBtn.getAttribute('aria-pressed'));
+    });
+    hudCamera.addEventListener('click', e => { e.stopPropagation(); camToggle.click(); });
+    document.getElementById('paywallLater').addEventListener('click', closePaywall);
+    // Slider fill: show how far along the track the value is.
+    const paintRange = el => {
+      const pct = (el.value - el.min) / ((el.max - el.min) || 1) * 100;
+      el.style.setProperty('--pct', pct + '%');
+    };
+    document.addEventListener('input', e => { if (e.target.type === 'range') paintRange(e.target); });
+    new MutationObserver(() => ctrlGrid.querySelectorAll('input[type=range]').forEach(paintRange))
+      .observe(ctrlGrid, { childList: true });
+    // Tap (not drag) on the picture toggles immersive full screen.
+    let downX = 0, downY = 0, downT = 0;
+    stageWrap.addEventListener('pointerdown', e => { downX = e.clientX; downY = e.clientY; downT = Date.now(); }, true);
+    stageWrap.addEventListener('pointerup', e => {
+      if (e.target.closest('.hud-btn')) return;
+      const moved = Math.hypot(e.clientX - downX, e.clientY - downY) > 8;
+      if (moved || Date.now() - downT > 400) return;
+      if (compareMode && !activeConditions.has('none')) return; // taps move the divider in compare
+      root.classList.toggle('immersive');
+      toast.classList.remove('show');
+    });
+    // First run: never open on an empty black box — show a real simulation.
+    if (!urlConds && !currentSource) {
+      loadSample('street');
+      setActiveConditions(['cataract']);
+      const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
+      if (on) conditionsEl.scrollLeft = on.offsetLeft - (conditionsEl.clientWidth - on.offsetWidth) / 2;
+      let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
+      if (!seen) {
+        setTimeout(() => toast.classList.add('show'), 600);
+        setTimeout(() => toast.classList.remove('show'), 4200);
+        try { localStorage.setItem('vs_ui2_hint', '1'); } catch (e) {}
+      }
+    }
   }
   updateConditionsScrollState();
   updateSamplesScrollState();
