@@ -486,7 +486,7 @@
   html.ui2.immersive .viewer-hud .hud-keep { opacity: 1; }
   html.ui2.immersive .active-badge { bottom: calc(24px + env(safe-area-inset-bottom)); }
   .ui2-toast { display: none; }
-  html.ui2 .ui2-toast { display: block; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 9; pointer-events: none;
+  html.ui2 .ui2-toast { display: block; position: absolute; left: 50%; top: 24%; transform: translate(-50%,-50%); width: max-content; max-width: calc(100% - 48px); z-index: 9; pointer-events: none;
     background: rgba(20,24,32,0.7); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; font-size: 14px; font-weight: 500;
     padding: 10px 16px; border-radius: 14px; text-align: center; line-height: 1.4; opacity: 0; transition: opacity 0.4s; }
   html.ui2 .ui2-toast.show { opacity: 1; }
@@ -536,8 +536,15 @@
   html.ui2 .combine-conditions-btn[aria-checked="true"] .vs-switch { background: #34c759; }
   html.ui2 .combine-conditions-btn[aria-checked="true"] .vs-switch::after { transform: translateX(20px); }
   html.ui2.is-app.pro-ready:not(.is-pro) .combine-conditions-btn.locked { opacity: 1; color: var(--ink-dim); }
-  html.ui2 .conditions-header { min-height: 44px; gap: 8px; }
-  html.ui2 .conditions-header::before { font-size: 15px; color: var(--ink); }
+  html.ui2 .conditions-header { min-height: 44px; gap: 14px; justify-content: flex-start; }
+  /* The two switches carry the row; the chips below are self-explanatory. */
+  html.ui2 .conditions-header::before { display: none; }
+  html.ui2 .unlock-pro-btn { margin-left: auto; }
+  .compare-switch { display: none; }
+  html.ui2 .compare-switch { display: inline-flex; }
+  html.ui2 .combine-conditions-btn.compare-switch[aria-checked="true"] .vs-switch { background: #34c759; }
+  /* Nothing to compare on Normal Vision: hide the divider and tags. */
+  html.ui2 body.compare.cond-none .compare-line, html.ui2 body.compare.cond-none .compare-tag { display: none; }
   /* Home indicator: never let the last row sit under it. */
   html.ui2 .wrap { padding-bottom: calc(20px + max(env(safe-area-inset-bottom), 12px)); scroll-padding-bottom: env(safe-area-inset-bottom); }
   /* About lives in a sheet, not at the bottom of the dock. */
@@ -639,12 +646,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
         <div>
           <button type="button" class="hud-btn" id="hudCompare" aria-pressed="false" aria-label="Compare before and after">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg><span>Compare</span></button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button>
           <button type="button" class="hud-btn" id="hudCamera" aria-label="Camera">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
         </div>
       </div>
-      <div class="ui2-toast" id="ui2Toast" role="status" aria-live="polite">Tap a condition below<br>Tap the picture for full screen</div>
+      <div class="ui2-toast" id="ui2Toast" role="status" aria-live="polite">Drag the line to compare normal vs. cataract<br>Tap the picture for full screen</div>
       <div class="empty-state" id="emptyState">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
         <div>Start the camera or upload an image to begin.</div>
@@ -706,6 +713,7 @@
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions-header">
     <p class="conditions-hint">Swipe for all 11 · tap to switch · Combine to layer several</p>
+    <button type="button" class="combine-conditions-btn compare-switch" id="compareSwitch" role="switch" aria-checked="false"><span>Compare</span><span class="vs-switch" aria-hidden="true"></span></button>
     <button type="button" class="combine-conditions-btn" id="combineConditionsBtn" aria-pressed="false">Combine: Off</button>
     <button type="button" class="unlock-pro-btn" id="unlockProBtn">Unlock Pro</button>
     <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
@@ -2543,16 +2551,29 @@
     if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
-  compareBtn.addEventListener('click', () => {
-    if (pluginReady && !isPro) { openPaywall(); return; }
-    compareMode = !compareMode;
+  // One setter keeps every Compare control (web button, in-app switch,
+  // floating button on the image) in sync.
+  function setCompareMode(on) {
+    compareMode = on;
     compareBtn.setAttribute('aria-pressed', compareMode ? 'true' : 'false');
     const lbl = document.getElementById('compareLabel');
     if (lbl) lbl.textContent = compareMode ? 'Compare: On' : 'Compare: Off';
+    const sw = document.getElementById('compareSwitch');
+    if (sw) sw.setAttribute('aria-checked', String(compareMode));
+    const hud = document.getElementById('hudCompare');
+    if (hud) hud.setAttribute('aria-pressed', String(compareMode));
     document.body.classList.toggle('compare', compareMode);
     positionDivider();
     if (currentSource === 'image') drawOnce();
-  });
+  }
+  // Turning Compare off is always allowed; turning it on is Pro (the app opens
+  // with a free Compare preview on Cataract, see UI v2 first run).
+  function toggleCompare() {
+    if (!compareMode && pluginReady && !isPro) { openPaywall(); return; }
+    setCompareMode(!compareMode);
+    hapticTap();
+  }
+  compareBtn.addEventListener('click', toggleCompare);
 
   // Drag the compare divider across the stage (before/after wipe).
   const stageWrap = document.querySelector('.stage-wrap');
@@ -2625,7 +2646,8 @@
     const labelStage = () => {
       const keys = activeConditionKeys();
       const stage = [...ctrlGrid.querySelectorAll('.preset[aria-pressed="true"]')].map(b => b.textContent.trim()).join(', ');
-      stageCanvas.setAttribute('aria-label', 'Simulated view: ' + (keys.length ? keys.map(shortTitle).join(' + ') : 'Normal vision') + (stage ? ' (' + stage + ')' : ''));
+      document.body.classList.toggle('cond-none', keys.length === 0);
+      stageCanvas.setAttribute('aria-label', (compareMode && keys.length ? 'Before and after. ' : '') + 'Simulated view: ' + (keys.length ? keys.map(shortTitle).join(' + ') : 'Normal vision') + (stage ? ' (' + stage + ')' : ''));
       ctrlGrid.querySelectorAll('.presets').forEach(g => {
         g.setAttribute('role', 'group');
         const l = g.parentElement.querySelector('label'); if (l) g.setAttribute('aria-label', l.textContent.trim());
@@ -2633,11 +2655,8 @@
     };
     new MutationObserver(labelStage).observe(ctrlGrid, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
     labelStage();
-    hudCompare.addEventListener('click', e => {
-      e.stopPropagation();
-      compareBtn.click();
-      hudCompare.setAttribute('aria-pressed', compareBtn.getAttribute('aria-pressed'));
-    });
+    hudCompare.addEventListener('click', e => { e.stopPropagation(); toggleCompare(); labelStage(); });
+    document.getElementById('compareSwitch').addEventListener('click', () => { toggleCompare(); labelStage(); });
     hudCamera.addEventListener('click', e => { e.stopPropagation(); camToggle.click(); });
     document.getElementById('paywallLater').addEventListener('click', closePaywall);
     // Slider fill: show how far along the track the value is.
@@ -2668,6 +2687,9 @@
     if (!currentSource) {
       loadSample('street');
       if (!urlConds) setActiveConditions(['cataract']);
+      // Default state: Compare on, divider centered — Normal | Cataract.
+      compareSplit = 0.5;
+      setCompareMode(true);
       const centerActive = () => {
         const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
         if (on) conditionsEl.scrollLeft = on.offsetLeft - (conditionsEl.clientWidth - on.offsetWidth) / 2;
