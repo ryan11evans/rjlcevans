@@ -1,0 +1,502 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0FA1C237B39E12A86A189C47 /* AgendaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08757D295C94523E0BCCBBE /* AgendaCardView.swift */; };
+		2996845FD203C7DAC00C6A31 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D2DDF1B73960465BECA823 /* SampleData.swift */; };
+		40E9D9409D40AE1F0F040E94 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D2DDF1B73960465BECA823 /* SampleData.swift */; };
+		4B517B0740EFA02903A9B4FA /* HiveCalWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 007E169C2E06A5B414563E60 /* HiveCalWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6662D869166A5EB200156529 /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA026043E69F4CE80206B2A /* CalendarEvent.swift */; };
+		802E7B9121D694B11D94D747 /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA026043E69F4CE80206B2A /* CalendarEvent.swift */; };
+		86F7DAA7CB01835ED0B74262 /* DayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B7A3E21D9D8803342E7A2E /* DayDetailSheet.swift */; };
+		8C1DA71BE46DF286AF41D407 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4A7FE5360D52729C450175D /* Assets.xcassets */; };
+		9C8CF35A6BCD48EA4B657072 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BAACEF64AAE8036741C92A0 /* ContentView.swift */; };
+		A0A32306A180ED7E56309BCC /* MonthGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7253678FBC7ADD047B75F2FF /* MonthGrid.swift */; };
+		AD2372F699BBE47C9995B04C /* HiveCalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 316B8DF55FC0F4BE3B24A0D7 /* HiveCalApp.swift */; };
+		B1C585A1AEF4910E40ACC263 /* AgendaListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3114EAB4A5AACC92567E446 /* AgendaListView.swift */; };
+		BABB0F1094DAD1F122CFE3F0 /* EventChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4C9AED6032A7EB87FEC80 /* EventChip.swift */; };
+		C4AFB913820A55C55C845275 /* AgendaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08757D295C94523E0BCCBBE /* AgendaCardView.swift */; };
+		CC434C01EC16A6DE444A3409 /* HiveCalWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDEFD882ED88934BED01149 /* HiveCalWidget.swift */; };
+		E58935FF177ECA396D4225ED /* MonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B09E93487DBFF75805EF01 /* MonthView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4AD66BF9BF525AF4A458936D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E25EC631812B8FF9508A5E30 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7D9FBE2843D99C7BA17CD3B2;
+			remoteInfo = HiveCalWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3DAAA871E0E722A955A6F1F8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4B517B0740EFA02903A9B4FA /* HiveCalWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		007E169C2E06A5B414563E60 /* HiveCalWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = HiveCalWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		00B09E93487DBFF75805EF01 /* MonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthView.swift; sourceTree = "<group>"; };
+		0B9EF0DF85F73085D956D288 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		316B8DF55FC0F4BE3B24A0D7 /* HiveCalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiveCalApp.swift; sourceTree = "<group>"; };
+		5DDEFD882ED88934BED01149 /* HiveCalWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiveCalWidget.swift; sourceTree = "<group>"; };
+		68B7A3E21D9D8803342E7A2E /* DayDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailSheet.swift; sourceTree = "<group>"; };
+		7253678FBC7ADD047B75F2FF /* MonthGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthGrid.swift; sourceTree = "<group>"; };
+		75BE161AA0320F28AA71F042 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7AA4C9AED6032A7EB87FEC80 /* EventChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventChip.swift; sourceTree = "<group>"; };
+		8BAACEF64AAE8036741C92A0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B08757D295C94523E0BCCBBE /* AgendaCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgendaCardView.swift; sourceTree = "<group>"; };
+		D4A7FE5360D52729C450175D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E17FEFDC5F4E63AC19AF9561 /* HiveCal.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HiveCal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3114EAB4A5AACC92567E446 /* AgendaListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgendaListView.swift; sourceTree = "<group>"; };
+		F6D2DDF1B73960465BECA823 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		FFA026043E69F4CE80206B2A /* CalendarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEvent.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		19706FE3AAD3220FAAA0E7EA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E17FEFDC5F4E63AC19AF9561 /* HiveCal.app */,
+				007E169C2E06A5B414563E60 /* HiveCalWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8D51CF21723BDF8116D6D80D /* HiveCal */ = {
+			isa = PBXGroup;
+			children = (
+				D4A7FE5360D52729C450175D /* Assets.xcassets */,
+				EBA749917BD3D358B7E76709 /* App */,
+				FF63FEBC119D64907ACD240C /* Models */,
+				A0E2CEB6776C2F2BD998317F /* Views */,
+			);
+			path = HiveCal;
+			sourceTree = "<group>";
+		};
+		A0E2CEB6776C2F2BD998317F /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E3114EAB4A5AACC92567E446 /* AgendaListView.swift */,
+				8BAACEF64AAE8036741C92A0 /* ContentView.swift */,
+				68B7A3E21D9D8803342E7A2E /* DayDetailSheet.swift */,
+				7AA4C9AED6032A7EB87FEC80 /* EventChip.swift */,
+				00B09E93487DBFF75805EF01 /* MonthView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B8DE50A9068904342E427A9D /* HiveCalWidget */ = {
+			isa = PBXGroup;
+			children = (
+				5DDEFD882ED88934BED01149 /* HiveCalWidget.swift */,
+				75BE161AA0320F28AA71F042 /* Info.plist */,
+			);
+			path = HiveCalWidget;
+			sourceTree = "<group>";
+		};
+		C293E2013079DD8404C707A5 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				B08757D295C94523E0BCCBBE /* AgendaCardView.swift */,
+				FFA026043E69F4CE80206B2A /* CalendarEvent.swift */,
+				F6D2DDF1B73960465BECA823 /* SampleData.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		E63D8A807B744BB6644BB532 = {
+			isa = PBXGroup;
+			children = (
+				8D51CF21723BDF8116D6D80D /* HiveCal */,
+				B8DE50A9068904342E427A9D /* HiveCalWidget */,
+				C293E2013079DD8404C707A5 /* Shared */,
+				19706FE3AAD3220FAAA0E7EA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EBA749917BD3D358B7E76709 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				316B8DF55FC0F4BE3B24A0D7 /* HiveCalApp.swift */,
+				0B9EF0DF85F73085D956D288 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FF63FEBC119D64907ACD240C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				7253678FBC7ADD047B75F2FF /* MonthGrid.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1C58DCEE08359369B85B5021 /* HiveCal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2EA984B68ADFF15A0399DB0 /* Build configuration list for PBXNativeTarget "HiveCal" */;
+			buildPhases = (
+				152F5A1C247A7BD1C8D26B1E /* Sources */,
+				F3047D08471CE8EC562B6A2A /* Resources */,
+				3DAAA871E0E722A955A6F1F8 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3734DA9E75D87C55E0165F5B /* PBXTargetDependency */,
+			);
+			name = HiveCal;
+			packageProductDependencies = (
+			);
+			productName = HiveCal;
+			productReference = E17FEFDC5F4E63AC19AF9561 /* HiveCal.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7D9FBE2843D99C7BA17CD3B2 /* HiveCalWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 921F8CA6231B18DE8CE4673B /* Build configuration list for PBXNativeTarget "HiveCalWidget" */;
+			buildPhases = (
+				42F779257A0736DD6C4B78FD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HiveCalWidget;
+			packageProductDependencies = (
+			);
+			productName = HiveCalWidget;
+			productReference = 007E169C2E06A5B414563E60 /* HiveCalWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E25EC631812B8FF9508A5E30 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1C58DCEE08359369B85B5021 = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+					7D9FBE2843D99C7BA17CD3B2 = {
+						DevelopmentTeam = 9B9PTBR9A2;
+					};
+				};
+			};
+			buildConfigurationList = 19E37FF7A9007736F6BF10AB /* Build configuration list for PBXProject "HiveCal" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E63D8A807B744BB6644BB532;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 19706FE3AAD3220FAAA0E7EA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1C58DCEE08359369B85B5021 /* HiveCal */,
+				7D9FBE2843D99C7BA17CD3B2 /* HiveCalWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F3047D08471CE8EC562B6A2A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8C1DA71BE46DF286AF41D407 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		152F5A1C247A7BD1C8D26B1E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FA1C237B39E12A86A189C47 /* AgendaCardView.swift in Sources */,
+				B1C585A1AEF4910E40ACC263 /* AgendaListView.swift in Sources */,
+				6662D869166A5EB200156529 /* CalendarEvent.swift in Sources */,
+				9C8CF35A6BCD48EA4B657072 /* ContentView.swift in Sources */,
+				86F7DAA7CB01835ED0B74262 /* DayDetailSheet.swift in Sources */,
+				BABB0F1094DAD1F122CFE3F0 /* EventChip.swift in Sources */,
+				AD2372F699BBE47C9995B04C /* HiveCalApp.swift in Sources */,
+				A0A32306A180ED7E56309BCC /* MonthGrid.swift in Sources */,
+				E58935FF177ECA396D4225ED /* MonthView.swift in Sources */,
+				2996845FD203C7DAC00C6A31 /* SampleData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		42F779257A0736DD6C4B78FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4AFB913820A55C55C845275 /* AgendaCardView.swift in Sources */,
+				802E7B9121D694B11D94D747 /* CalendarEvent.swift in Sources */,
+				CC434C01EC16A6DE444A3409 /* HiveCalWidget.swift in Sources */,
+				40E9D9409D40AE1F0F040E94 /* SampleData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3734DA9E75D87C55E0165F5B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7D9FBE2843D99C7BA17CD3B2 /* HiveCalWidget */;
+			targetProxy = 4AD66BF9BF525AF4A458936D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		436BFD260605C55750EEF164 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9B9PTBR9A2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		4C1AD133EA5C9E10464D58F2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = HiveCalWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.hivecal.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4D3E8B7A07E6D93A94C41CC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9B9PTBR9A2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		6C33F6B0F44DF59D79FB0A6A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = HiveCal/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.hivecal;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7F48807EE4AE093C4EBA32D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = HiveCal/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.hivecal;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B85CF2B457514ED462813425 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = HiveCalWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rjlcevans.hivecal.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		19E37FF7A9007736F6BF10AB /* Build configuration list for PBXProject "HiveCal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D3E8B7A07E6D93A94C41CC5 /* Debug */,
+				436BFD260605C55750EEF164 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		921F8CA6231B18DE8CE4673B /* Build configuration list for PBXNativeTarget "HiveCalWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C1AD133EA5C9E10464D58F2 /* Debug */,
+				B85CF2B457514ED462813425 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D2EA984B68ADFF15A0399DB0 /* Build configuration list for PBXNativeTarget "HiveCal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7F48807EE4AE093C4EBA32D2 /* Debug */,
+				6C33F6B0F44DF59D79FB0A6A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E25EC631812B8FF9508A5E30 /* Project object */;
+}

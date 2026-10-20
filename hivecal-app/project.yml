@@ -1,0 +1,61 @@
+name: HiveCal
+options:
+  bundleIdPrefix: com.rjlcevans
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+schemes:
+  HiveCal:
+    build:
+      targets:
+        HiveCal: all
+    run:
+      config: Debug
+      executable: HiveCal
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: "9B9PTBR9A2"
+
+targets:
+
+  # ── iPhone App ────────────────────────────────────────────────────────────
+  HiveCal:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: HiveCal
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.hivecal
+        INFOPLIST_FILE: HiveCal/App/Info.plist
+    dependencies:
+      - target: HiveCalWidget
+
+  # ── Home Screen Widget Extension ─────────────────────────────────────────
+  HiveCalWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: HiveCalWidget
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.hivecal.widget
+        INFOPLIST_FILE: HiveCalWidget/Info.plist
