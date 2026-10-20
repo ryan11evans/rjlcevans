@@ -1099,6 +1099,20 @@
     } else {
       cropW = sw; cropH = sw / stageRatio; cropX = 0; cropY = (sh - cropH) / 2;
     }
+    // Built-in photos can carry a focus point (fractions of the image). The
+    // crop is placed so the focus lands at `ty` of the view; if the photo has
+    // too little room above it (a tall phone viewer shows its full height), it
+    // zooms in a little, up to `maxZoom`, instead of leaving it high.
+    const focus = currentSource === 'image' ? uploadedImage._focus : null;
+    if (focus && document.documentElement.classList.contains('ui2')) {
+      const fx = focus.x * sw, fy = focus.y * sh, ty = focus.ty;
+      if (fy - ty * cropH < 0) {
+        const z = Math.min(focus.maxZoom, cropH * ty / fy);
+        if (z > 1) { cropH /= z; cropW /= z; }
+      }
+      cropY = Math.max(0, Math.min(sh - cropH, fy - ty * cropH));
+      cropX = Math.max(0, Math.min(sw - cropW, fx - cropW / 2));
+    }
     const src = currentSource === 'camera' ? video : uploadedImage;
     sCtx.save();
     if (currentSource === 'camera' && facingMode === 'user') {
@@ -2498,6 +2512,10 @@
     garden: 'samples/garden.jpg',
     face:   'samples/portrait.jpg'
   };
+  // Where the subject is, so the cover crop keeps it centred (see drawSourceToCanvas).
+  const PHOTO_FOCUS = {
+    face: { x: 0.47, y: 0.36, ty: 0.48, maxZoom: 1.4 }   // between the eyes and mouth
+  };
 
   function loadSample(kind) {
     stopCamera();
@@ -2506,6 +2524,7 @@
     if (photoPath) {
       const img = new Image();
       img.onload = () => {
+        img._focus = PHOTO_FOCUS[kind] || null;
         uploadedImage = img;
         currentSource = 'image';
         emptyState.style.display = 'none';
