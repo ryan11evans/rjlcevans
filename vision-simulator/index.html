@@ -2336,6 +2336,7 @@ window.__vsBootSimulator = () => {
     }
 
     hapticTap();
+    if (!alreadyOn && key !== 'none') maybeRequestReviewAfterCondition();
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
     buildControls();
@@ -2640,30 +2641,65 @@ window.__vsBootSimulator = () => {
     if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
-  // Ask for an App Store rating after the 3rd time Compare is actually turned
-  // on. Apple's SKStoreReviewController decides whether a dialog appears and
-  // caps how often it will. Older binaries have no InAppReview plugin; the
-  // check below no-ops there so this live page cannot break them.
-  function maybeRequestReviewAfterCompare() {
+  // Ask for an App Store rating once per install, shortly after the user picks
+  // their 3rd distinct (non-Normal) condition. Free users can reach it: Myopia,
+  // Astigmatism and Cataract are free, and the first-run Cataract preview counts
+  // as seen. Only real taps can trigger it, never while the paywall or a sheet
+  // is open, and only inside the app: browsers never boot this script, and
+  // binaries without the InAppReview plugin no-op. Apple's
+  // SKStoreReviewController still decides whether a dialog actually appears.
+  const REVIEW_AFTER_DISTINCT = 3;
+  const REVIEW_DELAY_MS = 1800;
+  let reviewTimer = null;
+  function reviewPlugin() {
+    const cap = window.Capacitor;
+    if (!cap || typeof cap.isPluginAvailable !== 'function') return null;
+    if (!document.documentElement.classList.contains('is-native')) return null;
+    if (!cap.isPluginAvailable('InAppReview')) return null;
+    const plugin = typeof cap.registerPlugin === 'function'
+      ? cap.registerPlugin('InAppReview')
+      : (cap.Plugins && cap.Plugins.InAppReview);
+    return plugin && typeof plugin.requestReview === 'function' ? plugin : null;
+  }
+  function reviewAlreadyAsked() {
+    try { return localStorage.getItem('vs_reviewAsked') === '1'; } catch (e) { return true; }
+  }
+  // Records the active conditions as seen; returns how many distinct ones.
+  function markConditionsSeen() {
     try {
-      const cap = window.Capacitor;
-      if (!cap || typeof cap.isPluginAvailable !== 'function') return;
-      if (!cap.isPluginAvailable('InAppReview')) return;
-      let count = 0;
-      try {
-        count = parseInt(localStorage.getItem('vs_compareUses') || '0', 10) || 0;
-      } catch (e) { return; }
-      count += 1;
-      try { localStorage.setItem('vs_compareUses', String(count)); } catch (e) { return; }
-      if (count !== 3) return;
-      if (localStorage.getItem('vs_reviewAsked') === '1') return;
-      const plugin = typeof cap.registerPlugin === 'function'
-        ? cap.registerPlugin('InAppReview')
-        : (cap.Plugins && cap.Plugins.InAppReview);
-      if (!plugin || typeof plugin.requestReview !== 'function') return;
-      try { localStorage.setItem('vs_reviewAsked', '1'); } catch (e) {}
+      let seen = [];
+      try { seen = JSON.parse(localStorage.getItem('vs_condsSeen') || '[]'); } catch (e) { seen = []; }
+      if (!Array.isArray(seen)) seen = [];
+      activeConditions.forEach(k => { if (k !== 'none' && !seen.includes(k)) seen.push(k); });
+      localStorage.setItem('vs_condsSeen', JSON.stringify(seen));
+      return seen.length;
+    } catch (e) { return 0; }
+  }
+  function modalOpen() {
+    return !!document.querySelector('.paywall-overlay.open, .sheet-overlay.open, [role="dialog"].open');
+  }
+  function fireReviewWhenClear(triesLeft) {
+    reviewTimer = null;
+    try {
+      if (reviewAlreadyAsked()) return;
+      const plugin = reviewPlugin();
+      if (!plugin) return;
+      if (modalOpen() || document.hidden) {
+        // Wait for the sheet to close (up to about a minute), then try again.
+        if (triesLeft > 0) reviewTimer = setTimeout(() => fireReviewWhenClear(triesLeft - 1), 1000);
+        return;
+      }
+      try { localStorage.setItem('vs_reviewAsked', '1'); } catch (e) { return; }
       Promise.resolve(plugin.requestReview()).catch(() => {});
     } catch (e) { /* plugin missing or storage blocked — never throw */ }
+  }
+  function maybeRequestReviewAfterCondition() {
+    try {
+      const count = markConditionsSeen();
+      if (count < REVIEW_AFTER_DISTINCT || reviewTimer || reviewAlreadyAsked()) return;
+      if (!reviewPlugin()) return;
+      reviewTimer = setTimeout(() => fireReviewWhenClear(60), REVIEW_DELAY_MS);
+    } catch (e) {}
   }
   // One setter keeps every Compare control (web button, in-app switch,
   // floating button on the image) in sync.
@@ -2686,7 +2722,6 @@ window.__vsBootSimulator = () => {
     if (!compareMode && pluginReady && !isPro) { openPaywall(); return; }
     setCompareMode(!compareMode);
     hapticTap();
-    if (compareMode) maybeRequestReviewAfterCompare();
   }
   compareBtn.addEventListener('click', toggleCompare);
 
@@ -2821,6 +2856,9 @@ window.__vsBootSimulator = () => {
   }
   updateConditionsScrollState();
   updateSamplesScrollState();
+  // The condition on screen at launch (first-run Cataract or a ?cond= link)
+  // counts as seen for the rating prompt, but never triggers it by itself.
+  markConditionsSeen();
 
   window.addEventListener('beforeunload', stopCamera);
 };
