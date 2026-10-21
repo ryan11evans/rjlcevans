@@ -43,6 +43,28 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const storeHits = [];
 
+  // UI v2 puts chips in a scrolling dock, so tap by dispatching a click
+  // instead of requiring the element to be scrolled into view.
+  const tap = (page, sel) => page.locator(sel).dispatchEvent('click');
+  const reviewMock = () => {
+    window.__reviewCalls = 0;
+    window.Capacitor = Object.assign(window.Capacitor || {}, {
+      getPlatform: () => 'ios',
+      isNativePlatform: () => true,
+      isPluginAvailable: (name) => name === 'InAppReview',
+      registerPlugin: () => ({ requestReview: () => { window.__reviewCalls += 1; return Promise.resolve(); } }),
+    });
+  };
+  const purchaseMock = () => {
+    const chain = () => proxy;
+    const proxy = new Proxy({}, { get: () => chain });
+    window.CdvPurchase = {
+      store: { register: () => {}, when: () => proxy, get: () => null, owned: () => false, initialize: () => {} },
+      ProductType: { NON_CONSUMABLE: 'non_consumable' },
+      Platform: { APPLE_APPSTORE: 'ios' },
+    };
+  };
+
   async function track(page) {
     page.on('request', (req) => {
       if (req.url().startsWith('https://apps.apple.com/')) storeHits.push(req.url());
@@ -121,8 +143,9 @@ async function main() {
       await page.goto(origin + '/index.html', { waitUntil: 'domcontentloaded' });
       assert.strictEqual(await page.evaluate(() => window.__vsSimulatorBooted), true);
       assert.strictEqual(await page.locator('#storeGate').isVisible(), false);
-      assert.strictEqual(await page.locator('#compareToggle').isVisible(), true);
-      await page.locator('[data-sample="reading"]').click();
+      // UI v2 (app): the dock's Compare switch replaces #compareToggle.
+      assert.strictEqual(await page.locator('#compareSwitch').isVisible(), true);
+      await tap(page, '[data-sample="reading"]');
       await page.waitForFunction(() => {
         const canvas = document.getElementById('stageCanvas');
         if (!canvas.width || !canvas.height) return false;
@@ -190,80 +213,84 @@ async function main() {
       await context.close();
     }
 
-    // Current binary with the purchase plugin: Pro stays locked, Compare does not count.
+    // Free user on the current binary: the rating prompt comes ~1.8s after the
+    // 3rd distinct condition (first-run Cataract + Myopia + Astigmatism), once.
     {
       const context = await browser.newContext();
-      await context.addInitScript(() => {
-        const chain = () => proxy;
-        const proxy = new Proxy({}, { get: () => chain });
-        window.CdvPurchase = {
-          store: {
-            register: () => {},
-            when: () => proxy,
-            get: () => null,
-            owned: () => false,
-            initialize: () => {},
-          },
-          ProductType: { NON_CONSUMABLE: 'non_consumable' },
-          Platform: { APPLE_APPSTORE: 'ios' },
-        };
-        window.Capacitor = {
-          getPlatform: () => 'ios',
-          isNativePlatform: () => true,
-          isPluginAvailable: () => false,
-        };
-      });
+      await context.addInitScript(purchaseMock);
+      await context.addInitScript(reviewMock);
+      const page = await context.newPage();
+      const errors = [];
+      page.on('pageerror', (err) => errors.push(String(err)));
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
+      await page.waitForTimeout(100);
+      await tap(page, '[data-cond="glaucoma"]');
+      assert.strictEqual(await page.locator('#paywallOverlay').evaluate((el) => el.classList.contains('open')), true, 'Pro condition opens the paywall');
+      await tap(page, '#paywallClose');
+      await tap(page, '#compareSwitch'); // Compare off (allowed)
+      await tap(page, '#compareSwitch'); // Compare on is Pro: paywall
+      await tap(page, '#paywallClose');
+      await tap(page, '[data-cond="myopia"]');
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'two distinct conditions: no prompt');
+      await tap(page, '[data-cond="astigmatism"]');
+      await page.waitForTimeout(800);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'waits so the simulation is seen first');
+      await page.waitForTimeout(1700);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1, 'prompt on the 3rd distinct condition');
+      for (const c of ['cataract', 'myopia', 'astigmatism', 'none', 'cataract']) await tap(page, `[data-cond="${c}"]`);
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1, 'does not ask again');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      for (const c of ['myopia', 'astigmatism', 'cataract']) await tap(page, `[data-cond="${c}"]`);
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'once per install, also after a relaunch');
+      assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_reviewAsked')), '1');
+      assert.deepStrictEqual(errors, []);
+      await context.close();
+    }
+
+    // A paywall opened during the delay holds the prompt until it closes.
+    {
+      const context = await browser.newContext();
+      await context.addInitScript(purchaseMock);
+      await context.addInitScript(reviewMock);
       const page = await context.newPage();
       await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
       await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
       await page.waitForTimeout(100);
-      await page.locator('[data-cond="glaucoma"]').click();
-      assert.strictEqual(await page.locator('#paywallOverlay').evaluate((el) => el.classList.contains('open')), true);
-      await page.locator('#paywallClose').click();
-      await page.locator('#compareToggle').click();
-      assert.strictEqual(await page.locator('#compareToggle').getAttribute('aria-pressed'), 'false');
-      assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_compareUses')), null);
+      await tap(page, '[data-cond="myopia"]');
+      await tap(page, '[data-cond="astigmatism"]');
+      await tap(page, '[data-cond="amd"]'); // Pro: paywall opens inside the delay
+      await page.waitForTimeout(3500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'never over the paywall');
+      await tap(page, '#paywallLater');
+      await page.waitForTimeout(1500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1, 'asks once the paywall is closed');
       await context.close();
     }
 
-    // Older binary: Capacitor, no purchase plugin. Pro features stay unlocked.
+    // Older binary (no purchase plugin, everything unlocked): Compare no longer
+    // counts toward the prompt; conditions do.
     {
       const context = await browser.newContext();
-      await context.addInitScript(() => {
-        window.Capacitor = {
-          getPlatform: () => 'ios',
-          isNativePlatform: () => true,
-          isPluginAvailable: (name) => name === 'InAppReview',
-          registerPlugin: () => ({ requestReview: () => Promise.resolve() }),
-        };
-        window.__reviewCalls = 0;
-        const real = window.Capacitor.registerPlugin;
-        window.Capacitor.registerPlugin = (name) => {
-          const plugin = real(name);
-          return {
-            requestReview: () => {
-              window.__reviewCalls += 1;
-              return plugin.requestReview();
-            },
-          };
-        };
-      });
+      await context.addInitScript(reviewMock);
       const page = await context.newPage();
       await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
-      await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
-      await page.locator('[data-cond="glaucoma"]').click();
+      for (let i = 0; i < 6; i += 1) await tap(page, '#compareSwitch');
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'Compare does not trigger');
+      await tap(page, '[data-cond="glaucoma"]');
       assert.strictEqual(await page.locator('[data-cond="glaucoma"]').getAttribute('aria-pressed'), 'true');
       assert.strictEqual(await page.locator('#paywallOverlay').evaluate((el) => el.classList.contains('open')), false);
-      for (let i = 0; i < 5; i += 1) await page.locator('#compareToggle').click();
-      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1, 'review asked on the 3rd Compare on');
-      assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_compareUses')), '3');
-      await page.locator('#compareToggle').click();
-      await page.locator('#compareToggle').click();
-      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1, 'does not ask again');
+      await tap(page, '[data-cond="amd"]');
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1);
       await context.close();
     }
 
-    // Plugin absent: Compare still works and never calls review.
+    // Plugin absent: conditions work and review is never touched.
     {
       const context = await browser.newContext();
       await context.addInitScript(() => {
@@ -280,9 +307,24 @@ async function main() {
       });
       const page = await context.newPage();
       await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
-      for (let i = 0; i < 5; i += 1) await page.locator('#compareToggle').click();
+      for (const c of ['myopia', 'astigmatism', 'glaucoma', 'amd']) await tap(page, `[data-cond="${c}"]`);
+      await page.waitForTimeout(2500);
       assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0);
-      assert.strictEqual(await page.locator('#compareToggle').getAttribute('aria-pressed'), 'true');
+      assert.strictEqual(await page.locator('[data-cond="amd"]').getAttribute('aria-pressed'), 'true');
+      await context.close();
+    }
+
+    // Plain browser (with ?stay=1 so it stays on the page): simulator never
+    // boots, so tapping hidden chips can never ask for a review.
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => { window.__reviewCalls = 0; });
+      for (const c of ['myopia', 'astigmatism', 'cataract']) await tap(page, `[data-cond="${c}"]`);
+      await page.waitForTimeout(2500);
+      assert.strictEqual(await page.evaluate(() => window.__vsSimulatorBooted === true), false);
+      assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_condsSeen')), null);
       await context.close();
     }
 
