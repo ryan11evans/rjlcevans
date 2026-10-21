@@ -1,0 +1,23 @@
+{
+  "appId": "com.rjlcevans.visionsim",
+  "appName": "Vision Simulator",
+  "webDir": "../vision-simulator",
+  "server": {
+    "url": "https://rjlcevans.com/vision-simulator-staging/",
+    "cleartext": false,
+    "iosScheme": "capacitor"
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#151820",
+      "overlaysWebView": false
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#151820",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    }
+  }
+}

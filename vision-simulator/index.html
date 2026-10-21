@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f1620">
-<title>Vision Impairment Simulator — Dr. Ryan Evans, OD</title>
+<title>Vision Simulator by Dr. Evans</title>
+<meta name="description" content="See cataracts, glaucoma, AMD, and other eye conditions through a clinically informed simulator by Dr. Ryan Evans, OD. Free on the App Store for iPhone and iPad.">
+<link rel="canonical" href="https://rjlcevans.com/vision-simulator/">
+<meta name="apple-itunes-app" content="app-id=6772865195">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
@@ -73,6 +76,10 @@
   html.is-app h1,
   html.is-app .sub,
   html.is-app .credit { display: none; }
+  html.is-app #backToSite,
+  html.is-app #appStoreBadge,
+  html.is-app #homeLink { display: none !important; }
+  html.is-app #privacyLink { display: inline !important; }
   html.is-app.info-expanded .eyebrow,
   html.is-app.info-expanded h1,
   html.is-app.info-expanded .sub,
@@ -600,18 +607,72 @@
     html.ui2 .paywall-overlay { align-items: center; padding: 24px; }
     html.ui2 .paywall-panel { border-radius: 24px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
   }
+  /* Browser gate. The native app adds html.is-native before first paint and
+     never sees this. A normal browser adds html.is-browser and the simulator
+     markup stays in the DOM (so a late native signal can still boot it) but
+     is not shown and its script does not run. No class at all — detection
+     script missing — leaves the simulator visible so an app user is not locked out. */
+  #storeGate {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(28px + env(safe-area-inset-top)) 20px 32px;
+    box-sizing: border-box;
+  }
+  html.is-native #storeGate { display: none !important; }
+  html.is-browser .wrap,
+  html.is-browser #backToSite,
+  html.is-browser .paywall-overlay { display: none !important; }
+  .gate-card { max-width: 460px; width: 100%; text-align: center; }
+  .gate-card h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(32px, 6vw, 48px); line-height: 1.05; letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .gate-card .sub { margin: 0 auto 22px; font-size: 15px; }
+  .gate-card .btn { text-decoration: none; justify-content: center; padding: 13px 22px; font-size: 15px; }
+  .gate-note { color: var(--ink-mute); font-size: 13px; margin: 16px 0 0; }
+  .gate-home { display: inline-block; margin-top: 26px; color: var(--ink-dim); font-size: 13px; text-decoration: none; }
+  .gate-home:hover { color: var(--ink); }
 </style>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rjlcevans.com/vision-simulator/">
-  <meta property="og:title" content="Vision Impairment Simulator | rjlcevans.com">
-  <meta property="og:description" content="See the world through different eyes — experience cataracts, glaucoma, AMD, floaters, and refractive error in real time.">
-  <meta property="og:image" content="https://rjlcevans.com/family.jpg">
+  <meta property="og:title" content="Vision Simulator by Dr. Evans">
+  <meta property="og:description" content="See cataracts, glaucoma, AMD, and other eye conditions the way patients do. A clinically informed simulator by Dr. Ryan Evans, OD — free on the App Store.">
+  <meta property="og:image" content="https://rjlcevans.com/vision-simulator/visionsim-icon-1024.PNG">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Vision Impairment Simulator | rjlcevans.com">
-  <meta name="twitter:description" content="See the world through different eyes — experience cataracts, glaucoma, AMD, floaters, and refractive error in real time.">
-  <meta name="twitter:image" content="https://rjlcevans.com/family.jpg">
+  <meta name="twitter:title" content="Vision Simulator by Dr. Evans">
+  <meta name="twitter:description" content="See cataracts, glaucoma, AMD, and other eye conditions the way patients do. Free on the App Store.">
+  <meta name="twitter:image" content="https://rjlcevans.com/vision-simulator/visionsim-icon-1024.PNG">
+<script src="shell-detect.js?v=20261019"></script>
+<script>
+/* Classify before the body paints. Missing or broken detection fails open
+   to the simulator so an installed app is never stranded on the store page. */
+(function () {
+  var native = true;
+  try {
+    if (typeof isVisionSimulatorNativeApp === 'function') native = !!isVisionSimulatorNativeApp();
+  } catch (e) {
+    native = true;
+  }
+  var root = document.documentElement;
+  root.classList.add(native ? 'is-native' : 'is-browser');
+  if (native) root.classList.add('is-app');
+})();
+</script>
 </head>
 <body>
+<div id="storeGate">
+  <div class="gate-card">
+    <p class="eyebrow">Dr. Ryan Evans, OD</p>
+    <h1>Vision Simulator</h1>
+    <p class="sub">See cataracts, glaucoma, macular degeneration, and other eye conditions the way patients do. The simulator runs in the iPhone and iPad app.</p>
+    <a class="btn primary" id="storeGateBtn" href="https://apps.apple.com/us/app/vision-simulator-by-dr-evans/id6772865195">View on the App Store</a>
+    <p class="gate-note" id="storeGateNote" hidden>Opening the App Store…</p>
+    <a class="gate-home" href="https://rjlcevans.com/">Evans Family home</a>
+  </div>
+</div>
 <a href="/" id="backToSite" style="position:fixed;top:14px;left:14px;z-index:9999;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:500;letter-spacing:.01em;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.65)'" onmouseout="this.style.background='rgba(0,0,0,.38)'">← Evans Family</a>
 <div class="wrap">
 
@@ -803,8 +864,10 @@
 </svg>
 
 <script>
-(() => {
+window.__vsBootSimulator = () => {
   'use strict';
+  if (window.__vsSimulatorBooted) return;
+  window.__vsSimulatorBooted = true;
 
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
@@ -824,8 +887,9 @@
   const compareBtn = document.getElementById('compareToggle');
 
   // ===== Pro unlock (In-App Purchase via cordova-plugin-purchase) =====
-  // Gating only applies inside the native app — there's no purchase flow on
-  // the plain website, so it stays fully open there like it always has.
+  // This script only boots inside the native app (see the gate at the bottom
+  // of the page). Browsers never reach it, so the old "website is fully
+  // unlocked" path is closed without touching purchase or restore.
   // NOTE: PRO_PRODUCT_ID must exactly match the non-consumable product ID
   // registered in App Store Connect, or purchases will fail to resolve.
   const PRO_PRODUCT_ID = 'com.rjlcevans.visionsim.pro';
@@ -837,6 +901,8 @@
   // present. A build that predates this feature also sets window.Capacitor,
   // so gating must never key off that alone — it'd lock out anyone still
   // on an old binary with no way for them to actually purchase.
+  // Intentionally unchanged: those older binaries stay fully unlocked.
+  // They have no StoreKit plugin, so a paywall could not sell or restore.
   let pluginReady = false;
 
   const paywallOverlay = document.getElementById('paywallOverlay');
@@ -885,7 +951,10 @@
     try { if (localStorage.getItem('vs_isPro') === '1') isPro = true; } catch (e) {}
 
     document.addEventListener('deviceready', () => {
-      if (!window.CdvPurchase) return; // build predates the plugin — stay fully unlocked, same as before this feature existed
+      // Builds that predate cordova-plugin-purchase stay fully unlocked.
+      // Do not lock them: they cannot purchase or restore, and some of those
+      // installs predate the IAP entirely. See vision-simulator-app/README.md.
+      if (!window.CdvPurchase) return;
       pluginReady = true;
       document.documentElement.classList.add('pro-ready');
       updateProUI(); // now that gating can actually be satisfied, lock by default until the store confirms ownership
@@ -2571,6 +2640,31 @@
     if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
+  // Ask for an App Store rating after the 3rd time Compare is actually turned
+  // on. Apple's SKStoreReviewController decides whether a dialog appears and
+  // caps how often it will. Older binaries have no InAppReview plugin; the
+  // check below no-ops there so this live page cannot break them.
+  function maybeRequestReviewAfterCompare() {
+    try {
+      const cap = window.Capacitor;
+      if (!cap || typeof cap.isPluginAvailable !== 'function') return;
+      if (!cap.isPluginAvailable('InAppReview')) return;
+      let count = 0;
+      try {
+        count = parseInt(localStorage.getItem('vs_compareUses') || '0', 10) || 0;
+      } catch (e) { return; }
+      count += 1;
+      try { localStorage.setItem('vs_compareUses', String(count)); } catch (e) { return; }
+      if (count !== 3) return;
+      if (localStorage.getItem('vs_reviewAsked') === '1') return;
+      const plugin = typeof cap.registerPlugin === 'function'
+        ? cap.registerPlugin('InAppReview')
+        : (cap.Plugins && cap.Plugins.InAppReview);
+      if (!plugin || typeof plugin.requestReview !== 'function') return;
+      try { localStorage.setItem('vs_reviewAsked', '1'); } catch (e) {}
+      Promise.resolve(plugin.requestReview()).catch(() => {});
+    } catch (e) { /* plugin missing or storage blocked — never throw */ }
+  }
   // One setter keeps every Compare control (web button, in-app switch,
   // floating button on the image) in sync.
   function setCompareMode(on) {
@@ -2592,6 +2686,7 @@
     if (!compareMode && pluginReady && !isPro) { openPaywall(); return; }
     setCompareMode(!compareMode);
     hapticTap();
+    if (compareMode) maybeRequestReviewAfterCompare();
   }
   compareBtn.addEventListener('click', toggleCompare);
 
@@ -2728,17 +2823,76 @@
   updateSamplesScrollState();
 
   window.addEventListener('beforeunload', stopCamera);
-})();
+};
 </script>
 
 <script>
-  // Hide web-only elements when running inside the Capacitor native app wrapper
-  if (window.Capacitor) {
-    document.getElementById('backToSite').style.display   = 'none';
-    document.getElementById('appStoreBadge').style.display = 'none';
-    document.getElementById('homeLink').style.display      = 'none';
-    document.getElementById('privacyLink').style.display   = 'inline';
+  const STORE_URL = 'https://apps.apple.com/us/app/vision-simulator-by-dr-evans/id6772865195';
+  let storeRedirectTimer = null;
+
+  function applyNativeChrome() {
+    const back = document.getElementById('backToSite');
+    const badge = document.getElementById('appStoreBadge');
+    const home = document.getElementById('homeLink');
+    const privacy = document.getElementById('privacyLink');
+    if (back) back.style.display = 'none';
+    if (badge) badge.style.display = 'none';
+    if (home) home.style.display = 'none';
+    if (privacy) privacy.style.display = 'inline';
     document.documentElement.classList.add('is-app');
+  }
+
+  function cancelStoreRedirect() {
+    if (storeRedirectTimer) {
+      clearTimeout(storeRedirectTimer);
+      storeRedirectTimer = null;
+    }
+    const note = document.getElementById('storeGateNote');
+    if (note) note.hidden = true;
+  }
+
+  function scheduleStoreRedirect() {
+    if (storeRedirectTimer || window.__vsSimulatorBooted) return;
+    if (document.documentElement.classList.contains('is-native')) return;
+    let params;
+    try { params = new URLSearchParams(window.location.search); } catch (e) { params = { get: function () { return null; } }; }
+    if (params.get('stay') === '1') return;
+    try {
+      if (typeof isVisionSimulatorLinkPreview === 'function' && isVisionSimulatorLinkPreview()) return;
+    } catch (e) {}
+    try { if (sessionStorage.getItem('vs_storeRedirected') === '1') return; } catch (e) {}
+    const note = document.getElementById('storeGateNote');
+    if (note) note.hidden = false;
+    storeRedirectTimer = setTimeout(() => {
+      storeRedirectTimer = null;
+      if (window.__vsSimulatorBooted || document.documentElement.classList.contains('is-native')) return;
+      try { sessionStorage.setItem('vs_storeRedirected', '1'); } catch (e) {}
+      window.location.assign(STORE_URL);
+    }, 1200);
+  }
+
+  // Native if the head script said so, if detection says so, or if detection
+  // itself is missing. The only path that stays on the store gate is an
+  // explicit "this is a browser" answer.
+  function nativeSignalPresent() {
+    if (document.documentElement.classList.contains('is-native')) return true;
+    try {
+      if (typeof isVisionSimulatorNativeApp !== 'function') return true;
+      return !!isVisionSimulatorNativeApp();
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function tryBootSimulator() {
+    if (window.__vsSimulatorBooted) return true;
+    if (!nativeSignalPresent()) return false;
+    cancelStoreRedirect();
+    document.documentElement.classList.remove('is-browser');
+    document.documentElement.classList.add('is-native');
+    applyNativeChrome();
+    if (typeof window.__vsBootSimulator === 'function') window.__vsBootSimulator();
+    return true;
   }
 
   const heroInfoBtn = document.getElementById('heroInfoBtn');
@@ -2747,6 +2901,33 @@
       const expanded = document.documentElement.classList.toggle('info-expanded');
       heroInfoBtn.setAttribute('aria-expanded', String(expanded));
       heroInfoBtn.textContent = expanded ? 'Hide' : 'About';
+    });
+  }
+
+  const storeGateBtn = document.getElementById('storeGateBtn');
+  if (storeGateBtn) {
+    storeGateBtn.addEventListener('click', () => {
+      try { sessionStorage.setItem('vs_storeRedirected', '1'); } catch (e) {}
+    });
+  }
+
+  if (!tryBootSimulator()) {
+    // Bridge injection is normally synchronous. Keep listening briefly in
+    // case an older shell attaches Capacitor or fires deviceready late,
+    // and only then send a browser visitor to the App Store.
+    let tries = 0;
+    const watch = setInterval(() => {
+      tries += 1;
+      if (tryBootSimulator() || tries >= 40) {
+        clearInterval(watch);
+        if (!window.__vsSimulatorBooted) scheduleStoreRedirect();
+      }
+    }, 50);
+    document.addEventListener('deviceready', () => {
+      // deviceready only fires inside a native shell. Force the simulator
+      // even if the earlier check missed this build.
+      document.documentElement.classList.add('is-native');
+      tryBootSimulator();
     });
   }
 </script>
