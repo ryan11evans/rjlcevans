@@ -1361,15 +1361,19 @@
   }
 
   // ===== Glaucoma =====
-  // Right-eye field (nasal = left of the view). Early: superior nasal step and
-  // superior arcuate defect; then inferior defects and constriction; end stage
-  // leaves a central island plus a temporal island. Lost field is shown as a
-  // faded blur (filling-in), never pure black.
+  // Right-eye field (nasal = left of the view). Mild: superior nasal step and
+  // a faint superior arcuate defect. Moderate: dense superior arcuate joined to
+  // the nasal step, early inferior defects. Severe: superior hemifield lost
+  // outside the centre, dense inferior arcuate and nasal step, constricted
+  // periphery. End stage: everything outside a small central island is gone
+  // (black). Lost field gets darker and denser with each stage.
+  const GLAUCOMA_VEIL = [0, 0.50, 0.72, 0.88, 1];   // how dark lost field is, by stage
   function glaucomaLoss(stage) {
-    const nz = angNoise(97 + stage, 9);
+    const nz = angNoise(97 + stage, 9), nz2 = angNoise(131 + stage, 7);
     return (X, Y) => {
-      const r = Math.hypot(X, Y), th = Math.atan2(Y, X);
-      const wob = 0.75 + 0.5 * nz(th);
+      const th = Math.atan2(Y, X);
+      const r = Math.hypot(X, Y) * (0.92 + 0.16 * nz(th));             // uneven, not perfectly round edges
+      const dens = stage >= 4 ? 1 : 0.88 + 0.12 * nz2(th);
       const nasal = smooth(0, 6, -X);
       const sup = smooth(-2.5, 2.5, Y), inf = smooth(-2.5, 2.5, -Y);  // respects the horizontal meridian (softened)
       const arcBand = smooth(8, 12, r) * (1 - smooth(22, 28, r));
@@ -1378,22 +1382,20 @@
       const arcInf = arcBand * inf * smooth(-0.2, 0.9, Math.cos(th + Math.PI * 0.62));
       const stepSup = smooth(16, 26, r) * nasal * sup;
       const stepInf = smooth(16, 26, r) * nasal * inf;
-      const periph = (r0) => smooth(r0, r0 + 12, r) * (X > 0 ? 0.65 : 1);
+      const periph = (r0, temporal) => smooth(r0, r0 + 10, r) * (X > 0 ? temporal : 1);
       let L;
-      if (stage <= 1) L = Math.max(0.50 * stepSup, 0.30 * arcSup);
-      else if (stage === 2) L = Math.max(0.80 * stepSup, 0.75 * arcSup, 0.35 * stepInf, 0.30 * periph(30));
-      else if (stage === 3) L = Math.max(0.88 * smooth(6, 11, r) * sup, 0.75 * arcInf, 0.82 * stepInf, 0.55 * periph(22));
-      else {
-        const temporalIsland = 1 - smooth(0.55, 1.0, Math.hypot((X - 27) / 10, (Y + 3) / 12));
-        L = 0.95 * smooth(4, 8, r) * (1 - 0.8 * temporalIsland);
-      }
-      return Math.min(0.95, L * wob);
+      if (stage <= 1) L = Math.max(0.60 * stepSup, 0.45 * arcSup);
+      else if (stage === 2) L = Math.max(0.95 * stepSup, 0.90 * arcSup, 0.55 * stepInf, 0.40 * arcInf, 0.40 * periph(28, 0.7));
+      else if (stage === 3) L = Math.max(1.0 * smooth(7, 11, r) * sup, 0.92 * arcInf, 0.97 * stepInf, 0.90 * periph(18, 0.85));
+      else L = smooth(5, 9, r);                                        // small central island only
+      return Math.min(1, L * dens);
     };
   }
   function applyGlaucoma(stage) {
     ctx.drawImage(sourceCanvas, 0, 0);
-    const mask = fieldMask('glaucoma' + stage, glaucomaLoss(stage));
-    applyFieldLoss(mask, 16, 0.8, `rgba(78,80,86,${0.35 + stage * 0.08})`);
+    const st = Math.max(1, Math.min(4, stage | 0));
+    const mask = fieldMask('glaucoma' + st, glaucomaLoss(st));
+    applyFieldLoss(mask, 16, 0.8, `rgba(4,4,6,${GLAUCOMA_VEIL[st]})`);
   }
 
   // ===== AMD =====
