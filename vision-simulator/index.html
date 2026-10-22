@@ -1467,9 +1467,11 @@ window.__vsBootSimulator = () => {
   }
 
   // ===== AMD =====
-  // Early: metamorphopsia (lines bow) plus central blur. Later: an irregular,
-  // blurry grey central smudge that is never fully opaque.
-  const _amdMaskCache = new Map();
+  // Mild: metamorphopsia (lines bow), central blur and a faint grey smudge.
+  // Moderate: a denser, darker central smudge. Advanced: a dense, near-black
+  // central scotoma made of merging geographic-atrophy patches. End stage: a
+  // large, fully black central scotoma. From Advanced on, blur is limited to a
+  // narrow band at the scotoma edge and the periphery stays sharp.
   // Smooth warp drawn as a triangle mesh: each source triangle is mapped onto
   // its displaced triangle with an affine transform, so neighbouring pieces
   // share edges exactly and there are no tile seams.
@@ -1527,34 +1529,34 @@ window.__vsBootSimulator = () => {
       tri(p00, p10, p11); tri(p00, p11, p01);
     }
   }
-  function amdMask(sizePct, w, h) {
-    const key = sizePct + '|' + w + 'x' + h;
-    let c = _amdMaskCache.get(key);
-    if (c) return c;
-    if (_amdMaskCache.size > 12) _amdMaskCache.clear();
-    const mw = 200, mh = Math.max(2, Math.round(200 * h / w)), sc = mw / w;
-    c = mkCanvas(); c.width = mw; c.height = mh;
-    const x = c.getContext('2d'), rnd = mulberry32(2024);
-    const R = Math.min(w, h) * (sizePct / 100) * 1.05 * sc, cx = mw / 2, cy = mh / 2;
-    for (let i = 0; i < 6; i++) {            // overlapping soft blobs → irregular outline
-      const a = rnd() * Math.PI * 2, off = i === 0 ? 0 : R * (0.25 + rnd() * 0.35);
-      const bx = cx + Math.cos(a) * off, by = cy + Math.sin(a) * off * 0.8;
-      const br = R * (i === 0 ? 1 : 0.45 + rnd() * 0.35);
-      const g = x.createRadialGradient(bx, by, 0, bx, by, br);
-      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = g; x.fillRect(bx - br, by - br, br * 2, br * 2);
-    }
-    _amdMaskCache.set(key, c);
-    return c;
+  // Central loss in visual-field degrees (see fieldMask), centred on fixation.
+  // grow > 0 widens every edge (used for the blur band around the scotoma).
+  function amdStageOf(sizePct) { return sizePct >= 60 ? 4 : sizePct >= 44 ? 3 : sizePct >= 28 ? 2 : 1; }
+  function amdLoss(stage, grow) {
+    const nz = angNoise(2024 + stage, 7), nz2 = angNoise(4049 + stage, 17);
+    const lobe = (X, Y, cx, cy, r0, r1) => 1 - smooth(r0 + grow, r1 + grow, Math.hypot(X - cx, (Y - cy) * 1.1));
+    return (X, Y) => {
+      const th = Math.atan2(Y, X);
+      const r = Math.hypot(X, Y) * (0.84 + 0.22 * nz(th) + 0.1 * nz2(th));   // irregular outline
+      const core = (r0, r1) => 1 - smooth(r0 + grow, r1 + grow, r);
+      if (stage <= 1) return 0.45 * core(2.5, 6);
+      if (stage === 2) return 0.75 * core(4, 8);
+      if (stage === 3) {                                       // merging geographic-atrophy patches
+        return 0.95 * Math.max(core(5.5, 8.5),
+          lobe(X, Y, 2.6, 5.4, 2.8, 5.2), lobe(X, Y, -5.6, 1.2, 1.6, 3.4), lobe(X, Y, 2.2, -5.4, 1.4, 3.0));
+      }
+      return core(12, 15);                                     // end stage: large, fully black
+    };
   }
+  const AMD_VEIL = [null, 'rgba(70,68,64,0.55)', 'rgba(42,40,37,0.78)', 'rgba(12,11,10,0.96)', 'rgba(3,3,4,1)'];
+  const AMD_GROW = [0, 6, 5, 3, 3];   // how far the blur reaches past the scotoma, by stage (degrees)
   function applyAMD(sizePct, distortion) {
     const w = stageCanvas.width, h = stageCanvas.height, k = viewK();
     const cx = w / 2, cy = h / 2, minDim = Math.min(w, h);
     const sev = clamp01((sizePct - 12) / 48);           // Mild 0 … End stage 1
+    const st = amdStageOf(sizePct);
 
-    // 1. Warp (metamorphopsia) into an offscreen copy.
-    // Drawn straight onto the stage; the blur layers below read the unwarped
-    // source (the warp is invisible under that much blur) to save a full copy.
+    // 1. Warp (metamorphopsia), drawn straight onto the stage.
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(sourceCanvas, 0, 0);
     if (distortion > 0) {
@@ -1563,30 +1565,14 @@ window.__vsBootSimulator = () => {
       ctx.imageSmoothingQuality = 'high';
     }
 
-    // 2. Central blur, soft-edged.
-    const rb = minDim * (0.16 + 0.22 * sev);
-    softLayer(0, sourceCanvas, (3 + 9 * sev) * k, (x, lw, lh, sx, sy) => {
-      x.globalCompositeOperation = 'destination-in';
-      x.setTransform(sx, 0, 0, sy, 0, 0);
-      const g = x.createRadialGradient(cx, cy, 0, cx, cy, rb);
-      g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.6, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = g; x.fillRect(0, 0, w, h);
-      x.setTransform(1, 0, 0, 1, 0, 0);
-    }, ctx);
+    // 2. Blur: the whole centre in early stages, a narrow edge band later.
+    const lossBlur = amdLoss(st, AMD_GROW[st]), peak = st <= 1 ? 0.45 : st === 2 ? 0.75 : st === 3 ? 0.97 : 1;
+    const blurMask = fieldMask('amdBlur' + st, (X, Y) => Math.min(1, lossBlur(X, Y) / peak));
+    applyFieldLoss(blurMask, 3 + 7 * sev, 0, 'rgba(0,0,0,0)');
 
-    // 3. Grey, faded central smudge (scotoma), never fully opaque.
-    const op = 0.12 + 0.68 * sev;
-    if (op > 0.01) {
-      const m = amdMask(sizePct, w, h);
-      softLayer(1, sourceCanvas, (10 + 14 * sev) * k, (x, lw, lh) => {
-        x.globalCompositeOperation = 'saturation';
-        x.fillStyle = 'rgba(128,128,128,0.85)'; x.fillRect(0, 0, lw, lh);
-        x.globalCompositeOperation = 'source-over';
-        x.fillStyle = `rgba(104,102,98,${0.35 + 0.35 * sev})`; x.fillRect(0, 0, lw, lh);
-        x.globalCompositeOperation = 'destination-in';
-        x.drawImage(m, 0, 0, m.width, m.height, 0, 0, lw, lh);
-      }, ctx, Math.min(0.95, op / 0.9));   // mask core alpha 0.9 → effective max ≈ 0.85
-    }
+    // 3. Central scotoma: grey smudge early, near-black (Advanced) to black (End stage).
+    const mask = fieldMask('amd' + st, amdLoss(st, 0));
+    applyFieldLoss(mask, 14, 0.85, AMD_VEIL[st]);
   }
 
   // ===== Diabetic retinopathy =====
