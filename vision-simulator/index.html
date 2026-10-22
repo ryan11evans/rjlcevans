@@ -472,7 +472,7 @@
 
   /* Floating glass buttons on the viewer. */
   .viewer-hud { display: none; }
-  html.ui2 .viewer-hud { display: flex; position: absolute; top: 12px; left: 12px; right: 12px; justify-content: space-between; z-index: 8; pointer-events: none; transition: opacity 0.25s; }
+  html.ui2 .viewer-hud { display: flex; position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; justify-content: space-between; z-index: 8; pointer-events: none; transition: opacity 0.25s; }
   html.ui2 .viewer-hud > div { display: flex; gap: 8px; }
   .hud-btn { pointer-events: auto; appearance: none; border: none; height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; font: 600 14px 'Inter Tight', -apple-system, sans-serif;
@@ -481,10 +481,10 @@
   .hud-btn[aria-pressed="true"] { background: rgba(255,255,255,0.92); color: #0f1620; }
   html.ui2 .active-badge { bottom: 34px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: 0.02em; text-transform: none; font-weight: 600;
     padding: 7px 14px; background: rgba(20,24,32,0.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); white-space: nowrap; }
-  html.ui2 .compare-tag { top: 62px; }
+  html.ui2 .compare-tag { top: calc(62px + env(safe-area-inset-top)); }
   html.ui2 .active-badge { display: none; }
   html.ui2.immersive .active-badge { display: block; }
-  html.ui2.immersive .compare-tag { top: 16px; }
+  html.ui2.immersive .compare-tag { top: calc(16px + env(safe-area-inset-top)); }
   html.ui2.immersive body.compare .active-badge { display: none; }
   html.ui2 .empty-state { color: #c9d2de; }
 
