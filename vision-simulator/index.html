@@ -408,19 +408,22 @@
     border-radius: 0; box-shadow: none; z-index: 10;
     transition: bottom 0.32s cubic-bezier(0.32,0.72,0,1);
   }
-  /* Dock content order: condition chips → its controls → sources → about/footer. */
+  /* Dock content order: sample pictures → Camera / Upload → condition chips →
+     its controls → about/footer, so the picture sources show without scrolling. */
   html.ui2 header.hero { order: 9; border: none; padding: 8px 0 0; margin: 0; }
   html.ui2 .hero-app-bar { display: none; }
-  html.ui2 .conditions-header { order: 1; margin: 0 0 8px; align-items: center; }
-  html.ui2 .conditions-scroller { order: 2; }
-  html.ui2 .controls { order: 3; }
   .section-title.try-title { display: none; }
-  html.ui2 .section-title.try-title { order: 4; display: flex; }
-  html.ui2 .samples-scroller { order: 5; }
-  html.ui2 .wrap > .source-row { order: 6; }
+  html.ui2 .section-title.try-title { order: 1; display: flex; }
+  html.ui2 .samples-scroller { order: 2; }
+  html.ui2 .wrap > .source-row { order: 3; }
+  html.ui2 .conditions-header { order: 4; margin: 0 0 8px; align-items: center; }
+  html.ui2 .conditions-scroller { order: 5; }
+  html.ui2 .controls { order: 6; }
   html.ui2 footer { order: 10; margin-top: 18px; }
   html.ui2 .section-title:not(.try-title) { display: none; }
   html.ui2 .section-title { font-family: 'Inter Tight', -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-dim); letter-spacing: 0; margin: 18px 0 8px; }
+  html.ui2 .section-title.try-title { margin-top: 2px; }
+  html.ui2 .wrap > .source-row { margin-bottom: 14px; }
   html.ui2 .conditions-hint { display: none; }
   html.ui2 .conditions-header::before { content: 'Condition'; font-size: 13px; font-weight: 600; color: var(--ink-dim); margin-right: auto; }
   html.ui2 .combine-conditions-btn, html.ui2 .unlock-pro-btn, html.ui2 .clear-conditions-btn {
@@ -2820,6 +2823,67 @@ window.__vsBootSimulator = () => {
       root.classList.toggle('immersive');
       toast.classList.remove('show');
     });
+    // Drag the dock down (or right, when it is a side panel) to go full screen;
+    // drag up from the bottom of the full-screen picture (or left from its right
+    // edge) to bring it back. Touch events with a non-passive touchmove, so the
+    // gesture wins over the dock's own scrolling and iOS rubber-banding. A drag
+    // that starts while the dock is scrolled down scrolls it instead.
+    const dock = document.querySelector('.wrap');
+    const sideDock = () => window.matchMedia('(orientation: landscape)').matches;
+    let drag = null;
+    const dockTouchStart = e => {
+      if (e.touches.length !== 1 || root.classList.contains('immersive')) { drag = null; return; }
+      const t = e.touches[0], r = dock.getBoundingClientRect(), side = sideDock();
+      const onHandle = side ? false : t.clientY - r.top < 30;
+      const inHScroll = !!e.target.closest('#sampleRow, #conditions, input[type=range]');
+      drag = { x: t.clientX, y: t.clientY, t: Date.now(), side, onHandle, inHScroll,
+               scrolled: dock.scrollTop > 0, active: false, d: 0, lastD: 0, lastT: Date.now(), v: 0 };
+    };
+    const dockTouchMove = e => {
+      if (!drag) return;
+      const t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
+      if (!drag.active) {
+        if (Math.hypot(dx, dy) < 8) return;
+        const main = drag.side ? dx : dy, cross = drag.side ? dy : dx;
+        const ok = main > 0 && Math.abs(main) > Math.abs(cross) * 1.2 &&
+          (drag.side ? !drag.inHScroll : (drag.onHandle || (!drag.scrolled && dock.scrollTop <= 0)));
+        if (!ok) { drag = null; return; }
+        drag.active = true; drag.x = t.clientX; drag.y = t.clientY;
+        dock.style.transition = 'none';
+      }
+      e.preventDefault();
+      const d = Math.max(0, drag.side ? t.clientX - drag.x : t.clientY - drag.y), now = Date.now();
+      drag.v = (d - drag.lastD) / Math.max(1, now - drag.lastT); drag.lastD = d; drag.lastT = now; drag.d = d;
+      dock.style.transform = drag.side ? `translateX(${d}px)` : `translateY(${d}px)`;
+    };
+    const dockTouchEnd = () => {
+      if (!drag) return;
+      const g = drag; drag = null;
+      if (!g.active) return;
+      const size = g.side ? dock.offsetWidth : dock.offsetHeight;
+      const collapse = g.d > Math.min(110, size * 0.3) || (g.v > 0.5 && g.d > 24);
+      dock.style.transition = ''; dock.style.transform = '';
+      if (collapse) { root.classList.add('immersive'); toast.classList.remove('show'); }
+    };
+    dock.addEventListener('touchstart', dockTouchStart, { passive: true });
+    dock.addEventListener('touchmove', dockTouchMove, { passive: false });
+    dock.addEventListener('touchend', dockTouchEnd);
+    dock.addEventListener('touchcancel', dockTouchEnd);
+    // Full screen → swipe up (or left on a side dock) on the picture to restore.
+    let up = null;
+    stageWrap.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1 || !root.classList.contains('immersive')) { up = null; return; }
+      up = { x: e.touches[0].clientX, y: e.touches[0].clientY, side: sideDock() };
+    }, { passive: true });
+    stageWrap.addEventListener('touchmove', e => {
+      if (!up) return;
+      const dx = e.touches[0].clientX - up.x, dy = e.touches[0].clientY - up.y;
+      const main = up.side ? -dx : -dy, cross = up.side ? dy : dx;
+      if (main > 60 && main > Math.abs(cross) * 1.5) {
+        up = null; root.classList.remove('immersive');
+      }
+    }, { passive: true });
+    stageWrap.addEventListener('touchend', () => { up = null; });
     // First run: never open on an empty black box — show a real simulation.
     // (A reload keeps ?cond= in the URL; still show a picture, just keep that condition.)
     if (!currentSource) {
