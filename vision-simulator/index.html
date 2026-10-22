@@ -1576,9 +1576,14 @@ window.__vsBootSimulator = () => {
   }
 
   // ===== Diabetic retinopathy =====
-  // Scattered small, irregular, semi-transparent dot/blot hemorrhages that
-  // multiply with severity (same seeded positions, so they never jump),
-  // plus macular-edema haze and mild overall blur.
+  // Severity 0.1–1 runs through the stages:
+  //   mild NPDR (≤0.35): a few microaneurysms and tiny dot hemorrhages, slight blur;
+  //   moderate (0.35–0.6): more dot-blot and flame hemorrhages, hard exudates, mild edema haze;
+  //   severe / PDR (0.6–0.85): many near-opaque dark-red to black blots and flame
+  //     hemorrhages, central macular edema/ischemia darkening;
+  //   end stage (>0.85): plus a vitreous hemorrhage, dense red-brown floating
+  //     patches and haze that black out large parts of the view.
+  // Positions are seeded, so spots never jump as severity changes.
   let drBlots = null;
   const _drOverlay = mkCanvas();
   let _drKey = '';
@@ -1589,18 +1594,47 @@ window.__vsBootSimulator = () => {
       const u = Math.max(1e-6, r()), v = r();
       return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     };
-    drBlots = [];
-    for (let i = 0; i < 90; i++) {
+    const pos = (sx, sy) => [Math.min(0.97, Math.max(0.03, 0.5 + gauss() * sx)), Math.min(0.97, Math.max(0.03, 0.5 + gauss() * sy))];
+    const blots = [];
+    for (let i = 0; i < 150; i++) {
       const lobes = [];
       const nl = 1 + Math.floor(r() * 3);
       for (let j = 0; j < nl; j++) lobes.push({ dx: (r() - 0.5) * 1.2, dy: (r() - 0.5) * 1.2, s: 0.55 + r() * 0.5 });
-      drBlots.push({
-        x: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.24)),
-        y: Math.min(0.97, Math.max(0.03, 0.5 + gauss() * 0.22)),
-        u: r(), op: 0.25 + r() * 0.3, red: r() < 0.6, lobes
-      });
+      const [x, y] = pos(0.24, 0.22);
+      blots.push({ x, y, u: r(), op: r(), black: r() < 0.35, lobes });
     }
+    const flames = [];
+    for (let i = 0; i < 40; i++) {
+      const [x, y] = pos(0.22, 0.2);
+      // Nerve-fibre-layer streaks run roughly along arcs around the disc, so
+      // orient them mostly tangential to the centre with some scatter.
+      const ang = Math.atan2(y - 0.5, x - 0.5) + Math.PI / 2 + (r() - 0.5) * 0.9;
+      flames.push({ x, y, ang, u: r(), op: r() });
+    }
+    const exud = [];
+    for (let i = 0; i < 46; i++) {
+      // Clustered in rings around the macula (circinate pattern).
+      const a = r() * Math.PI * 2, rr = 0.07 + r() * 0.13, c = i % 3;
+      exud.push({ x: 0.5 + Math.cos(a) * rr + [0, 0.05, -0.06][c], y: 0.5 + Math.sin(a) * rr * 0.9 + [0, -0.04, 0.05][c], u: r(), op: r() });
+    }
+    const vh = [];
+    for (let i = 0; i < 10; i++) {
+      const lobes = [];
+      for (let j = 0; j < 6; j++) lobes.push({ dx: (r() - 0.5) * 1.6, dy: (r() - 0.5) * 1.3, s: 0.45 + r() * 0.6 });
+      // Free blood settles low in the eye, which the patient sees as the
+      // upper field going dark first, so bias the patches upward in the view.
+      vh.push({ x: 0.08 + r() * 0.84, y: 0.06 + Math.pow(r(), 1.4) * 0.8, u: r(), op: r(), lobes });
+    }
+    drBlots = { blots, flames, exud, vh };
     return drBlots;
+  }
+  function drBlob(o, px, py, rr, col, op, hard) {
+    const g = o.createRadialGradient(px, py, 0, px, py, rr);
+    g.addColorStop(0, `rgba(${col},${op})`);
+    g.addColorStop(hard, `rgba(${col},${op * 0.92})`);
+    g.addColorStop(Math.min(0.95, hard + (1 - hard) * 0.55), `rgba(${col},${op * 0.4})`);
+    g.addColorStop(1, `rgba(${col},0)`);
+    o.fillStyle = g; o.fillRect(px - rr, py - rr, rr * 2, rr * 2);
   }
   function applyDiabetic(severity) {
     const s = clamp01(severity);
@@ -1619,22 +1653,59 @@ window.__vsBootSimulator = () => {
       x.setTransform(1, 0, 0, 1, 0, 0);
     }, ctx);
 
-    // Spots, cached per severity and size.
+    // Lesions, cached per severity and size.
     const key = w + 'x' + h + '|' + s.toFixed(2);
     if (key !== _drKey) {
       const o = sizeTo(_drOverlay, w, h);
+      o.globalCompositeOperation = 'source-over';
       o.clearRect(0, 0, w, h);
-      const spots = drSpots(), n = Math.round(8 + 72 * s);
-      for (let i = 0; i < n; i++) {
-        const b = spots[i];
-        const base = minDim * (0.009 + 0.026 * b.u) * (0.75 + 0.5 * s);
-        const op = b.op * (0.5 + 0.35 * s);
-        const col = b.red ? '62,30,28' : '44,40,40';
-        for (const l of b.lobes) {
-          const px = b.x * w + l.dx * base, py = b.y * h + l.dy * base, rr = base * l.s * 2.1;
-          const gg = o.createRadialGradient(px, py, 0, px, py, rr);
-          gg.addColorStop(0, `rgba(${col},${op * 0.85})`); gg.addColorStop(0.3, `rgba(${col},${op * 0.6})`); gg.addColorStop(0.65, `rgba(${col},${op * 0.22})`); gg.addColorStop(1, `rgba(${col},0)`);
-          o.fillStyle = gg; o.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+      const L = drSpots();
+      const late = smooth(0.55, 0.9, s);                 // 0 until moderate, 1 by end stage
+      const vit = smooth(0.82, 1, s);                    // vitreous hemorrhage
+
+      // Hard exudates (yellow), from moderate on.
+      const ne = Math.round(46 * smooth(0.3, 0.8, s));
+      for (let i = 0; i < ne; i++) {
+        const e = L.exud[i], rr = minDim * (0.004 + 0.008 * e.u);
+        drBlob(o, e.x * w, e.y * h, rr, '226,198,96', 0.55 + 0.3 * e.op, 0.45);
+      }
+
+      // Microaneurysms / dot-blot hemorrhages: more, larger and near-opaque with severity.
+      const nb = Math.round(6 + 144 * Math.pow(s, 1.35));
+      for (let i = 0; i < nb; i++) {
+        const b = L.blots[i];
+        const micro = s < 0.35 || b.u < 0.3;
+        const base = minDim * (micro ? 0.004 + 0.005 * b.u : (0.008 + 0.022 * b.u) * (0.8 + 0.5 * s));
+        const op = Math.min(0.97, (0.55 + 0.3 * b.op) * (0.75 + 0.3 * s) + 0.25 * late);
+        const col = b.black && s > 0.5 ? '16,5,5' : '54,11,9';
+        for (const l of b.lobes) drBlob(o, b.x * w + l.dx * base, b.y * h + l.dy * base, base * l.s * 1.7, col, op, 0.5);
+      }
+
+      // Flame (splinter) hemorrhages, from moderate on.
+      const nf = Math.round(40 * smooth(0.32, 0.9, s));
+      for (let i = 0; i < nf; i++) {
+        const f = L.flames[i], len = minDim * (0.02 + 0.03 * f.u) * (0.8 + 0.4 * s);
+        o.save();
+        o.translate(f.x * w, f.y * h); o.rotate(f.ang); o.scale(1, 0.28);
+        drBlob(o, 0, 0, len, '70,14,10', Math.min(0.96, 0.6 + 0.25 * f.op + 0.2 * late), 0.4);
+        o.restore();
+      }
+
+      // Central macular edema / ischemia: an irregular dark centre at late stages.
+      if (late > 0) {
+        const cx = w / 2, cy = h / 2, rc = minDim * (0.1 + 0.1 * late);
+        drBlob(o, cx, cy, rc * 1.5, '34,22,20', 0.45 * late, 0.25);
+        drBlob(o, cx - rc * 0.35, cy + rc * 0.2, rc, '26,14,12', 0.55 * late, 0.35);
+        drBlob(o, cx + rc * 0.4, cy - rc * 0.25, rc * 0.8, '26,14,12', 0.5 * late, 0.35);
+      }
+
+      // Vitreous hemorrhage veil: dense red-brown patches plus a reddish haze.
+      if (vit > 0) {
+        o.fillStyle = `rgba(74,22,14,${0.38 * vit})`; o.fillRect(0, 0, w, h);
+        for (const p of L.vh) {
+          const base = minDim * (0.1 + 0.14 * p.u);
+          const op = Math.min(0.98, (0.7 + 0.28 * p.op) * vit);
+          for (const l of p.lobes) drBlob(o, p.x * w + l.dx * base, p.y * h + l.dy * base, base * l.s, '34,9,6', op, 0.45);
         }
       }
       _drKey = key;
@@ -1690,11 +1761,14 @@ window.__vsBootSimulator = () => {
 
   // ===== Retinitis pigmentosa =====
   // Early: mid-peripheral ring scotoma with preserved far periphery; then the
-  // ring widens and the field constricts to a tunnel. Soft scalloped edges,
-  // plus night-vision dimming and contrast loss. (Bone-spicule pigment is a
-  // fundus finding the doctor sees; patients don't see it, so it isn't drawn.)
+  // ring widens and the field constricts to a tunnel. Advanced: dense (~90%)
+  // loss outside ~10° with a small surviving temporal island. End stage:
+  // everything outside a tiny (~5°) central island is black. Soft scalloped
+  // edges, plus night-vision dimming and contrast loss. (Bone-spicule pigment
+  // is a fundus finding the doctor sees; patients don't see it, so it isn't drawn.)
   let rpSpicules = null;
   function initRP(stage) { rpSpicules = null; }
+  const RP_VEIL = [0, 0.62, 0.80, 0.93, 1];   // how dark lost field is, by stage
   function rpLoss(stage) {
     const rnd = mulberry32(311 + stage), a1 = rnd() * 6.28, a2 = rnd() * 6.28, a3 = rnd() * 6.28;
     return (X, Y) => {
@@ -1702,22 +1776,23 @@ window.__vsBootSimulator = () => {
       const scal = 1 + 0.05 * Math.sin(2 * th + a1) + 0.045 * Math.sin(3 * th + a2) + 0.025 * Math.sin(5 * th + a3);
       const r = Math.hypot(X, Y) * scal;   // gently scalloped boundary
       let L;
-      if (stage <= 1) L = 0.70 * smooth(13, 20, r) * (1 - smooth(26, 34, r));
-      else if (stage === 2) L = Math.max(0.85 * smooth(11, 15, r) * (1 - smooth(31, 36, r)), 0.45 * smooth(30, 38, r));
-      else if (stage === 3) L = 0.90 * smooth(8, 12, r) * (1 - 0.45 * (1 - smooth(0.5, 1, Math.hypot((X - 29) / 7, Y / 10))));   // small temporal island
-      else L = 0.94 * smooth(3.5, 6.5, r);
+      if (stage <= 1) L = 0.78 * smooth(13, 19, r) * (1 - smooth(26, 33, r));
+      else if (stage === 2) L = Math.max(0.92 * smooth(11, 14.5, r) * (1 - smooth(31, 36, r)), 0.55 * smooth(30, 37, r));
+      else if (stage === 3) L = 0.97 * smooth(8, 11, r) * (1 - 0.5 * (1 - smooth(0.5, 1, Math.hypot((X - 29) / 7, Y / 10))));   // small temporal island
+      else L = smooth(3, 5, r);           // end stage: tiny central island only
       return L;
     };
   }
   function applyRP(stage) {
     const w = stageCanvas.width, h = stageCanvas.height;
+    const st = Math.max(1, Math.min(4, stage | 0));
     ctx.drawImage(sourceCanvas, 0, 0);
-    ctx.fillStyle = `rgba(60,60,64,${0.02 + stage * 0.025})`;   // contrast loss
+    ctx.fillStyle = `rgba(60,60,64,${0.02 + st * 0.025})`;   // contrast loss
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = `rgba(0,0,0,${0.04 + stage * 0.035})`;      // night-vision dimming
+    ctx.fillStyle = `rgba(0,0,0,${0.04 + st * 0.035})`;      // night-vision dimming
     ctx.fillRect(0, 0, w, h);
-    const mask = fieldMask('rp' + stage, rpLoss(stage));
-    applyFieldLoss(mask, 14, 0.9, `rgba(16,16,20,${0.46 + stage * 0.09})`);
+    const mask = fieldMask('rp' + st, rpLoss(st));
+    applyFieldLoss(mask, 14, 0.9, `rgba(5,5,7,${RP_VEIL[st]})`);
   }
 
   // ===== Presbyopia =====
