@@ -34,6 +34,19 @@ struct StackSnapshot {
 
     var valueText: String? { value.map { AppCurrency.current.format($0) } }
     var btcShort: String? { btcPrice.map { AppCurrency.current.formatShort($0) } }
+
+    /// Live stack when the user holds bitcoin and we have a price. Otherwise a
+    /// sample 0.15 BTC so a first-launch preview still looks like My Stack.
+    /// Holders with no price yet keep the empty state — we don't invent a value.
+    static func liveOrSample() -> (snapshot: StackSnapshot, isSample: Bool) {
+        let live = current
+        if live.value != nil { return (live, false) }
+        if UserDefaults.shared.double(forKey: "btcHoldings") > 0 {
+            return (live, false)
+        }
+        let price = live.btcPrice ?? 100_000
+        return (StackSnapshot(value: price * 0.15, gainPct: 0.124, btcPrice: price), true)
+    }
 }
 
 extension PaywallTrigger {
@@ -47,13 +60,14 @@ extension PaywallTrigger {
         case .briefing:   return "sun.max.fill"
         case .icon:       return "app.badge.fill"
         case .theme:      return "paintpalette.fill"
+        case .onboarding: return "sparkles"
         }
     }
 
     /// Feature row to lead with. Matches the control the user just tapped.
     var featureID: String {
         switch self {
-        case .settings, .widget, .holdings: return "stack"
+        case .settings, .widget, .holdings, .onboarding: return "stack"
         case .volatility: return "volatility"
         case .briefing:   return "briefing"
         case .alerts:     return "alerts"
@@ -65,7 +79,7 @@ extension PaywallTrigger {
     func headline(stack: String?) -> String {
         guard let stack else { return plainHeadline }
         switch self {
-        case .widget, .settings:
+        case .widget, .settings, .onboarding:
             return "Your \(stack) stack, on your Home Screen"
         case .holdings:
             return "Your \(stack) stack, everywhere"
@@ -92,6 +106,7 @@ extension PaywallTrigger {
         case .volatility: return "Catch the big moves"
         case .icon:       return "Exclusive app icons"
         case .theme:      return "Widget themes"
+        case .onboarding: return "Your stack, on your Home Screen and Watch"
         }
     }
 
@@ -99,6 +114,8 @@ extension PaywallTrigger {
         switch self {
         case .widget:
             return "Pro puts this number on My Stack, your Watch, and the daily briefing."
+        case .onboarding:
+            return "One-time Pro puts this on My Stack and your Watch. No subscription."
         case .holdings:
             return "One unlock puts it on your Home Screen, Watch, and morning briefing."
         case .settings:
@@ -131,11 +148,29 @@ struct PaywallView: View {
     @State private var purchasing = false
     @State private var restoring = false
     @State private var showThanks = false
+    /// Full thank-you, swapped in for the paywall so it isn't a second
+    /// presentation fighting this sheet's dismissal (or the stack-everywhere
+    /// sheet underneath it).
+    @State private var showPurchaseThanks = false
     @State private var alert: PaywallAlert?
 
     private var stack: StackSnapshot { StackSnapshot.current }
 
     var body: some View {
+        Group {
+            if showPurchaseThanks {
+                ProThanksView { dismiss() }
+                    .adaptiveSheetSizing(.page)
+            } else {
+                paywallContent
+            }
+        }
+        .interactiveDismissDisabled(showPurchaseThanks)
+        .presentationDragIndicator(showPurchaseThanks ? .hidden : .automatic)
+        .preferredColorScheme(.dark)
+    }
+
+    private var paywallContent: some View {
         NavigationStack {
             ZStack {
                 Color(red: 0.07, green: 0.06, blue: 0.06).ignoresSafeArea()
@@ -165,6 +200,8 @@ struct PaywallView: View {
                     Button("Close", systemImage: "xmark") { dismiss() }
                 }
             }
+            // Restore, and a purchase that already walked through the
+            // thank-you. A first purchase swaps in ProThanksView instead.
             .alert("You're Pro! ⚡️", isPresented: $showThanks) {
                 Button("Let's go") { dismiss() }
             } message: {
@@ -188,7 +225,6 @@ struct PaywallView: View {
                 if pro.product == nil { await pro.refresh() }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var hero: some View {
@@ -342,7 +378,11 @@ struct PaywallView: View {
         defer { purchasing = false }
         switch await pro.purchase() {
         case .success:
-            showThanks = true
+            if ProPurchaseThanks.hasSeen {
+                showThanks = true
+            } else {
+                showPurchaseThanks = true
+            }
         case .cancelled:
             break
         case .pending:
@@ -421,35 +461,72 @@ private enum PaywallAlert {
     }
 }
 
-// Miniature My Stack widget + Watch row. Shared by the paywall hero and the
-// post-holdings sheet. Dollar amounts are only shown when we actually have them.
+enum StackPreviewFocus {
+    case both
+    case widget
+    case watch
+}
+
+// Miniature My Stack widget + Watch row. Shared by the paywall hero, the
+// post-holdings sheet, and the first-launch Pro walkthrough. Dollar amounts
+// are only shown when we actually have them (or an explicit sample).
 struct StackSurfacesPreview: View {
     var stackText: String?
     var gainPct: Double?
     var btcText: String?
     var showsBriefing: Bool = false
+    var focus: StackPreviewFocus = .both
+    var showsExampleLabel: Bool = false
 
     private let up = Color(red: 0.19, green: 0.82, blue: 0.35)
     private let down = Color(red: 1, green: 0.27, blue: 0.23)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("HOME SCREEN & WATCH")
-                .font(.system(.caption2, design: .rounded, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-                .padding(.horizontal, 4)
-
-            HStack(alignment: .top, spacing: 12) {
-                widgetCard
-                watchCard
+            HStack(spacing: 8) {
+                Text(sectionTitle)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.5)
+                if showsExampleLabel {
+                    Text("EXAMPLE")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.orange)
+                        .tracking(0.6)
+                }
             }
+            .padding(.horizontal, 4)
+
+            surfaceCards
 
             if showsBriefing {
                 briefingCard
             }
         }
         .padding(.horizontal, 20)
+    }
+
+    private var sectionTitle: String {
+        switch focus {
+        case .both: return "HOME SCREEN & WATCH"
+        case .widget: return "MY STACK"
+        case .watch: return "APPLE WATCH"
+        }
+    }
+
+    @ViewBuilder
+    private var surfaceCards: some View {
+        switch focus {
+        case .both:
+            HStack(alignment: .top, spacing: 12) {
+                widgetCard
+                watchCard
+            }
+        case .widget:
+            widgetCard
+        case .watch:
+            watchHero
+        }
     }
 
     private var amountLine: String { stackText ?? "Your stack" }
@@ -466,7 +543,7 @@ struct StackSurfacesPreview: View {
                     .tracking(0.4)
             }
             Text(amountLine)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(size: focus == .widget ? 28 : 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
@@ -514,6 +591,39 @@ struct StackSurfacesPreview: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 8)
         .frame(width: 108, height: 118)
+        .background(previewBackground)
+    }
+
+    private var watchHero: some View {
+        VStack(spacing: 8) {
+            Text("TAPBTC")
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .foregroundStyle(.secondary)
+                .tracking(0.8)
+            Image(systemName: "bitcoinsign.circle.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(.orange)
+            Text(btcText ?? "BTC")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(stackText.map { "Stack · \($0)" } ?? "Your stack")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.orange)
+                .minimumScaleFactor(0.6)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+            if let gainPct {
+                Text("\(gainPct >= 0 ? "+" : "")\(String(format: "%.1f", gainPct * 100))% all-time")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(gainPct >= 0 ? up : down)
+            }
+        }
+        .padding(.vertical, 22)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 180)
         .background(previewBackground)
     }
 
@@ -653,7 +763,12 @@ struct StackEverywhereView: View {
                 }
             }
             .sheet(isPresented: $showPaywall, onDismiss: {
-                if pro.isPro { dismiss() }
+                guard pro.isPro else { return }
+                // Thank-you replaced the paywall. An animated dismiss of this
+                // sheet would flash it after Done.
+                var transaction = SwiftUI.Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { dismiss() }
             }) {
                 PaywallView(trigger: .holdings)
             }
