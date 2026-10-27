@@ -79,6 +79,8 @@ enum PaywallTrigger: String, Identifiable {
     case briefing
     case icon
     case theme
+    /// First-launch walkthrough. Not sent by the widget.
+    case onboarding
 
     var id: String { rawValue }
 }

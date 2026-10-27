@@ -121,6 +121,9 @@ final class StackEverywherePrompt: ObservableObject {
     }
 
     private func present() {
+        // The first-launch Pro walkthrough owns the screen. A later save or
+        // open can still show this; don't cover the walkthrough with it.
+        guard !ProWalkthrough.suppressOtherPrompts else { return }
         presentedThisSession = true
         showCount += 1
         UserDefaults.standard.set(false, forKey: deferredKey)

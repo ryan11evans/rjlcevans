@@ -2,6 +2,69 @@ import SwiftUI
 import StoreKit
 import UniformTypeIdentifiers
 
+/// Which first-launch cover is up. Decided once, before the open count
+/// increments, so an upgrade isn't treated as a new install later this session.
+private struct FirstLaunch {
+    var offerPro: Bool
+    var showNotifications: Bool
+    var showPro: Bool
+    var wantsPaywall: Bool
+
+    var isPresented: Bool { showNotifications || showPro }
+
+    static func make() -> FirstLaunch {
+        let offer = ProWalkthrough.shouldOffer()
+        let notifications = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
+        return FirstLaunch(
+            offerPro: offer,
+            showNotifications: notifications,
+            showPro: offer && !notifications,
+            wantsPaywall: false
+        )
+    }
+}
+
+/// Stays mounted for the life of the cover so the notification intro can
+/// hand off to the Pro walkthrough without dismissing.
+private struct FirstLaunchCover: View {
+    @Binding var launch: FirstLaunch
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.12, green: 0.11, blue: 0.10),
+                         Color(red: 0.07, green: 0.06, blue: 0.06),
+                         Color(red: 0.02, green: 0.02, blue: 0.02)],
+                startPoint: .topLeading, endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            if launch.showNotifications {
+                OnboardingView {
+                    UserDefaults.shared.set(true, forKey: "hasSeenOnboarding")
+                    launch.showNotifications = false
+                    if launch.offerPro && !ProWalkthrough.hasSeen {
+                        launch.showPro = true
+                    }
+                }
+            } else if launch.showPro {
+                ProOnboardingView(
+                    onGetPro: {
+                        ProWalkthrough.markSeen()
+                        launch.wantsPaywall = true
+                        launch.showPro = false
+                    },
+                    onFinish: {
+                        ProWalkthrough.markSeen()
+                        launch.showPro = false
+                    }
+                )
+                .onAppear { ProWalkthrough.markSeen() }
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var service: PriceService
     @StateObject private var statsService = StatsService.shared
@@ -17,7 +80,9 @@ struct ContentView: View {
     @State private var showCompare = false
     @State private var showSettings = false
     @State private var showHalving = false
-    @State private var showOnboarding = !UserDefaults.shared.bool(forKey: "hasSeenOnboarding")
+    /// Notification intro and the Pro walkthrough share one cover so the
+    /// second page doesn't present while the first is still dismissing.
+    @State private var firstLaunch = FirstLaunch.make()
     @Environment(\.requestReview) private var requestReview
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.displayScale) private var displayScale
@@ -96,11 +161,32 @@ struct ContentView: View {
             .sheet(isPresented: $showHalving) {
                 HalvingView(currentPrice: service.currentPrice?.usd)
             }
-            .fullScreenCover(isPresented: $showOnboarding) {
-                OnboardingView {
-                    UserDefaults.shared.set(true, forKey: "hasSeenOnboarding")
-                    showOnboarding = false
+            .fullScreenCover(
+                isPresented: Binding(
+                    get: { firstLaunch.isPresented },
+                    set: { presented in
+                        if !presented {
+                            firstLaunch.showNotifications = false
+                            firstLaunch.showPro = false
+                        }
+                    }
+                ),
+                onDismiss: {
+                    ProWalkthrough.suppressOtherPrompts = false
+                    guard firstLaunch.wantsPaywall else { return }
+                    firstLaunch.wantsPaywall = false
+                    Task { @MainActor in
+                        // Let the cover finish dismissing before the paywall sheet.
+                        try? await Task.sleep(nanoseconds: 450_000_000)
+                        if appLock.isLocked {
+                            pendingPaywallTrigger = .onboarding
+                        } else {
+                            presentPaywall(.onboarding)
+                        }
+                    }
                 }
+            ) {
+                FirstLaunchCover(launch: $firstLaunch)
             }
             .sheet(item: $paywallRouter.trigger) { trigger in
                 PaywallView(trigger: trigger)

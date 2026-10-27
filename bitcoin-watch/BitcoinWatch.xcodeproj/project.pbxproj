@@ -22,6 +22,8 @@
 		1FA88B4BC3A666A94C12E6C8 /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF1551661A68A7B563D2D09 /* AlertService.swift */; };
 		219C1809527B20E03FD01A2A /* BTCLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BA7347446E7AE7F831FBD3A /* BTCLiveActivityAttributes.swift */; };
 		239D28A0B8C577A1A555EC18 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */; };
+		F5B28D3C0E1A4F7B9C2D4E60 /* ProOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A17C2B9D0F4E6A8B1C3D5F /* ProOnboardingView.swift */; };
+		B7D40F5E2A3C619D1E4F6082 /* ProThanksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6C39E4D1F2B508C0D3E5F71 /* ProThanksView.swift */; };
 		23C84858E3EE7424ED5D58D5 /* RefreshBTCIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD79839C322806BB9983F2B2 /* RefreshBTCIntent.swift */; };
 		23F5599C6613C1069F1BF953 /* WatchStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4A1E5DE777EDF7D0DDC5D /* WatchStatsService.swift */; };
 		2431240FE36C91B69E5FE82D /* BTCWatchComplication.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8EDE6B2E01278C7136701591 /* BTCWatchComplication.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -179,6 +181,8 @@
 		19BBB0E47753759C583C4774 /* PriceAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceAlertView.swift; sourceTree = "<group>"; };
 		1EB816A19957318279715077 /* AppIcon-Emerald-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Emerald-83.5@2x.png"; sourceTree = "<group>"; };
 		1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E4A17C2B9D0F4E6A8B1C3D5F /* ProOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProOnboardingView.swift; sourceTree = "<group>"; };
+		A6C39E4D1F2B508C0D3E5F71 /* ProThanksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProThanksView.swift; sourceTree = "<group>"; };
 		25A82A534CA6CFCDA62922B2 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
 		2A222D2C3C2D1A5DD15D7770 /* AppIcon-Silver-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Silver-76@2x.png"; sourceTree = "<group>"; };
 		2A58BCE402A9A818934FBCD0 /* AppIcon-Gold@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Gold@2x.png"; sourceTree = "<group>"; };
@@ -376,6 +380,8 @@
 				ADF03608C3190FC8FF917634 /* LockView.swift */,
 				1F74F4B39EC9544A21C8F620 /* OnboardingView.swift */,
 				C71B110B96E76243F0E8D0CE /* PaywallView.swift */,
+				E4A17C2B9D0F4E6A8B1C3D5F /* ProOnboardingView.swift */,
+				A6C39E4D1F2B508C0D3E5F71 /* ProThanksView.swift */,
 				A9D73D75E08D14B007B0BD04 /* PortfolioCardView.swift */,
 				19BBB0E47753759C583C4774 /* PriceAlertView.swift */,
 				8D5F75E5632EE79637E7C994 /* PriceChartView.swift */,
@@ -671,6 +677,8 @@
 				B21812DD83CA5F704763EE56 /* LiveActivityManager.swift in Sources */,
 				9D73715E32EE20481BBBCA82 /* LockView.swift in Sources */,
 				239D28A0B8C577A1A555EC18 /* OnboardingView.swift in Sources */,
+				F5B28D3C0E1A4F7B9C2D4E60 /* ProOnboardingView.swift in Sources */,
+				B7D40F5E2A3C619D1E4F6082 /* ProThanksView.swift in Sources */,
 				8C1D6CC1DDB682DF818CD378 /* PaywallView.swift in Sources */,
 				BAAF949ACFA57FEA683F67C2 /* PortfolioCardView.swift in Sources */,
 				5A2DB71711045AC4466488DA /* PriceAlertView.swift in Sources */,
@@ -827,7 +835,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 50;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
@@ -843,7 +851,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.7;
+				MARKETING_VERSION = 3.8;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -938,7 +946,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 50;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
@@ -960,7 +968,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.7;
+				MARKETING_VERSION = 3.8;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
