@@ -11,12 +11,18 @@ struct WeekRoute: Hashable {
     var kind: Kind
 }
 
+private enum OvertimeDestination: Hashable {
+    case week(WeekRoute)
+    case codeTT
+}
+
 struct OvertimeTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var premium: PremiumStore
     @Query private var profiles: [TaxProfile]
     @Query private var employers: [Employer]
 
+    @State private var path: [OvertimeDestination] = []
     @State private var showPaywall = false
 
     private var calendar: Calendar { .current }
@@ -30,16 +36,16 @@ struct OvertimeTabView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if let profile, let employer {
                     content(profile: profile, employer: employer)
                 } else {
-                    ContentUnavailableView(
-                        "Setup incomplete",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text("The tax profile or primary job is missing.")
-                    )
+                    ContentUnavailableView {
+                        Label("Almost there", systemImage: "clock.fill")
+                    } description: {
+                        Text("The tax profile or primary job is missing.")
+                    }
                 }
             }
             .navigationTitle("Overtime")
@@ -64,149 +70,247 @@ struct OvertimeTabView: View {
         let estimate = OvertimeEligibility.yearEstimate(weeks: allWeeks, profile: profile)
         let dialAmount = premium.isPremium ? estimate.ytdQualifiedPremium : (visible.first?.result.qualifiedPremium ?? 0)
         let cap = OvertimeEligibility.cap(profile)
+        let canCreate = premium.isPremium || visible.isEmpty
 
         List {
             Section {
-                OvertimeDial(
-                    amount: dialAmount,
-                    cap: cap,
-                    caption: dialCaption(profile: profile, cap: cap, hasWeeks: !visible.isEmpty),
-                    accessibilityLabel: premium.isPremium
-                        ? "Estimated year-to-date qualified overtime premium"
-                        : "Estimated current-week qualified overtime premium"
-                )
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                VStack(spacing: 16) {
+                    OvertimeDial(
+                        amount: dialAmount,
+                        cap: cap,
+                        caption: dialCaption(profile: profile, cap: cap, hasWeeks: !visible.isEmpty),
+                        accessibilityLabel: premium.isPremium
+                            ? "Estimated year-to-date qualified overtime premium"
+                            : "Estimated current-week qualified overtime premium"
+                    )
 
-                if let note = OvertimeEligibility.blocksDeduction(profile) {
-                    Text(note)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if let note = OvertimeEligibility.blocksDeduction(profile) {
+                        KindNote(text: note)
+                    }
+
+                    SoftCard {
+                        if premium.isPremium {
+                            // Projection method: OvertimeCalculator.projectedYearEndPremium (logged-week average × 52).
+                            EstimateLine(
+                                title: "Year-to-date qualified premium (estimate)",
+                                amount: estimate.ytdQualifiedPremium
+                            )
+                            EstimateLine(
+                                title: "Projected year-end premium (estimate)",
+                                amount: estimate.projectedYearEndPremium,
+                                detail: "Run-rate: average qualified premium of the logged weeks × 52."
+                            )
+                            EstimateLine(
+                                title: "Estimated deduction after phase-out",
+                                amount: estimate.estimatedDeduction,
+                                detail: "Cap, then $100 off per $1,000 of MAGI over the threshold. Uses the projected premium."
+                            )
+                            EstimateLine(
+                                title: "Estimated federal tax saved",
+                                amount: estimate.estimatedTaxSaved,
+                                detail: "Estimated deduction × the \(AppFormatting.percent(profile.marginalRate)) bracket on the tax profile."
+                            )
+                        } else {
+                            EstimateLine(
+                                title: "Current week qualified premium (estimate)",
+                                amount: dialAmount
+                            )
+                            PremiumLockedSection(
+                                message: "The year-to-date total, the year-end run-rate, the phase-out, and earlier weeks unlock with the full estimate."
+                            )
+                        }
+                        EstimateFootnote()
+                    }
                 }
-
-                if premium.isPremium {
-                    // Projection method: OvertimeCalculator.projectedYearEndPremium (logged-week average × 52).
-                    EstimateLine(
-                        title: "Year-to-date qualified premium (estimate)",
-                        amount: estimate.ytdQualifiedPremium
-                    )
-                    EstimateLine(
-                        title: "Projected year-end premium (estimate)",
-                        amount: estimate.projectedYearEndPremium,
-                        detail: "Run-rate: average qualified premium of the logged weeks × 52."
-                    )
-                    EstimateLine(
-                        title: "Estimated deduction after phase-out",
-                        amount: estimate.estimatedDeduction,
-                        detail: "Cap, then $100 off per $1,000 of MAGI over the threshold. Uses the projected premium."
-                    )
-                    EstimateLine(
-                        title: "Estimated federal tax saved",
-                        amount: estimate.estimatedTaxSaved,
-                        detail: "Estimated deduction × the \(AppFormatting.percent(profile.marginalRate)) bracket on the tax profile."
-                    )
-                } else {
-                    EstimateLine(
-                        title: "Current week qualified premium (estimate)",
-                        amount: dialAmount
-                    )
-                    PremiumLockedSection(
-                        message: "The year-to-date total, the year-end run-rate, the phase-out, and earlier weeks are locked."
-                    )
-                }
-
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                .overtimeRow()
             }
 
             Section {
                 if visible.isEmpty {
-                    ContentUnavailableView {
-                        Label("No weeks logged", systemImage: "calendar.badge.plus")
-                    } description: {
-                        Text(premium.isPremium
-                             ? "Add a workweek to estimate the FLSA half-time premium."
-                             : "Add the current workweek. Earlier weeks are part of the full estimate.")
-                    }
-                    .listRowBackground(Color.clear)
+                    emptyWeeks(canCreate: canCreate)
+                        .overtimeRow()
                 } else {
                     ForEach(visible) { week in
-                        NavigationLink(value: WeekRoute(kind: .edit(week.persistentModelID))) {
+                        NavigationLink(value: OvertimeDestination.week(WeekRoute(kind: .edit(week.persistentModelID)))) {
                             weekRow(week)
                         }
+                        .accessibilityAction(named: "Delete") {
+                            modelContext.delete(week)
+                            try? modelContext.save()
+                        }
+                        .overtimeRow()
                     }
                     .onDelete { offsets in
                         delete(visible, at: offsets)
                     }
                 }
             } header: {
-                Text("Workweeks")
+                ThemeSectionHeader("Your weeks")
             } footer: {
-                Text("Qualified premium is only the 0.5× FLSA premium on hours over 40. It is not the full time-and-a-half pay.")
+                Text("Qualified premium is only the 0.5× FLSA premium on hours over 40. It is not the full time-and-a-half paycheck.")
+                    .font(Theme.rounded(.footnote))
+                    .foregroundStyle(Theme.textSecondary)
             }
 
             Section {
-                if premium.isPremium {
-                    NavigationLink("W-2 Box 12 code TT") {
-                        CodeTTView(employer: employer, profile: profile, weeks: allWeeks)
+                Button {
+                    if premium.isPremium {
+                        path.append(.codeTT)
+                    } else {
+                        showPaywall = true
                     }
-                } else {
-                    Button("W-2 Box 12 code TT") { showPaywall = true }
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.title3)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(Theme.emerald, Theme.gold)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("W-2 code TT")
+                                .font(Theme.rounded(.headline, weight: .bold))
+                                .foregroundStyle(Theme.ink)
+                            Text("Compare Box 12 with this log")
+                                .font(Theme.rounded(.subheadline))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: premium.isPremium ? "chevron.right" : "lock.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Theme.card)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(Theme.cardStroke, lineWidth: 1)
+                    )
                 }
+                .buttonStyle(.plain)
+                .overtimeRow()
             } footer: {
-                Text("Compare a code TT amount to the qualified premium this log computed.")
+                Text("See how a code TT amount compares with the qualified premium this log computed.")
+                    .font(Theme.rounded(.footnote))
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
-        .navigationDestination(for: WeekRoute.self) { route in
-            WeekEditorView(
-                route: route,
-                employer: employer,
-                taxYear: profile.taxYear,
-                locksDate: !premium.isPremium
-            )
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Theme.background.ignoresSafeArea())
+        .navigationDestination(for: OvertimeDestination.self) { destination in
+            switch destination {
+            case .week(let route):
+                WeekEditorView(
+                    route: route,
+                    employer: employer,
+                    taxYear: profile.taxYear,
+                    locksDate: !premium.isPremium
+                )
+            case .codeTT:
+                CodeTTView(employer: employer, profile: profile, weeks: allWeeks)
+            }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if premium.isPremium || visible.isEmpty {
-                    NavigationLink(value: WeekRoute(kind: .create)) {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Add workweek")
-                } else {
-                    Button {
-                        showPaywall = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Add workweek")
+                Button {
+                    addWeek(canCreate: canCreate)
+                } label: {
+                    Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add workweek")
             }
         }
     }
 
-    private func dialCaption(profile: TaxProfile, cap: Decimal, hasWeeks: Bool) -> String {
-        if !hasWeeks { return "No weeks logged" }
-        if profile.filingStatus == .marriedFilingSeparately {
-            return "Cap \(AppFormatting.currency(0)). Married filing separately."
+    private func emptyWeeks(canCreate: Bool) -> some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Image(systemName: "clock.fill")
+                    .font(.system(size: 64))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(Theme.emerald)
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 28))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.white, Theme.goldBright)
+                    .offset(x: 30, y: 24)
+            }
+            .accessibilityHidden(true)
+            .padding(.top, 8)
+
+            Text("Your overtime lives here")
+                .font(Theme.rounded(.title2, weight: .bold))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+            Text(premium.isPremium
+                 ? "Log a workweek and we'll estimate the extra half-time pay."
+                 : "Log this week's hours. Earlier weeks are part of the full estimate.")
+                .font(Theme.rounded(.body))
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ThemeButton(title: "Log your first week", enabled: true) {
+                addWeek(canCreate: canCreate)
+            }
+            .accessibilityHint("Opens the week editor")
         }
-        let scope = premium.isPremium ? "Year to date" : "Current week"
-        return "\(scope) of \(AppFormatting.currency(cap)) cap"
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private func dialCaption(profile: TaxProfile, cap: Decimal, hasWeeks: Bool) -> String {
+        if !hasWeeks { return "Log a week and the ring starts to fill" }
+        if profile.filingStatus == .marriedFilingSeparately {
+            return "Cap \(AppFormatting.currency(0)) for married filing separately"
+        }
+        let scope = premium.isPremium ? "Year to date" : "This week"
+        return "\(scope), of a \(AppFormatting.currency(cap)) cap. Estimate."
     }
 
     private func weekRow(_ week: Week) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(AppFormatting.mediumDate(week.startDate))
-                .font(.headline)
+                .font(Theme.rounded(.headline, weight: .bold))
+                .foregroundStyle(Theme.ink)
             Text("\(AppFormatting.hours(week.hoursWorked)) hours")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Text("Regular rate (estimate) \(AppFormatting.currency(week.result.regularRate))")
-                .font(.subheadline)
-            Text("Qualified premium (estimate) \(AppFormatting.currency(week.result.qualifiedPremium))")
-                .font(.subheadline)
+                .font(Theme.rounded(.subheadline))
+                .foregroundStyle(Theme.textSecondary)
+            Text(AppFormatting.currency(week.result.qualifiedPremium))
+                .font(Theme.rounded(.title3, weight: .bold))
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText())
+            Text("Qualified premium, estimate")
+                .font(Theme.rounded(.caption, weight: .semibold))
+                .foregroundStyle(Theme.emerald)
+            Text("Regular rate, estimate \(AppFormatting.currency(week.result.regularRate))")
+                .font(Theme.rounded(.subheadline))
+                .foregroundStyle(Theme.textSecondary)
         }
-        .padding(.vertical, 4)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Theme.card)
+                .shadow(color: Theme.shadowColor, radius: 10, x: 0, y: 6)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Theme.cardStroke, lineWidth: 1)
+        )
         .accessibilityElement(children: .combine)
+    }
+
+    private func addWeek(canCreate: Bool) {
+        if canCreate {
+            path.append(.week(WeekRoute(kind: .create)))
+        } else {
+            showPaywall = true
+        }
     }
 
     private func delete(_ weeks: [Week], at offsets: IndexSet) {
@@ -217,11 +321,21 @@ struct OvertimeTabView: View {
     }
 }
 
+private extension View {
+    func overtimeRow() -> some View {
+        listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+    }
+}
+
 private struct OvertimeDial: View {
     var amount: Decimal
     var cap: Decimal
     var caption: String
     var accessibilityLabel: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .title) private var amountSize: CGFloat = 32
 
     private var progress: Double {
         EstimateProgress.fraction(amount: amount, cap: cap)
@@ -229,41 +343,53 @@ private struct OvertimeDial: View {
 
     private var accessibilityValue: String {
         if cap == 0 {
-            return "\(AppFormatting.currency(amount)). Cap is \(AppFormatting.currency(0))."
+            return "\(AppFormatting.currency(amount)). Estimate. Cap is \(AppFormatting.currency(0))."
         }
-        return "\(AppFormatting.currency(amount)) of \(AppFormatting.currency(cap)) cap."
+        return "\(AppFormatting.currency(amount)) of \(AppFormatting.currency(cap)) cap. Estimate."
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .stroke(Color.secondary.opacity(0.25), lineWidth: 14)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color(hex: 0x14C472), Color(hex: 0x0A9F5A), Color(hex: 0x004D4D)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 18, lineCap: .round)
+                    )
                 Circle()
                     .trim(from: 0, to: progress)
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .stroke(Theme.goldBright, style: StrokeStyle(lineWidth: 18, lineCap: .round))
                     .rotationEffect(.degrees(-90))
+                    .animation(reduceMotion ? nil : .spring(duration: 0.85, bounce: 0.2), value: progress)
                 VStack(spacing: 2) {
                     Text(AppFormatting.currency(amount))
-                        .font(.title2.weight(.semibold))
-                        .minimumScaleFactor(0.5)
+                        .font(.system(size: amountSize, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.ink)
+                        .contentTransition(.numericText())
+                        .animation(reduceMotion ? nil : .snappy, value: amount)
+                        .minimumScaleFactor(0.45)
                         .lineLimit(1)
                     Text("Estimate")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.rounded(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.emerald)
                 }
                 .padding(28)
             }
             .aspectRatio(1, contentMode: .fit)
-            .frame(maxWidth: 220)
+            .frame(maxWidth: 280)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityLabel)
             .accessibilityValue(accessibilityValue)
 
             Text(caption)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(Theme.rounded(.subheadline))
+                .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityHidden(true)
         }
         .frame(maxWidth: .infinity)

@@ -8,17 +8,21 @@ struct PaywallView: View {
     var body: some View {
         SubscriptionStoreView(productIDs: [PremiumStore.yearlyID]) {
             VStack(alignment: .leading, spacing: 12) {
+                StopwatchHero(diameter: 96)
+                    .frame(maxWidth: .infinity)
                 Text("Full estimate")
-                    .font(.title2.bold())
+                    .font(Theme.rounded(.title, weight: .bold))
+                    .foregroundStyle(Theme.ink)
                 Text("Free includes a VIN check and the current overtime week. The full estimate adds every workweek, the year dial, the car-loan deduction, code TT, the W-4 helper, and CSV export.")
-                    .font(.body)
+                    .font(Theme.rounded(.body))
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
                 lifetimeButton
                 Text("The yearly plan renews through Apple until you cancel it. The lifetime unlock is a one-time purchase and does not renew.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.rounded(.footnote))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                EstimateFootnote()
                 HStack(spacing: 16) {
                     Link("Privacy", destination: LegalURLs.privacy)
                     Link("Terms", destination: LegalURLs.terms)
@@ -83,12 +87,19 @@ struct PremiumLockedSection: View {
     @State private var showPaywall = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("Full estimate", systemImage: "lock")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            Label {
+                Text("Full estimate")
+                    .font(Theme.rounded(.headline, weight: .bold))
+            } icon: {
+                Image(systemName: "lock.fill")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Theme.gold, Theme.emerald)
+            }
             Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(Theme.rounded(.subheadline))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
             Button("Unlock") { showPaywall = true }
                 .buttonStyle(.borderedProminent)
         }

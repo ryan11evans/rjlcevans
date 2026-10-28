@@ -29,11 +29,11 @@ struct SummaryTabView: View {
                         locked
                     }
                 } else {
-                    ContentUnavailableView(
-                        "Setup incomplete",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text("The tax profile is missing.")
-                    )
+                    ContentUnavailableView {
+                        Label("Almost there", systemImage: "chart.pie.fill")
+                    } description: {
+                        Text("The tax profile is missing.")
+                    }
                 }
             }
             .navigationTitle("Summary")
@@ -41,16 +41,29 @@ struct SummaryTabView: View {
     }
 
     private var locked: some View {
-        List {
-            Section {
-                PremiumLockedSection(
-                    message: "The combined Schedule 1-A estimate, the W-4 suggestion, and CSV export are locked."
-                )
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(spacing: 18) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 42))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Theme.gold, Theme.emerald)
+                    .accessibilityHidden(true)
+                Text("The full picture is locked")
+                    .font(Theme.rounded(.title2, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
+                SoftCard {
+                    PremiumLockedSection(
+                        message: "The combined Schedule 1-A estimate, the W-4 suggestion, and CSV export unlock with the full estimate."
+                    )
+                }
+                EstimateFootnote()
             }
+            .padding(24)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
         }
+        .themeScreen()
     }
 
     private func loaded(_ profile: TaxProfile) -> some View {
@@ -63,14 +76,29 @@ struct SummaryTabView: View {
         let csv = SummaryCSV.document(profile: profile, employer: employer, estimate: estimate)
         return List {
             Section {
-                Text("Schedule 1-A, tax year \(String(profile.taxYear))")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Text(AppFormatting.filingStatusTitle(profile.filingStatus))
-                    .font(.subheadline)
+                VStack(spacing: 6) {
+                    Text("Estimated deduction")
+                        .font(Theme.rounded(.subheadline))
+                        .foregroundStyle(Theme.textSecondary)
+                    ThemeMoney(amount: estimate.schedule.combinedDeduction, style: .largeTitle, alignment: .center)
+                    Text("Estimate")
+                        .font(Theme.rounded(.caption, weight: .semibold))
+                        .foregroundStyle(Theme.emerald)
+                    Text("Estimated tax saved \(AppFormatting.currency(estimate.schedule.estimatedTaxSaved))")
+                        .font(Theme.rounded(.headline, weight: .bold))
+                        .foregroundStyle(Theme.deepTeal)
+                        .multilineTextAlignment(.center)
+                    Text("Tax year \(String(profile.taxYear)) · \(AppFormatting.filingStatusTitle(profile.filingStatus))")
+                        .font(Theme.rounded(.caption))
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .accessibilityElement(children: .combine)
             }
 
-            Section("Overtime") {
+            Section {
                 EstimateLine(title: "Year-to-date qualified premium (estimate)", amount: estimate.overtime.ytdQualifiedPremium)
                 EstimateLine(
                     title: "Projected year-end premium (estimate)",
@@ -80,27 +108,33 @@ struct SummaryTabView: View {
                 EstimateLine(title: "Estimated overtime deduction", amount: estimate.overtime.estimatedDeduction)
                 if let note = estimate.overtimeNote {
                     Text(note)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.rounded(.subheadline))
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+            } header: {
+                ThemeSectionHeader("Overtime")
             }
 
-            Section("Car loan") {
+            Section {
                 if estimate.carLines.isEmpty {
-                    Text("No vehicle saved yet.")
-                        .foregroundStyle(.secondary)
+                    Text("No car yet. The Car Loan tab can check a VIN.")
+                        .font(Theme.rounded(.body))
+                        .foregroundStyle(Theme.textSecondary)
                 } else {
                     ForEach(estimate.carLines) { line in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(line.title)
+                                .font(Theme.rounded(.headline, weight: .bold))
+                                .foregroundStyle(Theme.ink)
                             Text(line.vin)
                                 .font(.caption.monospaced())
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                             Text(line.included
                                  ? "Included in the deduction (estimate)"
-                                 : "Not included. The checklist is not eligible.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                 : "Not included. The checklist isn't eligible yet.")
+                                .font(Theme.rounded(.caption))
+                                .foregroundStyle(Theme.textSecondary)
                             EstimateLine(
                                 title: line.usedForm1098 ? "Form 1098-VLI interest" : "Interest used (estimate)",
                                 amount: line.used
@@ -113,9 +147,11 @@ struct SummaryTabView: View {
                     amount: estimate.carDeduction,
                     detail: "$10,000 cap on the combined interest, then the MAGI phase-out."
                 )
+            } header: {
+                ThemeSectionHeader("Car loan")
             }
 
-            Section("Schedule 1-A") {
+            Section {
                 EstimateLine(title: "Combined estimated deduction", amount: estimate.schedule.combinedDeduction)
                 EstimateLine(
                     title: "Estimated federal tax saved",
@@ -128,6 +164,8 @@ struct SummaryTabView: View {
                 ShareLink(item: ScheduleCSV(text: csv), preview: SharePreview("Schedule 1-A estimate")) {
                     Label("Export CSV", systemImage: "square.and.arrow.up")
                 }
+            } header: {
+                ThemeSectionHeader("Schedule 1-A")
             }
 
             if let employer, let reported = employer.codeTT[profile.taxYear] {
@@ -135,21 +173,23 @@ struct SummaryTabView: View {
                     reported: reported,
                     computedPremium: estimate.overtime.ytdQualifiedPremium
                 )
-                Section("Code TT") {
+                Section {
                     EstimateLine(title: "W-2 Box 12 code TT", amount: reported)
                     EstimateLine(title: "Difference, code TT minus the log (estimate)", amount: difference.reportedMinusComputed)
                     Text(CodeTTCopy.explanation(difference: difference))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.rounded(.subheadline))
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } header: {
+                    ThemeSectionHeader("Code TT")
                 }
             }
 
             Section {
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                EstimateFootnote()
             }
         }
+        .themeGroupedList()
     }
 }
 
@@ -167,11 +207,10 @@ struct W4HelperView: View {
                 Text("Line 4(b) is “Deductions” on Form W-4. This suggestion is the sum of the two estimated Schedule 1-A deductions, each already after its own cap and phase-out. It is not a full withholding calculation, and it does not fill out the form. Tax year \(String(profile.taxYear)), \(AppFormatting.filingStatusTitle(profile.filingStatus)).")
             }
             Section {
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                EstimateFootnote()
             }
         }
+        .themeGroupedList()
         .navigationTitle("W-4 helper")
         .navigationBarTitleDisplayMode(.inline)
     }

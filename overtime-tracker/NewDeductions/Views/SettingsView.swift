@@ -24,9 +24,11 @@ struct SettingsView: View {
             List {
                 Section {
                     Text(AppCopy.disclaimer)
-                        .font(.body)
+                        .font(Theme.rounded(.body))
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 } header: {
-                    Text("Disclaimer")
+                    ThemeSectionHeader("Disclaimer")
                 } footer: {
                     Text("Accepted during setup. The overtime, car-loan, and summary screens show a shorter line: \(AppCopy.estimateFootnote).")
                 }
@@ -40,16 +42,20 @@ struct SettingsView: View {
                         ForEach(employers) { employer in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(employer.name)
-                                Text("\(AppFormatting.currency(employer.defaultRate)) / hour")
-                                    .foregroundStyle(.secondary)
-                                Text("Workweek starts \(AppFormatting.weekdayName(employer.workweekStartsOn))")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .font(Theme.rounded(.headline, weight: .bold))
+                                Text("\(AppFormatting.currency(employer.defaultRate)) / hour, estimate")
+                                    .font(Theme.rounded(.subheadline))
+                                    .foregroundStyle(Theme.textSecondary)
+                                Picker("Workweek starts", selection: workweekBinding(employer)) {
+                                    ForEach(1...7, id: \.self) { day in
+                                        Text(AppFormatting.weekdayName(day)).tag(day)
+                                    }
+                                }
                             }
                             .padding(.vertical, 2)
                         }
                     } header: {
-                        Text("Employer")
+                        ThemeSectionHeader("Employer")
                     } footer: {
                         Text("Overtime is calculated per employer. This version keeps the primary job from setup. Hours at different jobs are not combined.")
                     }
@@ -117,6 +123,7 @@ struct SettingsView: View {
                     Text("Deletes the tax profile, employer, weeks, and vehicles stored on this device.")
                 }
             }
+            .themeGroupedList()
             .navigationTitle("Settings")
             .onAppear(perform: loadMAGI)
             .confirmationDialog("Reset onboarding?", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -155,16 +162,17 @@ struct SettingsView: View {
                     Text("\(percent)%").tag(percent)
                 }
             }
-            Toggle("Valid SSN", isOn: boolBinding(profile, \.hasSSN))
-            Toggle("Hourly, non-exempt", isOn: boolBinding(profile, \.isHourlyNonExempt))
-            Toggle("Paid OT over 40", isOn: boolBinding(profile, \.paidOvertimeOver40))
+            Toggle("Valid Social Security number", isOn: boolBinding(profile, \.hasSSN))
+            Toggle("Hourly and non-exempt", isOn: boolBinding(profile, \.isHourlyNonExempt))
+            Toggle("Paid time-and-a-half after 40 hours", isOn: boolBinding(profile, \.paidOvertimeOver40))
+            Toggle("Bought a new car in 2025 or later", isOn: wantsCarBinding(profile))
             if let profileMessage {
                 Text(profileMessage)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Tax profile")
+            ThemeSectionHeader("Tax profile")
         } footer: {
             Text("Filing status, estimated MAGI, and the bracket change the phase-out and the estimated tax saved. Every figure that uses them is an estimate.")
         }
@@ -228,6 +236,26 @@ struct SettingsView: View {
             get: { AppFormatting.nearestBracketPercent(profile.marginalRate) },
             set: { percent in
                 profile.marginalRate = Decimal(percent) / 100
+                try? modelContext.save()
+            }
+        )
+    }
+
+    private func wantsCarBinding(_ profile: TaxProfile) -> Binding<Bool> {
+        Binding(
+            get: { profile.wantsCarLoan ?? false },
+            set: { newValue in
+                profile.wantsCarLoan = newValue
+                try? modelContext.save()
+            }
+        )
+    }
+
+    private func workweekBinding(_ employer: Employer) -> Binding<Int> {
+        Binding(
+            get: { employer.workweekStartsOn },
+            set: { newValue in
+                employer.workweekStartsOn = newValue
                 try? modelContext.save()
             }
         )

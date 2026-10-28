@@ -8,9 +8,12 @@ struct YesNoPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
+                .font(Theme.rounded(.body, weight: .semibold))
+                .foregroundStyle(Theme.ink)
             Text(detail)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(Theme.rounded(.footnote))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 12) {
                 choice("Yes", value: true)
                 choice("No", value: false)
@@ -18,19 +21,27 @@ struct YesNoPicker: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
+        .sensoryFeedback(.selection, trigger: selection)
     }
 
     private func choice(_ label: String, value: Bool) -> some View {
-        Button {
+        let selected = selection == value
+        return Button {
             selection = value
         } label: {
             Text(label)
+                .font(Theme.rounded(.headline, weight: .semibold))
                 .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(selected ? Theme.emerald : Theme.backgroundElevated)
+                )
+                .foregroundStyle(selected ? Color.white : Theme.ink)
         }
-        .buttonStyle(.bordered)
-        .tint(selection == value ? Color.accentColor : Color.secondary)
+        .buttonStyle(PressableStyle())
         .accessibilityLabel("\(title), \(label)")
-        .accessibilityAddTraits(selection == value ? .isSelected : AccessibilityTraits())
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
@@ -43,16 +54,15 @@ struct EstimateLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Text(AppFormatting.currency(amount))
-                .font(.title3)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
+                .font(Theme.rounded(.subheadline))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            ThemeMoney(amount: amount, style: .title3)
             if let detail {
                 Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.rounded(.caption))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

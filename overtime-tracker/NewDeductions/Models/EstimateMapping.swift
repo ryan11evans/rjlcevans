@@ -64,16 +64,16 @@ enum OvertimeEligibility {
     /// Why the overtime deduction is forced to $0, or nil when the profile can have one.
     static func blocksDeduction(_ profile: TaxProfile) -> String? {
         if profile.filingStatus == .marriedFilingSeparately {
-            return "Married filing separately does not qualify. The estimated overtime deduction is $0."
+            return "Married filing separately doesn't qualify, so the overtime estimate is $0. You can change this in Settings."
         }
         if !profile.hasSSN {
-            return "A valid Social Security number is required. The estimated overtime deduction is $0."
+            return "A valid Social Security number is required, so the overtime estimate is $0. You can update that in Settings."
         }
         if !profile.isHourlyNonExempt {
-            return "This profile is not hourly and non-exempt. The estimated overtime deduction is $0."
+            return "Salaried exempt work usually doesn't qualify, so the overtime estimate is $0. The car-loan estimate is separate."
         }
         if !profile.paidOvertimeOver40 {
-            return "This profile is not paid overtime after 40 hours in a workweek. The estimated overtime deduction is $0."
+            return "Without time-and-a-half after 40 hours, the overtime estimate is $0."
         }
         return nil
     }

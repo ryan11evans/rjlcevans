@@ -5,10 +5,15 @@ struct RootView: View {
     @Query private var profiles: [TaxProfile]
 
     var body: some View {
-        if profiles.contains(where: \.acceptedDisclaimer) {
-            MainTabView()
-        } else {
-            OnboardingView()
+        Group {
+            if profiles.contains(where: \.acceptedDisclaimer) {
+                MainTabView()
+            } else {
+                OnboardingView()
+            }
         }
+        .tint(Theme.emerald)
+        .fontDesign(.rounded)
+        .background(Theme.background.ignoresSafeArea())
     }
 }

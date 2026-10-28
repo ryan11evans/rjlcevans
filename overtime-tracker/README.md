@@ -22,7 +22,7 @@ cd overtime-tracker
 xcodegen generate
 ```
 
-After regenerating, confirm `MARKETING_VERSION` is still `1.0` and `CURRENT_PROJECT_VERSION` is still `1` in both `project.yml` and `project.pbxproj`. Add any new source file in both files. `NewDeductions/App/Info.plist` is the app's Info.plist (`INFOPLIST_FILE`); it is not a resource.
+After regenerating, confirm `MARKETING_VERSION` is still `1.0` and `CURRENT_PROJECT_VERSION` is still `2` in both `project.yml` and `project.pbxproj`. Add any new source file in both files. `NewDeductions/App/Info.plist` is the app's Info.plist (`INFOPLIST_FILE`); it is not a resource.
 
 ### Tests
 
@@ -53,7 +53,7 @@ Settings links all three. There is no tracker and no external script on those pa
 
 - Xcode project and the local `OvertimeCore` package
 - SwiftData models: Employer, Week, Shift, TaxProfile, Vehicle, VehicleLoan. The store is local only (`cloudKitDatabase: .none`, no iCloud entitlement)
-- Onboarding: eligibility, base rate and workweek start day, filing status / estimated MAGI / bracket, and the disclaimer the user has to accept before a profile is saved
+- Onboarding: one question per screen (pay type, time-and-a-half, filing status, rough income, hourly rate, typical overtime hours with a live deduction preview, and an optional new car). The Social Security number requirement is in the disclaimer. "Got it" stores `acceptedDisclaimer`. A salaried or married-filing-separately answer can continue; the overtime estimate stays $0. Build number is 2.
 - Overtime tab for the one "Primary job" employer: a year dial and a workweek log (add, edit, delete), including weeks back to the workweek that contains January 1 of the tax year. Qualified premium is only the 0.5× FLSA premium. The year-end figure is a run-rate: average qualified premium of the logged weeks × 52 (see `OvertimeCalculator.projectedYearEndPremium`). The deduction and tax-saved figures apply the cap and MAGI phase-out to that projection. Every figure is labeled as an estimate
 - Car loan tab: 17-character VIN with the ISO check digit, then one NHTSA vPIC `DecodeVinValues` call. US `PlantCountry` is US final assembly. Any other country is "Not eligible". A blank or failed lookup is "Unknown, check the door-jamb label". The checklist, amortization, Form 1098-VLI override, and deduction are in the same tab
 - W-2 Box 12 code TT compared with the log, a Form W-4 line 4(b) suggestion (the two estimated deductions added together), and a Summary tab with CSV export
@@ -75,6 +75,7 @@ SwiftData optional properties, so a week-1 store can open without a custom migra
 - `Vehicle.userConfirmedGVWRUnderLimit: Bool?`
 - `VehicleLoan.salvageOrScrap: Bool?`
 - `VehicleLoan.relatedPartyLender: Bool?`
+- `TaxProfile.wantsCarLoan: Bool?` (onboarding's new-car answer; nil on a build-1 store)
 
 `Employer.codeTT` and `VehicleLoan.actualInterest` are still computed over JSON `Data`. Assign the whole dictionary, or call `setCodeTT` / `setActualInterest`.
 
