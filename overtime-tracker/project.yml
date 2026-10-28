@@ -1,0 +1,125 @@
+name: NewDeductions
+options:
+  bundleIdPrefix: com.rjlcevans
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+# Working display name: CFBundleDisplayName in NewDeductions/App/Info.plist.
+# That plist string is the only copy of the name.
+#
+# MARKETING_VERSION (1.0) and CURRENT_PROJECT_VERSION (1) below must match every
+# occurrence in NewDeductions.xcodeproj/project.pbxproj.
+# Signing is automatic. Team ID matches TapBTC (bitcoin-watch).
+
+packages:
+  OvertimeCore:
+    path: OvertimeCore
+
+# Shown in the project navigator. Not compiled by the app target; SwiftPM builds them.
+fileGroups:
+  - OvertimeCore/Package.swift
+  - OvertimeCore/Sources/OvertimeCore/OvertimeCalculator.swift
+  - OvertimeCore/Sources/OvertimeCore/CarLoanInterestCalculator.swift
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: "9B9PTBR9A2"
+    CODE_SIGN_STYLE: Automatic
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+schemes:
+  NewDeductions:
+    build:
+      targets:
+        NewDeductions: all
+        NewDeductionsTests: [test]
+    run:
+      config: Debug
+      executable: NewDeductions
+    test:
+      config: Debug
+      targets:
+        - NewDeductionsTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+targets:
+  NewDeductions:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: NewDeductions/App/AppFormatting.swift
+      - path: NewDeductions/App/AppIdentity.swift
+      - path: NewDeductions/App/AppModelContainer.swift
+      - path: NewDeductions/App/NewDeductionsApp.swift
+      - path: NewDeductions/Models/Employer.swift
+      - path: NewDeductions/Models/Shift.swift
+      - path: NewDeductions/Models/TaxProfile.swift
+      - path: NewDeductions/Models/Vehicle.swift
+      - path: NewDeductions/Models/VehicleLoan.swift
+      - path: NewDeductions/Models/Week.swift
+      - path: NewDeductions/Models/YearAmountStorage.swift
+      - path: NewDeductions/Views/MainTabView.swift
+      - path: NewDeductions/Views/OnboardingView.swift
+      - path: NewDeductions/Views/PlaceholderTabView.swift
+      - path: NewDeductions/Views/RootView.swift
+      - path: NewDeductions/Views/SettingsView.swift
+      - path: NewDeductions/Views/TaxSources.swift
+      - path: NewDeductions/Assets.xcassets
+      - path: NewDeductions/PrivacyInfo.xcprivacy
+    dependencies:
+      - package: OvertimeCore
+        product: OvertimeCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.newdeductions
+        PRODUCT_NAME: NewDeductions
+        INFOPLIST_FILE: NewDeductions/App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: "9B9PTBR9A2"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        SDKROOT: iphoneos
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+
+  NewDeductionsTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: OvertimeCore/Tests/OvertimeCoreTests/CarLoanInterestCalculatorTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/OvertimeCalculatorTests.swift
+    dependencies:
+      - target: NewDeductions
+      - package: OvertimeCore
+        product: OvertimeCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjlcevans.newdeductions.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: "9B9PTBR9A2"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        SDKROOT: iphoneos
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/NewDeductions.app/NewDeductions"
+        BUNDLE_LOADER: "$(TEST_HOST)"
