@@ -78,6 +78,7 @@ struct VehicleDetailView: View {
                 Button("Delete vehicle", role: .destructive) { confirmDelete = true }
             }
         }
+        .themeGroupedList()
         .navigationTitle(vehicle.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -193,9 +194,7 @@ struct VehicleDetailView: View {
                 title: "Estimated federal tax saved",
                 amount: CarLoanInterestCalculator.estimatedTaxSaved(deduction: deduction, marginalRate: profile.marginalRate)
             )
-            Text(AppCopy.estimateFootnote)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            EstimateFootnote()
         } header: {
             Text("Estimate")
         }

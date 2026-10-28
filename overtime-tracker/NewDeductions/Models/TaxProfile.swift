@@ -15,6 +15,8 @@ final class TaxProfile {
     var isHourlyNonExempt: Bool
     var paidOvertimeOver40: Bool
     var acceptedDisclaimer: Bool
+    /// Set when onboarding asks about a new car. Optional so a build-1 store opens without a migration.
+    var wantsCarLoan: Bool?
 
     init(
         taxYear: Int,
@@ -24,7 +26,8 @@ final class TaxProfile {
         hasSSN: Bool,
         isHourlyNonExempt: Bool,
         paidOvertimeOver40: Bool,
-        acceptedDisclaimer: Bool
+        acceptedDisclaimer: Bool,
+        wantsCarLoan: Bool? = nil
     ) {
         self.taxYear = taxYear
         self.filingStatusRaw = filingStatus.rawValue
@@ -34,6 +37,7 @@ final class TaxProfile {
         self.isHourlyNonExempt = isHourlyNonExempt
         self.paidOvertimeOver40 = paidOvertimeOver40
         self.acceptedDisclaimer = acceptedDisclaimer
+        self.wantsCarLoan = wantsCarLoan
     }
 
     var filingStatus: FilingStatus {

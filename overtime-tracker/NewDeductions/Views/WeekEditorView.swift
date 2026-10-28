@@ -126,9 +126,7 @@ struct WeekEditorView: View {
                     .accessibilityElement(children: .combine)
                     EstimateLine(title: "Qualified premium (estimate)", amount: result.qualifiedPremium,
                                  detail: "0.5 × regular rate × hours over 40. Not the full 1.5× paycheck amount.")
-                    Text(AppCopy.estimateFootnote)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    EstimateFootnote()
                 }
             }
 
@@ -145,6 +143,7 @@ struct WeekEditorView: View {
                 }
             }
         }
+        .themeGroupedList()
         .navigationTitle(existing == nil ? "Add week" : "Edit week")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

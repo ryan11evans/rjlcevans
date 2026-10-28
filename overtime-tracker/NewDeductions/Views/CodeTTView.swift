@@ -60,11 +60,10 @@ struct CodeTTView: View {
             }
 
             Section {
-                Text(AppCopy.estimateFootnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                EstimateFootnote()
             }
         }
+        .themeGroupedList()
         .navigationTitle("Code TT")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

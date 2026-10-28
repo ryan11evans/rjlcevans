@@ -13,7 +13,8 @@ enum AppIdentity {
 
 enum AppCopy {
     /// Required onboarding acceptance, and repeated in Settings.
-    static let disclaimer = "Estimates only, not tax advice or tax-prep software."
+    /// The Social Security number question lives in this sentence instead of its own step.
+    static let disclaimer = "Estimates only, not tax advice or tax-prep software. The overtime deduction needs a valid Social Security number."
     /// One-line footnote on every estimate screen.
-    static let estimateFootnote = "Estimate only, not tax advice"
+    static let estimateFootnote = "Estimates only, not tax advice"
 }

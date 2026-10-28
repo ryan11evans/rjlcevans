@@ -6,6 +6,7 @@ struct CarLoanTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var premium: PremiumStore
     @Query(sort: \Vehicle.vin) private var vehicles: [Vehicle]
+    @Query private var profiles: [TaxProfile]
 
     @State private var vinText = ""
     @State private var vinMessage: String?
@@ -13,45 +14,83 @@ struct CarLoanTabView: View {
     @State private var showPaywall = false
     @FocusState private var vinFocused: Bool
 
+    private var profile: TaxProfile? {
+        profiles.first(where: \.acceptedDisclaimer) ?? profiles.first
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    TextField("VIN", text: $vinText)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                        .font(.body.monospaced())
-                        .focused($vinFocused)
-                        .accessibilityLabel("VIN")
-                    Text("\(VINValidator.normalize(vinText).count) of 17")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button {
-                        checkVIN()
-                    } label: {
-                        if isDecoding {
-                            ProgressView()
-                        } else {
-                            Text("Check VIN")
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "car.fill")
+                                .font(.system(size: 28, weight: .semibold))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Theme.emerald, Theme.gold)
+                                .frame(width: 52, height: 52)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(Theme.backgroundElevated)
+                                )
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(profile?.wantsCarLoan == true ? "Your new car" : "Car loan interest")
+                                    .font(Theme.rounded(.title3, weight: .bold))
+                                    .foregroundStyle(Theme.ink)
+                                Text(carIntro)
+                                    .font(Theme.rounded(.subheadline))
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        TextField("VIN", text: $vinText)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                            .font(.body.monospaced())
+                            .focused($vinFocused)
+                            .accessibilityLabel("VIN")
+                        Text("\(VINValidator.normalize(vinText).count) of 17")
+                            .font(Theme.rounded(.caption))
+                            .foregroundStyle(Theme.textSecondary)
+                        Button {
+                            checkVIN()
+                        } label: {
+                            if isDecoding {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                            } else {
+                                Text("Check VIN")
+                                    .font(Theme.rounded(.headline, weight: .bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isDecoding)
+                        if let vinMessage {
+                            Text(vinMessage)
+                                .font(Theme.rounded(.body))
+                                .foregroundStyle(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    .disabled(isDecoding)
-                    if let vinMessage {
-                        Text(vinMessage)
-                            .font(.body)
-                    }
+                    .padding(.vertical, 4)
                 } header: {
-                    Text("VIN check")
+                    ThemeSectionHeader("VIN check")
                 } footer: {
                     Text("The check digit is verified on this device. A valid VIN is sent to NHTSA so the app can read Plant Country. US final assembly can qualify. Anything else shows Not eligible, or Unknown if the field is blank.")
                 }
 
                 if !vehicles.isEmpty {
-                    Section("Vehicles") {
+                    Section {
                         ForEach(vehicles) { vehicle in
                             vehicleBlock(vehicle)
                         }
                         .onDelete(perform: deleteVehicles)
+                    } header: {
+                        ThemeSectionHeader("Your cars")
                     }
                 }
 
@@ -64,11 +103,10 @@ struct CarLoanTabView: View {
                 }
 
                 Section {
-                    Text(AppCopy.estimateFootnote)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    EstimateFootnote()
                 }
             }
+            .themeGroupedList()
             .navigationTitle("Car Loan")
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
@@ -80,6 +118,13 @@ struct CarLoanTabView: View {
                 PaywallView().environmentObject(premium)
             }
         }
+    }
+
+    private var carIntro: String {
+        if profile?.wantsCarLoan == true {
+            return "You mentioned a new car. A free VIN check is the first step. The loan details come after that."
+        }
+        return "Have a car from 2025 or later? Check the VIN and we'll estimate the interest deduction."
     }
 
     @ViewBuilder
@@ -112,20 +157,42 @@ struct CarLoanTabView: View {
     }
 
     private func vehicleSummary(_ vehicle: Vehicle) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(vehicle.displayTitle)
+                .font(Theme.rounded(.headline, weight: .bold))
+                .foregroundStyle(Theme.ink)
             Text(vehicle.vin)
                 .font(.body.monospaced())
-            Text(vehicle.displayTitle)
+                .foregroundStyle(Theme.textSecondary)
             Text(AssemblyCopy.line(vehicle.assemblySignal))
-                .font(.headline)
+                .font(Theme.rounded(.subheadline, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(assemblyColor(vehicle.assemblySignal).opacity(0.18))
+                )
             if let country = vehicle.plantCountry {
                 Text("Plant country: \(country)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.rounded(.caption))
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    private func assemblyColor(_ signal: AssemblySignal) -> Color {
+        switch signal {
+        case .usPlant, .stickerConfirmedUS:
+            return Theme.emerald
+        case .unknown:
+            return Theme.gold
+        case .nonUSPlant:
+            return Theme.textSecondary
+        }
     }
 
     private func checkVIN() {
