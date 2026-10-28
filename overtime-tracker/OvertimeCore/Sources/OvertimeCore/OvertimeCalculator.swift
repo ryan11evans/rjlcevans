@@ -12,7 +12,7 @@ import Foundation
 ///  • Phase-out: reduced by $100 for each $1,000 of MAGI over $150,000 ($300,000 MFJ).
 ///  • Must have a valid SSN; married filers must file jointly (MFS gets $0).
 
-public enum FilingStatus: String, Codable, CaseIterable, Sendable {
+public enum FilingStatus: String, Codable, CaseIterable, Hashable, Sendable {
     case single, headOfHousehold, marriedFilingJointly, marriedFilingSeparately, qualifyingSurvivingSpouse
 
     public var cap: Decimal { self == .marriedFilingJointly ? 25_000 : 12_500 }
@@ -33,6 +33,26 @@ public struct WorkWeek: Equatable, Sendable {
         self.hoursWorked = hoursWorked
         self.hourlyRate = hourlyRate
         self.includableExtras = includableExtras
+    }
+}
+
+public struct OvertimeYearEstimate: Equatable, Sendable {
+    public var ytdQualifiedPremium: Decimal
+    public var weeksLogged: Int
+    public var projectedYearEndPremium: Decimal
+    public var estimatedDeduction: Decimal
+    public var estimatedTaxSaved: Decimal
+
+    public init(ytdQualifiedPremium: Decimal,
+                weeksLogged: Int,
+                projectedYearEndPremium: Decimal,
+                estimatedDeduction: Decimal,
+                estimatedTaxSaved: Decimal) {
+        self.ytdQualifiedPremium = ytdQualifiedPremium
+        self.weeksLogged = weeksLogged
+        self.projectedYearEndPremium = projectedYearEndPremium
+        self.estimatedDeduction = estimatedDeduction
+        self.estimatedTaxSaved = estimatedTaxSaved
     }
 }
 
@@ -85,6 +105,45 @@ public enum OvertimeCalculator {
     /// Rough federal tax saved = deduction x marginal bracket. Clearly an estimate.
     public static func estimatedTaxSavings(deduction: Decimal, marginalRate: Decimal) -> Decimal {
         round2(deduction * marginalRate)
+    }
+
+    /// Sum of each week's qualified FLSA premium (the 0.5× piece only).
+    public static func ytdQualifiedPremium(_ weeks: [WorkWeek]) -> Decimal {
+        weeks.reduce(Decimal(0)) { $0 + compute($1).qualifiedPremium }
+    }
+
+    /// Projected year-end qualified premium.
+    ///
+    /// Method: the average qualified premium of the logged workweeks, multiplied by 52.
+    /// Weeks that logged $0 of premium stay in the count, so a quiet stretch lowers the run-rate.
+    /// This annualizes the observed weekly average across a full 52-week year. It does not add that
+    /// average on top of the year-to-date total a second time, and it does not scale by the number
+    /// of weeks left on the calendar. With no logged weeks the projection is $0.
+    public static func projectedYearEndPremium(ytdQualifiedPremium: Decimal, weeksLogged: Int) -> Decimal {
+        guard weeksLogged > 0 else { return 0 }
+        return round2(ytdQualifiedPremium / Decimal(weeksLogged) * 52)
+    }
+
+    /// Year estimate. The cap and MAGI phase-out run on the projected year-end premium, not the
+    /// year-to-date total. Married filing separately and a missing SSN produce a $0 deduction.
+    public static func yearEstimate(weeks: [WorkWeek],
+                                    filingStatus: FilingStatus,
+                                    magi: Decimal,
+                                    marginalRate: Decimal,
+                                    hasValidSSN: Bool = true) -> OvertimeYearEstimate {
+        let ytd = ytdQualifiedPremium(weeks)
+        let projected = projectedYearEndPremium(ytdQualifiedPremium: ytd, weeksLogged: weeks.count)
+        let estimatedDeduction = deduction(qualifiedOvertime: projected,
+                                           filingStatus: filingStatus,
+                                           magi: magi,
+                                           hasValidSSN: hasValidSSN)
+        return OvertimeYearEstimate(
+            ytdQualifiedPremium: ytd,
+            weeksLogged: weeks.count,
+            projectedYearEndPremium: projected,
+            estimatedDeduction: estimatedDeduction,
+            estimatedTaxSaved: estimatedTaxSavings(deduction: estimatedDeduction, marginalRate: marginalRate)
+        )
     }
 
     static func round2(_ value: Decimal, scale: Int = 2) -> Decimal {

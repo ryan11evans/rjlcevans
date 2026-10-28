@@ -60,4 +60,58 @@ final class OvertimeCalculatorTests: XCTestCase {
     func testTaxSavingsEstimate() {
         XCTAssertEqual(OvertimeCalculator.estimatedTaxSavings(deduction: 7_500, marginalRate: money("0.22")), 1_650)
     }
+
+    func testQuarterHoursAndExtras() {
+        // 42.5 hrs × $20 + $85 extras → RR = (850+85)/42.5 = $22. OT = 2.5. Premium = 2.5 × 22 × 0.5 = $27.50.
+        let week = WorkWeek(hoursWorked: money("42.5"), hourlyRate: 20, includableExtras: 85)
+        let result = OvertimeCalculator.compute(week)
+        XCTAssertEqual(result.regularRate, 22)
+        XCTAssertEqual(result.overtimeHours, money("2.5"))
+        XCTAssertEqual(result.qualifiedPremium, money("27.50"))
+        XCTAssertEqual(OvertimeCalculator.regularRate(for: week), 22)
+    }
+
+    func testProjectedYearEndPremiumIsAverageTimes52() {
+        // 10 logged weeks, $1,500 year to date → $150 average × 52 = $7,800.
+        XCTAssertEqual(OvertimeCalculator.projectedYearEndPremium(ytdQualifiedPremium: 1_500, weeksLogged: 10), 7_800)
+        XCTAssertEqual(OvertimeCalculator.projectedYearEndPremium(ytdQualifiedPremium: 100, weeksLogged: 3), money("1733.33"))
+        XCTAssertEqual(OvertimeCalculator.projectedYearEndPremium(ytdQualifiedPremium: 0, weeksLogged: 0), 0)
+    }
+
+    func testPhaseOutAppliesToProjectedPremium() {
+        let weeks = Array(repeating: WorkWeek(hoursWorked: 50, hourlyRate: 30), count: 10)
+        let estimate = OvertimeCalculator.yearEstimate(
+            weeks: weeks,
+            filingStatus: .single,
+            magi: 175_000,
+            marginalRate: money("0.22")
+        )
+        XCTAssertEqual(estimate.ytdQualifiedPremium, 1_500)
+        XCTAssertEqual(estimate.projectedYearEndPremium, 7_800)
+        // $25,000 over the single threshold → 25 × $100 = $2,500 off $7,800.
+        XCTAssertEqual(estimate.estimatedDeduction, 5_300)
+        XCTAssertEqual(estimate.estimatedTaxSaved, 1_166)
+    }
+
+    func testProjectedPremiumMarriedFilingSeparatelyIsZero() {
+        let weeks = Array(repeating: WorkWeek(hoursWorked: 50, hourlyRate: 30), count: 10)
+        let estimate = OvertimeCalculator.yearEstimate(
+            weeks: weeks,
+            filingStatus: .marriedFilingSeparately,
+            magi: 60_000,
+            marginalRate: money("0.22")
+        )
+        XCTAssertEqual(estimate.projectedYearEndPremium, 7_800)
+        XCTAssertEqual(estimate.estimatedDeduction, 0)
+        XCTAssertEqual(estimate.estimatedTaxSaved, 0)
+    }
+
+    func testYearEstimateWithNoWeeks() {
+        let estimate = OvertimeCalculator.yearEstimate(weeks: [], filingStatus: .single, magi: 90_000, marginalRate: money("0.24"))
+        XCTAssertEqual(estimate.weeksLogged, 0)
+        XCTAssertEqual(estimate.ytdQualifiedPremium, 0)
+        XCTAssertEqual(estimate.projectedYearEndPremium, 0)
+        XCTAssertEqual(estimate.estimatedDeduction, 0)
+        XCTAssertEqual(estimate.estimatedTaxSaved, 0)
+    }
 }

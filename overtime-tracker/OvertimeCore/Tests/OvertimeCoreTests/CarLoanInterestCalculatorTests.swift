@@ -33,6 +33,12 @@ final class CarLoanInterestCalculatorTests: XCTestCase {
     }
     func testOutsideYears() { XCTAssertEqual(C.deduction(interest: 5_000, magi: 50_000, status: .single, taxYear: 2029), 0) }
 
+    func testCapAppliesToTheSumOfQualifyingLoans() {
+        XCTAssertEqual(C.deduction(loanInterest: [6_000, 6_000], magi: 90_000, status: .single, taxYear: 2026), 10_000)
+        // Same MAGI as the partial-thousand test: 5 steps × $200, taken off the $10,000 cap.
+        XCTAssertEqual(C.deduction(loanInterest: [6_000, 6_000], magi: 104_200, status: .single, taxYear: 2026), 9_000)
+    }
+
     func testVerdicts() {
         let ok = VehicleLoanFacts(originationDate: d(2026, 3, 1), isNew: true, personalUse: true, firstLien: true,
                                   vehicleType: .pickup, gvwrPounds: 7_500, assembly: .usPlant)
