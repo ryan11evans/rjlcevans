@@ -19,7 +19,6 @@ struct OnboardingView: View {
     @State private var saveError: String?
     @FocusState private var focusedField: Field?
 
-    private let brackets = [10, 12, 22, 24, 32, 35, 37]
     private let taxYear = TaxProfile.defaultTaxYear()
 
     private enum Field: Hashable {
@@ -150,7 +149,7 @@ struct OnboardingView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 Picker("Estimated federal bracket", selection: $marginalPercent) {
-                    ForEach(brackets, id: \.self) { percent in
+                    ForEach(AppFormatting.marginalBrackets, id: \.self) { percent in
                         Text("\(percent)%").tag(percent)
                     }
                 }
@@ -261,36 +260,3 @@ struct OnboardingView: View {
     }
 }
 
-private struct YesNoPicker: View {
-    let title: String
-    let detail: String
-    @Binding var selection: Bool?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-            Text(detail)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            HStack(spacing: 12) {
-                choice("Yes", value: true)
-                choice("No", value: false)
-            }
-        }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .contain)
-    }
-
-    private func choice(_ label: String, value: Bool) -> some View {
-        Button {
-            selection = value
-        } label: {
-            Text(label)
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-        .tint(selection == value ? Color.accentColor : Color.secondary)
-        .accessibilityLabel("\(title), \(label)")
-        .accessibilityAddTraits(selection == value ? .isSelected : AccessibilityTraits())
-    }
-}

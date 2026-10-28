@@ -2,6 +2,8 @@ import Foundation
 import OvertimeCore
 
 enum AppFormatting {
+    static let marginalBrackets = [10, 12, 22, 24, 32, 35, 37]
+
     static func filingStatusTitle(_ status: FilingStatus) -> String {
         switch status {
         case .single: "Single"
@@ -41,6 +43,48 @@ enum AppFormatting {
         formatter.locale = Locale(identifier: "en_US")
         let points = formatter.string(from: (rate * 100) as NSDecimalNumber) ?? "\(rate * 100)"
         return "\(points)%"
+    }
+
+    static func hours(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: amount as NSDecimalNumber) ?? "\(amount)"
+    }
+
+    static func mediumDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.calendar = .current
+        formatter.timeZone = .current
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+
+    static func isoDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    /// A decimal the user can put back into a text field. Not localized.
+    static func editableDecimal(_ value: Decimal) -> String {
+        NSDecimalNumber(decimal: value).stringValue
+    }
+
+    static func plainDecimal(_ value: Decimal) -> String {
+        NSDecimalNumber(decimal: value).stringValue
+    }
+
+    static func nearestBracketPercent(_ rate: Decimal) -> Int {
+        let points = NSDecimalNumber(decimal: rate * 100).intValue
+        return marginalBrackets.min { abs($0 - points) < abs($1 - points) } ?? 22
     }
 
     static func parseDecimal(_ text: String) -> Decimal? {

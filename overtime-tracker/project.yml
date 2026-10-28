@@ -21,8 +21,13 @@ packages:
 # Shown in the project navigator. Not compiled by the app target; SwiftPM builds them.
 fileGroups:
   - OvertimeCore/Package.swift
-  - OvertimeCore/Sources/OvertimeCore/OvertimeCalculator.swift
   - OvertimeCore/Sources/OvertimeCore/CarLoanInterestCalculator.swift
+  - OvertimeCore/Sources/OvertimeCore/OvertimeCalculator.swift
+  - OvertimeCore/Sources/OvertimeCore/Schedule1ACalculator.swift
+  - OvertimeCore/Sources/OvertimeCore/VINValidator.swift
+  - OvertimeCore/Sources/OvertimeCore/VPICDecoder.swift
+  - OvertimeCore/Sources/OvertimeCore/WorkweekDates.swift
+  - NewDeductions/Products.storekit
 
 settings:
   base:
@@ -43,6 +48,7 @@ schemes:
     run:
       config: Debug
       executable: NewDeductions
+      storeKitConfiguration: NewDeductions/Products.storekit
     test:
       config: Debug
       targets:
@@ -63,20 +69,31 @@ targets:
       - path: NewDeductions/App/AppFormatting.swift
       - path: NewDeductions/App/AppIdentity.swift
       - path: NewDeductions/App/AppModelContainer.swift
+      - path: NewDeductions/App/LegalURLs.swift
+      - path: NewDeductions/App/NHTSAClient.swift
       - path: NewDeductions/App/NewDeductionsApp.swift
+      - path: NewDeductions/App/PremiumStore.swift
       - path: NewDeductions/Models/Employer.swift
+      - path: NewDeductions/Models/EstimateMapping.swift
       - path: NewDeductions/Models/Shift.swift
       - path: NewDeductions/Models/TaxProfile.swift
       - path: NewDeductions/Models/Vehicle.swift
       - path: NewDeductions/Models/VehicleLoan.swift
       - path: NewDeductions/Models/Week.swift
       - path: NewDeductions/Models/YearAmountStorage.swift
+      - path: NewDeductions/Views/CarLoanTabView.swift
+      - path: NewDeductions/Views/CodeTTView.swift
+      - path: NewDeductions/Views/FormControls.swift
       - path: NewDeductions/Views/MainTabView.swift
       - path: NewDeductions/Views/OnboardingView.swift
-      - path: NewDeductions/Views/PlaceholderTabView.swift
+      - path: NewDeductions/Views/OvertimeTabView.swift
+      - path: NewDeductions/Views/PaywallView.swift
       - path: NewDeductions/Views/RootView.swift
       - path: NewDeductions/Views/SettingsView.swift
+      - path: NewDeductions/Views/SummaryTabView.swift
       - path: NewDeductions/Views/TaxSources.swift
+      - path: NewDeductions/Views/VehicleDetailView.swift
+      - path: NewDeductions/Views/WeekEditorView.swift
       - path: NewDeductions/Assets.xcassets
       - path: NewDeductions/PrivacyInfo.xcprivacy
     dependencies:
@@ -105,6 +122,10 @@ targets:
     sources:
       - path: OvertimeCore/Tests/OvertimeCoreTests/CarLoanInterestCalculatorTests.swift
       - path: OvertimeCore/Tests/OvertimeCoreTests/OvertimeCalculatorTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/Schedule1ACalculatorTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/VINValidatorTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/VPICDecoderTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/WorkweekDatesTests.swift
     dependencies:
       - target: NewDeductions
       - package: OvertimeCore

@@ -4,6 +4,7 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<!-- App Store name (App Store Connect, not the home screen): New Deductions: OT + Car Loan -->
 	<key>CFBundleDisplayName</key>
 	<string>New Deductions</string>
 	<key>CFBundleExecutable</key>

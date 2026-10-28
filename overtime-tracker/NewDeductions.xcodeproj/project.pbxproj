@@ -20,12 +20,27 @@
 		A11E00000000000000000043 /* YearAmountStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000042 /* YearAmountStorage.swift */; };
 		A11E00000000000000000045 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000044 /* MainTabView.swift */; };
 		A11E00000000000000000047 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000046 /* OnboardingView.swift */; };
-		A11E00000000000000000049 /* PlaceholderTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000048 /* PlaceholderTabView.swift */; };
 		A11E0000000000000000004B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000004A /* RootView.swift */; };
 		A11E0000000000000000004D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000004C /* SettingsView.swift */; };
 		A11E0000000000000000004F /* TaxSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000004E /* TaxSources.swift */; };
 		A11E00000000000000000054 /* CarLoanInterestCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000053 /* CarLoanInterestCalculatorTests.swift */; };
 		A11E00000000000000000056 /* OvertimeCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000055 /* OvertimeCalculatorTests.swift */; };
+		A11E0000000000000000006C /* LegalURLs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005F /* LegalURLs.swift */; };
+		A11E0000000000000000006D /* NHTSAClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000060 /* NHTSAClient.swift */; };
+		A11E0000000000000000006E /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000061 /* PremiumStore.swift */; };
+		A11E0000000000000000006F /* EstimateMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000062 /* EstimateMapping.swift */; };
+		A11E00000000000000000070 /* FormControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000063 /* FormControls.swift */; };
+		A11E00000000000000000071 /* OvertimeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000064 /* OvertimeTabView.swift */; };
+		A11E00000000000000000072 /* WeekEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000065 /* WeekEditorView.swift */; };
+		A11E00000000000000000073 /* CodeTTView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000066 /* CodeTTView.swift */; };
+		A11E00000000000000000074 /* CarLoanTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000067 /* CarLoanTabView.swift */; };
+		A11E00000000000000000075 /* VehicleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000068 /* VehicleDetailView.swift */; };
+		A11E00000000000000000076 /* SummaryTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000069 /* SummaryTabView.swift */; };
+		A11E00000000000000000077 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000006A /* PaywallView.swift */; };
+		A11E00000000000000000078 /* WorkweekDatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005B /* WorkweekDatesTests.swift */; };
+		A11E00000000000000000079 /* VINValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005C /* VINValidatorTests.swift */; };
+		A11E0000000000000000007A /* VPICDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005D /* VPICDecoderTests.swift */; };
+		A11E0000000000000000007B /* Schedule1ACalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005E /* Schedule1ACalculatorTests.swift */; };
 		A11E0000000000000000002C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000002A /* Assets.xcassets */; };
 		A11E0000000000000000002D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000002B /* PrivacyInfo.xcprivacy */; };
 		A11E0000000000000000001A /* OvertimeCore in Frameworks */ = {isa = PBXBuildFile; productRef = A11E00000000000000000018 /* OvertimeCore */; };
@@ -63,7 +78,6 @@
 		A11E00000000000000000042 /* YearAmountStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearAmountStorage.swift; sourceTree = "<group>"; };
 		A11E00000000000000000044 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		A11E00000000000000000046 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		A11E00000000000000000048 /* PlaceholderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTabView.swift; sourceTree = "<group>"; };
 		A11E0000000000000000004A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A11E0000000000000000004C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A11E0000000000000000004E /* TaxSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaxSources.swift; sourceTree = "<group>"; };
@@ -72,6 +86,27 @@
 		A11E00000000000000000052 /* OvertimeCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OvertimeCalculator.swift; sourceTree = "<group>"; };
 		A11E00000000000000000053 /* CarLoanInterestCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarLoanInterestCalculatorTests.swift; sourceTree = "<group>"; };
 		A11E00000000000000000055 /* OvertimeCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OvertimeCalculatorTests.swift; sourceTree = "<group>"; };
+		A11E00000000000000000057 /* WorkweekDates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkweekDates.swift; sourceTree = "<group>"; };
+		A11E00000000000000000058 /* VINValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VINValidator.swift; sourceTree = "<group>"; };
+		A11E00000000000000000059 /* VPICDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPICDecoder.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005A /* Schedule1ACalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule1ACalculator.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005B /* WorkweekDatesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkweekDatesTests.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005C /* VINValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VINValidatorTests.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005D /* VPICDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPICDecoderTests.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005E /* Schedule1ACalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule1ACalculatorTests.swift; sourceTree = "<group>"; };
+		A11E0000000000000000005F /* LegalURLs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalURLs.swift; sourceTree = "<group>"; };
+		A11E00000000000000000060 /* NHTSAClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NHTSAClient.swift; sourceTree = "<group>"; };
+		A11E00000000000000000061 /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
+		A11E00000000000000000062 /* EstimateMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimateMapping.swift; sourceTree = "<group>"; };
+		A11E00000000000000000063 /* FormControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormControls.swift; sourceTree = "<group>"; };
+		A11E00000000000000000064 /* OvertimeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OvertimeTabView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000065 /* WeekEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekEditorView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000066 /* CodeTTView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeTTView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000067 /* CarLoanTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarLoanTabView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000068 /* VehicleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000069 /* SummaryTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryTabView.swift; sourceTree = "<group>"; };
+		A11E0000000000000000006A /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		A11E0000000000000000006B /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,7 +154,10 @@
 				A11E00000000000000000030 /* AppIdentity.swift */,
 				A11E00000000000000000032 /* AppModelContainer.swift */,
 				A11E00000000000000000029 /* Info.plist */,
+				A11E0000000000000000005F /* LegalURLs.swift */,
+				A11E00000000000000000060 /* NHTSAClient.swift */,
 				A11E00000000000000000034 /* NewDeductionsApp.swift */,
+				A11E00000000000000000061 /* PremiumStore.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -128,6 +166,7 @@
 			isa = PBXGroup;
 			children = (
 				A11E00000000000000000036 /* Employer.swift */,
+				A11E00000000000000000062 /* EstimateMapping.swift */,
 				A11E00000000000000000038 /* Shift.swift */,
 				A11E0000000000000000003A /* TaxProfile.swift */,
 				A11E0000000000000000003C /* Vehicle.swift */,
@@ -141,12 +180,19 @@
 		A11E00000000000000000008 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A11E00000000000000000067 /* CarLoanTabView.swift */,
+				A11E00000000000000000066 /* CodeTTView.swift */,
+				A11E00000000000000000063 /* FormControls.swift */,
 				A11E00000000000000000044 /* MainTabView.swift */,
 				A11E00000000000000000046 /* OnboardingView.swift */,
-				A11E00000000000000000048 /* PlaceholderTabView.swift */,
+				A11E00000000000000000064 /* OvertimeTabView.swift */,
+				A11E0000000000000000006A /* PaywallView.swift */,
 				A11E0000000000000000004A /* RootView.swift */,
 				A11E0000000000000000004C /* SettingsView.swift */,
+				A11E00000000000000000069 /* SummaryTabView.swift */,
 				A11E0000000000000000004E /* TaxSources.swift */,
+				A11E00000000000000000068 /* VehicleDetailView.swift */,
+				A11E00000000000000000065 /* WeekEditorView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -157,6 +203,7 @@
 				A11E00000000000000000006 /* App */,
 				A11E0000000000000000002A /* Assets.xcassets */,
 				A11E00000000000000000007 /* Models */,
+				A11E0000000000000000006B /* Products.storekit */,
 				A11E0000000000000000002B /* PrivacyInfo.xcprivacy */,
 				A11E00000000000000000008 /* Views */,
 			);
@@ -168,6 +215,10 @@
 			children = (
 				A11E00000000000000000051 /* CarLoanInterestCalculator.swift */,
 				A11E00000000000000000052 /* OvertimeCalculator.swift */,
+				A11E0000000000000000005A /* Schedule1ACalculator.swift */,
+				A11E00000000000000000058 /* VINValidator.swift */,
+				A11E00000000000000000059 /* VPICDecoder.swift */,
+				A11E00000000000000000057 /* WorkweekDates.swift */,
 			);
 			path = OvertimeCore;
 			sourceTree = "<group>";
@@ -185,6 +236,10 @@
 			children = (
 				A11E00000000000000000053 /* CarLoanInterestCalculatorTests.swift */,
 				A11E00000000000000000055 /* OvertimeCalculatorTests.swift */,
+				A11E0000000000000000005E /* Schedule1ACalculatorTests.swift */,
+				A11E0000000000000000005C /* VINValidatorTests.swift */,
+				A11E0000000000000000005D /* VPICDecoderTests.swift */,
+				A11E0000000000000000005B /* WorkweekDatesTests.swift */,
 			);
 			path = OvertimeCoreTests;
 			sourceTree = "<group>";
@@ -322,7 +377,11 @@
 				A11E00000000000000000031 /* AppIdentity.swift in Sources */,
 				A11E00000000000000000033 /* AppModelContainer.swift in Sources */,
 				A11E00000000000000000035 /* NewDeductionsApp.swift in Sources */,
+				A11E0000000000000000006C /* LegalURLs.swift in Sources */,
+				A11E0000000000000000006D /* NHTSAClient.swift in Sources */,
+				A11E0000000000000000006E /* PremiumStore.swift in Sources */,
 				A11E00000000000000000037 /* Employer.swift in Sources */,
+				A11E0000000000000000006F /* EstimateMapping.swift in Sources */,
 				A11E00000000000000000039 /* Shift.swift in Sources */,
 				A11E0000000000000000003B /* TaxProfile.swift in Sources */,
 				A11E0000000000000000003D /* Vehicle.swift in Sources */,
@@ -331,10 +390,17 @@
 				A11E00000000000000000043 /* YearAmountStorage.swift in Sources */,
 				A11E00000000000000000045 /* MainTabView.swift in Sources */,
 				A11E00000000000000000047 /* OnboardingView.swift in Sources */,
-				A11E00000000000000000049 /* PlaceholderTabView.swift in Sources */,
 				A11E0000000000000000004B /* RootView.swift in Sources */,
 				A11E0000000000000000004D /* SettingsView.swift in Sources */,
 				A11E0000000000000000004F /* TaxSources.swift in Sources */,
+				A11E00000000000000000070 /* FormControls.swift in Sources */,
+				A11E00000000000000000071 /* OvertimeTabView.swift in Sources */,
+				A11E00000000000000000072 /* WeekEditorView.swift in Sources */,
+				A11E00000000000000000073 /* CodeTTView.swift in Sources */,
+				A11E00000000000000000074 /* CarLoanTabView.swift in Sources */,
+				A11E00000000000000000075 /* VehicleDetailView.swift in Sources */,
+				A11E00000000000000000076 /* SummaryTabView.swift in Sources */,
+				A11E00000000000000000077 /* PaywallView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,6 +410,10 @@
 			files = (
 				A11E00000000000000000054 /* CarLoanInterestCalculatorTests.swift in Sources */,
 				A11E00000000000000000056 /* OvertimeCalculatorTests.swift in Sources */,
+				A11E00000000000000000078 /* WorkweekDatesTests.swift in Sources */,
+				A11E00000000000000000079 /* VINValidatorTests.swift in Sources */,
+				A11E0000000000000000007A /* VPICDecoderTests.swift in Sources */,
+				A11E0000000000000000007B /* Schedule1ACalculatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

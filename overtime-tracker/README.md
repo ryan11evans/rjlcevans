@@ -37,25 +37,46 @@ xcodebuild test \
 
 On a Mac, `swift test` inside `overtime-tracker/OvertimeCore` runs the same tests.
 
-**This tree was not compiled.** The machine that added it has no Xcode and no Swift toolchain. The first build is on a Mac.
+The iOS app target needs Xcode. `swift test` inside `overtime-tracker/OvertimeCore` runs the package tests without the app.
 
-## Week 1
+The App Store listing name is **New Deductions: OT + Car Loan**. The home-screen name stays `CFBundleDisplayName` ("New Deductions"). Do not put the longer name in that plist key.
 
-Done:
+Privacy, terms, and support are static pages in this folder. GitHub Pages on `main` serves them at:
 
-- Xcode project and the local `OvertimeCore` package (both calculators and their tests)
+- https://rjlcevans.com/overtime-tracker/privacy.html
+- https://rjlcevans.com/overtime-tracker/terms.html
+- https://rjlcevans.com/overtime-tracker/support.html
+
+Settings links all three. There is no tracker and no external script on those pages.
+
+## What this version does
+
+- Xcode project and the local `OvertimeCore` package
 - SwiftData models: Employer, Week, Shift, TaxProfile, Vehicle, VehicleLoan. The store is local only (`cloudKitDatabase: .none`, no iCloud entitlement)
-- Tabs: Overtime, Car Loan, Summary, Settings. The first three are placeholders
 - Onboarding: eligibility, base rate and workweek start day, filing status / estimated MAGI / bracket, and the disclaimer the user has to accept before a profile is saved
-- Settings: the disclaimer, the saved profile and primary employer, and the source list (those links open in Safari; the app does not fetch them)
+- Overtime tab for the one "Primary job" employer: a year dial and a workweek log (add, edit, delete), including weeks back to the workweek that contains January 1 of the tax year. Qualified premium is only the 0.5× FLSA premium. The year-end figure is a run-rate: average qualified premium of the logged weeks × 52 (see `OvertimeCalculator.projectedYearEndPremium`). The deduction and tax-saved figures apply the cap and MAGI phase-out to that projection. Every figure is labeled as an estimate
+- Car loan tab: 17-character VIN with the ISO check digit, then one NHTSA vPIC `DecodeVinValues` call. US `PlantCountry` is US final assembly. Any other country is "Not eligible". A blank or failed lookup is "Unknown, check the door-jamb label". The checklist, amortization, Form 1098-VLI override, and deduction are in the same tab
+- W-2 Box 12 code TT compared with the log, a Form W-4 line 4(b) suggestion (the two estimated deductions added together), and a Summary tab with CSV export
+- StoreKit 2 paywall. Free tier: VIN check and the current overtime week. Everything else is locked. Products, also listed in `NewDeductions/Products.storekit`: `com.rjlcevans.newdeductions.yearly` ($19.99/year, auto-renews through Apple) and `com.rjlcevans.newdeductions.lifetime` ($29.99, non-consumable). The scheme's Run action points at that storekit file for local testing
+- Settings: the disclaimer, an editable tax profile (filing status, estimated MAGI, 10/12/22/24/32/35/37 bracket), restore purchases, the legal links, and the source list (those links open in Safari; the app does not fetch them)
 
 Not in this version:
 
-- Week 2: overtime week log and home dial
-- Week 3: VIN entry, check digit, NHTSA decode
-- Week 4: W-2 Box 12 code TT, W-4 helper, Form 1098-VLI actual interest
-- Week 5: CSV and PDF export, StoreKit paywall, hosted privacy policy
+- PDF export
 - v1.1: Live Activity shift clock, VIN camera scan, multiple-employer UI, iCloud
+
+Optional shift-by-shift time entry is not in the week editor. Hours are entered for the workweek. The `Shift` model is unchanged.
+
+### Schema added since week 1
+
+SwiftData optional properties, so a week-1 store can open without a custom migration:
+
+- `Vehicle.gvwrPounds: Int?`
+- `Vehicle.userConfirmedGVWRUnderLimit: Bool?`
+- `VehicleLoan.salvageOrScrap: Bool?`
+- `VehicleLoan.relatedPartyLender: Bool?`
+
+`Employer.codeTT` and `VehicleLoan.actualInterest` are still computed over JSON `Data`. Assign the whole dictionary, or call `setCodeTT` / `setActualInterest`.
 
 ## Notes for the next weeks
 
