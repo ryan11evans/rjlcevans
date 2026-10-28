@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — New Deductions</title>
+  <meta name="description" content="Privacy policy for the New Deductions iOS app. Estimates stay on the device.">
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      background: #f7f4ef;
+      color: #1c1917;
+    }
+    main { max-width: 40rem; margin: 0 auto; padding: 1.25rem; }
+    h1 { font-size: 1.75rem; line-height: 1.2; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; }
+    a { color: #9a3412; }
+    nav a { margin-right: 1rem; }
+    .date { color: #57534e; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1c1917; color: #f5f5f4; }
+      a { color: #fdba74; }
+      .date { color: #a8a29e; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <nav>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <h1>Privacy Policy</h1>
+    <p class="date">New Deductions: OT + Car Loan. Effective October 28, 2026.</p>
+    <p>The home-screen name is New Deductions. This policy describes that iOS app.</p>
+
+    <h2>Data stays on the device</h2>
+    <p>The app stores what you enter in a local SwiftData database on the phone. That includes the tax profile (filing status, estimated MAGI, estimated bracket, and the eligibility answers), the employer, workweeks, VINs, decoded vehicle fields, loan terms, any Form 1098-VLI interest you type, and any W-2 Box 12 code TT amount you type.</p>
+    <p>The app has no accounts, no analytics, and no ads. It does not use iCloud. There is no advertising identifier and no tracker.</p>
+
+    <h2>The only network call</h2>
+    <p>The only request the app makes is to decode a VIN. When you tap Check VIN, and the check digit is valid, the app sends that 17-character VIN to the U.S. government's NHTSA vPIC API:</p>
+    <p>https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{VIN}?format=json</p>
+    <p>It reads fields such as Plant Country from the response. The request does not include your name, tax figures, or loan numbers. If the lookup fails, the app stops. Nothing else leaves the phone to a server we operate.</p>
+
+    <h2>Purchases</h2>
+    <p>StoreKit purchases are handled by Apple. The yearly subscription and the lifetime unlock are sold through your Apple ID. The app does not see your card number. Apple's payment system is separate from the VIN lookup.</p>
+
+    <h2>Deleting data</h2>
+    <p>Settings includes Reset onboarding, which deletes the tax profile, employer, weeks, and vehicles stored on the device. Removing the app deletes the local database as well.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:ryanevansod@gmail.com">ryanevansod@gmail.com</a>.</p>
+  </main>
+</body>
+</html>

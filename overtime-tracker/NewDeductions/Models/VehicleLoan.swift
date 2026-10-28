@@ -14,6 +14,10 @@ final class VehicleLoan {
     var firstLien: Bool?
     var isLease: Bool
     var isRefinance: Bool
+    /// Nil until the checklist is answered. Treated as false for eligibility.
+    var salvageOrScrap: Bool?
+    /// Nil until the checklist is answered. Treated as false for eligibility.
+    var relatedPartyLender: Bool?
     /// JSON from `YearAmountStorage`. Tax year → Form 1098-VLI interest.
     var actualInterestData: Data
     var vehicle: Vehicle?
@@ -30,6 +34,8 @@ final class VehicleLoan {
         firstLien: Bool? = nil,
         isLease: Bool = false,
         isRefinance: Bool = false,
+        salvageOrScrap: Bool? = nil,
+        relatedPartyLender: Bool? = nil,
         actualInterest: [Int: Decimal] = [:],
         vehicle: Vehicle? = nil
     ) {
@@ -44,6 +50,8 @@ final class VehicleLoan {
         self.firstLien = firstLien
         self.isLease = isLease
         self.isRefinance = isRefinance
+        self.salvageOrScrap = salvageOrScrap
+        self.relatedPartyLender = relatedPartyLender
         self.actualInterestData = YearAmountStorage.encode(actualInterest)
         self.vehicle = vehicle
     }

@@ -113,6 +113,12 @@ public enum CarLoanInterestCalculator {
     }
 
     // MARK: Deduction
+    /// Cap applies once to the sum of qualifying loans on the return, then the phase-out.
+    /// Pass only loans that already passed the eligibility checklist.
+    public static func deduction(loanInterest amounts: [Decimal], magi: Decimal, status: FilingStatus, taxYear: Int) -> Decimal {
+        deduction(interest: amounts.reduce(Decimal(0), +), magi: magi, status: status, taxYear: taxYear)
+    }
+
     /// `interest`: Form 1098-VLI / actual figure if entered, otherwise projection. Sum across qualifying loans.
     public static func deduction(interest: Decimal, magi: Decimal, status: FilingStatus, taxYear: Int) -> Decimal {
         guard (firstTaxYear...lastTaxYear).contains(taxYear) else { return 0 }

@@ -1,13 +1,23 @@
+import OvertimeCore
 import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var premium: PremiumStore
     @Query(sort: \TaxProfile.taxYear) private var profiles: [TaxProfile]
     @Query(sort: \Employer.name) private var employers: [Employer]
 
     @State private var confirmReset = false
     @State private var resetError: String?
+    @State private var magiText = ""
+    @State private var magiLoaded = false
+    @State private var profileMessage: String?
+    @State private var restoreMessage: String?
+
+    private var profile: TaxProfile? {
+        profiles.first(where: \.acceptedDisclaimer) ?? profiles.first
+    }
 
     var body: some View {
         NavigationStack {
@@ -18,19 +28,11 @@ struct SettingsView: View {
                 } header: {
                     Text("Disclaimer")
                 } footer: {
-                    Text("Accepted during setup. The overtime, car-loan, and summary screens repeat it.")
+                    Text("Accepted during setup. The overtime, car-loan, and summary screens show a shorter line: \(AppCopy.estimateFootnote).")
                 }
 
-                if let profile = profiles.first(where: \.acceptedDisclaimer) ?? profiles.first {
-                    Section("Tax profile") {
-                        LabeledContent("Tax year", value: String(profile.taxYear))
-                        LabeledContent("Filing status", value: AppFormatting.filingStatusTitle(profile.filingStatus))
-                        LabeledContent("Estimated MAGI", value: AppFormatting.currency(profile.estimatedMAGI))
-                        LabeledContent("Estimated bracket", value: AppFormatting.percent(profile.marginalRate))
-                        LabeledContent("Valid SSN", value: profile.hasSSN ? "Yes" : "No")
-                        LabeledContent("Hourly, non-exempt", value: profile.isHourlyNonExempt ? "Yes" : "No")
-                        LabeledContent("Paid OT over 40", value: profile.paidOvertimeOver40 ? "Yes" : "No")
-                    }
+                if let profile {
+                    profileSection(profile)
                 }
 
                 if !employers.isEmpty {
@@ -49,8 +51,32 @@ struct SettingsView: View {
                     } header: {
                         Text("Employer")
                     } footer: {
-                        Text("Overtime is calculated per employer. This version keeps the primary job from setup.")
+                        Text("Overtime is calculated per employer. This version keeps the primary job from setup. Hours at different jobs are not combined.")
                     }
+                }
+
+                Section {
+                    LabeledContent("Access", value: premium.isPremium ? "Full estimate" : "Free")
+                    if !premium.isPremium {
+                        Text("Free includes a VIN check and the current overtime week.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("Restore purchases") {
+                        Task { restoreMessage = await premium.restore() }
+                    }
+                } header: {
+                    Text("Purchase")
+                } footer: {
+                    Text("The yearly plan renews through Apple until you cancel it. The lifetime unlock is a one-time purchase. Apple handles the payment.")
+                }
+
+                Section {
+                    Link("Privacy Policy", destination: LegalURLs.privacy)
+                    Link("Terms of Use", destination: LegalURLs.terms)
+                    Link("Support", destination: LegalURLs.support)
+                } footer: {
+                    Text("These open in Safari. The app does not download them.")
                 }
 
                 Section {
@@ -73,6 +99,9 @@ struct SettingsView: View {
 
                 Section {
                     LabeledContent("Version", value: versionText)
+                    Text("Listed on the App Store as \(AppIdentity.appStoreName). The home screen name stays \(AppIdentity.displayName).")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                     Text("Estimates stay on this device. iCloud sync is off.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -85,21 +114,59 @@ struct SettingsView: View {
                         confirmReset = true
                     }
                 } footer: {
-                    Text("Deletes the tax profile and employer stored on this device.")
+                    Text("Deletes the tax profile, employer, weeks, and vehicles stored on this device.")
                 }
             }
             .navigationTitle("Settings")
+            .onAppear(perform: loadMAGI)
             .confirmationDialog("Reset onboarding?", isPresented: $confirmReset, titleVisibility: .visible) {
                 Button("Delete profile", role: .destructive) { resetStore() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Removes the tax profile and employer stored on this device.")
+                Text("Removes the tax profile, employer, weeks, and vehicles stored on this device.")
             }
             .alert("Couldn't reset", isPresented: resetAlertPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(resetError ?? "")
             }
+            .alert("Restore purchases", isPresented: restoreAlertPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(restoreMessage ?? "")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func profileSection(_ profile: TaxProfile) -> some View {
+        Section {
+            LabeledContent("Tax year", value: String(profile.taxYear))
+            Picker("Filing status", selection: filingStatusBinding(profile)) {
+                ForEach(FilingStatus.allCases, id: \.self) { status in
+                    Text(AppFormatting.filingStatusTitle(status)).tag(status)
+                }
+            }
+            TextField("Estimated MAGI", text: $magiText)
+                .keyboardType(.decimalPad)
+            Button("Save estimated MAGI") { saveMAGI(profile) }
+            Picker("Estimated federal bracket", selection: bracketBinding(profile)) {
+                ForEach(AppFormatting.marginalBrackets, id: \.self) { percent in
+                    Text("\(percent)%").tag(percent)
+                }
+            }
+            Toggle("Valid SSN", isOn: boolBinding(profile, \.hasSSN))
+            Toggle("Hourly, non-exempt", isOn: boolBinding(profile, \.isHourlyNonExempt))
+            Toggle("Paid OT over 40", isOn: boolBinding(profile, \.paidOvertimeOver40))
+            if let profileMessage {
+                Text(profileMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Tax profile")
+        } footer: {
+            Text("Filing status, estimated MAGI, and the bracket change the phase-out and the estimated tax saved. Every figure that uses them is an estimate.")
         }
     }
 
@@ -115,6 +182,10 @@ struct SettingsView: View {
         Binding(get: { resetError != nil }, set: { if !$0 { resetError = nil } })
     }
 
+    private var restoreAlertPresented: Binding<Bool> {
+        Binding(get: { restoreMessage != nil }, set: { if !$0 { restoreMessage = nil } })
+    }
+
     private func sourceLink(_ source: TaxSource) -> some View {
         Link(destination: source.url) {
             VStack(alignment: .leading, spacing: 2) {
@@ -124,6 +195,52 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+
+    private func loadMAGI() {
+        guard !magiLoaded, let profile else { return }
+        magiLoaded = true
+        magiText = AppFormatting.editableDecimal(profile.estimatedMAGI)
+    }
+
+    private func saveMAGI(_ profile: TaxProfile) {
+        guard let magi = AppFormatting.parseDecimal(magiText), magi >= 0 else {
+            profileMessage = "Enter estimated MAGI as a number."
+            return
+        }
+        profile.estimatedMAGI = magi
+        profileMessage = "Saved estimated MAGI \(AppFormatting.currency(magi))."
+        try? modelContext.save()
+    }
+
+    private func filingStatusBinding(_ profile: TaxProfile) -> Binding<FilingStatus> {
+        Binding(
+            get: { profile.filingStatus },
+            set: { newValue in
+                profile.filingStatus = newValue
+                try? modelContext.save()
+            }
+        )
+    }
+
+    private func bracketBinding(_ profile: TaxProfile) -> Binding<Int> {
+        Binding(
+            get: { AppFormatting.nearestBracketPercent(profile.marginalRate) },
+            set: { percent in
+                profile.marginalRate = Decimal(percent) / 100
+                try? modelContext.save()
+            }
+        )
+    }
+
+    private func boolBinding(_ profile: TaxProfile, _ keyPath: ReferenceWritableKeyPath<TaxProfile, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { profile[keyPath: keyPath] },
+            set: { newValue in
+                profile[keyPath: keyPath] = newValue
+                try? modelContext.save()
+            }
+        )
     }
 
     private func resetStore() {
