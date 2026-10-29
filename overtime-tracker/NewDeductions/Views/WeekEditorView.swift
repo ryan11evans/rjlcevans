@@ -64,86 +64,104 @@ struct WeekEditorView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
-                DatePicker(
-                    "Week start",
-                    selection: $startDate,
-                    in: dateRange,
-                    displayedComponents: .date
-                )
-                .disabled(locksDate)
-            } header: {
-                Text("Workweek")
-            } footer: {
-                Text(locksDate
-                     ? "The free estimate includes the current workweek, which starts on \(AppFormatting.weekdayName(employer.workweekStartsOn)). Earlier weeks are locked."
-                     : "Starts on \(AppFormatting.weekdayName(employer.workweekStartsOn)). Weeks can go back to the workweek that includes January 1, \(String(taxYear)).")
-            }
-
-            Section {
-                HStack {
-                    TextField("Hours worked", text: $hoursText)
-                        .keyboardType(.decimalPad)
-                        .focused($focused, equals: .hours)
-                    Stepper(
-                        "Quarter hour",
-                        onIncrement: { adjustHours(by: Self.quarterHour) },
-                        onDecrement: { adjustHours(by: -Self.quarterHour) }
-                    )
-                        .labelsHidden()
-                        .accessibilityLabel("Adjust hours by a quarter hour")
-                }
-                TextField("Base hourly rate", text: $rateText)
-                    .keyboardType(.decimalPad)
-                    .focused($focused, equals: .rate)
-                TextField("Includable extras for the week", text: $extrasText)
-                    .keyboardType(.decimalPad)
-                    .focused($focused, equals: .extras)
-            } header: {
-                Text("Pay")
-            } footer: {
-                Text("Hours can include quarter hours, such as 40.25. Extras are nondiscretionary bonuses or shift differentials for this week, in dollars. Leave extras blank for $0.")
-            }
-
-            Section {
-                TextField("Note", text: $note, axis: .vertical)
-                    .focused($focused, equals: .note)
-            }
-
-            if let draft {
-                let result = OvertimeCalculator.compute(draft)
-                Section {
-                    EstimateLine(title: "Regular rate (estimate)", amount: result.regularRate)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Overtime hours (estimate)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Text(AppFormatting.hours(result.overtimeHours))
-                            .font(.title3)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                SoftCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ThemeSectionHeader("Workweek")
+                        DatePicker(
+                            "Week start",
+                            selection: $startDate,
+                            in: dateRange,
+                            displayedComponents: .date
+                        )
+                        .disabled(locksDate)
+                        .font(Theme.rounded(.body))
+                        Text(locksDate
+                             ? "The free estimate includes the current workweek, which starts on \(AppFormatting.weekdayName(employer.workweekStartsOn)). Earlier weeks are part of Pro."
+                             : "Starts on \(AppFormatting.weekdayName(employer.workweekStartsOn)). Weeks can go back to the workweek that includes January 1, \(String(taxYear)).")
+                            .font(Theme.rounded(.footnote))
+                            .foregroundStyle(Theme.textSecondary)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .combine)
-                    EstimateLine(title: "Qualified premium (estimate)", amount: result.qualifiedPremium,
-                                 detail: "0.5 × regular rate × hours over 40. Not the full 1.5× paycheck amount.")
-                    EstimateFootnote()
                 }
-            }
 
-            if let message {
-                Section {
+                SoftCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ThemeSectionHeader("Pay")
+                        HStack {
+                            TextField("Hours worked", text: $hoursText)
+                                .keyboardType(.decimalPad)
+                                .focused($focused, equals: .hours)
+                                .font(Theme.rounded(.title2, weight: .bold))
+                            Stepper(
+                                "Quarter hour",
+                                onIncrement: { adjustHours(by: Self.quarterHour) },
+                                onDecrement: { adjustHours(by: -Self.quarterHour) }
+                            )
+                            .labelsHidden()
+                            .accessibilityLabel("Adjust hours by a quarter hour")
+                        }
+                        TextField("Base hourly rate", text: $rateText)
+                            .keyboardType(.decimalPad)
+                            .focused($focused, equals: .rate)
+                            .font(Theme.rounded(.title3, weight: .semibold))
+                        TextField("Includable extras for the week", text: $extrasText)
+                            .keyboardType(.decimalPad)
+                            .focused($focused, equals: .extras)
+                            .font(Theme.rounded(.body))
+                        Text("Hours can include quarter hours, such as 40.25. Extras are nondiscretionary bonuses or shift differentials for this week, in dollars. Leave extras blank for $0.")
+                            .font(Theme.rounded(.footnote))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+
+                SoftCard {
+                    TextField("Note", text: $note, axis: .vertical)
+                        .focused($focused, equals: .note)
+                        .font(Theme.rounded(.body))
+                }
+
+                if let draft {
+                    let result = OvertimeCalculator.compute(draft)
+                    SoftCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            EstimateLine(title: "Regular rate (estimate)", amount: result.regularRate)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Overtime hours (estimate)")
+                                    .font(Theme.rounded(.subheadline))
+                                    .foregroundStyle(Theme.textSecondary)
+                                Text(AppFormatting.hours(result.overtimeHours))
+                                    .font(Theme.rounded(.title3, weight: .bold))
+                                    .foregroundStyle(Theme.ink)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityElement(children: .combine)
+                            EstimateLine(title: "Qualified premium (estimate)", amount: result.qualifiedPremium,
+                                         detail: "0.5 × regular rate × hours over 40. Not the full 1.5× paycheck amount.")
+                            EstimateFootnote()
+                        }
+                    }
+                }
+
+                if let message {
                     Text(message)
+                        .font(Theme.rounded(.subheadline))
                         .foregroundStyle(.red)
                 }
-            }
 
-            if existing != nil {
-                Section {
+                ThemeButton(title: existing == nil ? "Save week" : "Save changes", enabled: draft != nil) {
+                    save()
+                }
+                if existing != nil {
                     Button("Delete week", role: .destructive) { confirmDelete = true }
+                        .font(Theme.rounded(.headline, weight: .bold))
+                        .frame(maxWidth: .infinity)
                 }
             }
+            .padding(20)
         }
-        .themeGroupedList()
+        .themeScreen()
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(existing == nil ? "Add week" : "Edit week")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -240,6 +258,7 @@ struct WeekEditorView: View {
         }
         do {
             try modelContext.save()
+            Haptics.success()
             dismiss()
         } catch {
             message = error.localizedDescription

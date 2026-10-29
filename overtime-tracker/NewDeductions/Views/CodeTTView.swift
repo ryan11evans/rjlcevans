@@ -33,11 +33,13 @@ struct CodeTTView: View {
             if premium.isPremium {
                 flow
             } else {
-                List {
-                    Section {
+                ScrollView {
+                    SoftCard {
                         PremiumLockedSection(message: "The W-2 Code TT check is part of Pro.")
                     }
+                    .padding(20)
                 }
+                .themeScreen()
             }
         }
         .navigationTitle("Check my W-2")

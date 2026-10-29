@@ -314,6 +314,27 @@ struct EstimateFootnote: View {
     }
 }
 
+struct CardBlock<Content: View>: View {
+    var title: String
+    var footer: String? = nil
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        SoftCard {
+            VStack(alignment: .leading, spacing: 12) {
+                ThemeSectionHeader(title)
+                content()
+                if let footer {
+                    Text(footer)
+                        .font(Theme.rounded(.footnote))
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+}
+
 struct ThemeSectionHeader: View {
     let title: String
 

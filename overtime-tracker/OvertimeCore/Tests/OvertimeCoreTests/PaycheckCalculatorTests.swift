@@ -149,9 +149,9 @@ final class PaycheckCalculatorTests: XCTestCase {
             calendar: utc
         )
         XCTAssertEqual(boost.marginalRate, money("0.10"))
-        XCTAssertEqual(boost.annualTaxSaved, 100)
+        XCTAssertEqual(boost.annualTaxSaved, 0)
         XCTAssertEqual(boost.remainingPaychecks, 1)
-        XCTAssertEqual(boost.perPaycheck, boost.annualTaxSaved)
+        XCTAssertEqual(boost.perPaycheck, 0)
     }
 
     func testRepeatingDivisionRoundsToCents() {
@@ -194,34 +194,115 @@ final class PaycheckCalculatorTests: XCTestCase {
     }
 
     func test2026BracketBoundaries() {
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 0), money("0.10"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: -100), money("0.10"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 12_400), money("0.10"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: money("12400.01")), money("0.12"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 50_400), money("0.12"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: money("50400.01")), money("0.22"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 105_700), money("0.22"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 201_775), money("0.24"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: money("201775.01")), money("0.32"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: 640_600), money("0.35"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, magi: money("640600.01")), money("0.37"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 0), money("0.10"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: -100), money("0.10"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 12_400), money("0.10"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: money("12400.01")), money("0.12"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 50_400), money("0.12"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: money("50400.01")), money("0.22"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 105_700), money("0.22"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 201_775), money("0.24"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: money("201775.01")), money("0.32"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: 640_600), money("0.35"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .single, taxableIncome: money("640600.01")), money("0.37"))
 
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, magi: 24_800), money("0.10"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, magi: 100_800), money("0.12"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, magi: money("100800.01")), money("0.22"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, magi: 768_700), money("0.35"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .qualifyingSurvivingSpouse, magi: money("768700.01")), money("0.37"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, taxableIncome: 24_800), money("0.10"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, taxableIncome: 100_800), money("0.12"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, taxableIncome: money("100800.01")), money("0.22"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingJointly, taxableIncome: 768_700), money("0.35"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .qualifyingSurvivingSpouse, taxableIncome: money("768700.01")), money("0.37"))
 
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 17_700), money("0.10"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 67_450), money("0.12"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 105_700), money("0.22"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 201_750), money("0.24"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 256_200), money("0.32"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: 640_600), money("0.35"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, magi: money("640600.01")), money("0.37"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 17_700), money("0.10"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 67_450), money("0.12"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 105_700), money("0.22"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 201_750), money("0.24"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 256_200), money("0.32"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: 640_600), money("0.35"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .headOfHousehold, taxableIncome: money("640600.01")), money("0.37"))
 
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, magi: 256_225), money("0.32"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, magi: 384_350), money("0.35"))
-        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, magi: money("384350.01")), money("0.37"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, taxableIncome: 256_225), money("0.32"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, taxableIncome: 384_350), money("0.35"))
+        XCTAssertEqual(FederalBracket.marginalRate(filingStatus: .marriedFilingSeparately, taxableIncome: money("384350.01")), money("0.37"))
+    }
+
+    func testStandardDeductionAndTaxTables() {
+        XCTAssertEqual(FederalBracket.standardDeduction(for: .single), 16_100)
+        XCTAssertEqual(FederalBracket.standardDeduction(for: .marriedFilingSeparately), 16_100)
+        XCTAssertEqual(FederalBracket.standardDeduction(for: .headOfHousehold), 24_150)
+        XCTAssertEqual(FederalBracket.standardDeduction(for: .marriedFilingJointly), 32_200)
+        XCTAssertEqual(FederalBracket.standardDeduction(for: .qualifyingSurvivingSpouse), 32_200)
+
+        XCTAssertEqual(FederalBracket.incomeTax(taxableIncome: 0, filingStatus: .single), 0)
+        XCTAssertEqual(FederalBracket.incomeTax(taxableIncome: 12_400, filingStatus: .single), 1_240)
+        XCTAssertEqual(FederalBracket.incomeTax(taxableIncome: 50_400, filingStatus: .single), 5_800)
+        XCTAssertEqual(FederalBracket.incomeTax(taxableIncome: 640_600, filingStatus: .single), money("192979.25"))
+        XCTAssertEqual(
+            FederalBracket.incomeTax(taxableIncome: 100_000, filingStatus: .qualifyingSurvivingSpouse),
+            FederalBracket.incomeTax(taxableIncome: 100_000, filingStatus: .marriedFilingJointly)
+        )
+    }
+
+    func testSavingsUseTaxableIncomeAndStraddleABracket() {
+        // Single MAGI $67,100 → taxable $51,000 before a $2,000 deduction, $49,000 after.
+        // $600 of the deduction is taxed at 22% and $1,400 at 12%.
+        let single = FederalBracket.estimate(magi: 67_100, filingStatus: .single, schedule1ADeductions: 2_000)
+        XCTAssertEqual(single.taxableBefore, 51_000)
+        XCTAssertEqual(single.taxableAfter, 49_000)
+        XCTAssertEqual(single.taxSaved, 300)
+        XCTAssertEqual(single.marginalRate, money("0.12"))
+
+        let joint = FederalBracket.estimate(magi: 133_600, filingStatus: .marriedFilingJointly, schedule1ADeductions: 2_000)
+        XCTAssertEqual(joint.standardDeduction, 32_200)
+        XCTAssertEqual(joint.taxableBefore, 101_400)
+        XCTAssertEqual(joint.taxableAfter, 99_400)
+        XCTAssertEqual(joint.taxSaved, 300)
+        XCTAssertEqual(joint.marginalRate, money("0.12"))
+
+        let household = FederalBracket.estimate(magi: 92_200, filingStatus: .headOfHousehold, schedule1ADeductions: 2_000)
+        XCTAssertEqual(household.taxableBefore, 68_050)
+        XCTAssertEqual(household.taxableAfter, 66_050)
+        XCTAssertEqual(household.taxSaved, 300)
+        XCTAssertEqual(household.marginalRate, money("0.12"))
+
+        let separate = FederalBracket.estimate(magi: 67_100, filingStatus: .marriedFilingSeparately, schedule1ADeductions: 2_000)
+        XCTAssertEqual(separate.taxSaved, 300)
+
+        let surviving = FederalBracket.estimate(magi: 40_000, filingStatus: .qualifyingSurvivingSpouse, schedule1ADeductions: 1_000)
+        XCTAssertEqual(surviving.taxableBefore, 7_800)
+        XCTAssertEqual(surviving.taxSaved, 100)
+        XCTAssertEqual(surviving.marginalRate, money("0.10"))
+    }
+
+    func testSavingsFloorAtZeroTaxableIncome() {
+        let below = FederalBracket.estimate(magi: 10_000, filingStatus: .single, schedule1ADeductions: 5_000)
+        XCTAssertEqual(below.taxableBefore, 0)
+        XCTAssertEqual(below.taxableAfter, 0)
+        XCTAssertEqual(below.taxSaved, 0)
+        XCTAssertEqual(below.marginalRate, money("0.10"))
+
+        let partial = FederalBracket.estimate(magi: 20_000, filingStatus: .single, schedule1ADeductions: 10_000)
+        XCTAssertEqual(partial.taxableBefore, 3_900)
+        XCTAssertEqual(partial.taxableAfter, 0)
+        XCTAssertEqual(partial.taxSaved, 390)
+
+        let negative = FederalBracket.estimate(magi: -500, filingStatus: .headOfHousehold, schedule1ADeductions: 1_000)
+        XCTAssertEqual(negative.taxableBefore, 0)
+        XCTAssertEqual(negative.taxSaved, 0)
+    }
+
+    func testMarriedFilingSeparatelyOvertimeDeductionStaysZero() {
+        let overtime = OvertimeCalculator.deduction(
+            qualifiedOvertime: 5_000,
+            filingStatus: .marriedFilingSeparately,
+            magi: 80_000
+        )
+        XCTAssertEqual(overtime, 0)
+        let estimate = FederalBracket.estimate(
+            magi: 80_000,
+            filingStatus: .marriedFilingSeparately,
+            schedule1ADeductions: overtime
+        )
+        XCTAssertEqual(estimate.taxableBefore, 63_900)
+        XCTAssertEqual(estimate.taxSaved, 0)
     }
 }

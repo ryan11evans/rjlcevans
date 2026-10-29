@@ -627,7 +627,7 @@ struct OnboardingPayoffPage: View {
                 Text("for the year")
                     .font(Theme.rounded(.title3, weight: .bold))
                     .foregroundStyle(Theme.deepTeal)
-                Text("Estimated \(AppFormatting.percent(estimate.marginalRate)) federal bracket from 2026 tables and your income. Brackets apply to taxable income, so this is an estimate.")
+                Text("Estimated \(AppFormatting.percent(estimate.marginalRate)) bracket. Taxable income is your income minus the 2026 standard deduction and this deduction, floored at zero. Savings are the difference in tax, so a bracket boundary is included. Estimate, not tax advice.")
                     .font(Theme.rounded(.footnote))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)

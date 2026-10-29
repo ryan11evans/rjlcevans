@@ -99,19 +99,108 @@ public enum PayFrequency: String, Codable, CaseIterable, Hashable, Sendable {
     }
 }
 
-/// 2026 federal income-tax rate tables (Rev. Proc. 2025-32), used only as an estimate.
-///
-/// The tables apply to taxable income. This lookup treats estimated MAGI as if it were
-/// taxable income, which can put the rate a bracket high. Label the result as an estimate.
-/// Not tax advice.
+/// Estimated federal tax from the 2026 rate tables (Rev. Proc. 2025-32).
+/// Estimate only, not tax advice. Additional standard-deduction amounts for age or blindness are not modeled.
+public struct FederalTaxEstimate: Equatable, Sendable {
+    public var standardDeduction: Decimal
+    /// MAGI minus the standard deduction, floored at zero. Before Schedule 1-A.
+    public var taxableBefore: Decimal
+    /// `taxableBefore` minus the Schedule 1-A deductions, floored at zero.
+    public var taxableAfter: Decimal
+    public var taxBefore: Decimal
+    public var taxAfter: Decimal
+    /// `taxBefore` minus `taxAfter`. Zero when the deduction does not reduce tax.
+    public var taxSaved: Decimal
+    /// Marginal rate at `taxableAfter`.
+    public var marginalRate: Decimal
+
+    public init(standardDeduction: Decimal,
+                taxableBefore: Decimal,
+                taxableAfter: Decimal,
+                taxBefore: Decimal,
+                taxAfter: Decimal,
+                taxSaved: Decimal,
+                marginalRate: Decimal) {
+        self.standardDeduction = standardDeduction
+        self.taxableBefore = taxableBefore
+        self.taxableAfter = taxableAfter
+        self.taxBefore = taxBefore
+        self.taxAfter = taxAfter
+        self.taxSaved = taxSaved
+        self.marginalRate = marginalRate
+    }
+}
+
+/// 2026 federal income-tax rate tables and basic standard deduction (Rev. Proc. 2025-32).
+/// Estimate only, not tax advice.
 public enum FederalBracket {
-    public static func marginalRate(filingStatus: FilingStatus, magi: Decimal) -> Decimal {
-        let income = max(magi, 0)
+    /// Basic standard deduction for 2026. Senior and blind additions are not included.
+    public static func standardDeduction(for status: FilingStatus) -> Decimal {
+        switch status {
+        case .marriedFilingJointly, .qualifyingSurvivingSpouse:
+            return 32_200
+        case .headOfHousehold:
+            return 24_150
+        case .single, .marriedFilingSeparately:
+            return 16_100
+        }
+    }
+
+    /// Marginal rate on taxable income. Amounts at a bracket ceiling stay in the lower rate.
+    public static func marginalRate(filingStatus: FilingStatus, taxableIncome: Decimal) -> Decimal {
+        let income = max(taxableIncome, 0)
         let caps = ceilings(for: filingStatus)
         for (index, ceiling) in caps.enumerated() where income <= ceiling {
             return rates[index]
         }
         return rates[rates.count - 1]
+    }
+
+    /// Tax on taxable income under the 2026 percentage-method tables, rounded to cents.
+    public static func incomeTax(taxableIncome: Decimal, filingStatus: FilingStatus) -> Decimal {
+        let income = max(taxableIncome, 0)
+        let caps = ceilings(for: filingStatus)
+        var floor = Decimal(0)
+        var base = Decimal(0)
+        for (index, ceiling) in caps.enumerated() {
+            if income <= ceiling {
+                return roundMoney(base + rates[index] * (income - floor))
+            }
+            base += rates[index] * (ceiling - floor)
+            floor = ceiling
+        }
+        return roundMoney(base + rates[rates.count - 1] * (income - floor))
+    }
+
+    /// Estimated taxable income and the tax saved by Schedule 1-A deductions.
+    ///
+    /// Taxable income before the deductions is MAGI minus the 2026 standard deduction, floored at zero.
+    /// Taxable income after is that amount minus the deductions, floored at zero.
+    /// Savings are tax(before) − tax(after), so a deduction that crosses a bracket boundary is exact.
+    /// Married filing separately still receives no overtime deduction when that deduction is passed in as zero.
+    public static func estimate(magi: Decimal,
+                                filingStatus: FilingStatus,
+                                schedule1ADeductions: Decimal) -> FederalTaxEstimate {
+        let standard = standardDeduction(for: filingStatus)
+        let before = max(Decimal(0), magi - standard)
+        let after = max(Decimal(0), before - max(schedule1ADeductions, 0))
+        let taxBefore = incomeTax(taxableIncome: before, filingStatus: filingStatus)
+        let taxAfter = incomeTax(taxableIncome: after, filingStatus: filingStatus)
+        return FederalTaxEstimate(
+            standardDeduction: standard,
+            taxableBefore: before,
+            taxableAfter: after,
+            taxBefore: taxBefore,
+            taxAfter: taxAfter,
+            taxSaved: max(Decimal(0), taxBefore - taxAfter),
+            marginalRate: marginalRate(filingStatus: filingStatus, taxableIncome: after)
+        )
+    }
+
+    private static func roundMoney(_ value: Decimal) -> Decimal {
+        var v = value, r = Decimal()
+        NSDecimalRound(&r, &v, 2, .bankers)
+        return r
     }
 
     /// Inclusive top of each bracket, in order, for the 10% through 35% rates.
@@ -141,7 +230,7 @@ public enum FederalBracket {
 public struct PaycheckBoost: Equatable, Sendable {
     /// Overtime deduction plus car-loan deduction, each already after its own cap and phase-out.
     public var annualDeduction: Decimal
-    /// Estimated 2026 marginal rate from filing status and MAGI.
+    /// Marginal rate at estimated taxable income after the standard deduction and these deductions.
     public var marginalRate: Decimal
     public var annualTaxSaved: Decimal
     public var payFrequency: PayFrequency
@@ -190,16 +279,15 @@ public enum PaycheckCalculator {
                              on date: Date,
                              calendar: Calendar) -> PaycheckBoost {
         let annual = max(overtimeDeduction, 0) + max(carLoanDeduction, 0)
-        let rate = FederalBracket.marginalRate(filingStatus: filingStatus, magi: magi)
-        let saved = OvertimeCalculator.estimatedTaxSavings(deduction: annual, marginalRate: rate)
+        let tax = FederalBracket.estimate(magi: magi, filingStatus: filingStatus, schedule1ADeductions: annual)
         let remaining = frequency.remainingPaychecks(on: date, calendar: calendar)
         return PaycheckBoost(
             annualDeduction: annual,
-            marginalRate: rate,
-            annualTaxSaved: saved,
+            marginalRate: tax.marginalRate,
+            annualTaxSaved: tax.taxSaved,
             payFrequency: frequency,
             remainingPaychecks: remaining,
-            perPaycheck: perPaycheck(annualTaxSaved: saved, remainingPaychecks: remaining)
+            perPaycheck: perPaycheck(annualTaxSaved: tax.taxSaved, remainingPaychecks: remaining)
         )
     }
 

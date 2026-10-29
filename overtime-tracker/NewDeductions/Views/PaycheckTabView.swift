@@ -79,13 +79,11 @@ struct PaycheckTabView: View {
             calendar: calendar
         )
         let currentWeek = weeks.first { calendar.isDate($0.startDate, inSameDayAs: weekStart) }
-        let rate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI)
-
         return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 hero(
                     boost: boost,
-                    rate: rate,
+                    rate: boost.marginalRate,
                     includesCar: car > 0,
                     usesTypicalWeek: usesTypicalWeek,
                     typicalHours: typicalHours,
@@ -189,7 +187,7 @@ struct PaycheckTabView: View {
                  : "Logged premium plus that pace for the rest of a 52-week year, spread over \(boost.remainingPaychecks) remaining \(AppFormatting.payFrequencyTitle(boost.payFrequency).lowercased()) paychecks.")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
-            Text("About \(AppFormatting.currency(boost.annualTaxSaved)) for the year. Estimated \(AppFormatting.percent(rate)) federal bracket from 2026 tables and your MAGI.")
+            Text("About \(AppFormatting.currency(boost.annualTaxSaved)) for the year. Estimated \(AppFormatting.percent(rate)) bracket on taxable income after the 2026 standard deduction and these deductions.")
                 .font(.footnote)
                 .foregroundStyle(.white.opacity(0.9))
             if includesCar {
