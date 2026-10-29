@@ -1,16 +1,20 @@
 import StoreKit
 import SwiftUI
 
-/// Free tier: a VIN check and the current overtime workweek.
-/// Yearly subscription or the lifetime non-consumable unlocks everything else.
+/// Free: the per-paycheck estimate, a VIN check, and the current week's hours.
+/// New Deductions Pro is one non-consumable. No subscription.
 @MainActor
 final class PremiumStore: ObservableObject {
-    static let yearlyID = "com.rjlcevans.newdeductions.yearly"
-    static let lifetimeID = "com.rjlcevans.newdeductions.lifetime"
-    static let productIDs: Set<String> = [yearlyID, lifetimeID]
+    static let proID = "com.rjlcevans.newdeductions.pro"
+    /// Earlier builds sold these. A verified purchase still unlocks Pro. They are not offered.
+    static let legacyIDs: Set<String> = [
+        "com.rjlcevans.newdeductions.yearly",
+        "com.rjlcevans.newdeductions.lifetime"
+    ]
+    static let productIDs: Set<String> = legacyIDs.union([proID])
 
     @Published private(set) var isPremium = false
-    @Published private(set) var lifetimeProduct: Product?
+    @Published private(set) var proProduct: Product?
     @Published var purchaseError: String?
 
     private var updates: Task<Void, Never>?
@@ -24,7 +28,7 @@ final class PremiumStore: ObservableObject {
             }
         }
         await refreshEntitlements()
-        await loadLifetimeProduct()
+        await loadProProduct()
     }
 
     func refreshEntitlements() async {
@@ -39,25 +43,25 @@ final class PremiumStore: ObservableObject {
         isPremium = premium
     }
 
-    func loadLifetimeProduct() async {
+    func loadProProduct() async {
         do {
-            let products = try await Product.products(for: [Self.lifetimeID])
-            lifetimeProduct = products.first
+            let products = try await Product.products(for: [Self.proID])
+            proProduct = products.first
         } catch {
-            lifetimeProduct = nil
+            proProduct = nil
         }
     }
 
-    func purchaseLifetime() async {
-        if lifetimeProduct == nil {
-            await loadLifetimeProduct()
+    func purchasePro() async {
+        if proProduct == nil {
+            await loadProProduct()
         }
-        guard let lifetimeProduct else {
-            purchaseError = "The lifetime unlock is not available from the App Store right now."
+        guard let proProduct else {
+            purchaseError = "New Deductions Pro is not available from the App Store right now."
             return
         }
         do {
-            let result = try await lifetimeProduct.purchase()
+            let result = try await proProduct.purchase()
             switch result {
             case .success(let verification):
                 if case .verified(let transaction) = verification {
@@ -80,7 +84,7 @@ final class PremiumStore: ObservableObject {
         do {
             try await AppStore.sync()
             await refreshEntitlements()
-            return isPremium ? "Purchases restored." : "No active purchase was found for this Apple ID."
+            return isPremium ? "Purchases restored." : "No purchase was found for this Apple ID."
         } catch {
             return error.localizedDescription
         }

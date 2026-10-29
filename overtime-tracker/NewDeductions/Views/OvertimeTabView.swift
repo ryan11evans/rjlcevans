@@ -48,7 +48,7 @@ struct OvertimeTabView: View {
                     }
                 }
             }
-            .navigationTitle("Overtime")
+            .navigationTitle("Hours")
             .sheet(isPresented: $showPaywall) {
                 PaywallView().environmentObject(premium)
             }
@@ -108,7 +108,7 @@ struct OvertimeTabView: View {
                             EstimateLine(
                                 title: "Estimated federal tax saved",
                                 amount: estimate.estimatedTaxSaved,
-                                detail: "Estimated deduction × the \(AppFormatting.percent(profile.marginalRate)) bracket on the tax profile."
+                                detail: "Estimated deduction × the \(AppFormatting.percent(FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI))) bracket, estimated from 2026 tables and MAGI."
                             )
                         } else {
                             EstimateLine(
@@ -116,7 +116,7 @@ struct OvertimeTabView: View {
                                 amount: dialAmount
                             )
                             PremiumLockedSection(
-                                message: "The year-to-date total, the year-end run-rate, the phase-out, and earlier weeks unlock with the full estimate."
+                                message: "History beyond the current week, the year-to-date total, and the year-end estimate are part of Pro."
                             )
                         }
                         EstimateFootnote()

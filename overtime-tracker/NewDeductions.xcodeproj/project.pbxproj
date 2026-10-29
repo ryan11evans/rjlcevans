@@ -39,6 +39,9 @@
 		A11E00000000000000000077 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000006A /* PaywallView.swift */; };
 		A11E0000000000000000007D /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000007C /* Theme.swift */; };
 		A11E0000000000000000007F /* OnboardingPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000007E /* OnboardingPages.swift */; };
+		A11E00000000000000000083 /* PaycheckTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000082 /* PaycheckTabView.swift */; };
+		A11E00000000000000000085 /* W4FlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000084 /* W4FlowView.swift */; };
+		A11E00000000000000000088 /* PaycheckCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00000000000000000087 /* PaycheckCalculatorTests.swift */; };
 		A11E00000000000000000078 /* WorkweekDatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005B /* WorkweekDatesTests.swift */; };
 		A11E00000000000000000079 /* VINValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005C /* VINValidatorTests.swift */; };
 		A11E0000000000000000007A /* VPICDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E0000000000000000005D /* VPICDecoderTests.swift */; };
@@ -110,6 +113,10 @@
 		A11E0000000000000000006A /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		A11E0000000000000000007C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A11E0000000000000000007E /* OnboardingPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPages.swift; sourceTree = "<group>"; };
+		A11E00000000000000000082 /* PaycheckTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaycheckTabView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000084 /* W4FlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = W4FlowView.swift; sourceTree = "<group>"; };
+		A11E00000000000000000086 /* PaycheckCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaycheckCalculator.swift; sourceTree = "<group>"; };
+		A11E00000000000000000087 /* PaycheckCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaycheckCalculatorTests.swift; sourceTree = "<group>"; };
 		A11E0000000000000000006B /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -192,12 +199,14 @@
 				A11E0000000000000000007E /* OnboardingPages.swift */,
 				A11E00000000000000000046 /* OnboardingView.swift */,
 				A11E00000000000000000064 /* OvertimeTabView.swift */,
+				A11E00000000000000000082 /* PaycheckTabView.swift */,
 				A11E0000000000000000006A /* PaywallView.swift */,
 				A11E0000000000000000004A /* RootView.swift */,
 				A11E0000000000000000004C /* SettingsView.swift */,
 				A11E00000000000000000069 /* SummaryTabView.swift */,
 				A11E0000000000000000004E /* TaxSources.swift */,
 				A11E00000000000000000068 /* VehicleDetailView.swift */,
+				A11E00000000000000000084 /* W4FlowView.swift */,
 				A11E00000000000000000065 /* WeekEditorView.swift */,
 			);
 			path = Views;
@@ -221,6 +230,7 @@
 			children = (
 				A11E00000000000000000051 /* CarLoanInterestCalculator.swift */,
 				A11E00000000000000000052 /* OvertimeCalculator.swift */,
+				A11E00000000000000000086 /* PaycheckCalculator.swift */,
 				A11E0000000000000000005A /* Schedule1ACalculator.swift */,
 				A11E00000000000000000058 /* VINValidator.swift */,
 				A11E00000000000000000059 /* VPICDecoder.swift */,
@@ -242,6 +252,7 @@
 			children = (
 				A11E00000000000000000053 /* CarLoanInterestCalculatorTests.swift */,
 				A11E00000000000000000055 /* OvertimeCalculatorTests.swift */,
+				A11E00000000000000000087 /* PaycheckCalculatorTests.swift */,
 				A11E0000000000000000005E /* Schedule1ACalculatorTests.swift */,
 				A11E0000000000000000005C /* VINValidatorTests.swift */,
 				A11E0000000000000000005D /* VPICDecoderTests.swift */,
@@ -409,6 +420,8 @@
 				A11E00000000000000000075 /* VehicleDetailView.swift in Sources */,
 				A11E00000000000000000076 /* SummaryTabView.swift in Sources */,
 				A11E00000000000000000077 /* PaywallView.swift in Sources */,
+				A11E00000000000000000083 /* PaycheckTabView.swift in Sources */,
+				A11E00000000000000000085 /* W4FlowView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,6 +431,7 @@
 			files = (
 				A11E00000000000000000054 /* CarLoanInterestCalculatorTests.swift in Sources */,
 				A11E00000000000000000056 /* OvertimeCalculatorTests.swift in Sources */,
+				A11E00000000000000000088 /* PaycheckCalculatorTests.swift in Sources */,
 				A11E00000000000000000078 /* WorkweekDatesTests.swift in Sources */,
 				A11E00000000000000000079 /* VINValidatorTests.swift in Sources */,
 				A11E0000000000000000007A /* VPICDecoderTests.swift in Sources */,
@@ -471,7 +485,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
@@ -541,7 +555,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
@@ -574,7 +588,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "NewDeductions/App/Info.plist";
@@ -597,7 +611,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "NewDeductions/App/Info.plist";
@@ -620,7 +634,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -644,7 +658,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9B9PTBR9A2;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

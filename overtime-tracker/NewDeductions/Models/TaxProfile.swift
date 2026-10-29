@@ -17,6 +17,8 @@ final class TaxProfile {
     var acceptedDisclaimer: Bool
     /// Set when onboarding asks about a new car. Optional so a build-1 store opens without a migration.
     var wantsCarLoan: Bool?
+    /// Optional so an existing store opens without a migration. Nil means biweekly.
+    var payFrequencyRaw: String? = "biweekly"
 
     init(
         taxYear: Int,
@@ -27,7 +29,8 @@ final class TaxProfile {
         isHourlyNonExempt: Bool,
         paidOvertimeOver40: Bool,
         acceptedDisclaimer: Bool,
-        wantsCarLoan: Bool? = nil
+        wantsCarLoan: Bool? = nil,
+        payFrequency: PayFrequency = .biweekly
     ) {
         self.taxYear = taxYear
         self.filingStatusRaw = filingStatus.rawValue
@@ -38,11 +41,17 @@ final class TaxProfile {
         self.paidOvertimeOver40 = paidOvertimeOver40
         self.acceptedDisclaimer = acceptedDisclaimer
         self.wantsCarLoan = wantsCarLoan
+        self.payFrequencyRaw = payFrequency.rawValue
     }
 
     var filingStatus: FilingStatus {
         get { FilingStatus(rawValue: filingStatusRaw) ?? .single }
         set { filingStatusRaw = newValue.rawValue }
+    }
+
+    var payFrequency: PayFrequency {
+        get { PayFrequency(rawValue: payFrequencyRaw ?? "") ?? .biweekly }
+        set { payFrequencyRaw = newValue.rawValue }
     }
 
     /// Calendar year clamped to the deduction window, 2025–2028.

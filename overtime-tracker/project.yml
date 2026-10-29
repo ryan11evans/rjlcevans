@@ -10,7 +10,7 @@ options:
 # Working display name: CFBundleDisplayName in NewDeductions/App/Info.plist.
 # That plist string is the only copy of the name.
 #
-# MARKETING_VERSION (1.0) and CURRENT_PROJECT_VERSION (2) below must match every
+# MARKETING_VERSION (1.0) and CURRENT_PROJECT_VERSION (3) below must match every
 # occurrence in NewDeductions.xcodeproj/project.pbxproj.
 # Signing is automatic. Team ID matches TapBTC (bitcoin-watch).
 
@@ -23,6 +23,7 @@ fileGroups:
   - OvertimeCore/Package.swift
   - OvertimeCore/Sources/OvertimeCore/CarLoanInterestCalculator.swift
   - OvertimeCore/Sources/OvertimeCore/OvertimeCalculator.swift
+  - OvertimeCore/Sources/OvertimeCore/PaycheckCalculator.swift
   - OvertimeCore/Sources/OvertimeCore/Schedule1ACalculator.swift
   - OvertimeCore/Sources/OvertimeCore/VINValidator.swift
   - OvertimeCore/Sources/OvertimeCore/VPICDecoder.swift
@@ -33,7 +34,7 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "2"
+    CURRENT_PROJECT_VERSION: "3"
     DEVELOPMENT_TEAM: "9B9PTBR9A2"
     CODE_SIGN_STYLE: Automatic
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
@@ -89,12 +90,14 @@ targets:
       - path: NewDeductions/Views/OnboardingPages.swift
       - path: NewDeductions/Views/OnboardingView.swift
       - path: NewDeductions/Views/OvertimeTabView.swift
+      - path: NewDeductions/Views/PaycheckTabView.swift
       - path: NewDeductions/Views/PaywallView.swift
       - path: NewDeductions/Views/RootView.swift
       - path: NewDeductions/Views/SettingsView.swift
       - path: NewDeductions/Views/SummaryTabView.swift
       - path: NewDeductions/Views/TaxSources.swift
       - path: NewDeductions/Views/VehicleDetailView.swift
+      - path: NewDeductions/Views/W4FlowView.swift
       - path: NewDeductions/Views/WeekEditorView.swift
       - path: NewDeductions/Assets.xcassets
       - path: NewDeductions/PrivacyInfo.xcprivacy
@@ -110,7 +113,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "9B9PTBR9A2"
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "2"
+        CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
@@ -124,6 +127,7 @@ targets:
     sources:
       - path: OvertimeCore/Tests/OvertimeCoreTests/CarLoanInterestCalculatorTests.swift
       - path: OvertimeCore/Tests/OvertimeCoreTests/OvertimeCalculatorTests.swift
+      - path: OvertimeCore/Tests/OvertimeCoreTests/PaycheckCalculatorTests.swift
       - path: OvertimeCore/Tests/OvertimeCoreTests/Schedule1ACalculatorTests.swift
       - path: OvertimeCore/Tests/OvertimeCoreTests/VINValidatorTests.swift
       - path: OvertimeCore/Tests/OvertimeCoreTests/VPICDecoderTests.swift
@@ -139,7 +143,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "9B9PTBR9A2"
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "2"
+        CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1,2"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         SDKROOT: iphoneos

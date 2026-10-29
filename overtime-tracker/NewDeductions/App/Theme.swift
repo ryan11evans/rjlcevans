@@ -294,6 +294,16 @@ struct ThemeMoney: View {
     }
 }
 
+enum Haptics {
+    static func select() {
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    }
+
+    static func success() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+}
+
 struct EstimateFootnote: View {
     var body: some View {
         Text(AppCopy.estimateFootnote)
