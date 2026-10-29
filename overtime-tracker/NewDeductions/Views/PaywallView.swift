@@ -12,7 +12,7 @@ struct PaywallView: View {
                         Text("New Deductions Pro")
                             .font(.title.weight(.bold))
                             .foregroundStyle(.white)
-                        Text("One-time $14.99. No subscription.")
+                        Text(priceLine)
                             .font(.title3.weight(.semibold))
                             .foregroundStyle(Theme.gold)
                         Text("Put the overtime estimate on your W-4, and check that W-2 code TT matches your log. Estimates only, not tax advice.")
@@ -100,11 +100,13 @@ struct PaywallView: View {
 
     @State private var restoreMessage: String?
 
+    private var priceLine: String {
+        let price = premium.proProduct?.displayPrice ?? "$9.99"
+        return "One-time \(price). No subscription."
+    }
+
     private var purchaseTitle: String {
-        if let price = premium.proProduct?.displayPrice {
-            return "Unlock Pro \(price)"
-        }
-        return "Unlock Pro $14.99"
+        "Unlock Pro \(premium.proProduct?.displayPrice ?? "$9.99")"
     }
 
     private var purchaseAlertPresented: Binding<Bool> {
@@ -134,7 +136,7 @@ struct PremiumLockedSection: View {
                 .foregroundStyle(.secondary)
             Button("Unlock Pro") { showPaywall = true }
                 .buttonStyle(.borderedProminent)
-            Text("One-time $14.99. No subscription.")
+            Text("One-time \(premium.proProduct?.displayPrice ?? "$9.99"). No subscription.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

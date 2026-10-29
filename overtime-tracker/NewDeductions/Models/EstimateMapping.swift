@@ -88,12 +88,18 @@ enum OvertimeEligibility {
             weeks: weeks.map(\.workWeek),
             filingStatus: profile.filingStatus,
             magi: profile.estimatedMAGI,
-            marginalRate: FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI),
+            marginalRate: 0,
             hasValidSSN: profile.hasSSN
         )
         if blocksDeduction(profile) != nil {
             estimate.estimatedDeduction = 0
             estimate.estimatedTaxSaved = 0
+        } else {
+            estimate.estimatedTaxSaved = FederalBracket.estimate(
+                magi: profile.estimatedMAGI,
+                filingStatus: profile.filingStatus,
+                schedule1ADeductions: estimate.estimatedDeduction
+            ).taxSaved
         }
         return estimate
     }
@@ -244,11 +250,17 @@ enum ReturnEstimateBuilder {
         let overtime = OvertimeEligibility.yearEstimate(weeks: weeks, profile: profile)
         let carLines = CarLoanMath.qualifying(vehicles: vehicles, taxYear: profile.taxYear, calendar: calendar)
         let carDeduction = CarLoanMath.deduction(vehicles: vehicles, profile: profile, calendar: calendar)
-        let rate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI)
-        let schedule = Schedule1ACalculator.estimate(
+        let combined = overtime.estimatedDeduction + carDeduction
+        let tax = FederalBracket.estimate(
+            magi: profile.estimatedMAGI,
+            filingStatus: profile.filingStatus,
+            schedule1ADeductions: combined
+        )
+        let schedule = Schedule1AEstimate(
             overtimeDeduction: overtime.estimatedDeduction,
             carLoanDeduction: carDeduction,
-            marginalRate: rate
+            combinedDeduction: combined,
+            estimatedTaxSaved: tax.taxSaved
         )
         return ReturnEstimate(
             weeks: weeks,

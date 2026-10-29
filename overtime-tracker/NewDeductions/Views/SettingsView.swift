@@ -25,16 +25,13 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                CardBlock(title: "Disclaimer", footer: "Accepted during setup. The overtime, car-loan, and summary screens show a shorter line: \(AppCopy.estimateFootnote).") {
                     Text(AppCopy.disclaimer)
                         .font(Theme.rounded(.body))
                         .foregroundStyle(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                } header: {
-                    ThemeSectionHeader("Disclaimer")
-                } footer: {
-                    Text("Accepted during setup. The overtime, car-loan, and summary screens show a shorter line: \(AppCopy.estimateFootnote).")
                 }
 
                 if let profile {
@@ -42,7 +39,7 @@ struct SettingsView: View {
                 }
 
                 if !employers.isEmpty {
-                    Section {
+                    CardBlock(title: "Employer", footer: "Typical overtime hours are a projection until a real week is logged. Overtime is calculated per employer. Hours at different jobs are not combined.") {
                         ForEach(employers) { employer in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(employer.name)
@@ -66,14 +63,10 @@ struct SettingsView: View {
                             }
                             .padding(.vertical, 2)
                         }
-                    } header: {
-                        ThemeSectionHeader("Employer")
-                    } footer: {
-                        Text("Typical overtime hours are a projection until a real week is logged. Overtime is calculated per employer. Hours at different jobs are not combined.")
                     }
                 }
 
-                Section {
+                CardBlock(title: "Purchase", footer: "New Deductions Pro is a one-time purchase. No subscription. Apple handles the payment. The price on the button is the price Apple shows.") {
                     LabeledContent("Access", value: premium.isPremium ? "Pro" : "Free")
                     if !premium.isPremium {
                         Text("Free includes the per-paycheck estimate, a VIN check, and the current week’s hours.")
@@ -84,39 +77,27 @@ struct SettingsView: View {
                     Button("Restore Purchases") {
                         Task { restoreMessage = await premium.restore() }
                     }
-                } header: {
-                    Text("Purchase")
-                } footer: {
-                    Text("New Deductions Pro is a one-time purchase. No subscription. Apple handles the payment.")
                 }
 
-                Section {
+                CardBlock(title: "Legal", footer: "These open in Safari. The app does not download them.") {
                     Link("Privacy Policy", destination: LegalURLs.privacy)
                     Link("Terms of Use", destination: LegalURLs.terms)
                     Link("Support", destination: LegalURLs.support)
-                } footer: {
-                    Text("These open in Safari. The app does not download them.")
                 }
 
-                Section {
+                CardBlock(title: "Overtime sources") {
                     ForEach(TaxSources.overtime) { source in
                         sourceLink(source)
                     }
-                } header: {
-                    Text("Overtime sources")
                 }
 
-                Section {
+                CardBlock(title: "Car loan sources", footer: "These open in Safari when you tap them. The app does not download them.") {
                     ForEach(TaxSources.carLoan) { source in
                         sourceLink(source)
                     }
-                } header: {
-                    Text("Car loan sources")
-                } footer: {
-                    Text("These open in Safari when you tap them. The app does not download them.")
                 }
 
-                Section {
+                CardBlock(title: AppIdentity.displayName) {
                     LabeledContent("Version", value: versionText)
                     Text("Listed on the App Store as \(AppIdentity.appStoreName). The home screen name stays \(AppIdentity.displayName).")
                         .font(.subheadline)
@@ -124,19 +105,18 @@ struct SettingsView: View {
                     Text("Estimates stay on this device. iCloud sync is off.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                } header: {
-                    Text(AppIdentity.displayName)
                 }
 
-                Section {
+                CardBlock(title: "Reset", footer: "Deletes the tax profile, employer, weeks, and vehicles stored on this device.") {
                     Button("Reset onboarding", role: .destructive) {
                         confirmReset = true
                     }
-                } footer: {
-                    Text("Deletes the tax profile, employer, weeks, and vehicles stored on this device.")
+                    .font(Theme.rounded(.headline, weight: .bold))
                 }
+                }
+                .padding(20)
             }
-            .themeGroupedList()
+            .themeScreen()
             .navigationTitle("Settings")
             .onAppear(perform: loadMAGI)
             .confirmationDialog("Reset onboarding?", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -163,7 +143,7 @@ struct SettingsView: View {
 
     @ViewBuilder
     private func profileSection(_ profile: TaxProfile) -> some View {
-        Section {
+        CardBlock(title: "Tax profile", footer: "Filing status, pay frequency, and estimated MAGI change the phase-out and the per-paycheck estimate. The bracket here is on MAGI minus the 2026 standard deduction, floored at zero. The paycheck estimate also subtracts the Schedule 1-A deductions and uses the difference in tax. Estimate, not tax advice.") {
             LabeledContent("Tax year", value: String(profile.taxYear))
             Picker("Filing status", selection: filingStatusBinding(profile)) {
                 ForEach(FilingStatus.allCases, id: \.self) { status in
@@ -181,10 +161,11 @@ struct SettingsView: View {
             LabeledContent(
                 "Estimated federal bracket",
                 value: AppFormatting.percent(
-                    FederalBracket.marginalRate(
+                    FederalBracket.estimate(
+                        magi: AppFormatting.parseDecimal(magiText) ?? profile.estimatedMAGI,
                         filingStatus: profile.filingStatus,
-                        magi: AppFormatting.parseDecimal(magiText) ?? profile.estimatedMAGI
-                    )
+                        schedule1ADeductions: 0
+                    ).marginalRate
                 )
             )
             Toggle("Valid Social Security number", isOn: boolBinding(profile, \.hasSSN))
@@ -196,10 +177,6 @@ struct SettingsView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-        } header: {
-            ThemeSectionHeader("Tax profile")
-        } footer: {
-            Text("Filing status, pay frequency, and estimated MAGI change the phase-out and the per-paycheck estimate. The bracket is estimated from 2026 tables and MAGI. Brackets apply to taxable income, so it is an estimate, not tax advice.")
         }
     }
 
@@ -258,7 +235,11 @@ struct SettingsView: View {
             return
         }
         profile.estimatedMAGI = magi
-        profile.marginalRate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: magi)
+        profile.marginalRate = FederalBracket.estimate(
+            magi: magi,
+            filingStatus: profile.filingStatus,
+            schedule1ADeductions: 0
+        ).marginalRate
         profileMessage = "Saved estimated MAGI \(AppFormatting.currency(magi))."
         try? modelContext.save()
     }
@@ -278,7 +259,11 @@ struct SettingsView: View {
             get: { profile.filingStatus },
             set: { newValue in
                 profile.filingStatus = newValue
-                profile.marginalRate = FederalBracket.marginalRate(filingStatus: newValue, magi: profile.estimatedMAGI)
+                profile.marginalRate = FederalBracket.estimate(
+                    magi: profile.estimatedMAGI,
+                    filingStatus: newValue,
+                    schedule1ADeductions: 0
+                ).marginalRate
                 try? modelContext.save()
             }
         )

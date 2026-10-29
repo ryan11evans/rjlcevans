@@ -22,11 +22,13 @@ struct W4FlowView: View {
             if premium.isPremium {
                 flow
             } else {
-                List {
-                    Section {
+                ScrollView {
+                    SoftCard {
                         PremiumLockedSection(message: "The W-4 helper is part of Pro.")
                     }
+                    .padding(20)
                 }
+                .themeScreen()
             }
         }
         .navigationTitle("Update my W-4")

@@ -47,38 +47,48 @@ struct VehicleDetailView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
-                LabeledContent("VIN", value: vehicle.vin)
-                LabeledContent("Vehicle", value: vehicle.displayTitle)
-                LabeledContent("Final assembly", value: AssemblyCopy.line(vehicle.assemblySignal))
-                if let country = vehicle.plantCountry {
-                    LabeledContent("Plant country", value: country)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                SoftCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        LabeledContent("VIN", value: vehicle.vin)
+                        LabeledContent("Vehicle", value: vehicle.displayTitle)
+                        LabeledContent("Final assembly", value: AssemblyCopy.line(vehicle.assemblySignal))
+                        if let country = vehicle.plantCountry {
+                            LabeledContent("Plant country", value: country)
+                        }
+                        if let gvwr = vehicle.gvwrClass {
+                            LabeledContent("GVWR", value: gvwr)
+                        }
+                    }
+                    .font(Theme.rounded(.body))
                 }
-                if let gvwr = vehicle.gvwrClass {
-                    LabeledContent("GVWR", value: gvwr)
+
+                checklist
+                loanFields
+
+                if let profile {
+                    results(profile: profile)
                 }
-            }
 
-            checklist
-
-            loanFields
-
-            if let profile {
-                results(profile: profile)
-            }
-
-            if let message {
-                Section {
-                    Text(message).foregroundStyle(.red)
+                if let message {
+                    Text(message)
+                        .font(Theme.rounded(.subheadline))
+                        .foregroundStyle(.red)
                 }
-            }
 
-            Section {
+                ThemeButton(title: "Save loan", enabled: true) {
+                    save()
+                }
+
                 Button("Delete vehicle", role: .destructive) { confirmDelete = true }
+                    .font(Theme.rounded(.headline, weight: .bold))
+                    .frame(maxWidth: .infinity)
             }
+            .padding(20)
         }
-        .themeGroupedList()
+        .themeScreen()
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(vehicle.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -98,7 +108,9 @@ struct VehicleDetailView: View {
     }
 
     private var checklist: some View {
-        Section {
+        SoftCard {
+        VStack(alignment: .leading, spacing: 12) {
+            ThemeSectionHeader("Eligibility")
             YesNoPicker(
                 title: "New vehicle?",
                 detail: "Original use has to start with you.",
@@ -125,15 +137,17 @@ struct VehicleDetailView: View {
                     selection: $gvwrUnder
                 )
             }
-        } header: {
-            Text("Eligibility")
-        } footer: {
-            Text("A refinance is not treated as disqualifying in this estimate. Confirm the dates against the IRS instructions. The loan must be originated after December 31, 2024.")
+            Text("A refinance is not treated as disqualifying in this estimate. Confirm the dates against the IRS instructions. The loan must be originated after December 31, 2024. Estimate only, not tax advice.")
+                .font(Theme.rounded(.footnote))
+                .foregroundStyle(Theme.textSecondary)
+        }
         }
     }
 
     private var loanFields: some View {
-        Section {
+        SoftCard {
+        VStack(alignment: .leading, spacing: 12) {
+            ThemeSectionHeader("Loan")
             TextField("Lender", text: $lender)
                 .focused($focused, equals: .lender)
             TextField("Loan amount", text: $principalText)
@@ -150,10 +164,10 @@ struct VehicleDetailView: View {
             TextField("Form 1098-VLI interest", text: $actualText)
                 .keyboardType(.decimalPad)
                 .focused($focused, equals: .actual)
-        } header: {
-            Text("Loan")
-        } footer: {
             Text("Form 1098-VLI interest, when you enter it, replaces the projected interest for this tax year. Leave it blank to use the amortization estimate.")
+                .font(Theme.rounded(.footnote))
+                .foregroundStyle(Theme.textSecondary)
+        }
         }
     }
 
@@ -161,7 +175,9 @@ struct VehicleDetailView: View {
     private func results(profile: TaxProfile) -> some View {
         let facts = draftFacts
         let verdict = CarLoanInterestCalculator.verdict(facts)
-        Section {
+        SoftCard {
+        VStack(alignment: .leading, spacing: 10) {
+            ThemeSectionHeader("Estimate")
             Text(CarLoanMath.verdictTitle(verdict))
                 .font(.headline)
             if verdict != .eligible {
@@ -192,11 +208,15 @@ struct VehicleDetailView: View {
             )
             EstimateLine(
                 title: "Estimated federal tax saved",
-                amount: CarLoanInterestCalculator.estimatedTaxSaved(deduction: deduction, marginalRate: profile.marginalRate)
+                amount: FederalBracket.estimate(
+                    magi: profile.estimatedMAGI,
+                    filingStatus: profile.filingStatus,
+                    schedule1ADeductions: deduction
+                ).taxSaved,
+                detail: "Tax before this deduction minus tax after it. 2026 brackets and the standard deduction. Estimate."
             )
             EstimateFootnote()
-        } header: {
-            Text("Estimate")
+        }
         }
     }
 
@@ -348,6 +368,7 @@ struct VehicleDetailView: View {
         do {
             try modelContext.save()
             message = nil
+            Haptics.success()
             dismiss()
         } catch {
             message = error.localizedDescription

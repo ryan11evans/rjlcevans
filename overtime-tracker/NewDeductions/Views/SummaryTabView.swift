@@ -74,8 +74,9 @@ struct SummaryTabView: View {
             calendar: calendar
         )
         let csv = SummaryCSV.document(profile: profile, employer: employer, estimate: estimate)
-        return List {
-            Section {
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+            SoftCard {
                 VStack(spacing: 6) {
                     Text("Estimated deduction")
                         .font(Theme.rounded(.subheadline))
@@ -98,7 +99,9 @@ struct SummaryTabView: View {
                 .accessibilityElement(children: .combine)
             }
 
-            Section {
+            SoftCard {
+                VStack(alignment: .leading, spacing: 10) {
+                ThemeSectionHeader("Overtime")
                 EstimateLine(title: "Year-to-date qualified premium (estimate)", amount: estimate.overtime.ytdQualifiedPremium)
                 EstimateLine(
                     title: "Projected year-end premium (estimate)",
@@ -112,11 +115,12 @@ struct SummaryTabView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-            } header: {
-                ThemeSectionHeader("Overtime")
+                }
             }
 
-            Section {
+            SoftCard {
+                VStack(alignment: .leading, spacing: 10) {
+                ThemeSectionHeader("Car loan")
                 if estimate.carLines.isEmpty {
                     Text("No car yet. The Car Loan tab can check a VIN.")
                         .font(Theme.rounded(.body))
@@ -147,16 +151,17 @@ struct SummaryTabView: View {
                     amount: estimate.carDeduction,
                     detail: "$10,000 cap on the combined interest, then the MAGI phase-out."
                 )
-            } header: {
-                ThemeSectionHeader("Car loan")
+                }
             }
 
-            Section {
+            SoftCard {
+                VStack(alignment: .leading, spacing: 10) {
+                ThemeSectionHeader("Schedule 1-A")
                 EstimateLine(title: "Combined estimated deduction", amount: estimate.schedule.combinedDeduction)
                 EstimateLine(
                     title: "Estimated federal tax saved",
                     amount: estimate.schedule.estimatedTaxSaved,
-                    detail: "Combined deduction × the \(AppFormatting.percent(FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI))) bracket, estimated from 2026 tables and MAGI."
+                    detail: "Estimated tax before these deductions minus tax after them. 2026 brackets and the standard deduction. Estimate."
                 )
                 NavigationLink("Update my W-4") {
                     W4FlowView(
@@ -170,8 +175,7 @@ struct SummaryTabView: View {
                 ShareLink(item: ScheduleCSV(text: csv), preview: SharePreview("Schedule 1-A estimate")) {
                     Label("Export CSV", systemImage: "square.and.arrow.up")
                 }
-            } header: {
-                ThemeSectionHeader("Schedule 1-A")
+                }
             }
 
             if let employer {
@@ -182,7 +186,9 @@ struct SummaryTabView: View {
                         reported: absent ? nil : reported,
                         computedPremium: estimate.overtime.ytdQualifiedPremium
                     )
-                    Section {
+                    SoftCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                        ThemeSectionHeader("Code TT")
                         if let reported {
                             EstimateLine(title: "W-2 Box 12 code TT", amount: reported)
                         }
@@ -196,17 +202,16 @@ struct SummaryTabView: View {
                             .font(Theme.rounded(.subheadline))
                             .foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
-                    } header: {
-                        ThemeSectionHeader("Code TT")
+                        }
                     }
                 }
             }
 
-            Section {
-                EstimateFootnote()
+            EstimateFootnote()
             }
+            .padding(20)
         }
-        .themeGroupedList()
+        .themeScreen()
     }
 }
 
@@ -219,9 +224,14 @@ enum SummaryCSV {
         add("meta", "disclaimer", nil, AppCopy.estimateFootnote)
         add("meta", "tax year", Decimal(profile.taxYear), "estimate")
         rows.append(["meta", "filing status", "", AppFormatting.filingStatusTitle(profile.filingStatus)])
-        let rate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI)
+        let tax = FederalBracket.estimate(
+            magi: profile.estimatedMAGI,
+            filingStatus: profile.filingStatus,
+            schedule1ADeductions: estimate.schedule.combinedDeduction
+        )
         add("meta", "estimated MAGI", profile.estimatedMAGI, "estimate")
-        add("meta", "marginal rate", rate, "fraction, estimated 2026 bracket from MAGI")
+        add("meta", "marginal rate", tax.marginalRate, "fraction, 2026 bracket at taxable income after the standard deduction and Schedule 1-A, estimate")
+        add("meta", "standard deduction", tax.standardDeduction, "2026 basic standard deduction, estimate")
         rows.append(["meta", "pay frequency", "", profile.payFrequency.rawValue])
         let boost = PaycheckCalculator.boost(
             overtimeDeduction: estimate.overtime.estimatedDeduction,

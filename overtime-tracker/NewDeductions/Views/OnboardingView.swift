@@ -406,7 +406,7 @@ struct OnboardingView: View {
             taxYear: taxYear,
             filingStatus: filingStatus,
             estimatedMAGI: income,
-            marginalRate: FederalBracket.marginalRate(filingStatus: filingStatus, magi: income),
+            marginalRate: OnboardingMath.estimate(draft).marginalRate,
             hasSSN: true,
             isHourlyNonExempt: isHourly,
             paidOvertimeOver40: paidOvertime,

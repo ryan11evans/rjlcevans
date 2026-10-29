@@ -20,8 +20,9 @@ struct CarLoanTabView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    SoftCard {
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "car.fill")
@@ -53,60 +54,44 @@ struct CarLoanTabView: View {
                         Text("\(VINValidator.normalize(vinText).count) of 17")
                             .font(Theme.rounded(.caption))
                             .foregroundStyle(Theme.textSecondary)
-                        Button {
+                        ThemeButton(title: "Check VIN", enabled: !isDecoding, isLoading: isDecoding) {
+                            Haptics.select()
                             checkVIN()
-                        } label: {
-                            if isDecoding {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                            } else {
-                                Text("Check VIN")
-                                    .font(Theme.rounded(.headline, weight: .bold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                            }
                         }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isDecoding)
                         if let vinMessage {
                             Text(vinMessage)
                                 .font(Theme.rounded(.body))
                                 .foregroundStyle(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        Text("The check digit is verified on this device. A valid VIN is sent to NHTSA so the app can read Plant Country. US final assembly can qualify. Anything else shows Not eligible, or Unknown if the field is blank.")
+                            .font(Theme.rounded(.footnote))
+                            .foregroundStyle(Theme.textSecondary)
                     }
-                    .padding(.vertical, 4)
-                } header: {
-                    ThemeSectionHeader("VIN check")
-                } footer: {
-                    Text("The check digit is verified on this device. A valid VIN is sent to NHTSA so the app can read Plant Country. US final assembly can qualify. Anything else shows Not eligible, or Unknown if the field is blank.")
-                }
+                    }
 
                 if !vehicles.isEmpty {
-                    Section {
-                        ForEach(vehicles) { vehicle in
+                    ThemeSectionHeader("Your cars")
+                    ForEach(vehicles) { vehicle in
+                        SoftCard {
                             vehicleBlock(vehicle)
                         }
-                        .onDelete(perform: deleteVehicles)
-                    } header: {
-                        ThemeSectionHeader("Your cars")
                     }
                 }
 
                 if !premium.isPremium {
-                    Section {
+                    SoftCard {
                         PremiumLockedSection(
-                            message: "The eligibility checklist, the loan, Form 1098-VLI, and the deduction estimate are locked. The VIN check stays free."
+                            message: "The eligibility checklist, the loan, Form 1098-VLI, and the deduction estimate are part of Pro. The VIN check stays free."
                         )
                     }
                 }
 
-                Section {
-                    EstimateFootnote()
+                EstimateFootnote()
                 }
+                .padding(20)
             }
-            .themeGroupedList()
+            .themeScreen()
             .navigationTitle("Car Loan")
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
@@ -139,6 +124,12 @@ struct CarLoanTabView: View {
             } else {
                 vehicleSummary(vehicle)
             }
+            Button("Remove vehicle", role: .destructive) {
+                Haptics.select()
+                modelContext.delete(vehicle)
+                try? modelContext.save()
+            }
+            .font(Theme.rounded(.subheadline, weight: .semibold))
             if vehicle.assemblySignal == .unknown || vehicle.assemblySignal == .stickerConfirmedUS {
                 Toggle(
                     "The door-jamb label shows US final assembly",
@@ -271,11 +262,4 @@ struct CarLoanTabView: View {
         return vehicle
     }
 
-    private func deleteVehicles(at offsets: IndexSet) {
-        let snapshot = vehicles
-        for index in offsets {
-            modelContext.delete(snapshot[index])
-        }
-        try? modelContext.save()
-    }
 }

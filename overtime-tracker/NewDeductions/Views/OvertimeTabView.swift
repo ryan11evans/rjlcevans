@@ -72,8 +72,8 @@ struct OvertimeTabView: View {
         let cap = OvertimeEligibility.cap(profile)
         let canCreate = premium.isPremium || visible.isEmpty
 
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
                 VStack(spacing: 16) {
                     OvertimeDial(
                         amount: dialAmount,
@@ -108,7 +108,7 @@ struct OvertimeTabView: View {
                             EstimateLine(
                                 title: "Estimated federal tax saved",
                                 amount: estimate.estimatedTaxSaved,
-                                detail: "Estimated deduction × the \(AppFormatting.percent(FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI))) bracket, estimated from 2026 tables and MAGI."
+                                detail: "Estimated tax before this deduction minus tax after it. 2026 brackets, standard deduction, floored at zero. Estimate."
                             )
                         } else {
                             EstimateLine(
@@ -122,37 +122,19 @@ struct OvertimeTabView: View {
                         EstimateFootnote()
                     }
                 }
-                .overtimeRow()
-            }
 
-            Section {
+                ThemeSectionHeader("Your weeks")
                 if visible.isEmpty {
                     emptyWeeks(canCreate: canCreate)
-                        .overtimeRow()
                 } else {
                     ForEach(visible) { week in
-                        NavigationLink(value: OvertimeDestination.week(WeekRoute(kind: .edit(week.persistentModelID)))) {
-                            weekRow(week)
-                        }
-                        .accessibilityAction(named: "Delete") {
-                            modelContext.delete(week)
-                            try? modelContext.save()
-                        }
-                        .overtimeRow()
-                    }
-                    .onDelete { offsets in
-                        delete(visible, at: offsets)
+                        weekCard(week)
                     }
                 }
-            } header: {
-                ThemeSectionHeader("Your weeks")
-            } footer: {
                 Text("Qualified premium is only the 0.5× FLSA premium on hours over 40. It is not the full time-and-a-half paycheck.")
                     .font(Theme.rounded(.footnote))
                     .foregroundStyle(Theme.textSecondary)
-            }
 
-            Section {
                 Button {
                     if premium.isPremium {
                         path.append(.codeTT)
@@ -190,17 +172,16 @@ struct OvertimeTabView: View {
                             .stroke(Theme.cardStroke, lineWidth: 1)
                     )
                 }
-                .buttonStyle(.plain)
-                .overtimeRow()
-            } footer: {
-                Text("See how a code TT amount compares with the qualified premium this log computed.")
+                .buttonStyle(PressableStyle())
+                .sensoryFeedback(.selection, trigger: path.count)
+                Text("See how a code TT amount compares with the qualified premium this log computed. Estimate only, not tax advice.")
                     .font(Theme.rounded(.footnote))
                     .foregroundStyle(Theme.textSecondary)
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 28)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Theme.background.ignoresSafeArea())
+        .themeScreen()
         .navigationDestination(for: OvertimeDestination.self) { destination in
             switch destination {
             case .week(let route):
@@ -248,7 +229,7 @@ struct OvertimeTabView: View {
                 .multilineTextAlignment(.center)
             Text(premium.isPremium
                  ? "Log a workweek and we'll estimate the extra half-time pay."
-                 : "Log this week's hours. Earlier weeks are part of the full estimate.")
+                 : "Log this week's hours. Earlier weeks are part of Pro.")
                 .font(Theme.rounded(.body))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -270,6 +251,28 @@ struct OvertimeTabView: View {
         }
         let scope = premium.isPremium ? "Year to date" : "This week"
         return "\(scope), of a \(AppFormatting.currency(cap)) cap. Estimate."
+    }
+
+    private func weekCard(_ week: Week) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            NavigationLink(value: OvertimeDestination.week(WeekRoute(kind: .edit(week.persistentModelID)))) {
+                weekRow(week)
+            }
+            .buttonStyle(.plain)
+            Button {
+                Haptics.select()
+                modelContext.delete(week)
+                try? modelContext.save()
+            } label: {
+                Image(systemName: "trash")
+                    .font(Theme.rounded(.body, weight: .bold))
+                    .foregroundStyle(Theme.deepTeal)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(Theme.backgroundElevated))
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("Delete week starting \(AppFormatting.mediumDate(week.startDate))")
+        }
     }
 
     private func weekRow(_ week: Week) -> some View {
@@ -313,20 +316,6 @@ struct OvertimeTabView: View {
         }
     }
 
-    private func delete(_ weeks: [Week], at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(weeks[index])
-        }
-        try? modelContext.save()
-    }
-}
-
-private extension View {
-    func overtimeRow() -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
-    }
 }
 
 private struct OvertimeDial: View {
