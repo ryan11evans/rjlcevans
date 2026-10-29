@@ -5,18 +5,18 @@
   ],
   "products" : [
     {
-      "displayPrice" : "29.99",
+      "displayPrice" : "14.99",
       "familyShareable" : false,
-      "internalID" : "A11E0003",
+      "internalID" : "A11E0007",
       "localizations" : [
         {
-          "description" : "Unlock every overtime week, the car-loan deduction estimate, code TT, the W-4 helper, and CSV export. One purchase. It does not renew.",
-          "displayName" : "Lifetime",
+          "description" : "Unlock the W-4 helper, the W-2 Code TT check, hours beyond the current week, the car-loan deduction estimate, and CSV export. One-time purchase. No subscription.",
+          "displayName" : "New Deductions Pro",
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.rjlcevans.newdeductions.lifetime",
-      "referenceName" : "Lifetime",
+      "productID" : "com.rjlcevans.newdeductions.pro",
+      "referenceName" : "New Deductions Pro",
       "type" : "NonConsumable"
     }
   ],
@@ -31,40 +31,7 @@
     ]
   },
   "subscriptionGroups" : [
-    {
-      "id" : "A11E0005",
-      "localizations" : [
 
-      ],
-      "name" : "Premium",
-      "subscriptions" : [
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "19.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "A11E0006",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "A year of the full estimate: every workweek, the car-loan deduction, code TT, the W-4 helper, and CSV export. Renews each year through Apple until you cancel.",
-              "displayName" : "Yearly",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "com.rjlcevans.newdeductions.yearly",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Yearly",
-          "subscriptionGroupID" : "A11E0005",
-          "type" : "RecurringSubscription"
-        }
-      ]
-    }
   ],
   "version" : {
     "major" : 3,

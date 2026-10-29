@@ -48,13 +48,13 @@ struct SummaryTabView: View {
                     .symbolRenderingMode(.palette)
                     .foregroundStyle(Theme.gold, Theme.emerald)
                     .accessibilityHidden(true)
-                Text("The full picture is locked")
+                Text("The full picture is part of Pro")
                     .font(Theme.rounded(.title2, weight: .bold))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                 SoftCard {
                     PremiumLockedSection(
-                        message: "The combined Schedule 1-A estimate, the W-4 suggestion, and CSV export unlock with the full estimate."
+                        message: "The summary and CSV export are part of Pro."
                     )
                 }
                 EstimateFootnote()
@@ -156,10 +156,16 @@ struct SummaryTabView: View {
                 EstimateLine(
                     title: "Estimated federal tax saved",
                     amount: estimate.schedule.estimatedTaxSaved,
-                    detail: "Combined deduction × the \(AppFormatting.percent(profile.marginalRate)) bracket."
+                    detail: "Combined deduction × the \(AppFormatting.percent(FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI))) bracket, estimated from 2026 tables and MAGI."
                 )
-                NavigationLink("W-4 line 4(b)") {
-                    W4HelperView(profile: profile, estimate: estimate)
+                NavigationLink("Update my W-4") {
+                    W4FlowView(
+                        taxYear: profile.taxYear,
+                        filingStatus: profile.filingStatus,
+                        overtimeDeduction: estimate.overtime.estimatedDeduction,
+                        carDeduction: estimate.carDeduction,
+                        line4b: estimate.w4Line4b
+                    )
                 }
                 ShareLink(item: ScheduleCSV(text: csv), preview: SharePreview("Schedule 1-A estimate")) {
                     Label("Export CSV", systemImage: "square.and.arrow.up")
@@ -168,20 +174,31 @@ struct SummaryTabView: View {
                 ThemeSectionHeader("Schedule 1-A")
             }
 
-            if let employer, let reported = employer.codeTT[profile.taxYear] {
-                let difference = Schedule1ACalculator.compareCodeTT(
-                    reported: reported,
-                    computedPremium: estimate.overtime.ytdQualifiedPremium
-                )
-                Section {
-                    EstimateLine(title: "W-2 Box 12 code TT", amount: reported)
-                    EstimateLine(title: "Difference, code TT minus the log (estimate)", amount: difference.reportedMinusComputed)
-                    Text(CodeTTCopy.explanation(difference: difference))
-                        .font(Theme.rounded(.subheadline))
-                        .foregroundStyle(Theme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                } header: {
-                    ThemeSectionHeader("Code TT")
+            if let employer {
+                let reported = employer.codeTT[profile.taxYear]
+                let absent = employer.codeTTIsAbsent(for: profile.taxYear)
+                if reported != nil || absent {
+                    let comparison = Schedule1ACalculator.comparison(
+                        reported: absent ? nil : reported,
+                        computedPremium: estimate.overtime.ytdQualifiedPremium
+                    )
+                    Section {
+                        if let reported {
+                            EstimateLine(title: "W-2 Box 12 code TT", amount: reported)
+                        }
+                        Text(CodeTTCopy.headline(comparison))
+                            .font(Theme.rounded(.headline, weight: .bold))
+                            .foregroundStyle(Theme.ink)
+                        if let dollars = CodeTTCopy.dollars(comparison) {
+                            EstimateLine(title: "Dollar difference (estimate)", amount: dollars)
+                        }
+                        Text(CodeTTCopy.explanation(comparison: comparison, taxYear: profile.taxYear))
+                            .font(Theme.rounded(.subheadline))
+                            .foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } header: {
+                        ThemeSectionHeader("Code TT")
+                    }
                 }
             }
 
@@ -190,29 +207,6 @@ struct SummaryTabView: View {
             }
         }
         .themeGroupedList()
-    }
-}
-
-struct W4HelperView: View {
-    let profile: TaxProfile
-    let estimate: ReturnEstimate
-
-    var body: some View {
-        Form {
-            Section {
-                EstimateLine(title: "Estimated overtime deduction", amount: estimate.overtime.estimatedDeduction)
-                EstimateLine(title: "Estimated car-loan deduction", amount: estimate.carDeduction)
-                EstimateLine(title: "Suggested Form W-4 line 4(b) (estimate)", amount: estimate.w4Line4b)
-            } footer: {
-                Text("Line 4(b) is “Deductions” on Form W-4. This suggestion is the sum of the two estimated Schedule 1-A deductions, each already after its own cap and phase-out. It is not a full withholding calculation, and it does not fill out the form. Tax year \(String(profile.taxYear)), \(AppFormatting.filingStatusTitle(profile.filingStatus)).")
-            }
-            Section {
-                EstimateFootnote()
-            }
-        }
-        .themeGroupedList()
-        .navigationTitle("W-4 helper")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -225,8 +219,22 @@ enum SummaryCSV {
         add("meta", "disclaimer", nil, AppCopy.estimateFootnote)
         add("meta", "tax year", Decimal(profile.taxYear), "estimate")
         rows.append(["meta", "filing status", "", AppFormatting.filingStatusTitle(profile.filingStatus)])
+        let rate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI)
         add("meta", "estimated MAGI", profile.estimatedMAGI, "estimate")
-        add("meta", "marginal rate", profile.marginalRate, "fraction, estimate")
+        add("meta", "marginal rate", rate, "fraction, estimated 2026 bracket from MAGI")
+        rows.append(["meta", "pay frequency", "", profile.payFrequency.rawValue])
+        let boost = PaycheckCalculator.boost(
+            overtimeDeduction: estimate.overtime.estimatedDeduction,
+            carLoanDeduction: estimate.carDeduction,
+            filingStatus: profile.filingStatus,
+            magi: profile.estimatedMAGI,
+            frequency: profile.payFrequency,
+            on: Date(),
+            calendar: .current
+        )
+        add("paycheck", "estimated annual tax saved", boost.annualTaxSaved, "estimate")
+        add("paycheck", "remaining paychecks", Decimal(boost.remainingPaychecks), "estimate")
+        add("paycheck", "estimated per paycheck", boost.perPaycheck, "annual estimate divided by remaining paychecks")
         add("overtime", "year-to-date qualified premium", estimate.overtime.ytdQualifiedPremium, "estimate, 0.5x FLSA premium only")
         add("overtime", "projected year-end premium", estimate.overtime.projectedYearEndPremium, "estimate, average of logged weeks times 52")
         add("overtime", "estimated deduction", estimate.overtime.estimatedDeduction, "estimate, after cap and phase-out")
@@ -239,13 +247,24 @@ enum SummaryCSV {
         add("schedule 1-A", "combined estimated deduction", estimate.schedule.combinedDeduction, "estimate")
         add("schedule 1-A", "estimated federal tax saved", estimate.schedule.estimatedTaxSaved, "estimate")
         add("w-4", "suggested line 4(b)", estimate.w4Line4b, "estimate")
-        if let employer, let reported = employer.codeTT[profile.taxYear] {
-            let difference = Schedule1ACalculator.compareCodeTT(
-                reported: reported,
-                computedPremium: estimate.overtime.ytdQualifiedPremium
-            )
-            add("code TT", "W-2 amount", reported, "entered from the W-2")
-            add("code TT", "reported minus log", difference.reportedMinusComputed, "estimate")
+        if let employer {
+            let reported = employer.codeTT[profile.taxYear]
+            let absent = employer.codeTTIsAbsent(for: profile.taxYear)
+            if reported != nil || absent {
+                let comparison = Schedule1ACalculator.comparison(
+                    reported: absent ? nil : reported,
+                    computedPremium: estimate.overtime.ytdQualifiedPremium
+                )
+                if let reported {
+                    add("code TT", "W-2 amount", reported, "entered from the W-2")
+                }
+                if absent {
+                    rows.append(["code TT", "not on W-2", "", "user marked code TT as not on the W-2"])
+                }
+                if let gap = comparison.reportedMinusLog {
+                    add("code TT", "reported minus log", gap, "estimate")
+                }
+            }
         }
         return rows.map { $0.map(csvCell).joined(separator: ",") }.joined(separator: "\n")
     }

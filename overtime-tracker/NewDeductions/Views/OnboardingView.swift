@@ -9,6 +9,7 @@ enum OnboardingPage: Int, CaseIterable, Identifiable {
     case filing
     case income
     case rate
+    case frequency
     case hours
     case car
     case payoff
@@ -28,6 +29,7 @@ struct OnboardingDraft {
     var rateText = ""
     var workweekStartsOn = 1
     var typicalOvertimeHours: Double = 5
+    var payFrequency: PayFrequency?
     var wantsCar: Bool?
     var acceptedDisclaimer = false
 }
@@ -36,14 +38,14 @@ struct OnboardingEstimate: Equatable {
     var weeklyPremium: Decimal
     var deduction: Decimal
     var taxSaved: Decimal
+    var perPaycheck: Decimal
+    var remainingPaychecks: Int
+    var marginalRate: Decimal
     var blocked: Bool
     var phaseoutZero: Bool
 }
 
 enum OnboardingMath {
-    static let marginalPercent = 22
-    static var marginalRate: Decimal { Decimal(marginalPercent) / 100 }
-
     /// Slider values are halves of an hour. Build the decimal from that count so a comma locale cannot break it.
     static func hours(_ value: Double) -> Decimal {
         Decimal(Int((value * 2).rounded())) / 2
@@ -66,25 +68,40 @@ enum OnboardingMath {
         let overtime = hours(draft.typicalOvertimeHours)
         let week = WorkWeek(hoursWorked: 40 + overtime, hourlyRate: hourly)
         let result = OvertimeCalculator.compute(week)
-        let projected = OvertimeCalculator.projectedYearEndPremium(
-            ytdQualifiedPremium: result.qualifiedPremium,
-            weeksLogged: 1
+        let projected = PaycheckCalculator.annualQualifiedPremium(
+            logged: 0,
+            weeksLogged: 0,
+            typicalWeekPremium: result.qualifiedPremium
         )
         let status = draft.filingStatus ?? .single
+        let income = magi(draft)
         let blocked = draft.isHourly == false
             || draft.paidOvertime == false
             || status == .marriedFilingSeparately
         let raw = OvertimeCalculator.deduction(
             qualifiedOvertime: projected,
             filingStatus: status,
-            magi: magi(draft),
+            magi: income,
             hasValidSSN: true
         )
         let deduction = blocked ? Decimal(0) : raw
+        let frequency = draft.payFrequency ?? .biweekly
+        let boost = PaycheckCalculator.boost(
+            overtimeDeduction: deduction,
+            carLoanDeduction: 0,
+            filingStatus: status,
+            magi: income,
+            frequency: frequency,
+            on: Date(),
+            calendar: .current
+        )
         return OnboardingEstimate(
             weeklyPremium: result.qualifiedPremium,
             deduction: deduction,
-            taxSaved: OvertimeCalculator.estimatedTaxSavings(deduction: deduction, marginalRate: marginalRate),
+            taxSaved: boost.annualTaxSaved,
+            perPaycheck: boost.perPaycheck,
+            remainingPaychecks: boost.remainingPaychecks,
+            marginalRate: boost.marginalRate,
             blocked: blocked,
             phaseoutZero: !blocked && projected > 0 && deduction == 0
         )
@@ -210,6 +227,8 @@ struct OnboardingView: View {
             OnboardingIncomePage(draft: $draft)
         case .rate:
             OnboardingRatePage(draft: $draft)
+        case .frequency:
+            OnboardingFrequencyPage(draft: $draft)
         case .hours:
             OnboardingHoursPage(draft: $draft)
         case .car:
@@ -295,6 +314,7 @@ struct OnboardingView: View {
         case .overtime: "Choose yes or no"
         case .filing: "Choose a filing status"
         case .rate: "Enter an hourly rate to continue"
+        case .frequency: "Choose how often you're paid"
         case .car: "Choose yes or no"
         default: ""
         }
@@ -316,6 +336,8 @@ struct OnboardingView: View {
             return draft.filingStatus != nil
         case .rate:
             return OnboardingMath.rate(draft) > 0
+        case .frequency:
+            return draft.payFrequency != nil
         case .car:
             return draft.wantsCar != nil
         case .payoff:
@@ -328,6 +350,7 @@ struct OnboardingView: View {
             draft.isHourly.map { $0 ? "h1" : "h0" } ?? "h",
             draft.paidOvertime.map { $0 ? "o1" : "o0" } ?? "o",
             draft.filingStatus?.rawValue ?? "f",
+            draft.payFrequency?.rawValue ?? "p",
             draft.wantsCar.map { $0 ? "c1" : "c0" } ?? "c"
         ].joined(separator: "|")
     }
@@ -370,6 +393,7 @@ struct OnboardingView: View {
         guard let filingStatus = draft.filingStatus,
               let isHourly = draft.isHourly,
               let paidOvertime = draft.paidOvertime,
+              let payFrequency = draft.payFrequency,
               let wantsCar = draft.wantsCar,
               OnboardingMath.rate(draft) > 0,
               draft.acceptedDisclaimer,
@@ -377,21 +401,24 @@ struct OnboardingView: View {
 
         isSaving = true
         let weekday = min(max(draft.workweekStartsOn, 1), 7)
+        let income = OnboardingMath.magi(draft)
         let profile = TaxProfile(
             taxYear: taxYear,
             filingStatus: filingStatus,
-            estimatedMAGI: OnboardingMath.magi(draft),
-            marginalRate: OnboardingMath.marginalRate,
+            estimatedMAGI: income,
+            marginalRate: FederalBracket.marginalRate(filingStatus: filingStatus, magi: income),
             hasSSN: true,
             isHourlyNonExempt: isHourly,
             paidOvertimeOver40: paidOvertime,
             acceptedDisclaimer: true,
-            wantsCarLoan: wantsCar
+            wantsCarLoan: wantsCar,
+            payFrequency: payFrequency
         )
         let employer = Employer(
             name: "Primary job",
             workweekStartsOn: weekday,
-            defaultRate: OnboardingMath.rate(draft)
+            defaultRate: OnboardingMath.rate(draft),
+            typicalOvertimeHours: OnboardingMath.hours(draft.typicalOvertimeHours)
         )
         modelContext.insert(profile)
         modelContext.insert(employer)

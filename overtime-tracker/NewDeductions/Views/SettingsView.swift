@@ -14,6 +14,10 @@ struct SettingsView: View {
     @State private var magiLoaded = false
     @State private var profileMessage: String?
     @State private var restoreMessage: String?
+    @State private var showPaywall = false
+    @State private var typicalHoursText = ""
+    @State private var typicalLoaded = false
+    @State private var hoursMessage: String?
 
     private var profile: TaxProfile? {
         profiles.first(where: \.acceptedDisclaimer) ?? profiles.first
@@ -51,30 +55,39 @@ struct SettingsView: View {
                                         Text(AppFormatting.weekdayName(day)).tag(day)
                                     }
                                 }
+                                TextField("Typical overtime hours a week", text: $typicalHoursText)
+                                    .keyboardType(.decimalPad)
+                                Button("Save typical hours") { saveTypicalHours(employer) }
+                                if let hoursMessage {
+                                    Text(hoursMessage)
+                                        .font(Theme.rounded(.footnote))
+                                        .foregroundStyle(Theme.textSecondary)
+                                }
                             }
                             .padding(.vertical, 2)
                         }
                     } header: {
                         ThemeSectionHeader("Employer")
                     } footer: {
-                        Text("Overtime is calculated per employer. This version keeps the primary job from setup. Hours at different jobs are not combined.")
+                        Text("Typical overtime hours are a projection until a real week is logged. Overtime is calculated per employer. Hours at different jobs are not combined.")
                     }
                 }
 
                 Section {
-                    LabeledContent("Access", value: premium.isPremium ? "Full estimate" : "Free")
+                    LabeledContent("Access", value: premium.isPremium ? "Pro" : "Free")
                     if !premium.isPremium {
-                        Text("Free includes a VIN check and the current overtime week.")
+                        Text("Free includes the per-paycheck estimate, a VIN check, and the current week’s hours.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        Button("Unlock Pro") { showPaywall = true }
                     }
-                    Button("Restore purchases") {
+                    Button("Restore Purchases") {
                         Task { restoreMessage = await premium.restore() }
                     }
                 } header: {
                     Text("Purchase")
                 } footer: {
-                    Text("The yearly plan renews through Apple until you cancel it. The lifetime unlock is a one-time purchase. Apple handles the payment.")
+                    Text("New Deductions Pro is a one-time purchase. No subscription. Apple handles the payment.")
                 }
 
                 Section {
@@ -137,7 +150,10 @@ struct SettingsView: View {
             } message: {
                 Text(resetError ?? "")
             }
-            .alert("Restore purchases", isPresented: restoreAlertPresented) {
+            .sheet(isPresented: $showPaywall) {
+                PaywallView().environmentObject(premium)
+            }
+            .alert("Restore Purchases", isPresented: restoreAlertPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(restoreMessage ?? "")
@@ -154,14 +170,23 @@ struct SettingsView: View {
                     Text(AppFormatting.filingStatusTitle(status)).tag(status)
                 }
             }
+            Picker("Pay frequency", selection: payFrequencyBinding(profile)) {
+                ForEach(PayFrequency.allCases, id: \.self) { frequency in
+                    Text(AppFormatting.payFrequencyTitle(frequency)).tag(frequency)
+                }
+            }
             TextField("Estimated MAGI", text: $magiText)
                 .keyboardType(.decimalPad)
             Button("Save estimated MAGI") { saveMAGI(profile) }
-            Picker("Estimated federal bracket", selection: bracketBinding(profile)) {
-                ForEach(AppFormatting.marginalBrackets, id: \.self) { percent in
-                    Text("\(percent)%").tag(percent)
-                }
-            }
+            LabeledContent(
+                "Estimated federal bracket",
+                value: AppFormatting.percent(
+                    FederalBracket.marginalRate(
+                        filingStatus: profile.filingStatus,
+                        magi: AppFormatting.parseDecimal(magiText) ?? profile.estimatedMAGI
+                    )
+                )
+            )
             Toggle("Valid Social Security number", isOn: boolBinding(profile, \.hasSSN))
             Toggle("Hourly and non-exempt", isOn: boolBinding(profile, \.isHourlyNonExempt))
             Toggle("Paid time-and-a-half after 40 hours", isOn: boolBinding(profile, \.paidOvertimeOver40))
@@ -174,7 +199,7 @@ struct SettingsView: View {
         } header: {
             ThemeSectionHeader("Tax profile")
         } footer: {
-            Text("Filing status, estimated MAGI, and the bracket change the phase-out and the estimated tax saved. Every figure that uses them is an estimate.")
+            Text("Filing status, pay frequency, and estimated MAGI change the phase-out and the per-paycheck estimate. The bracket is estimated from 2026 tables and MAGI. Brackets apply to taxable income, so it is an estimate, not tax advice.")
         }
     }
 
@@ -209,6 +234,22 @@ struct SettingsView: View {
         guard !magiLoaded, let profile else { return }
         magiLoaded = true
         magiText = AppFormatting.editableDecimal(profile.estimatedMAGI)
+        guard !typicalLoaded else { return }
+        typicalLoaded = true
+        let employer = employers.first { $0.name == "Primary job" } ?? employers.first
+        if let hours = employer?.typicalOvertimeHours {
+            typicalHoursText = AppFormatting.editableDecimal(hours)
+        }
+    }
+
+    private func saveTypicalHours(_ employer: Employer) {
+        guard let hours = AppFormatting.parseDecimal(typicalHoursText), hours >= 0, hours <= 80 else {
+            hoursMessage = "Enter typical overtime hours as a number from 0 to 80."
+            return
+        }
+        employer.typicalOvertimeHours = hours
+        hoursMessage = "Saved \(AppFormatting.hours(hours)) typical overtime hours. Estimate only."
+        try? modelContext.save()
     }
 
     private func saveMAGI(_ profile: TaxProfile) {
@@ -217,8 +258,19 @@ struct SettingsView: View {
             return
         }
         profile.estimatedMAGI = magi
+        profile.marginalRate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: magi)
         profileMessage = "Saved estimated MAGI \(AppFormatting.currency(magi))."
         try? modelContext.save()
+    }
+
+    private func payFrequencyBinding(_ profile: TaxProfile) -> Binding<PayFrequency> {
+        Binding(
+            get: { profile.payFrequency },
+            set: { newValue in
+                profile.payFrequency = newValue
+                try? modelContext.save()
+            }
+        )
     }
 
     private func filingStatusBinding(_ profile: TaxProfile) -> Binding<FilingStatus> {
@@ -226,16 +278,7 @@ struct SettingsView: View {
             get: { profile.filingStatus },
             set: { newValue in
                 profile.filingStatus = newValue
-                try? modelContext.save()
-            }
-        )
-    }
-
-    private func bracketBinding(_ profile: TaxProfile) -> Binding<Int> {
-        Binding(
-            get: { AppFormatting.nearestBracketPercent(profile.marginalRate) },
-            set: { percent in
-                profile.marginalRate = Decimal(percent) / 100
+                profile.marginalRate = FederalBracket.marginalRate(filingStatus: newValue, magi: profile.estimatedMAGI)
                 try? modelContext.save()
             }
         )

@@ -88,7 +88,7 @@ enum OvertimeEligibility {
             weeks: weeks.map(\.workWeek),
             filingStatus: profile.filingStatus,
             magi: profile.estimatedMAGI,
-            marginalRate: profile.marginalRate,
+            marginalRate: FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI),
             hasValidSSN: profile.hasSSN
         )
         if blocksDeduction(profile) != nil {
@@ -244,10 +244,11 @@ enum ReturnEstimateBuilder {
         let overtime = OvertimeEligibility.yearEstimate(weeks: weeks, profile: profile)
         let carLines = CarLoanMath.qualifying(vehicles: vehicles, taxYear: profile.taxYear, calendar: calendar)
         let carDeduction = CarLoanMath.deduction(vehicles: vehicles, profile: profile, calendar: calendar)
+        let rate = FederalBracket.marginalRate(filingStatus: profile.filingStatus, magi: profile.estimatedMAGI)
         let schedule = Schedule1ACalculator.estimate(
             overtimeDeduction: overtime.estimatedDeduction,
             carLoanDeduction: carDeduction,
-            marginalRate: profile.marginalRate
+            marginalRate: rate
         )
         return ReturnEstimate(
             weeks: weeks,
@@ -274,14 +275,79 @@ enum EstimateProgress {
 }
 
 enum CodeTTCopy {
-    static func explanation(difference: CodeTTDifference) -> String {
-        let gap = difference.reportedMinusComputed
-        if gap == 0 {
-            return "Code TT matches the qualified premium computed from the weeks in this log. Both figures are still estimates until you file."
+    static let transitionYear = "Employers may report the qualified overtime premium separately for the 2025 transition year."
+
+    static func headline(_ comparison: CodeTTComparison) -> String {
+        switch comparison {
+        case .notOnW2: "Not on this W-2"
+        case .match: "Match"
+        case .possibleShortfall: "Possible shortfall"
+        case .overage: "Overage"
         }
-        if gap > 0 {
-            return "Code TT is \(AppFormatting.currency(gap)) higher than this log (estimate). The log may be missing weeks, or the W-2 may include pay this app does not count as the FLSA half-time premium."
+    }
+
+    static func dollars(_ comparison: CodeTTComparison) -> Decimal? {
+        switch comparison {
+        case .notOnW2, .match: nil
+        case .possibleShortfall(let dollars), .overage(let dollars): dollars
         }
-        return "Code TT is \(AppFormatting.currency(-gap)) lower than this log (estimate). The hours, base rate, or weekly extras may not match payroll, or the log may include weeks the W-2 does not."
+    }
+
+    static func explanation(comparison: CodeTTComparison, taxYear: Int) -> String {
+        let transition = taxYear == 2025 ? " \(transitionYear)" : ""
+        switch comparison {
+        case .notOnW2:
+            return "You marked code TT as not on this W-2, so there is no dollar comparison yet. \(transitionYear) Estimate only, not tax advice."
+        case .match:
+            return "Code TT matches the qualified premium in this log. Both figures are estimates.\(transition)"
+        case .possibleShortfall(let dollars):
+            return "Possible shortfall of \(AppFormatting.currency(dollars)). The W-2 amount is lower than this log (estimate). Hours, the base rate, or weekly extras may not match payroll.\(transition)"
+        case .overage(let dollars):
+            return "Overage of \(AppFormatting.currency(dollars)). The W-2 amount is higher than this log (estimate). The log may be missing weeks, or the W-2 may include pay this app does not count as the FLSA half-time premium.\(transition)"
+        }
+    }
+
+    static func payrollNote(taxYear: Int, computed: Decimal, reported: Decimal?, comparison: CodeTTComparison) -> String {
+        let logged = AppFormatting.currency(computed)
+        let mentionTransition = taxYear == 2025 || comparison == .notOnW2
+        let transition = mentionTransition ? " \(transitionYear)" : ""
+        switch comparison {
+        case .notOnW2:
+            return """
+            Hello,
+
+            My Form W-2 for tax year \(taxYear) does not show Box 12 code TT. Could you confirm whether that code should be there, and the amount if so? My own log estimates the qualified FLSA overtime premium (the extra half of time-and-a-half, not the full overtime pay) at \(logged).\(transition)
+
+            This is an estimate from my records, not a tax filing. Thank you for checking.
+            """
+        case .match:
+            return """
+            Hello,
+
+            Could you verify Box 12 code TT on my Form W-2 for tax year \(taxYear)? Code TT should be the qualified overtime premium, the extra half of time-and-a-half under the FLSA, not the full overtime pay.
+
+            My log estimates that premium at \(logged), and the W-2 shows the same amount. I would appreciate a confirmation.\(transition)
+
+            This is an estimate from my records, not a tax filing. Thank you.
+            """
+        case .possibleShortfall(let dollars):
+            let shown = reported.map(AppFormatting.currency) ?? AppFormatting.currency(computed - dollars)
+            return gapNote(taxYear: taxYear, logged: logged, reported: shown, gap: AppFormatting.currency(dollars), direction: "lower", transition: transition)
+        case .overage(let dollars):
+            let shown = reported.map(AppFormatting.currency) ?? AppFormatting.currency(computed + dollars)
+            return gapNote(taxYear: taxYear, logged: logged, reported: shown, gap: AppFormatting.currency(dollars), direction: "higher", transition: transition)
+        }
+    }
+
+    private static func gapNote(taxYear: Int, logged: String, reported: String, gap: String, direction: String, transition: String) -> String {
+        """
+        Hello,
+
+        Could you verify Box 12 code TT on my Form W-2 for tax year \(taxYear)? Code TT should be the qualified overtime premium, the extra half of time-and-a-half under the FLSA, not the full overtime pay.
+
+        My log estimates that premium at \(logged). The W-2 shows \(reported). The difference is \(gap) (the W-2 is \(direction)).\(transition)
+
+        This is an estimate from my records, not a tax filing. Thank you for checking.
+        """
     }
 }

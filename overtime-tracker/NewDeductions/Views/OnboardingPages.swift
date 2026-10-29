@@ -42,13 +42,13 @@ struct OnboardingWelcomePage: View {
             VStack(spacing: 22) {
                 StopwatchHero()
                     .padding(.top, 12)
-                Text("Keep more of your overtime")
+                Text("Get your overtime tax break in every paycheck")
                     .font(Theme.rounded(.largeTitle, weight: .bold))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text("The extra half of time-and-a-half, and interest on a new car loan. Two federal deductions for 2025–2028, as a plain estimate.")
+                Text("See an estimate of the federal tax the qualified overtime deduction could leave in each paycheck, then put that amount on Form W-4 line 4(b). Interest on a new car loan can be part of it too. Estimates only, not tax advice.")
                     .font(Theme.rounded(.body))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -391,6 +391,37 @@ struct OnboardingRatePage: View {
     }
 }
 
+struct OnboardingFrequencyPage: View {
+    @Binding var draft: OnboardingDraft
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        OnboardingQuestion(
+            title: "How often are you paid?",
+            subtitle: "This spreads the yearly estimate across the paychecks still left this year. It is an estimate of pay dates, not your employer's calendar."
+        ) {
+            VStack(spacing: 12) {
+                frequencyCard(.weekly, symbol: "calendar")
+                frequencyCard(.biweekly, symbol: "calendar.badge.clock")
+                frequencyCard(.semimonthly, symbol: "calendar.badge.plus")
+                frequencyCard(.monthly, symbol: "calendar.circle")
+            }
+            .animation(reduceMotion ? nil : .spring(duration: 0.35, bounce: 0.1), value: draft.payFrequency)
+        }
+    }
+
+    private func frequencyCard(_ frequency: PayFrequency, symbol: String) -> some View {
+        ChoiceCard(
+            title: AppFormatting.payFrequencyTitle(frequency),
+            subtitle: AppFormatting.payFrequencyDetail(frequency),
+            symbol: symbol,
+            isSelected: draft.payFrequency == frequency
+        ) {
+            draft.payFrequency = frequency
+        }
+    }
+}
+
 struct OnboardingHoursPage: View {
     @Binding var draft: OnboardingDraft
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -401,7 +432,7 @@ struct OnboardingHoursPage: View {
     var body: some View {
         OnboardingQuestion(
             title: "Typical overtime hours per week?",
-            subtitle: "A usual week is enough. You'll log real weeks next, and this preview updates as you slide."
+            subtitle: "A usual week is enough. This preview is a projection, not logged hours, and it updates as you slide."
         ) {
             VStack(spacing: 16) {
                 HStack(spacing: 16) {
@@ -451,28 +482,28 @@ struct OnboardingHoursPage: View {
     private var previewCard: some View {
         SoftCard {
             VStack(alignment: .leading, spacing: 8) {
-                Text("You could deduct about")
-                    .font(Theme.rounded(.subheadline))
-                    .foregroundStyle(Theme.textSecondary)
-                Text(AppFormatting.currency(estimate.deduction))
+                Text("About")
+                    .font(Theme.rounded(.subheadline, weight: .semibold))
+                    .foregroundStyle(Theme.gold)
+                Text(AppFormatting.currency(estimate.perPaycheck))
                     .font(Theme.rounded(.largeTitle, weight: .bold))
                     .foregroundStyle(Theme.ink)
                     .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .snappy, value: estimate.deduction)
+                    .animation(reduceMotion ? nil : .snappy, value: estimate.perPaycheck)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                Text("this year")
+                Text("more per paycheck")
                     .font(Theme.rounded(.title3, weight: .bold))
                     .foregroundStyle(Theme.ink)
-                Text("Estimate")
+                Text("Projection from this typical week, not logged hours. Estimate.")
                     .font(Theme.rounded(.caption, weight: .semibold))
                     .foregroundStyle(Theme.emerald)
-                Text("Estimated tax saved \(AppFormatting.currency(estimate.taxSaved))")
+                Text("About \(AppFormatting.currency(estimate.taxSaved)) for the year")
                     .font(Theme.rounded(.headline, weight: .semibold))
                     .foregroundStyle(Theme.deepTeal)
                     .contentTransition(.numericText())
                     .animation(reduceMotion ? nil : .snappy, value: estimate.taxSaved)
-                Text("About \(AppFormatting.currency(estimate.weeklyPremium)) of qualified half-time premium in a week like this. The yearly figure carries that across the year, then applies the cap and income phase-out.")
+                Text("Estimated deduction \(AppFormatting.currency(estimate.deduction)). About \(AppFormatting.currency(estimate.weeklyPremium)) of qualified half-time premium in a week like this, carried across the year, then the cap and income phase-out. Spread over \(estimate.remainingPaychecks) remaining \(AppFormatting.payFrequencyTitle(draft.payFrequency ?? .biweekly).lowercased()) paychecks.")
                     .font(Theme.rounded(.footnote))
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -486,7 +517,7 @@ struct OnboardingHoursPage: View {
     }
 
     private var previewLabel: String {
-        var text = "You could deduct about \(AppFormatting.currency(estimate.deduction)) this year. Estimate. Estimated tax saved \(AppFormatting.currency(estimate.taxSaved))."
+        var text = "About \(AppFormatting.currency(estimate.perPaycheck)) more per paycheck. Projection from a typical week, not logged hours. Estimate. About \(AppFormatting.currency(estimate.taxSaved)) for the year."
         if let note = OnboardingMath.kindness(draft) {
             text += " \(note)"
         }
@@ -562,7 +593,7 @@ struct OnboardingPayoffPage: View {
                             .font(Theme.rounded(.largeTitle, weight: .bold))
                             .foregroundStyle(Theme.ink)
                             .accessibilityAddTraits(.isHeader)
-                        Text("Here's the estimate from a typical week, carried across the year.")
+                        Text("Here's the estimate from a typical week, in your paycheck first.")
                             .font(Theme.rounded(.body))
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center)
@@ -571,21 +602,32 @@ struct OnboardingPayoffPage: View {
                     .padding(.top, 12)
                 }
 
-                Text("Estimated deduction")
+                Text("About")
                     .font(Theme.rounded(.subheadline, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
-                CountingCurrency(target: estimate.deduction, active: isActive)
-                Text("Estimate")
+                    .foregroundStyle(Theme.gold)
+                CountingCurrency(target: estimate.perPaycheck, active: isActive, label: "About \(AppFormatting.currency(estimate.perPaycheck)) more per paycheck, estimate")
+                Text("more per paycheck")
+                    .font(Theme.rounded(.title3, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                Text("Projection from a typical week, not logged hours. Estimate.")
                     .font(Theme.rounded(.caption, weight: .bold))
                     .foregroundStyle(Theme.emerald)
+                    .multilineTextAlignment(.center)
 
-                Text("Estimated tax saved \(AppFormatting.currency(estimate.taxSaved))")
+                Text("About")
+                    .font(Theme.rounded(.subheadline, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.top, 8)
+                CountingCurrency(
+                    target: estimate.taxSaved,
+                    active: isActive,
+                    delay: reduceMotion ? 0 : 1.25,
+                    label: "About \(AppFormatting.currency(estimate.taxSaved)) for the year, estimate"
+                )
+                Text("for the year")
                     .font(Theme.rounded(.title3, weight: .bold))
                     .foregroundStyle(Theme.deepTeal)
-                    .multilineTextAlignment(.center)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .snappy, value: estimate.taxSaved)
-                Text("Uses a \(OnboardingMath.marginalPercent)% federal bracket estimate. Change the bracket in Settings.")
+                Text("Estimated \(AppFormatting.percent(estimate.marginalRate)) federal bracket from 2026 tables and your income. Brackets apply to taxable income, so this is an estimate.")
                     .font(Theme.rounded(.footnote))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -614,6 +656,8 @@ struct OnboardingPayoffPage: View {
 private struct CountingCurrency: View {
     var target: Decimal
     var active: Bool
+    var delay: TimeInterval = 0
+    var label: String = "Estimated amount"
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown: Double = 0
     @State private var generation = 0
@@ -626,7 +670,7 @@ private struct CountingCurrency: View {
                 if active { sync(play: true) }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Estimated deduction")
+            .accessibilityLabel(label)
             .accessibilityValue(AppFormatting.currency(target))
     }
 
@@ -639,11 +683,18 @@ private struct CountingCurrency: View {
             return
         }
         jump(to: 0)
-        DispatchQueue.main.async {
-            guard token == generation else { return }
-            withAnimation(.spring(duration: 1.15, bounce: 0.18)) {
-                shown = end
+        let begin = {
+            DispatchQueue.main.async {
+                guard token == generation else { return }
+                withAnimation(.spring(duration: 1.15, bounce: 0.18)) {
+                    shown = end
+                }
             }
+        }
+        if delay > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: begin)
+        } else {
+            begin()
         }
     }
 
@@ -759,6 +810,7 @@ extension OnboardingDraft {
         draft.annualIncome = 65_000
         draft.rateText = "24"
         draft.typicalOvertimeHours = 5
+        draft.payFrequency = .biweekly
         draft.wantsCar = true
         return draft
     }
@@ -771,6 +823,7 @@ extension OnboardingDraft {
         draft.annualIncome = 80_000
         draft.rateText = "40"
         draft.typicalOvertimeHours = 8
+        draft.payFrequency = .weekly
         draft.wantsCar = false
         return draft
     }

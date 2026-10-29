@@ -16,6 +16,8 @@ struct NewDeductionsApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(premiumStore)
+                .tint(Theme.emerald)
+                .fontDesign(.rounded)
                 .task { await premiumStore.start() }
         }
         .modelContainer(container)

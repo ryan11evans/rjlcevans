@@ -22,7 +22,7 @@ cd overtime-tracker
 xcodegen generate
 ```
 
-After regenerating, confirm `MARKETING_VERSION` is still `1.0` and `CURRENT_PROJECT_VERSION` is still `2` in both `project.yml` and `project.pbxproj`. Add any new source file in both files. `NewDeductions/App/Info.plist` is the app's Info.plist (`INFOPLIST_FILE`); it is not a resource.
+After regenerating, confirm `MARKETING_VERSION` is still `1.0` and `CURRENT_PROJECT_VERSION` is still `3` in both `project.yml` and `project.pbxproj`. Add any new source file in both files. `NewDeductions/App/Info.plist` is the app's Info.plist (`INFOPLIST_FILE`); it is not a resource.
 
 ### Tests
 
@@ -53,12 +53,14 @@ Settings links all three. There is no tracker and no external script on those pa
 
 - Xcode project and the local `OvertimeCore` package
 - SwiftData models: Employer, Week, Shift, TaxProfile, Vehicle, VehicleLoan. The store is local only (`cloudKitDatabase: .none`, no iCloud entitlement)
-- Onboarding: one question per screen (pay type, time-and-a-half, filing status, rough income, hourly rate, typical overtime hours with a live deduction preview, and an optional new car). The Social Security number requirement is in the disclaimer. "Got it" stores `acceptedDisclaimer`. A salaried or married-filing-separately answer can continue; the overtime estimate stays $0. Build number is 2.
-- Overtime tab for the one "Primary job" employer: a year dial and a workweek log (add, edit, delete), including weeks back to the workweek that contains January 1 of the tax year. Qualified premium is only the 0.5× FLSA premium. The year-end figure is a run-rate: average qualified premium of the logged weeks × 52 (see `OvertimeCalculator.projectedYearEndPremium`). The deduction and tax-saved figures apply the cap and MAGI phase-out to that projection. Every figure is labeled as an estimate
+- Onboarding keeps the card flow: pay type, time-and-a-half, filing status, rough income, hourly rate, pay frequency, typical overtime hours with a live per-paycheck projection, and an optional new car. The welcome headline is "Get your overtime tax break in every paycheck." The payoff counts the per-paycheck estimate first, then the annual estimate. The Social Security number requirement is in the disclaimer. "Got it" stores `acceptedDisclaimer`. Build number is 3.
+- Paycheck is the first tab. Until a week is logged, "About $X more per paycheck" is a projection from typical overtime hours and the hourly rate. After that, it uses logged premium plus that pace for the rest of a 52-week year. The bracket is estimated from filing status and MAGI using the 2026 tables. Below that: Update my W-4, Check my W-2 (Code TT), and a compact current-week hours card
+- Hours tab (the old Overtime tab) for the one "Primary job" employer: a year dial and a workweek log (add, edit, delete), including weeks back to the workweek that contains January 1 of the tax year. Qualified premium is only the 0.5× FLSA premium. The year-end figure is a run-rate: average qualified premium of the logged weeks × 52 (see `OvertimeCalculator.projectedYearEndPremium`). The deduction and tax-saved figures apply the cap and MAGI phase-out to that projection. Every figure is labeled as an estimate
 - Car loan tab: 17-character VIN with the ISO check digit, then one NHTSA vPIC `DecodeVinValues` call. US `PlantCountry` is US final assembly. Any other country is "Not eligible". A blank or failed lookup is "Unknown, check the door-jamb label". The checklist, amortization, Form 1098-VLI override, and deduction are in the same tab
-- W-2 Box 12 code TT compared with the log, a Form W-4 line 4(b) suggestion (the two estimated deductions added together), and a Summary tab with CSV export
-- StoreKit 2 paywall. Free tier: VIN check and the current overtime week. Everything else is locked. Products, also listed in `NewDeductions/Products.storekit`: `com.rjlcevans.newdeductions.yearly` ($19.99/year, auto-renews through Apple) and `com.rjlcevans.newdeductions.lifetime` ($29.99, non-consumable). The scheme's Run action points at that storekit file for local testing
-- Settings: the disclaimer, an editable tax profile (filing status, estimated MAGI, 10/12/22/24/32/35/37 bracket), restore purchases, the legal links, and the source list (those links open in Safari; the app does not fetch them)
+- W-4 helper: a card flow for line 4(b). The amount is the projected qualified overtime deduction plus car-loan interest, each after its cap and phase-out, with a copy button and best-effort steps for a generic employer, ADP, Paychex, Gusto, and Workday
+- W-2 Box 12 code TT compared with the logged qualified premium: match, possible shortfall, or overage, or "not on my W-2". A ShareLink drafts a short note to payroll. Employers may report the amount separately for the 2025 transition year. Summary still shows the comparison and CSV export
+- StoreKit 2 paywall. One product, listed in `NewDeductions/Products.storekit`: `com.rjlcevans.newdeductions.pro` ("New Deductions Pro", $14.99, non-consumable). No subscription. Free: the per-paycheck number, a VIN check, and the current week. Pro: W-4 helper, W-2 check, history beyond the current week, the car-loan deduction, and Summary/CSV export. A verified purchase of the earlier yearly or lifetime product still unlocks Pro; those products are not offered. The scheme's Run action points at that storekit file for local testing
+- Settings: the disclaimer, an editable tax profile (filing status, pay frequency, estimated MAGI, and the 2026 bracket estimated from those), restore purchases, the legal links, and the source list (those links open in Safari; the app does not fetch them)
 
 Not in this version:
 
@@ -76,13 +78,15 @@ SwiftData optional properties, so a week-1 store can open without a custom migra
 - `VehicleLoan.salvageOrScrap: Bool?`
 - `VehicleLoan.relatedPartyLender: Bool?`
 - `TaxProfile.wantsCarLoan: Bool?` (onboarding's new-car answer; nil on a build-1 store)
+- `TaxProfile.payFrequencyRaw: String?` (nil means biweekly)
+- `Employer.typicalOvertimeHours: Decimal?` (projection until a real week is logged)
 
-`Employer.codeTT` and `VehicleLoan.actualInterest` are still computed over JSON `Data`. Assign the whole dictionary, or call `setCodeTT` / `setActualInterest`.
+`Employer.codeTT` and `VehicleLoan.actualInterest` are still computed over JSON `Data`. Assign the whole dictionary, or call `setCodeTT` / `setActualInterest`. `Employer.codeTTAbsentData` is optional JSON for tax years marked "not on my W-2".
 
 ## Notes for the next weeks
 
 - Onboarding creates one employer named "Primary job" so the hourly rate and workweek start day have a model to live on (`Employer.defaultRate`, `Employer.workweekStartsOn`). Overtime is per employer; hours are not combined across jobs.
-- `TaxProfile` also stores `isHourlyNonExempt`, `paidOvertimeOver40`, and `acceptedDisclaimer`. The plan's model snippet did not list those onboarding answers.
+- `TaxProfile` also stores `isHourlyNonExempt`, `paidOvertimeOver40`, and `acceptedDisclaimer`. The plan's model snippet did not list those onboarding answers. `payFrequencyRaw` is optional and nil means biweekly, so an older store opens without a custom migration.
 - The plan shows `codeTT` and `actualInterest` as `[Int: Decimal]`. SwiftData on iOS 17 does not persist that dictionary, so each one is a computed property over a JSON `Data` field (`codeTTData`, `actualInterestData`). Assign the whole dictionary, or call `setCodeTT` / `setActualInterest`. A subscript write on the getter's copy does not save.
 - v1.0 opts out of iCloud. Turning sync on in v1.1 may need a new store or a migration.
 - The app icon is a placeholder.

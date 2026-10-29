@@ -4,6 +4,24 @@ import OvertimeCore
 enum AppFormatting {
     static let marginalBrackets = [10, 12, 22, 24, 32, 35, 37]
 
+    static func payFrequencyTitle(_ frequency: PayFrequency) -> String {
+        switch frequency {
+        case .weekly: "Weekly"
+        case .biweekly: "Biweekly"
+        case .semimonthly: "Semimonthly"
+        case .monthly: "Monthly"
+        }
+    }
+
+    static func payFrequencyDetail(_ frequency: PayFrequency) -> String {
+        switch frequency {
+        case .weekly: "Every week · 52 paychecks a year"
+        case .biweekly: "Every two weeks · 26 paychecks a year"
+        case .semimonthly: "Twice a month · 24 paychecks a year"
+        case .monthly: "Once a month · 12 paychecks a year"
+        }
+    }
+
     static func filingStatusTitle(_ status: FilingStatus) -> String {
         switch status {
         case .single: "Single"
@@ -80,6 +98,17 @@ enum AppFormatting {
 
     static func plainDecimal(_ value: Decimal) -> String {
         NSDecimalNumber(decimal: value).stringValue
+    }
+
+    /// Digits to type on a form, such as `6600.00`. No currency symbol.
+    static func plainMoney(_ value: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: value as NSDecimalNumber) ?? NSDecimalNumber(decimal: value).stringValue
     }
 
     static func nearestBracketPercent(_ rate: Decimal) -> Int {
