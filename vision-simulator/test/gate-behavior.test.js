@@ -7,7 +7,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const ROOT = path.join(__dirname, '..');
-const STORE = 'https://apps.apple.com/us/app/vision-simulator-by-dr-evans/id6772865195';
+const STORE = 'https://apps.apple.com/app/id6772865195';
 
 function startServer() {
   return new Promise((resolve) => {
@@ -121,7 +121,7 @@ async function main() {
       assert.strictEqual(await page.locator('#storeGate h1').innerText(), 'Vision Simulator');
       assert.strictEqual(storeHits.length, 0, 'crawler must not be redirected');
       const og = await page.locator('meta[property="og:title"]').getAttribute('content');
-      assert.strictEqual(og, 'Vision Simulator by Dr. Evans');
+      assert.strictEqual(og, 'Vision Simulator: Eye Disease');
       await context.close();
     }
 
