@@ -22,11 +22,35 @@ struct WatchBTCProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchBTCEntry>) -> Void) {
         Task {
             let price = await fetchPrice() ?? UserDefaults.shared.loadPrice()
-            let entry = WatchBTCEntry(date: Date(), price: price, isFetching: false)
-            // Ask to be refreshed in 15 min — watchOS may extend this based on budget
-            let next = Date(timeIntervalSinceNow: 15 * 60)
-            completion(Timeline(entries: [entry], policy: .after(next)))
+            let now = Date()
+            // The circular and corner ages are ordinary text so they can scale.
+            // Entries advance that label; the price itself still reloads on the
+            // same 15-minute schedule (watchOS may push it later).
+            let entries = Self.timelineEntries(price: price, startingAt: now)
+            let next = now.addingTimeInterval(15 * 60)
+            completion(Timeline(entries: entries, policy: .after(next)))
         }
+    }
+
+    /// One entry each time the compact age string changes: every minute for an
+    /// hour (so "9m" becomes "10m"), then hourly, then daily. Later entries only
+    /// show if a reload is delayed.
+    private static func timelineEntries(price: BitcoinPrice?, startingAt now: Date) -> [WatchBTCEntry] {
+        guard price != nil else {
+            return [WatchBTCEntry(date: now, price: nil, isFetching: false)]
+        }
+        var dates: [Date] = []
+        dates.reserveCapacity(90)
+        for minute in 0..<60 {
+            dates.append(now.addingTimeInterval(TimeInterval(minute * 60)))
+        }
+        for hour in 1..<24 {
+            dates.append(now.addingTimeInterval(TimeInterval(hour * 3600)))
+        }
+        for day in 1..<8 {
+            dates.append(now.addingTimeInterval(TimeInterval(day * 86_400)))
+        }
+        return dates.map { WatchBTCEntry(date: $0, price: price, isFetching: false) }
     }
 
     private func fetchPrice() async -> BitcoinPrice? {
@@ -86,12 +110,19 @@ struct CircularView: View {
                     .multilineTextAlignment(.center)
                     .widgetAccentable()
                 if let price = entry.price {
-                    Text(price.timestamp, style: .relative)
+                    // Not `Text(_:style: .relative)`. That label is measured once
+                    // and then updated in place, trailing-anchored, so the extra
+                    // digit in "10m" / "10h" / "10d" draws past the leading edge
+                    // and the circular mask clips it. `minimumScaleFactor` never
+                    // runs again. A plain string is measured at its real width.
+                    Text(compactComplicationAge(from: price.timestamp, to: entry.date))
                         .font(.system(size: 9, weight: .medium, design: .rounded))
                         .minimumScaleFactor(0.5)
+                        .allowsTightening(true)
                         .lineLimit(1)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
                 } else {
                     Image(systemName: "bitcoinsign")
                         .font(.system(size: 9, weight: .bold))
@@ -134,7 +165,9 @@ struct InlineView: View {
     let entry: WatchBTCEntry
     var body: some View {
         if let price = entry.price {
-            Text(price.formatted + " · ") + Text(price.timestamp, style: .relative)
+            // One measured string. A live relative date grows in place, and on
+            // this single line that extra digit is what gets cut off.
+            Text("\(price.formatted) · \(compactComplicationAge(from: price.timestamp, to: entry.date))")
         } else {
             Text("BTC ---")
         }
@@ -150,7 +183,9 @@ struct CornerView: View {
             .lineLimit(1)
             .widgetLabel {
                 if let price = entry.price {
-                    Text(price.timestamp, style: .relative)
+                    // Curved corner text is just as tight as the circle, and the
+                    // live relative date clips the same way once it gains a digit.
+                    Text(compactComplicationAge(from: price.timestamp, to: entry.date))
                         .widgetAccentable()
                 } else {
                     Text("TapBTC")
@@ -158,6 +193,16 @@ struct CornerView: View {
                 }
             }
     }
+}
+
+/// Compact price age for the tight complication slots: "now", "9m", "10m", "23h", "10d".
+private func compactComplicationAge(from timestamp: Date, to now: Date) -> String {
+    let minutes = Int(max(0, now.timeIntervalSince(timestamp)) / 60)
+    if minutes < 1 { return "now" }
+    if minutes < 60 { return "\(minutes)m" }
+    let hours = minutes / 60
+    if hours < 24 { return "\(hours)h" }
+    return "\(hours / 24)d"
 }
 
 // MARK: - Widget Declaration
