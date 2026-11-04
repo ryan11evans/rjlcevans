@@ -104,7 +104,7 @@
 </svg>
 
 <div class="page-header">
-  <p class="page-eyebrow">Vision Impairment Simulator · Dr. Ryan Evans, OD</p>
+  <p class="page-eyebrow">Vision Simulator App · Built by an optometrist</p>
   <h1 class="page-title">App Store Screenshot Generator</h1>
   <p class="page-sub">1290 × 2796 px · iPhone 6.7" required size · Click any screenshot to download</p>
   <div class="btn-row">
@@ -142,7 +142,7 @@
       bullets: [
         '· Works on your live camera or any image',
         '· Drag the divider to reveal the difference',
-        '· 11 conditions · Stage-adjustable severity',
+        '· 10 conditions · Stage-adjustable severity',
       ]
     },
     {
@@ -167,7 +167,7 @@
       filter: 'glaucoma',
       filterArgs: [3],
       compare: false,
-      headline: '11 Conditions. Every Stage.',
+      headline: '10 Conditions. Every Stage.',
       sub: 'Glaucoma · AMD · Cataracts · RP · Diabetic Retinopathy · Color Blindness · Floaters · Presbyopia · More',
       bullets: [
         '· Evidence-based, OD-verified simulations',
@@ -333,7 +333,7 @@
       g.strokeStyle = '#b8aa90'; g.lineWidth = 1.5;
       g.beginPath(); g.moveTo(70,132); g.lineTo(c.width-70,132); g.stroke();
       let ry = 152;
-      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'Dr. R. Evans, OD  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
+      [['Patient:', 'Jane Smith, DOB 03/14/1958'], ['Diagnosis:', 'H52.4 Presbyopia / H40.1 Glaucoma'], ['Provider:', 'An optometrist  ·  Ref: SEE NOTES']].forEach(([lbl,val]) => {
         g.font = '700 19px Georgia, serif'; g.fillStyle = '#34344a'; g.fillText(lbl, 70, ry);
         g.font = '400 19px Georgia, serif'; g.fillStyle = '#1a1a2a'; g.fillText(val, 70+g.measureText(lbl).width+8, ry);
         ry += 38;
@@ -663,7 +663,7 @@
     // Title
     ctx.font = '500 52px "Fraunces", serif';
     ctx.fillStyle = '#d4a574';
-    ctx.fillText('Dr. Ryan Evans, OD', OUT_W / 2, 138);
+    ctx.fillText('Vision Simulator App', OUT_W / 2, 138);
     ctx.restore();
 
     // Thin separator below branding
@@ -719,7 +719,7 @@
     ctx.fillStyle = '#6b7888';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Dr. Ryan Evans, OD  ·  rjlcevans.com', OUT_W / 2, 2700);
+    ctx.fillText('Built by an optometrist', OUT_W / 2, 2700);
     ctx.restore();
 
     // App Store badge area — simple decorative pill
