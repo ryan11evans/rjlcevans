@@ -50,12 +50,20 @@ extension UserDefaults {
     func saveWidgetStats(high: Double, low: Double, ath: Double, fng: Int?) {
         set(high, forKey: "wHigh24h"); set(low, forKey: "wLow24h"); set(ath, forKey: "wATH")
         if let fng { set(fng, forKey: "wFNG") } else { removeObject(forKey: "wFNG") }
+        set(Date().timeIntervalSince1970, forKey: "wStatsAt")
     }
     func loadWidgetStats() -> (high: Double, low: Double, ath: Double, fng: Int?)? {
         guard let high = object(forKey: "wHigh24h") as? Double,
               let low = object(forKey: "wLow24h") as? Double,
               let ath = object(forKey: "wATH") as? Double else { return nil }
         return (high, low, ath, object(forKey: "wFNG") as? Int)
+    }
+
+    /// Stats older than this are hidden. A fresh price age must not sit next to
+    /// a 24h change or high/low that the widget has not refreshed.
+    func widgetStatsAreFresh(maxAge: TimeInterval = 3 * 60 * 60) -> Bool {
+        guard let t = object(forKey: "wStatsAt") as? TimeInterval else { return false }
+        return Date().timeIntervalSince1970 - t <= maxAge
     }
 }
 
