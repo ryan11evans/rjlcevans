@@ -1,6 +1,7 @@
 import WidgetKit
 import SwiftUI
 import Charts
+import AppIntents
 
 // ── Shared colors / helpers ──────────────────────────────────────────────────
 
@@ -50,9 +51,23 @@ struct BitcoinProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PriceEntry>) -> Void) {
         Task {
-            let price = await fetchLatestPrice() ?? UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 0, timestamp: Date())
-            // Keep the trend line fresh even when the app hasn't been opened.
-            if let spark = await fetchSparkline() { UserDefaults.shared.saveSparkline(spark) }
+            // A tap runs RefreshBTCIntent, which reloads this timeline. Fetch
+            // the price and the stats together so a fresh age is not paired
+            // with a 24h change from the last time the app was opened.
+            async let priceTask = fetchLatestPrice()
+            async let sparkTask = fetchSparkline()
+            async let marketTask = fetchMarketSnapshot()
+            async let fngTask = fetchFearGreedValue()
+            let price = await priceTask ?? UserDefaults.shared.loadPrice() ?? BitcoinPrice(usd: 0, timestamp: Date())
+            if let spark = await sparkTask { UserDefaults.shared.saveSparkline(spark) }
+            let greed = await fngTask
+            if let market = await marketTask {
+                UserDefaults.shared.saveChange24h(market.change)
+                UserDefaults.shared.saveWidgetStats(
+                    high: market.high, low: market.low, ath: market.ath,
+                    fng: greed ?? UserDefaults.shared.loadWidgetStats()?.fng
+                )
+            }
             let entry = makeEntry(price: price)
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 10, to: Date())!
             completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
@@ -71,11 +86,14 @@ struct BitcoinProvider: TimelineProvider {
     }
 
     private func makeEntry(price: BitcoinPrice) -> PriceEntry {
-        let stats = UserDefaults.shared.loadWidgetStats()
+        // Drop 24h change and the stat tiles when they were not refreshed with
+        // the price. Missing tiles are better than numbers that look current.
+        let fresh = UserDefaults.shared.widgetStatsAreFresh()
+        let stats = fresh ? UserDefaults.shared.loadWidgetStats() : nil
         return PriceEntry(
             date: Date(),
             price: price,
-            change24h: UserDefaults.shared.loadChange24h(),
+            change24h: fresh ? UserDefaults.shared.loadChange24h() : nil,
             sparkline: UserDefaults.shared.loadSparkline(),
             high24h: stats?.high, low24h: stats?.low, ath: stats?.ath, fng: stats?.fng,
             holdingsValue: holdingsValue(at: price.usd),
@@ -95,6 +113,49 @@ struct BitcoinProvider: TimelineProvider {
         let price = BitcoinPrice(usd: val, timestamp: Date())
         UserDefaults.shared.savePrice(price)
         return price
+    }
+
+    private struct MarketSnapshot {
+        let high, low, ath, change: Double
+    }
+
+    /// One CoinGecko call for 24h high/low, ATH, and the 24h percent, in the
+    /// selected currency. Fear & Greed is a separate tiny call, at most hourly.
+    private func fetchMarketSnapshot() async -> MarketSnapshot? {
+        let url = URL(string: "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false")!
+        guard let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        struct R: Decodable {
+            struct MD: Decodable {
+                let high_24h: [String: Double]
+                let low_24h: [String: Double]
+                let ath: [String: Double]
+                let price_change_percentage_24h: Double
+            }
+            let market_data: MD
+        }
+        guard let r = try? JSONDecoder().decode(R.self, from: data) else { return nil }
+        let cur = AppCurrency.current.rawValue
+        let md = r.market_data
+        guard let high = md.high_24h[cur], let low = md.low_24h[cur], let ath = md.ath[cur] else { return nil }
+        return MarketSnapshot(high: high, low: low, ath: ath, change: md.price_change_percentage_24h)
+    }
+
+    private func fetchFearGreedValue() async -> Int? {
+        if let t = UserDefaults.shared.object(forKey: "wFNGAt") as? TimeInterval,
+           Date().timeIntervalSince1970 - t < 3600 {
+            return UserDefaults.shared.loadWidgetStats()?.fng
+        }
+        guard let url = URL(string: "https://api.alternative.me/fng/"),
+              let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        struct R: Decodable {
+            struct Entry: Decodable { let value: String }
+            let data: [Entry]
+        }
+        guard let r = try? JSONDecoder().decode(R.self, from: data),
+              let value = r.data.first.flatMap({ Int($0.value) }) else { return nil }
+        UserDefaults.shared.set(value, forKey: "wFNG")
+        UserDefaults.shared.set(Date().timeIntervalSince1970, forKey: "wFNGAt")
+        return value
     }
 
     private func holdingsValue(at price: Double) -> Double? {
@@ -163,6 +224,24 @@ struct BitcoinWidgetView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
+        // The whole widget refreshes in place, the same way the Watch
+        // complication does. It does not also open the app: one tap, one job.
+        Button(intent: RefreshBTCIntent()) {
+            priceFamily
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: contentAlignment)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var contentAlignment: Alignment {
+        switch family {
+        case .accessoryCircular, .accessoryInline: return .center
+        default: return .topLeading
+        }
+    }
+
+    @ViewBuilder
+    private var priceFamily: some View {
         switch family {
         case .systemSmall:   SmallWidgetView(entry: entry)
         case .systemMedium:  MediumWidgetView(entry: entry)
@@ -192,8 +271,7 @@ struct SmallWidgetView: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
             Sparkline(prices: entry.sparkline, color: trendColor(entry.change24h))
                 .frame(maxWidth: .infinity)
-            Text(entry.price.timestamp, style: .relative)
-                .font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+            WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 9, alignment: .leading)
         }
         .containerBackground(for: .widget) { WidgetBackground(tint: trendColor(entry.change24h)) }
     }
@@ -207,6 +285,8 @@ struct MediumWidgetView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent).font(.subheadline)
                     Text("Bitcoin").font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 4)
+                    WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 11)
                 }
                 Text(entry.price.formatted)
                     .font(.system(size: 30, weight: .bold, design: .rounded))
@@ -215,11 +295,15 @@ struct MediumWidgetView: View {
                     Text(String(format: "%+.2f%%", change))
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(trendColor(change))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 if let stack = entry.holdingsValue {
                     Text("Stack · \(AppCurrency.current.format(stack))")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(themeAccent).lineLimit(1)
+                        .foregroundStyle(themeAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                 }
             }
             Spacer(minLength: 0)
@@ -238,8 +322,7 @@ struct LargeWidgetView: View {
                 Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent)
                 Text("Bitcoin").font(.headline)
                 Spacer()
-                Text(entry.price.timestamp, style: .relative)
-                    .font(.caption2).foregroundStyle(.secondary)
+                WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 11)
             }
 
             HStack(alignment: .lastTextBaseline, spacing: 8) {
@@ -274,10 +357,14 @@ struct LargeWidgetView: View {
                     Text(AppCurrency.current.format(stack))
                         .font(.system(size: 15, weight: .bold, design: .rounded))
                         .foregroundStyle(themeAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                     if let pct = entry.holdingsGainPct {
                         Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))%")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundStyle(trendColor(pct))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                     }
                 }
                 .padding(.top, 2)
@@ -313,6 +400,9 @@ struct PortfolioWidgetView: View {
 
     var body: some View {
         if let stack = entry.holdingsValue {
+            // Pro stack refreshes in place. The lock teaser and the empty
+            // state are not buttons: the lock opens the paywall, empty opens the app.
+            Button(intent: RefreshBTCIntent()) {
             VStack(alignment: .leading, spacing: family == .systemSmall ? 3 : 5) {
                 HStack(spacing: 4) {
                     Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent).font(.caption)
@@ -327,17 +417,30 @@ struct PortfolioWidgetView: View {
                     Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct * 100))% all-time")
                         .font(.system(size: family == .systemSmall ? 12 : 15, weight: .bold, design: .rounded))
                         .foregroundStyle(trendColor(pct))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
                 if family != .systemSmall {
                     Sparkline(prices: entry.sparkline, color: trendColor(entry.change24h))
                         .frame(maxWidth: .infinity).frame(minHeight: 44)
                 }
                 if family == .systemMedium || family == .systemSmall {
-                    Text("BTC \(entry.price.shortFormatted)")
-                        .font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text("BTC \(entry.price.shortFormatted)")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Spacer(minLength: 4)
+                        WidgetAgeLabel(date: entry.price.timestamp,
+                                       width: family == .systemSmall ? 64 : 96,
+                                       size: 10)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
             .containerBackground(for: .widget) { WidgetBackground(tint: trendColor(entry.holdingsGainPct ?? entry.change24h)) }
         } else if showsLockedTeaser {
             VStack(spacing: 8) {
@@ -396,23 +499,50 @@ struct AccessoryWidgetView: View {
         case .accessoryInline:
             Text("BTC \(entry.price.shortFormatted)").widgetAccentable()
         default: // .accessoryRectangular
-            HStack {
+            HStack(alignment: .center, spacing: 6) {
                 Image(systemName: "bitcoinsign.circle.fill").widgetAccentable()
                 VStack(alignment: .leading, spacing: 1) {
                     Text(entry.price.formatted)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.7).lineLimit(1)
-                    if let stack = entry.holdingsValue {
-                        Text("Stack \(AppCurrency.current.format(stack))")
-                            .font(.caption2).foregroundStyle(.secondary)
-                            .minimumScaleFactor(0.7).lineLimit(1)
-                    } else if let change = entry.change24h {
-                        Text(String(format: "%+.1f%% today", change))
-                            .font(.caption2).foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        if let stack = entry.holdingsValue {
+                            Text("Stack \(AppCurrency.current.format(stack))")
+                                .font(.caption2).foregroundStyle(.secondary)
+                                .minimumScaleFactor(0.6).lineLimit(1)
+                        } else if let change = entry.change24h {
+                            Text(String(format: "%+.1f%% today", change))
+                                .font(.caption2).foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        Spacer(minLength: 2)
+                        WidgetAgeLabel(date: entry.price.timestamp, width: 72, size: 10)
                     }
                 }
             }
         }
+    }
+}
+
+/// Live age held to a fixed width so a relative date cannot expand into the
+/// rest of the widget. Wide enough for "10 min ago" / "2 hr ago" at `size`,
+/// and it scales if a locale is longer.
+private struct WidgetAgeLabel: View {
+    let date: Date
+    var width: CGFloat = 108
+    var size: CGFloat = 11
+    var alignment: Alignment = .trailing
+
+    var body: some View {
+        Text(date, style: .relative)
+            .font(.system(size: size, weight: .medium, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.55)
+            .multilineTextAlignment(alignment == .leading ? .leading : .trailing)
+            .foregroundStyle(.secondary)
+            .frame(width: width, alignment: alignment)
     }
 }
 

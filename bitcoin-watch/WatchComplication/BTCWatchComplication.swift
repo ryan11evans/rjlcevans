@@ -33,7 +33,11 @@ struct WatchBTCProvider: TimelineProvider {
     }
 
     private func fetchPrice() async -> BitcoinPrice? {
-        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-USD/spot"),
+        // Same currency as the tap intent. A hardcoded BTC-USD fetch here would
+        // overwrite a EUR/GBP/JPY price on every scheduled reload, and again
+        // on the reload that follows a correct tap.
+        let code = AppCurrency.current.code
+        guard let url = URL(string: "https://api.coinbase.com/v2/prices/BTC-\(code)/spot"),
               let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
         struct R: Decodable { struct D: Decodable { let amount: String }; let data: D }
         guard let r = try? JSONDecoder().decode(R.self, from: data),
@@ -132,8 +136,22 @@ struct InlineView: View {
     let entry: WatchBTCEntry
     var body: some View {
         if let price = entry.price {
-            // Wide slot. The relative half counts on its own, as in 3.8.
-            Text(price.formatted + " · ") + Text(price.timestamp, style: .relative).monospacedDigit()
+            // Compact price ("$150.0K") plus a live age held to a fixed width,
+            // so "$150,000 · 10 minutes" cannot run off the inline slot.
+            HStack(spacing: 3) {
+                Text(price.shortFormatted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                Text("·")
+                    .foregroundStyle(.secondary)
+                Text(price.timestamp, style: .relative)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 44, alignment: .center)
+            }
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
         } else {
             Text("BTC ---")
         }
@@ -149,11 +167,9 @@ struct CornerView: View {
             .lineLimit(1)
             .widgetLabel {
                 if let price = entry.price {
-                    // The face extracts this Text and draws it on the bezel.
-                    // The arc is wider than the circular chord, and this is the
-                    // same live relative date 3.8 used, so it counts.
-                    Text(price.timestamp, style: .relative)
-                        .monospacedDigit()
+                    // Same 26pt centered relative date as the circular face,
+                    // so 10m / 10h / 10d stay inside the bezel arc.
+                    CircularAgeLabel(date: price.timestamp)
                         .widgetAccentable()
                 } else {
                     Text("TapBTC")
@@ -197,7 +213,7 @@ struct BTCWatchComplicationBundle: Widget {
             BTCComplicationView(entry: entry)
         }
         .configurationDisplayName("Bitcoin")
-        .description("Tap to refresh. Shows live BTC/USD price.")
+        .description("Tap to refresh. Shows the live Bitcoin price.")
         .supportedFamilies([
             .accessoryCircular,
             .accessoryRectangular,
