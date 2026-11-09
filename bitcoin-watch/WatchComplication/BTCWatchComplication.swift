@@ -22,14 +22,10 @@ struct WatchBTCProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchBTCEntry>) -> Void) {
         Task {
             let price = await fetchPrice() ?? UserDefaults.shared.loadPrice()
-            // One entry, same as before the age-label fix. A tap runs
-            // RefreshBTCIntent, which calls reloadAllTimelines(). watchOS only
-            // replaces the visible complication when the current timeline does
-            // not already cover the future. The per-minute / hourly / daily
-            // entries added for the compact age kept serving that cached price,
-            // so the reload never showed up. The age string is still measured
-            // text (so "10m" / "10h" / "10d" scale instead of clipping); it
-            // updates on this reload rather than on a prebuilt timeline.
+            // One entry, same shape as 3.8. A tap's reloadAllTimelines()
+            // replaces whatever timeline getTimeline completes with. The age
+            // counts on its own (Text date style); future entries are not
+            // required, and a week of them is what the 3.8.1 tap stopped on.
             let entry = WatchBTCEntry(date: Date(), price: price, isFetching: false)
             let next = Date(timeIntervalSinceNow: 15 * 60)
             completion(Timeline(entries: [entry], policy: .after(next)))
@@ -93,19 +89,7 @@ struct CircularView: View {
                     .multilineTextAlignment(.center)
                     .widgetAccentable()
                 if let price = entry.price {
-                    // Not `Text(_:style: .relative)`. That label is measured once
-                    // and then updated in place, trailing-anchored, so the extra
-                    // digit in "10m" / "10h" / "10d" draws past the leading edge
-                    // and the circular mask clips it. `minimumScaleFactor` never
-                    // runs again. A plain string is measured at its real width.
-                    Text(compactComplicationAge(from: price.timestamp, to: entry.date))
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .minimumScaleFactor(0.5)
-                        .allowsTightening(true)
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
+                    CircularAgeLabel(date: price.timestamp)
                 } else {
                     Image(systemName: "bitcoinsign")
                         .font(.system(size: 9, weight: .bold))
@@ -148,9 +132,8 @@ struct InlineView: View {
     let entry: WatchBTCEntry
     var body: some View {
         if let price = entry.price {
-            // One measured string. A live relative date grows in place, and on
-            // this single line that extra digit is what gets cut off.
-            Text("\(price.formatted) · \(compactComplicationAge(from: price.timestamp, to: entry.date))")
+            // Wide slot. The relative half counts on its own, as in 3.8.
+            Text(price.formatted + " · ") + Text(price.timestamp, style: .relative).monospacedDigit()
         } else {
             Text("BTC ---")
         }
@@ -166,9 +149,11 @@ struct CornerView: View {
             .lineLimit(1)
             .widgetLabel {
                 if let price = entry.price {
-                    // Curved corner text is just as tight as the circle, and the
-                    // live relative date clips the same way once it gains a digit.
-                    Text(compactComplicationAge(from: price.timestamp, to: entry.date))
+                    // The face extracts this Text and draws it on the bezel.
+                    // The arc is wider than the circular chord, and this is the
+                    // same live relative date 3.8 used, so it counts.
+                    Text(price.timestamp, style: .relative)
+                        .monospacedDigit()
                         .widgetAccentable()
                 } else {
                     Text("TapBTC")
@@ -178,14 +163,29 @@ struct CornerView: View {
     }
 }
 
-/// Compact price age for the tight complication slots: "now", "9m", "10m", "23h", "10d".
-private func compactComplicationAge(from timestamp: Date, to now: Date) -> String {
-    let minutes = Int(max(0, now.timeIntervalSince(timestamp)) / 60)
-    if minutes < 1 { return "now" }
-    if minutes < 60 { return "\(minutes)m" }
-    let hours = minutes / 60
-    if hours < 24 { return "\(hours)h" }
-    return "\(hours / 24)d"
+/// Live "how long since refresh" label.
+///
+/// In a widget, relative/offset/timer text is archived at one width and never
+/// laid out again. Offered the full square, it expands to that width and the
+/// circular mask cuts the leading digit once "9m" becomes "10m". 26pt is enough
+/// for a two-digit age ("10m", "23h", "10d") at 9pt and still inside the
+/// bottom chord, and the text is centered in that frame.
+private struct CircularAgeLabel: View {
+    let date: Date
+
+    /// Bottom chord of the smallest circular complication, not the square WidgetKit proposes.
+    private static let width: CGFloat = 26
+
+    var body: some View {
+        Text(date, style: .relative)
+            .font(.system(size: 9, weight: .medium, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.secondary)
+            .frame(width: Self.width, alignment: .center)
+    }
 }
 
 // MARK: - Widget Declaration
