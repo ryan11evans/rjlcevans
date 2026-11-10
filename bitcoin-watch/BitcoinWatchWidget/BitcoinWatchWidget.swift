@@ -271,7 +271,7 @@ struct SmallWidgetView: View {
                 .minimumScaleFactor(0.5).lineLimit(1)
             Sparkline(prices: entry.sparkline, color: trendColor(entry.change24h))
                 .frame(maxWidth: .infinity)
-            WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 9, alignment: .leading)
+            WidgetAgeLabel(date: entry.price.timestamp, width: 120, size: 12, alignment: .leading)
         }
         .containerBackground(for: .widget) { WidgetBackground(tint: trendColor(entry.change24h)) }
     }
@@ -286,7 +286,7 @@ struct MediumWidgetView: View {
                     Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent).font(.subheadline)
                     Text("Bitcoin").font(.subheadline.weight(.semibold))
                     Spacer(minLength: 4)
-                    WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 11)
+                    WidgetAgeLabel(date: entry.price.timestamp, width: 120, size: 12)
                 }
                 Text(entry.price.formatted)
                     .font(.system(size: 30, weight: .bold, design: .rounded))
@@ -322,7 +322,7 @@ struct LargeWidgetView: View {
                 Image(systemName: "bitcoinsign.circle.fill").foregroundStyle(themeAccent)
                 Text("Bitcoin").font(.headline)
                 Spacer()
-                WidgetAgeLabel(date: entry.price.timestamp, width: 108, size: 11)
+                WidgetAgeLabel(date: entry.price.timestamp, width: 120, size: 12)
             }
 
             HStack(alignment: .lastTextBaseline, spacing: 8) {
@@ -433,8 +433,8 @@ struct PortfolioWidgetView: View {
                             .minimumScaleFactor(0.7)
                         Spacer(minLength: 4)
                         WidgetAgeLabel(date: entry.price.timestamp,
-                                       width: family == .systemSmall ? 64 : 96,
-                                       size: 10)
+                                       width: family == .systemSmall ? 78 : 110,
+                                       size: family == .systemSmall ? 11 : 12)
                     }
                 }
             }
@@ -517,7 +517,7 @@ struct AccessoryWidgetView: View {
                                 .minimumScaleFactor(0.7)
                         }
                         Spacer(minLength: 2)
-                        WidgetAgeLabel(date: entry.price.timestamp, width: 72, size: 10)
+                        WidgetAgeLabel(date: entry.price.timestamp, width: 88, size: 12)
                     }
                 }
             }
@@ -525,21 +525,20 @@ struct AccessoryWidgetView: View {
     }
 }
 
-/// Live age held to a fixed width so a relative date cannot expand into the
-/// rest of the widget. Wide enough for "10 min ago" / "2 hr ago" at `size`,
-/// and it scales if a locale is longer.
+/// Live age held to a fixed width. The frame fits "10 min ago" / "2 hr" at
+/// `size` so the text stays near full size. It will not shrink below 0.85.
 private struct WidgetAgeLabel: View {
     let date: Date
-    var width: CGFloat = 108
-    var size: CGFloat = 11
+    var width: CGFloat = 120
+    var size: CGFloat = 12
     var alignment: Alignment = .trailing
 
     var body: some View {
         Text(date, style: .relative)
-            .font(.system(size: size, weight: .medium, design: .rounded))
+            .font(.system(size: size, weight: .semibold, design: .rounded))
             .monospacedDigit()
             .lineLimit(1)
-            .minimumScaleFactor(0.55)
+            .minimumScaleFactor(0.85)
             .multilineTextAlignment(alignment == .leading ? .leading : .trailing)
             .foregroundStyle(.secondary)
             .frame(width: width, alignment: alignment)
