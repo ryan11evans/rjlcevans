@@ -288,6 +288,115 @@ async function main() {
       await context.close();
     }
 
+    function denyCamera() {
+      const md = navigator.mediaDevices || {};
+      navigator.mediaDevices = md;
+      md.getUserMedia = () => Promise.reject(new DOMException('denied', 'NotAllowedError'));
+    }
+    async function frameStats(page) {
+      return page.evaluate(() => {
+        const c = document.getElementById('stageCanvas');
+        const ctx = c.getContext('2d');
+        const lum = (x, y) => {
+          const d = ctx.getImageData(Math.max(0, x), Math.max(0, y), 1, 1).data;
+          return 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+        };
+        const corners = [lum(3, 3), lum(c.width - 4, 3), lum(3, c.height - 4), lum(c.width - 4, c.height - 4)];
+        let center = 0;
+        for (let dy = -12; dy <= 12; dy += 4) {
+          for (let dx = -12; dx <= 12; dx += 4) {
+            center = Math.max(center, lum((c.width >> 1) + dx, (c.height >> 1) + dy));
+          }
+        }
+        return { corner: Math.max.apply(null, corners), center: center };
+      });
+    }
+
+    // Photo fallback: denied camera still runs end-stage glaucoma on the garden,
+    // counts down, freezes, then opens the unlock sheet. No price. One look only.
+    {
+      const context = await browser.newContext(phone);
+      await context.addInitScript(denyCamera);
+      await context.addInitScript(() => { window.__vsPreviewMs = 1400; });
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      const gateText = (await page.locator('#storeGate').innerText()).toLowerCase();
+      const previewAt = gateText.indexOf('see severe glaucoma');
+      const extrasAt = gateText.indexOf('fun extras');
+      const plateAt = gateText.indexOf('see the number');
+      assert.ok(previewAt !== -1 && previewAt < extrasAt && extrasAt < plateAt, 'preview is ahead of the fun extras');
+      await page.locator('#gatePreview [data-preview="glaucoma"]').click();
+      await page.waitForSelector('#previewHud', { state: 'visible' });
+      const count = await page.locator('#previewHudCount').innerText();
+      assert.ok(Number(count) >= 1 && Number(count) <= 10);
+      await page.waitForFunction(() => {
+        const c = document.getElementById('stageCanvas');
+        return c && c.width > 20;
+      });
+      const during = await frameStats(page);
+      assert.ok(during.corner < 28, 'end-stage glaucoma corners are black, got ' + during.corner);
+      assert.ok(during.center > 30, 'the central island keeps the photo, got ' + during.center);
+      await shot(page, 'preview-countdown.png');
+      await page.waitForSelector('#paywallOverlay.open', { timeout: 5000 });
+      assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what severe glaucoma looks like.");
+      assert.strictEqual(await page.locator('#paywallLead').innerText(), 'Unlock all 10 conditions.');
+      const buy = await page.locator('#paywallBuy').innerText();
+      assert.ok(!/\$/.test(buy), 'paywall must not hardcode a price');
+      const frozen = await frameStats(page);
+      assert.ok(frozen.center > 30, 'the last frame stays up behind the unlock sheet');
+      assert.ok(frozen.corner < 28, 'the frozen frame keeps the dense black loss');
+      await shot(page, 'preview-unlock.png');
+      await page.waitForTimeout(2000);
+      assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_reviewAsked')), null, 'watching a preview does not ask for a review');
+      await page.locator('#paywallClose').click();
+      await page.locator('#gatePreview [data-preview="glaucoma"]').click();
+      await page.waitForTimeout(400);
+      assert.strictEqual(await page.locator('#paywallOverlay').evaluate((el) => el.classList.contains('open')), true);
+      assert.strictEqual(await page.locator('#previewHud').evaluate((el) => el.hidden), true, 'a used preview goes straight to the paywall');
+      await page.locator('#paywallClose').click();
+      await page.locator('#gatePreview [data-preview="amd"]').click();
+      await page.waitForSelector('#previewHud', { state: 'visible' });
+      assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Severe AMD');
+      await context.close();
+    }
+
+    // A full 10-second countdown label, still on the garden fallback.
+    {
+      const context = await browser.newContext(phone);
+      await context.addInitScript(denyCamera);
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.locator('#gatePreview [data-preview="glaucoma"]').click();
+      await page.waitForFunction(() => {
+        const n = document.getElementById('previewHudCount');
+        return n && n.textContent === '10';
+      }, null, { timeout: 8000 });
+      await shot(page, 'preview-ten-seconds.png');
+      await context.close();
+    }
+
+    // Preview that ends in a purchase can ask for a review, once, after the sheet closes.
+    {
+      const context = await browser.newContext(phone);
+      await context.addInitScript(denyCamera);
+      await context.addInitScript(() => { window.__vsPreviewMs = 1200; });
+      await context.addInitScript(purchaseMock);
+      await context.addInitScript(reviewMock);
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
+      await page.locator('#previewBlock [data-preview="cataract"]').dispatchEvent('click');
+      await page.waitForSelector('#paywallOverlay.open', { timeout: 8000 });
+      assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what a dense cataract looks like.");
+      await page.locator('#paywallBuy').click();
+      await page.waitForTimeout(2000);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 0, 'review waits until the unlock sheet closes');
+      await page.locator('#paywallLater').dispatchEvent('click');
+      await page.waitForTimeout(1500);
+      assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1);
+      await context.close();
+    }
+
     console.log('challenges: ok');
   } finally {
     await browser.close();

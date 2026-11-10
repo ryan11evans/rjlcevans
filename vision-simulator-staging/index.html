@@ -388,6 +388,31 @@
   .challenge-card:active { transform: translateY(1px); }
   .cc-kicker { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
   .cc-name { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .preview-block { margin: 0 0 14px; }
+  .preview-hero, .preview-alt {
+    appearance: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    border: none; color: inherit;
+  }
+  .preview-hero {
+    min-height: 72px; padding: 12px 16px; border-radius: 16px;
+    background: var(--accent); color: #1a1208;
+  }
+  .preview-hero .cc-kicker { color: #5c4030; }
+  .preview-hero .cc-name { font-size: 16px; font-weight: 700; }
+  .preview-hero.is-used { background: rgba(212,165,116,0.18); color: var(--ink); }
+  .preview-hero.is-used .cc-kicker { color: var(--accent); }
+  .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .preview-alt {
+    min-height: 52px; padding: 8px 12px; border-radius: 14px;
+    background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+  }
+  .preview-alt.is-used { opacity: 0.85; }
+  .paywall-lead { margin: -4px 0 14px; font-size: 16px; font-weight: 600; color: var(--ink); }
+  .paywall-lead[hidden] { display: none; }
+  html.ui2 .preview-block { order: 0; margin: 0 0 10px; }
+  html.ui2 .preview-alt { background: rgba(255,255,255,0.06); border-color: transparent; }
+  html.ui2 .challenge-block .challenge-card { min-height: 44px; padding: 8px 12px; background: transparent; border: 1px solid rgba(255,255,255,0.14); }
+  html.ui2 .paywall-lead { font-size: 17px; }
 
   /* ===================================================================
      UI v2 (prototype, app only): full-bleed viewer + bottom control dock.
@@ -417,7 +442,7 @@
   /* Dock content order: condition chips → its controls → sources → about/footer. */
   html.ui2 header.hero { order: 9; border: none; padding: 8px 0 0; margin: 0; }
   html.ui2 .hero-app-bar { display: none; }
-  html.ui2 .challenge-block { order: 0; margin: 2px 0 12px; }
+  html.ui2 .challenge-block { order: 1; margin: 2px 0 8px; }
   html.ui2 .conditions-header { order: 1; margin: 0 0 8px; align-items: center; }
   html.ui2 .conditions-scroller { order: 2; }
   html.ui2 .controls { order: 3; }
@@ -691,9 +716,26 @@
     </button>
   </div>
 
+  <div class="preview-block" id="previewBlock">
+    <button type="button" class="preview-hero" data-preview="glaucoma">
+      <span class="cc-kicker">10 seconds · Free</span>
+      <span class="cc-name">See severe glaucoma through your camera</span>
+    </button>
+    <div class="preview-row">
+      <button type="button" class="preview-alt" data-preview="amd">
+        <span class="cc-kicker">10 seconds</span>
+        <span class="cc-name">Severe AMD</span>
+      </button>
+      <button type="button" class="preview-alt" data-preview="cataract">
+        <span class="cc-kicker">10 seconds</span>
+        <span class="cc-name">Dense cataract</span>
+      </button>
+    </div>
+  </div>
+
   <div class="challenge-block" id="challengeBlock">
-    <h2 class="section-title challenge-title">Free challenges</h2>
-    <div class="challenge-row" role="group" aria-label="Free challenges">
+    <h2 class="section-title challenge-title">Fun extras</h2>
+    <div class="challenge-row" role="group" aria-label="Fun extras">
       <button type="button" class="challenge-card" data-challenge="color">
         <span class="cc-kicker">Color</span>
         <span class="cc-name">See the number</span>
@@ -801,7 +843,8 @@
     <button type="button" class="paywall-close" id="paywallClose" aria-label="Close">&times;</button>
     <div class="paywall-hero" aria-hidden="true"><figure><figcaption>Glaucoma</figcaption></figure><figure><figcaption>AMD</figcaption></figure><figure><figcaption>Color Blindness</figcaption></figure></div>
     <p class="paywall-eyebrow">Vision Simulator Pro</p>
-    <h3 class="paywall-title">Unlock the full clinical set</h3>
+    <h3 class="paywall-title" id="paywallTitle">Unlock the full clinical set</h3>
+    <p class="paywall-lead" id="paywallLead" hidden></p>
     <ul class="paywall-features">
       <li>7 more conditions — Glaucoma, AMD, Diabetic Retinopathy, Color Blindness, Floaters/PVD, Retinitis Pigmentosa, Presbyopia</li>
       <li>Combine multiple conditions at once</li>
@@ -833,6 +876,7 @@
 
 <script src="vision-review.js?v=20261110"></script>
 <script src="challenges.js?v=20261110"></script>
+<script src="preview.js?v=20261110b"></script>
 <script>
 (() => {
   'use strict';
@@ -888,18 +932,34 @@
     try { localStorage.setItem('vs_isPro', owned ? '1' : '0'); } catch (e) {}
     updateProUI();
   }
+  function resetPaywallHeadline() {
+    const title = document.getElementById('paywallTitle');
+    const lead = document.getElementById('paywallLead');
+    if (title) title.textContent = 'Unlock the full clinical set';
+    if (lead) { lead.textContent = ''; lead.hidden = true; }
+    paywallOverlay.classList.remove('preview-unlock');
+  }
   function openPaywall(note) {
+    resetPaywallHeadline();
     paywallNote.textContent = note || '';
     paywallOverlay.classList.add('open');
   }
-  function closePaywall() { paywallOverlay.classList.remove('open'); }
+  function closePaywall() {
+    paywallOverlay.classList.remove('open');
+    resetPaywallHeadline();
+    if (typeof window.__vsPreviewOnClose === 'function') window.__vsPreviewOnClose();
+  }
 
   document.getElementById('unlockProBtn').addEventListener('click', () => openPaywall());
   document.getElementById('paywallClose').addEventListener('click', closePaywall);
   paywallOverlay.addEventListener('click', e => { if (e.target === paywallOverlay) closePaywall(); });
   document.getElementById('paywallBuy').addEventListener('click', () => {
     purchaseIntent = true;
-    if (!iapStore || !window.CdvPurchase) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    if (!iapStore || !window.CdvPurchase) {
+      if (!window.Capacitor) { window.location.assign('https://apps.apple.com/app/id6772865195'); return; }
+      openPaywall('Store not ready yet — try again in a moment.');
+      return;
+    }
     const { Platform } = window.CdvPurchase;
     const product = iapStore.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
     const offer = product && product.getOffer();
@@ -1029,6 +1089,7 @@
   };
 
   function resizeStage() {
+    if (currentSource === 'frozen') return;
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const newW = Math.max(1, Math.round(rect.width * dpr));
@@ -1093,6 +1154,8 @@
       currentSource = null;
       ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
       emptyState.style.display = 'grid';
+    } else if (currentSource === 'frozen') {
+      currentSource = null;
     }
     updateCamUI();
   }
@@ -2777,6 +2840,91 @@
   updateSamplesScrollState();
   // The condition on screen at launch counts as seen for the rating prompt,
   // but never triggers it by itself.
+  // One free camera preview of a late-stage Pro simulation. preview.js owns
+  // the countdown and the once-per-condition limit. These are the real filters.
+  window.__vsPreviewApi = {
+    apply(spec) {
+      if (compareMode) setCompareMode(false);
+      if (combineMode) setCombineMode(false);
+      setActiveConditions([spec.cond]);
+      Object.assign(params, spec.params);
+      buildControls();
+      if (currentSource === 'image' || currentSource === 'camera') drawOnce();
+    },
+    async startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+      let next;
+      try {
+        next = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } }, audio: false
+        });
+      } catch (e) {
+        return false;
+      }
+      stopCamera();
+      stream = next;
+      video.srcObject = stream;
+      try { await video.play(); } catch (e) {}
+      currentSource = 'camera';
+      currentSampleKind = null;
+      uploadedImage = null;
+      emptyState.style.display = 'none';
+      resizeStage();
+      loop();
+      updateCamUI();
+      return true;
+    },
+    showGarden() {
+      return new Promise((resolve) => {
+        loadSample('garden');
+        const t0 = Date.now();
+        const tick = () => {
+          const src = (uploadedImage && uploadedImage.src) || '';
+          if (currentSource === 'image' && src.indexOf('garden') !== -1 && stageCanvas.width > 2) {
+            try {
+              const px = ctx.getImageData(stageCanvas.width >> 1, stageCanvas.height >> 1, 1, 1).data;
+              if (px[0] + px[1] + px[2] > 8) { resolve(true); return; }
+            } catch (e) { resolve(true); return; }
+          }
+          if (Date.now() - t0 > 6000) { resolve(false); return; }
+          requestAnimationFrame(tick);
+        };
+        tick();
+      });
+    },
+    freeze() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      try { video.srcObject = null; } catch (e) {}
+      currentSource = 'frozen';
+      emptyState.style.display = 'none';
+      updateCamUI();
+    },
+    enter() {
+      const root = document.documentElement;
+      root.classList.add('preview-mode');
+      const stage = document.querySelector('.stage-wrap');
+      if (stage && stage.parentElement !== document.body) document.body.insertBefore(stage, document.body.firstChild);
+      if (root.classList.contains('ui2')) root.classList.add('immersive');
+      requestAnimationFrame(() => { resizeStage(); if (currentSource === 'image') drawOnce(); });
+    },
+    leave() {
+      document.documentElement.classList.remove('preview-mode');
+      document.documentElement.classList.remove('immersive');
+    },
+    openUnlock(spec) {
+      const title = document.getElementById('paywallTitle');
+      const lead = document.getElementById('paywallLead');
+      if (title) title.textContent = spec.line;
+      if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
+      paywallNote.textContent = '';
+      paywallOverlay.classList.add('open', 'preview-unlock');
+    }
+  };
+  if (window.__vsPreviewPending && typeof window.__vsConsumePreviewPending === 'function') {
+    window.__vsConsumePreviewPending();
+  }
+
   if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
 
   window.addEventListener('beforeunload', stopCamera);
