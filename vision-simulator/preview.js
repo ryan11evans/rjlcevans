@@ -1,5 +1,5 @@
 /*
- * One free look at a late-stage Pro simulation, on the live camera.
+ * One free look at a Pro simulation, on the live camera.
  * Ten seconds, then the unlock sheet. One preview per condition per install.
  * If the camera is denied, the same preview runs on the tulip garden photo.
  * The filters are the app's own (see __vsPreviewApi). Nothing here sets a price.
@@ -8,19 +8,21 @@
   'use strict';
 
   var SPECS = {
+    amd: {
+      cond: 'amd',
+      // Simulator Advanced preset: near-black central scotoma, sharp periphery.
+      // The Moderate preset is a lighter smudge, which reads as a grey blur on a photo.
+      params: { amdSize: 44, amdDistortion: 0.55 },
+      label: 'Macular degeneration',
+      line: "That's what macular degeneration looks like.",
+      usedLabel: 'Unlock macular degeneration'
+    },
     glaucoma: {
       cond: 'glaucoma',
       params: { glaucomaStage: 4 },
       label: 'Severe glaucoma',
       line: "That's what severe glaucoma looks like.",
       usedLabel: 'Unlock severe glaucoma'
-    },
-    amd: {
-      cond: 'amd',
-      params: { amdSize: 60, amdDistortion: 0.6 },
-      label: 'Severe AMD',
-      line: "That's what severe macular degeneration looks like.",
-      usedLabel: 'Unlock severe AMD'
     },
     cataract: {
       cond: 'cataract',
