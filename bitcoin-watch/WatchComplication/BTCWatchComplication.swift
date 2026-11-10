@@ -185,7 +185,8 @@ private struct CircularAgeLabel: View {
     let date: Date
     var size: CGFloat = 12
     var width: CGFloat = 32
-    var color: Color = .secondary
+    /// `.secondary` and `.tertiary` are hierarchical styles, not `Color`s.
+    var color: HierarchicalShapeStyle = .secondary
     var alignment: Alignment = .center
 
     var body: some View {
