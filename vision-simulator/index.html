@@ -767,7 +767,7 @@
 
   <div class="stage-wrap">
     <div class="stage">
-      <video id="video" autoplay playsinline muted></video>
+      <video id="video" autoplay playsinline webkit-playsinline muted></video>
       <canvas id="sourceCanvas"></canvas>
       <canvas id="stageCanvas" role="img" aria-label="Simulated view: Normal vision"></canvas>
       <svg class="overlay" id="overlay" viewBox="0 0 100 75" preserveAspectRatio="none"></svg>
@@ -1034,6 +1034,7 @@ window.__vsBootSimulator = () => {
     if (title) title.textContent = 'Unlock the full clinical set';
     if (lead) { lead.textContent = ''; lead.hidden = true; }
     paywallOverlay.classList.remove('preview-unlock');
+    paywallOverlay.setAttribute('aria-modal', 'true');
   }
   function openPaywall(note) {
     resetPaywallHeadline();
@@ -3065,6 +3066,20 @@ window.__vsBootSimulator = () => {
   // counts as seen for the rating prompt, but never triggers it by itself.
   // One free camera preview of a late-stage Pro simulation. preview.js owns
   // the countdown and the once-per-condition limit. These are the real filters.
+  // iOS Safari and WKWebView ignore play() on a paused element unless it is
+  // inline and muted. Set both again immediately before every resume.
+  function keepCameraPlaying() {
+    if (currentSource !== 'camera' || !video.srcObject) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('muted', '');
+    if (!rafId) loop();
+    const pending = video.play();
+    if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+  }
   window.__vsPreviewApi = {
     apply(spec) {
       if (compareMode) setCompareMode(false);
@@ -3115,13 +3130,23 @@ window.__vsBootSimulator = () => {
         tick();
       });
     },
-    freeze() {
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      try { video.srcObject = null; } catch (e) {}
-      currentSource = 'frozen';
-      emptyState.style.display = 'none';
-      updateCamUI();
+    // End of a free preview: drop the simulated condition and keep drawing.
+    // Stopping the track or the animation frame is what left the last
+    // filtered frame stuck on screen (AMD, glaucoma, and cataract alike).
+    restoreLive() {
+      setActiveConditions([]);
+      if (currentSource === 'camera') {
+        keepCameraPlaying();
+        // The unlock sheet is added just after this returns. WKWebView can
+        // pause the element when that overlay appears; a muted playsinline
+        // video may be resumed without another tap.
+        requestAnimationFrame(() => {
+          keepCameraPlaying();
+          requestAnimationFrame(keepCameraPlaying);
+        });
+      } else if (currentSource === 'image') {
+        drawOnce();
+      }
     },
     enter() {
       const root = document.documentElement;
@@ -3132,8 +3157,13 @@ window.__vsBootSimulator = () => {
       requestAnimationFrame(() => { resizeStage(); if (currentSource === 'image') drawOnce(); });
     },
     leave() {
+      const browserGate = document.documentElement.classList.contains('is-browser');
       document.documentElement.classList.remove('preview-mode');
       document.documentElement.classList.remove('immersive');
+      // On the website the stage is hidden once preview-mode is gone, so
+      // the camera must be released. Inside the app the page stays up and
+      // the live feed is the usable state the preview returns to.
+      if (browserGate && currentSource === 'camera') stopCamera();
     },
     openUnlock(spec) {
       const title = document.getElementById('paywallTitle');
@@ -3146,6 +3176,7 @@ window.__vsBootSimulator = () => {
         if (restore) restore.style.display = 'none';
       }
       paywallNote.textContent = '';
+      paywallOverlay.setAttribute('aria-modal', 'false');
       paywallOverlay.classList.add('open', 'preview-unlock');
     }
   };
@@ -3161,7 +3192,7 @@ window.__vsBootSimulator = () => {
 
 <script src="vision-review.js?v=20261110"></script>
 <script src="challenges.js?v=20261110"></script>
-<script src="preview.js?v=20261110b"></script>
+<script src="preview.js?v=20261110c"></script>
 <script>
   const STORE_URL = 'https://apps.apple.com/app/id6772865195';
   let storeRedirectTimer = null;

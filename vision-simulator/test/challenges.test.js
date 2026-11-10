@@ -312,8 +312,76 @@ async function main() {
       });
     }
 
-    // Photo fallback: denied camera still runs moderate AMD on the garden,
-    // counts down, freezes, then opens the unlock sheet. No price. One look only.
+    // Animated stand-in for the rear camera. A moving bar means a frozen
+    // canvas and a stopped track are distinguishable from a live feed.
+    function fakeLiveCamera() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const g = canvas.getContext('2d');
+      let tick = 0;
+      const draw = () => {
+        tick = (tick + 1) % 240;
+        g.fillStyle = '#2f6dff';
+        g.fillRect(0, 0, canvas.width, canvas.height);
+        g.fillStyle = '#ffe14a';
+        g.fillRect((tick / 240) * canvas.width, 0, 64, canvas.height);
+        requestAnimationFrame(draw);
+      };
+      draw();
+      const stream = canvas.captureStream(30);
+      const md = navigator.mediaDevices || {};
+      navigator.mediaDevices = md;
+      md.getUserMedia = () => Promise.resolve(stream);
+    }
+    function nativeShell() {
+      window.Capacitor = {
+        getPlatform: () => 'ios',
+        isNativePlatform: () => true,
+        isPluginAvailable: () => false,
+        Plugins: {}
+      };
+    }
+    async function cameraFeed(page) {
+      return page.evaluate(() => {
+        const v = document.getElementById('video');
+        const track = v.srcObject && v.srcObject.getVideoTracks()[0];
+        const overlay = document.getElementById('paywallOverlay');
+        const style = overlay ? getComputedStyle(overlay) : null;
+        const pressed = (key) => {
+          const el = document.querySelector('[data-cond="' + key + '"]');
+          return el ? el.getAttribute('aria-pressed') : null;
+        };
+        return {
+          paused: v.paused,
+          muted: v.muted,
+          playsinline: v.hasAttribute('playsinline'),
+          webkitPlaysinline: v.hasAttribute('webkit-playsinline'),
+          time: v.currentTime,
+          track: track ? track.readyState : null,
+          none: pressed('none'),
+          amd: pressed('amd'),
+          glaucoma: pressed('glaucoma'),
+          cataract: pressed('cataract'),
+          label: document.getElementById('stageCanvas').getAttribute('aria-label') || '',
+          pointerEvents: style ? style.pointerEvents : '',
+          backdrop: style ? (style.backdropFilter || '') : '',
+          previewMode: document.documentElement.classList.contains('preview-mode'),
+          buy: document.getElementById('paywallBuy') ? document.getElementById('paywallBuy').textContent : ''
+        };
+      });
+    }
+    async function assertFeedAdvances(page) {
+      const start = await page.evaluate(() => document.getElementById('video').currentTime);
+      await page.waitForFunction((t0) => {
+        const v = document.getElementById('video');
+        return v.currentTime > t0 + 0.05 && !v.paused;
+      }, start, { timeout: 2500 });
+    }
+
+    // Photo fallback: denied camera still runs end-stage AMD on the garden,
+    // counts down, returns to Normal Vision, then opens the unlock sheet.
+    // No price. One look only. The sheet does not freeze the picture.
     {
       const context = await browser.newContext(phone);
       await context.addInitScript(denyCamera);
@@ -362,9 +430,19 @@ async function main() {
       const features = await page.locator('.paywall-features').innerText();
       assert.ok(features.includes('All 10 conditions'));
       assert.ok(!features.includes('7 more'));
-      const frozen = await frameStats(page);
-      assert.ok(frozen.corner > 35, 'the last frame stays up behind the unlock sheet');
-      assert.ok(frozen.center < frozen.corner, 'the frozen frame keeps the central scotoma');
+      const after = await frameStats(page);
+      assert.ok(after.corner > 35, 'the garden stays up behind the unlock sheet');
+      assert.ok(after.center > 55, 'Normal Vision clears the central scotoma, got ' + after.center);
+      assert.ok(after.center > during.center, 'the center brightens once the effect is removed');
+      assert.strictEqual(await page.locator('[data-cond="none"]').getAttribute('aria-pressed'), 'true');
+      assert.strictEqual(await page.locator('[data-cond="amd"]').getAttribute('aria-pressed'), 'false');
+      assert.ok((await page.locator('#stageCanvas').getAttribute('aria-label')).includes('Normal vision'));
+      const sheet = await page.evaluate(() => {
+        const style = getComputedStyle(document.getElementById('paywallOverlay'));
+        return { pointerEvents: style.pointerEvents, backdrop: style.backdropFilter || '' };
+      });
+      assert.strictEqual(sheet.pointerEvents, 'none', 'the unlock sheet does not block the picture');
+      assert.ok(!/blur/.test(sheet.backdrop), 'the unlock sheet does not blur the picture');
       await shot(page, 'amd-unlock.png');
       await page.waitForTimeout(2000);
       assert.strictEqual(await page.evaluate(() => localStorage.getItem('vs_reviewAsked')), null, 'watching a preview does not ask for a review');
@@ -377,6 +455,112 @@ async function main() {
       await page.locator('#gatePreview [data-preview="glaucoma"]').click();
       await page.waitForSelector('#previewHud', { state: 'visible' });
       assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Severe glaucoma');
+      await context.close();
+    }
+
+    // iPhone-sized viewport, fake camera. When each preview ends the feed
+    // must still be running, in Normal Vision, with the unlock sheet up
+    // but not covering the picture. Pausing the element mid-preview checks
+    // the WKWebView resume path (play() only sticks when muted + playsinline).
+    const iphone = Object.assign({}, phone, {
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+    });
+    async function runLivePreview(kind, title) {
+      const context = await browser.newContext(iphone);
+      await context.addInitScript(fakeLiveCamera);
+      await context.addInitScript(nativeShell);
+      await context.addInitScript(() => { window.__vsPreviewMs = 800; });
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.locator('#previewBlock [data-preview="' + kind + '"]').dispatchEvent('click');
+      await page.waitForSelector('#previewHud', { state: 'visible', timeout: 12000 });
+      const during = await frameStats(page);
+      if (kind === 'amd') {
+        assert.ok(during.center < 40, kind + ' center should be a scotoma, got ' + during.center);
+        assert.ok(during.corner > 50, kind + ' periphery should stay visible, got ' + during.corner);
+      } else if (kind === 'glaucoma') {
+        assert.ok(during.corner < 30, kind + ' periphery should be lost, got ' + during.corner);
+        assert.ok(during.center > during.corner, kind + ' keeps a central island');
+      }
+      await page.evaluate(() => document.getElementById('video').pause());
+      await page.waitForSelector('#paywallOverlay.open', { timeout: 8000 });
+      await page.waitForFunction(() => {
+        const v = document.getElementById('video');
+        const track = v.srcObject && v.srcObject.getVideoTracks()[0];
+        return !v.paused && v.muted && track && track.readyState === 'live';
+      }, null, { timeout: 3000 });
+      await assertFeedAdvances(page);
+      const feed = await cameraFeed(page);
+      assert.strictEqual(feed.track, 'live', kind + ' camera track was stopped');
+      assert.strictEqual(feed.paused, false, kind + ' video stayed paused');
+      assert.strictEqual(feed.muted, true);
+      assert.strictEqual(feed.playsinline, true);
+      assert.strictEqual(feed.webkitPlaysinline, true);
+      assert.strictEqual(feed.none, 'true', kind + ' did not return to Normal Vision');
+      assert.strictEqual(feed[kind], 'false');
+      assert.ok(feed.label.includes('Normal vision'), feed.label);
+      assert.strictEqual(await page.locator('#paywallTitle').innerText(), title);
+      assert.ok(!/\$/.test(feed.buy), 'paywall must not hardcode a price');
+      assert.strictEqual(feed.pointerEvents, 'none');
+      assert.ok(!/blur/.test(feed.backdrop));
+      const after = await frameStats(page);
+      if (kind === 'amd') assert.ok(after.center > 50, 'AMD scotoma should be gone, got ' + after.center);
+      if (kind === 'glaucoma') assert.ok(after.corner > 40, 'glaucoma veil should be gone, got ' + after.corner);
+      if (kind === 'cataract') {
+        const blue = await page.evaluate(() => {
+          const c = document.getElementById('stageCanvas');
+          const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+          let blueish = 0;
+          let n = 0;
+          for (let i = 0; i < d.length; i += 64) {
+            n += 1;
+            if (d[i + 2] > d[i] + 40) blueish += 1;
+          }
+          return blueish / n;
+        });
+        assert.ok(blue > 0.6, 'cataract tint should be gone, blue fraction ' + blue);
+      }
+      await shot(page, kind + '-preview-live.png');
+      if (kind === 'amd') {
+        await page.locator('#paywallLater').dispatchEvent('click');
+        await page.waitForTimeout(200);
+        const still = await cameraFeed(page);
+        assert.strictEqual(still.track, 'live', 'dismissing the sheet must not stop the app camera');
+        assert.strictEqual(still.previewMode, false);
+        assert.strictEqual(still.none, 'true');
+        await assertFeedAdvances(page);
+      }
+      await context.close();
+    }
+    await runLivePreview('amd', "That's what macular degeneration looks like.");
+    await runLivePreview('glaucoma', "That's what severe glaucoma looks like.");
+    await runLivePreview('cataract', "That's what a dense cataract looks like.");
+
+    // Website preview: same live handoff, then releasing the sheet returns
+    // to the store gate and turns the camera off (the stage is hidden).
+    {
+      const context = await browser.newContext(iphone);
+      await context.addInitScript(fakeLiveCamera);
+      await context.addInitScript(() => { window.__vsPreviewMs = 700; });
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.locator('#gatePreview [data-preview="cataract"]').click();
+      await page.waitForSelector('#paywallOverlay.open', { timeout: 8000 });
+      const live = await cameraFeed(page);
+      assert.strictEqual(live.track, 'live');
+      assert.strictEqual(live.paused, false);
+      assert.strictEqual(live.none, 'true');
+      assert.strictEqual(live.cataract, 'false');
+      assert.strictEqual(await page.locator('#paywallBuy').innerText(), 'Get the app');
+      await assertFeedAdvances(page);
+      await page.locator('#paywallClose').click();
+      await page.waitForFunction(() => {
+        const v = document.getElementById('video');
+        const track = v.srcObject && v.srcObject.getVideoTracks()[0];
+        return !track || track.readyState === 'ended';
+      });
+      assert.strictEqual(await page.locator('#storeGate').isVisible(), true);
+      assert.strictEqual(await page.evaluate(() => document.documentElement.classList.contains('preview-mode')), false);
       await context.close();
     }
 
