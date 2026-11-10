@@ -939,7 +939,7 @@
     <h3 class="paywall-title" id="paywallTitle">Unlock the full clinical set</h3>
     <p class="paywall-lead" id="paywallLead" hidden></p>
     <ul class="paywall-features">
-      <li>7 more conditions — Glaucoma, AMD, Diabetic Retinopathy, Color Blindness, Floaters/PVD, Retinitis Pigmentosa, Presbyopia</li>
+      <li>All 10 conditions — myopia, astigmatism, cataract, glaucoma, AMD, diabetic retinopathy, color blindness, floaters, retinitis pigmentosa, and presbyopia</li>
       <li>Combine multiple conditions at once</li>
       <li>Compare mode — side-by-side normal vs. impaired</li>
     </ul>
@@ -3139,6 +3139,7 @@ window.__vsBootSimulator = () => {
       const lead = document.getElementById('paywallLead');
       if (title) title.textContent = spec.line;
       if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
+      if (!window.Capacitor) paywallBuy.textContent = 'Get the app';
       paywallNote.textContent = '';
       paywallOverlay.classList.add('open', 'preview-unlock');
     }

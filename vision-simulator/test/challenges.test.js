@@ -341,7 +341,11 @@ async function main() {
       assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what severe glaucoma looks like.");
       assert.strictEqual(await page.locator('#paywallLead').innerText(), 'Unlock all 10 conditions.');
       const buy = await page.locator('#paywallBuy').innerText();
+      assert.strictEqual(buy, 'Get the app');
       assert.ok(!/\$/.test(buy), 'paywall must not hardcode a price');
+      const features = await page.locator('.paywall-features').innerText();
+      assert.ok(features.includes('All 10 conditions'));
+      assert.ok(!features.includes('7 more'));
       const frozen = await frameStats(page);
       assert.ok(frozen.center > 30, 'the last frame stays up behind the unlock sheet');
       assert.ok(frozen.corner < 28, 'the frozen frame keeps the dense black loss');
