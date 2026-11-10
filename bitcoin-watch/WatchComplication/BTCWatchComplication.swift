@@ -124,8 +124,9 @@ struct RectangularView: View {
                     .widgetAccentable()
             }
             if let price = entry.price {
-                Text(price.timestamp, style: .relative)
-                    .foregroundStyle(.tertiary)
+                // Wider than the circle: this row has room, so the age stays
+                // at 13pt instead of scaling down.
+                CircularAgeLabel(date: price.timestamp, size: 13, width: 72, color: .tertiary, alignment: .leading)
             }
         }
         .font(.caption2)
@@ -144,12 +145,7 @@ struct InlineView: View {
                     .minimumScaleFactor(0.6)
                 Text("·")
                     .foregroundStyle(.secondary)
-                Text(price.timestamp, style: .relative)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .multilineTextAlignment(.center)
-                    .frame(width: 44, alignment: .center)
+                CircularAgeLabel(date: price.timestamp, width: 52)
             }
             .font(.system(size: 12, weight: .semibold, design: .rounded))
         } else {
@@ -167,8 +163,7 @@ struct CornerView: View {
             .lineLimit(1)
             .widgetLabel {
                 if let price = entry.price {
-                    // Same 26pt centered relative date as the circular face,
-                    // so 10m / 10h / 10d stay inside the bezel arc.
+                    // Same 12pt / 32pt label as the circular face.
                     CircularAgeLabel(date: price.timestamp)
                         .widgetAccentable()
                 } else {
@@ -181,26 +176,28 @@ struct CornerView: View {
 
 /// Live "how long since refresh" label.
 ///
-/// In a widget, relative/offset/timer text is archived at one width and never
-/// laid out again. Offered the full square, it expands to that width and the
-/// circular mask cuts the leading digit once "9m" becomes "10m". 26pt is enough
-/// for a two-digit age ("10m", "23h", "10d") at 9pt and still inside the
-/// bottom chord, and the text is centered in that frame.
+/// Relative date text is archived at one width. A 0.5 scale floor was shrinking
+/// it to fit a long reserved string inside 26pt, so "12m" became unreadably
+/// small. 12pt semibold in 32pt fits "10m"…"59m" and "1h"/"2h" at full size
+/// (monospaced digits, about 24pt wide) and still sits inside the bottom chord
+/// on a 40/41mm watch. It may scale only to 0.85, never to half size.
 private struct CircularAgeLabel: View {
     let date: Date
-
-    /// Bottom chord of the smallest circular complication, not the square WidgetKit proposes.
-    private static let width: CGFloat = 26
+    var size: CGFloat = 12
+    var width: CGFloat = 32
+    /// `.secondary` and `.tertiary` are hierarchical styles, not `Color`s.
+    var color: HierarchicalShapeStyle = .secondary
+    var alignment: Alignment = .center
 
     var body: some View {
         Text(date, style: .relative)
-            .font(.system(size: 9, weight: .medium, design: .rounded))
+            .font(.system(size: size, weight: .semibold, design: .rounded))
             .monospacedDigit()
             .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.secondary)
-            .frame(width: Self.width, alignment: .center)
+            .minimumScaleFactor(0.85)
+            .multilineTextAlignment(alignment == .leading ? .leading : .center)
+            .foregroundStyle(color)
+            .frame(width: width, alignment: alignment)
     }
 }
 

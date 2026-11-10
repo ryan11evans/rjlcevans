@@ -35,7 +35,11 @@ struct BTCLiveActivityWidget: Widget {
                                     : Color(red: 1, green: 0.27, blue: 0.23))
                         }
                         Text(context.state.timestamp, style: .relative)
-                            .font(.caption2)
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .frame(width: 88, alignment: .trailing)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -93,7 +97,11 @@ private struct BTCLockScreenLiveView: View {
                             : Color(red: 1, green: 0.27, blue: 0.23))
                 }
                 Text(state.timestamp, style: .relative)
-                    .font(.caption2)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(width: 110, alignment: .trailing)
                     .foregroundStyle(.secondary)
             }
         }
