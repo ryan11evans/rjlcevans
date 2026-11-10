@@ -383,6 +383,46 @@
   .paywall-restore:hover { color: var(--ink); text-decoration: underline; }
   .paywall-note { font-size: 12px; color: var(--ink-mute); text-align: center; margin: 8px 0 0; min-height: 1.4em; }
 
+  /* Free challenges. Same cards in the app dock and, on the website, on the store gate. */
+  .challenge-block { margin: 18px 0 2px; }
+  .challenge-row, .gate-challenges { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .challenge-card {
+    appearance: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    min-height: 56px; padding: 8px 12px; border-radius: 14px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+  }
+  .challenge-card:active { transform: translateY(1px); }
+  .cc-kicker { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .cc-name { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .preview-block { margin: 0 0 14px; }
+  .preview-hero, .preview-alt {
+    appearance: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    border: none; color: inherit;
+  }
+  .preview-hero {
+    min-height: 72px; padding: 12px 16px; border-radius: 16px;
+    background: var(--accent); color: #1a1208;
+  }
+  .preview-hero .cc-kicker { color: #5c4030; }
+  .preview-hero .cc-name { font-size: 16px; font-weight: 700; }
+  .preview-hero.is-used { background: rgba(212,165,116,0.18); color: var(--ink); }
+  .preview-hero.is-used .cc-kicker { color: var(--accent); }
+  .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .preview-alt {
+    min-height: 52px; padding: 8px 12px; border-radius: 14px;
+    background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+  }
+  .preview-alt.is-used { opacity: 0.85; }
+  .paywall-lead { margin: -4px 0 14px; font-size: 16px; font-weight: 600; color: var(--ink); }
+  .paywall-lead[hidden] { display: none; }
+  html.ui2 .preview-block { order: 0; margin: 0 0 10px; }
+  html.ui2 .preview-alt { background: rgba(255,255,255,0.06); border-color: transparent; }
+  html.ui2 .challenge-block .challenge-card { min-height: 44px; padding: 8px 12px; background: transparent; border: 1px solid rgba(255,255,255,0.14); }
+  html.ui2 .paywall-lead { font-size: 17px; }
+  .gate-challenge-label { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .gate-challenges { margin: 0 0 16px; text-align: left; }
+  .gate-card .cx-gate-note { margin: 12px 0 0; font-size: 12px; color: var(--ink-mute); }
+
   /* ===================================================================
      UI v2 (prototype, app only): full-bleed viewer + bottom control dock.
      Applies when html.ui2 is set (native app, or ?ui2=1 for testing on the
@@ -413,14 +453,16 @@
   html.ui2 header.hero { order: 9; border: none; padding: 8px 0 0; margin: 0; }
   html.ui2 .hero-app-bar { display: none; }
   .section-title.try-title { display: none; }
-  html.ui2 .section-title.try-title { order: 1; display: flex; }
-  html.ui2 .samples-scroller { order: 2; }
-  html.ui2 .wrap > .source-row { order: 3; }
-  html.ui2 .conditions-header { order: 4; margin: 0 0 8px; align-items: center; }
-  html.ui2 .conditions-scroller { order: 5; }
-  html.ui2 .controls { order: 6; }
+  html.ui2 .challenge-block { order: 1; margin: 2px 0 8px; }
+  html.ui2 .section-title.try-title { order: 2; display: flex; }
+  html.ui2 .samples-scroller { order: 3; }
+  html.ui2 .wrap > .source-row { order: 4; }
+  html.ui2 .conditions-header { order: 5; margin: 0 0 8px; align-items: center; }
+  html.ui2 .conditions-scroller { order: 6; }
+  html.ui2 .controls { order: 7; }
   html.ui2 footer { order: 10; margin-top: 18px; }
   html.ui2 .section-title:not(.try-title) { display: none; }
+  html.ui2 .challenge-block .challenge-title { display: flex; margin: 2px 0 8px; }
   html.ui2 .section-title { font-family: 'Inter Tight', -apple-system, sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-dim); letter-spacing: 0; margin: 18px 0 8px; }
   html.ui2 .section-title.try-title { margin-top: 2px; }
   html.ui2 .wrap > .source-row { margin-bottom: 14px; }
@@ -627,6 +669,7 @@
   html.is-browser .wrap,
   html.is-browser #backToSite,
   html.is-browser .paywall-overlay { display: none !important; }
+  html.is-browser .paywall-restore { display: none !important; }
   .gate-card { max-width: 460px; width: 100%; text-align: center; }
   .gate-card h1 {
     font-family: 'Fraunces', serif; font-weight: 500;
@@ -671,7 +714,35 @@
     <p class="eyebrow">Built by an optometrist</p>
     <h1>Vision Simulator</h1>
     <p class="sub">See cataracts, glaucoma, macular degeneration, and other eye conditions the way patients do. The simulator runs in the iPhone and iPad app.</p>
+    <div class="preview-block" id="gatePreview">
+      <button type="button" class="preview-hero" data-preview="amd">
+        <span class="cc-kicker">10 seconds · Free</span>
+        <span class="cc-name">See macular degeneration through your camera</span>
+      </button>
+      <div class="preview-row">
+        <button type="button" class="preview-alt" data-preview="glaucoma">
+          <span class="cc-kicker">10 seconds</span>
+          <span class="cc-name">Severe glaucoma</span>
+        </button>
+        <button type="button" class="preview-alt" data-preview="cataract">
+          <span class="cc-kicker">10 seconds</span>
+          <span class="cc-name">Dense cataract</span>
+        </button>
+      </div>
+    </div>
+    <p class="gate-challenge-label">Fun extras</p>
+    <div class="gate-challenges" id="gateChallenges">
+      <button type="button" class="challenge-card" data-challenge="color">
+        <span class="cc-kicker">Color</span>
+        <span class="cc-name">See the number</span>
+      </button>
+      <button type="button" class="challenge-card" data-challenge="spot">
+        <span class="cc-kicker">Field</span>
+        <span class="cc-name">Find your blind spot</span>
+      </button>
+    </div>
     <a class="btn primary" id="storeGateBtn" href="https://apps.apple.com/app/id6772865195">View on the App Store</a>
+    <p class="cx-gate-note">This is not a medical test.</p>
     <p class="gate-note" id="storeGateNote" hidden>Opening the App Store…</p>
   </div>
 </div>
@@ -737,6 +808,37 @@
       <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><path d="M7 9l-2 3 2 3M17 9l2 3-2 3"/></svg>
       <span id="compareLabel">Compare: Off</span>
     </button>
+  </div>
+
+  <div class="preview-block" id="previewBlock">
+    <button type="button" class="preview-hero" data-preview="amd">
+      <span class="cc-kicker">10 seconds · Free</span>
+      <span class="cc-name">See macular degeneration through your camera</span>
+    </button>
+    <div class="preview-row">
+      <button type="button" class="preview-alt" data-preview="glaucoma">
+        <span class="cc-kicker">10 seconds</span>
+        <span class="cc-name">Severe glaucoma</span>
+      </button>
+      <button type="button" class="preview-alt" data-preview="cataract">
+        <span class="cc-kicker">10 seconds</span>
+        <span class="cc-name">Dense cataract</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="challenge-block" id="challengeBlock">
+    <h2 class="section-title challenge-title">Fun extras</h2>
+    <div class="challenge-row" role="group" aria-label="Fun extras">
+      <button type="button" class="challenge-card" data-challenge="color">
+        <span class="cc-kicker">Color</span>
+        <span class="cc-name">See the number</span>
+      </button>
+      <button type="button" class="challenge-card" data-challenge="spot">
+        <span class="cc-kicker">Field</span>
+        <span class="cc-name">Find your blind spot</span>
+      </button>
+    </div>
   </div>
 
   <h2 class="section-title try-title">Try it on</h2>
@@ -835,9 +937,10 @@
     <button type="button" class="paywall-close" id="paywallClose" aria-label="Close">&times;</button>
     <div class="paywall-hero" aria-hidden="true"><figure><figcaption>Glaucoma</figcaption></figure><figure><figcaption>AMD</figcaption></figure><figure><figcaption>Color Blindness</figcaption></figure></div>
     <p class="paywall-eyebrow">Vision Simulator Pro</p>
-    <h3 class="paywall-title">Unlock the full clinical set</h3>
+    <h3 class="paywall-title" id="paywallTitle">Unlock the full clinical set</h3>
+    <p class="paywall-lead" id="paywallLead" hidden></p>
     <ul class="paywall-features">
-      <li>7 more conditions — Glaucoma, AMD, Diabetic Retinopathy, Color Blindness, Floaters/PVD, Retinitis Pigmentosa, Presbyopia</li>
+      <li>All 10 conditions — myopia, astigmatism, cataract, glaucoma, AMD, diabetic retinopathy, color blindness, floaters, retinitis pigmentosa, and presbyopia</li>
       <li>Combine multiple conditions at once</li>
       <li>Compare mode — side-by-side normal vs. impaired</li>
     </ul>
@@ -898,6 +1001,7 @@ window.__vsBootSimulator = () => {
   const PRO_CONDITIONS = new Set(['glaucoma', 'amd', 'diabetic', 'colorblind', 'floaters', 'rp', 'presbyopia']);
   const isNativeApp = !!window.Capacitor;
   let isPro = false;
+  let purchaseIntent = false;
   let iapStore = null;
   // True only once deviceready has fired *and* the plugin is confirmed
   // present. A build that predates this feature also sets window.Capacitor,
@@ -924,17 +1028,34 @@ window.__vsBootSimulator = () => {
     try { localStorage.setItem('vs_isPro', owned ? '1' : '0'); } catch (e) {}
     updateProUI();
   }
+  function resetPaywallHeadline() {
+    const title = document.getElementById('paywallTitle');
+    const lead = document.getElementById('paywallLead');
+    if (title) title.textContent = 'Unlock the full clinical set';
+    if (lead) { lead.textContent = ''; lead.hidden = true; }
+    paywallOverlay.classList.remove('preview-unlock');
+  }
   function openPaywall(note) {
+    resetPaywallHeadline();
     paywallNote.textContent = note || '';
     paywallOverlay.classList.add('open');
   }
-  function closePaywall() { paywallOverlay.classList.remove('open'); }
+  function closePaywall() {
+    paywallOverlay.classList.remove('open');
+    resetPaywallHeadline();
+    if (typeof window.__vsPreviewOnClose === 'function') window.__vsPreviewOnClose();
+  }
 
   document.getElementById('unlockProBtn').addEventListener('click', () => openPaywall());
   document.getElementById('paywallClose').addEventListener('click', closePaywall);
   paywallOverlay.addEventListener('click', e => { if (e.target === paywallOverlay) closePaywall(); });
   document.getElementById('paywallBuy').addEventListener('click', () => {
-    if (!iapStore || !window.CdvPurchase) { openPaywall('Store not ready yet — try again in a moment.'); return; }
+    purchaseIntent = true;
+    if (!iapStore || !window.CdvPurchase) {
+      if (!window.Capacitor) { window.location.assign('https://apps.apple.com/app/id6772865195'); return; }
+      openPaywall('Store not ready yet — try again in a moment.');
+      return;
+    }
     const { Platform } = window.CdvPurchase;
     const product = iapStore.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
     const offer = product && product.getOffer();
@@ -973,11 +1094,14 @@ window.__vsBootSimulator = () => {
       function syncProStatus() {
         const product = store.get(PRO_PRODUCT_ID, Platform.APPLE_APPSTORE);
         if (product) {
-          setPro(store.owned(product));
+          const owned = !!store.owned(product);
+          const justBought = owned && !isPro && purchaseIntent;
+          setPro(owned);
           // Show the real store-quoted price rather than a hardcoded guess, so it
           // can never drift from what App Store Connect actually charges.
           const price = product.pricing?.price;
           if (price) paywallBuy.textContent = `Unlock Pro — ${price}`;
+          if (justBought && window.VisionReview) VisionReview.notePositive();
         }
         if (paywallOverlay.classList.contains('open')) paywallNote.textContent = store.owned(product) ? 'Unlocked — thanks!' : '';
       }
@@ -1064,6 +1188,7 @@ window.__vsBootSimulator = () => {
   };
 
   function resizeStage() {
+    if (currentSource === 'frozen') return;
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const newW = Math.max(1, Math.round(rect.width * dpr));
@@ -1128,6 +1253,8 @@ window.__vsBootSimulator = () => {
       currentSource = null;
       ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
       emptyState.style.display = 'grid';
+    } else if (currentSource === 'frozen') {
+      currentSource = null;
     }
     updateCamUI();
   }
@@ -2401,7 +2528,7 @@ window.__vsBootSimulator = () => {
     }
 
     hapticTap();
-    if (!alreadyOn && key !== 'none') maybeRequestReviewAfterCondition();
+    if (!alreadyOn && key !== 'none' && window.VisionReview) VisionReview.noteConditions(activeConditionKeys());
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
     buildControls();
@@ -2706,66 +2833,18 @@ window.__vsBootSimulator = () => {
     if (tagL) tagL.style.opacity = compareSplit < 0.18 ? '0' : '1';
     if (tagR) tagR.style.opacity = compareSplit > 0.82 ? '0' : '1';
   }
-  // Ask for an App Store rating once per install, shortly after the user picks
-  // their 3rd distinct (non-Normal) condition. Free users can reach it: Myopia,
-  // Astigmatism and Cataract are free, and the first-run Cataract preview counts
-  // as seen. Only real taps can trigger it, never while the paywall or a sheet
-  // is open, and only inside the app: browsers never boot this script, and
-  // binaries without the InAppReview plugin no-op. Apple's
-  // SKStoreReviewController still decides whether a dialog actually appears.
-  const REVIEW_AFTER_DISTINCT = 3;
-  const REVIEW_DELAY_MS = 1800;
-  let reviewTimer = null;
-  function reviewPlugin() {
-    const cap = window.Capacitor;
-    if (!cap || typeof cap.isPluginAvailable !== 'function') return null;
-    if (!document.documentElement.classList.contains('is-native')) return null;
-    if (!cap.isPluginAvailable('InAppReview')) return null;
-    const plugin = typeof cap.registerPlugin === 'function'
-      ? cap.registerPlugin('InAppReview')
-      : (cap.Plugins && cap.Plugins.InAppReview);
-    return plugin && typeof plugin.requestReview === 'function' ? plugin : null;
-  }
-  function reviewAlreadyAsked() {
-    try { return localStorage.getItem('vs_reviewAsked') === '1'; } catch (e) { return true; }
-  }
-  // Records the active conditions as seen; returns how many distinct ones.
-  function markConditionsSeen() {
-    try {
-      let seen = [];
-      try { seen = JSON.parse(localStorage.getItem('vs_condsSeen') || '[]'); } catch (e) { seen = []; }
-      if (!Array.isArray(seen)) seen = [];
-      activeConditions.forEach(k => { if (k !== 'none' && !seen.includes(k)) seen.push(k); });
-      localStorage.setItem('vs_condsSeen', JSON.stringify(seen));
-      return seen.length;
-    } catch (e) { return 0; }
-  }
-  function modalOpen() {
-    return !!document.querySelector('.paywall-overlay.open, .sheet-overlay.open, [role="dialog"].open');
-  }
-  function fireReviewWhenClear(triesLeft) {
-    reviewTimer = null;
-    try {
-      if (reviewAlreadyAsked()) return;
-      const plugin = reviewPlugin();
-      if (!plugin) return;
-      if (modalOpen() || document.hidden) {
-        // Wait for the sheet to close (up to about a minute), then try again.
-        if (triesLeft > 0) reviewTimer = setTimeout(() => fireReviewWhenClear(triesLeft - 1), 1000);
-        return;
-      }
-      try { localStorage.setItem('vs_reviewAsked', '1'); } catch (e) { return; }
-      Promise.resolve(plugin.requestReview()).catch(() => {});
-    } catch (e) { /* plugin missing or storage blocked — never throw */ }
-  }
-  function maybeRequestReviewAfterCondition() {
-    try {
-      const count = markConditionsSeen();
-      if (count < REVIEW_AFTER_DISTINCT || reviewTimer || reviewAlreadyAsked()) return;
-      if (!reviewPlugin()) return;
-      reviewTimer = setTimeout(() => fireReviewWhenClear(60), REVIEW_DELAY_MS);
-    } catch (e) {}
-  }
+  // A finished challenge can open the matching simulation. Pro conditions
+  // still go through the paywall; the challenge itself never does.
+  window.__vsChallengeHost = () => ({ inApp: true, locked: pluginReady && !isPro });
+  document.addEventListener('vs-challenge', (e) => {
+    const key = e.detail && e.detail.condition;
+    if (e.detail?.action !== 'see' || !CONDITION_ORDER.includes(key)) return;
+    if (pluginReady && !isPro && PRO_CONDITIONS.has(key)) { openPaywall(); return; }
+    if (combineMode) setCombineMode(false);
+    setActiveConditions([key]);
+    if (key === 'colorblind') loadSample('garden');
+    else if (key === 'glaucoma') loadSample('street');
+  });
   // One setter keeps every Compare control (web button, in-app switch,
   // floating button on the image) in sync.
   function setCompareMode(on) {
@@ -2984,12 +3063,105 @@ window.__vsBootSimulator = () => {
   updateSamplesScrollState();
   // The condition on screen at launch (first-run Cataract or a ?cond= link)
   // counts as seen for the rating prompt, but never triggers it by itself.
-  markConditionsSeen();
+  // One free camera preview of a late-stage Pro simulation. preview.js owns
+  // the countdown and the once-per-condition limit. These are the real filters.
+  window.__vsPreviewApi = {
+    apply(spec) {
+      if (compareMode) setCompareMode(false);
+      if (combineMode) setCombineMode(false);
+      setActiveConditions([spec.cond]);
+      Object.assign(params, spec.params);
+      buildControls();
+      if (currentSource === 'image' || currentSource === 'camera') drawOnce();
+    },
+    async startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+      let next;
+      try {
+        next = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } }, audio: false
+        });
+      } catch (e) {
+        return false;
+      }
+      stopCamera();
+      stream = next;
+      video.srcObject = stream;
+      try { await video.play(); } catch (e) {}
+      currentSource = 'camera';
+      currentSampleKind = null;
+      uploadedImage = null;
+      emptyState.style.display = 'none';
+      resizeStage();
+      loop();
+      updateCamUI();
+      return true;
+    },
+    showGarden() {
+      return new Promise((resolve) => {
+        loadSample('garden');
+        const t0 = Date.now();
+        const tick = () => {
+          const src = (uploadedImage && uploadedImage.src) || '';
+          if (currentSource === 'image' && src.indexOf('garden') !== -1 && stageCanvas.width > 2) {
+            try {
+              const px = ctx.getImageData(stageCanvas.width >> 1, stageCanvas.height >> 1, 1, 1).data;
+              if (px[0] + px[1] + px[2] > 8) { resolve(true); return; }
+            } catch (e) { resolve(true); return; }
+          }
+          if (Date.now() - t0 > 6000) { resolve(false); return; }
+          requestAnimationFrame(tick);
+        };
+        tick();
+      });
+    },
+    freeze() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      try { video.srcObject = null; } catch (e) {}
+      currentSource = 'frozen';
+      emptyState.style.display = 'none';
+      updateCamUI();
+    },
+    enter() {
+      const root = document.documentElement;
+      root.classList.add('preview-mode');
+      const stage = document.querySelector('.stage-wrap');
+      if (stage && stage.parentElement !== document.body) document.body.insertBefore(stage, document.body.firstChild);
+      if (root.classList.contains('ui2')) root.classList.add('immersive');
+      requestAnimationFrame(() => { resizeStage(); if (currentSource === 'image') drawOnce(); });
+    },
+    leave() {
+      document.documentElement.classList.remove('preview-mode');
+      document.documentElement.classList.remove('immersive');
+    },
+    openUnlock(spec) {
+      const title = document.getElementById('paywallTitle');
+      const lead = document.getElementById('paywallLead');
+      if (title) title.textContent = spec.line;
+      if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
+      if (!window.Capacitor) {
+        paywallBuy.textContent = 'Get the app';
+        const restore = document.getElementById('paywallRestore');
+        if (restore) restore.style.display = 'none';
+      }
+      paywallNote.textContent = '';
+      paywallOverlay.classList.add('open', 'preview-unlock');
+    }
+  };
+  if (window.__vsPreviewPending && typeof window.__vsConsumePreviewPending === 'function') {
+    window.__vsConsumePreviewPending();
+  }
+
+  if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
 
   window.addEventListener('beforeunload', stopCamera);
 };
 </script>
 
+<script src="vision-review.js?v=20261110"></script>
+<script src="challenges.js?v=20261110"></script>
+<script src="preview.js?v=20261110b"></script>
 <script>
   const STORE_URL = 'https://apps.apple.com/app/id6772865195';
   let storeRedirectTimer = null;
@@ -3014,10 +3186,22 @@ window.__vsBootSimulator = () => {
     const note = document.getElementById('storeGateNote');
     if (note) note.hidden = true;
   }
+  window.__vsCancelStoreRedirect = cancelStoreRedirect;
+  window.__vsBootForPreview = function () {
+    cancelStoreRedirect();
+    try { sessionStorage.setItem('vs_storeRedirected', '1'); } catch (e) {}
+    if (!window.__vsSimulatorBooted && typeof window.__vsBootSimulator === 'function') {
+      window.__vsBootSimulator();
+    } else if (typeof window.__vsConsumePreviewPending === 'function') {
+      window.__vsConsumePreviewPending();
+    }
+  };
 
   function scheduleStoreRedirect() {
     if (storeRedirectTimer || window.__vsSimulatorBooted) return;
     if (document.documentElement.classList.contains('is-native')) return;
+    if (document.documentElement.classList.contains('preview-mode')) return;
+    if (document.querySelector('.challenge-overlay.open')) return;
     let params;
     try { params = new URLSearchParams(window.location.search); } catch (e) { params = { get: function () { return null; } }; }
     if (params.get('stay') === '1') return;
