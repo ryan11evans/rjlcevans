@@ -2,7 +2,7 @@
 
 Capacitor 6 shell for **Vision Simulator by Dr. Evans** (`com.rjlcevans.visionsim`). The app does not bundle the simulator. `capacitor.config.json` sets `server.url` to `https://rjlcevans.com/vision-simulator/`, and every installed copy — including older versions — loads that page.
 
-Version in this project: **4.1 (16)**. The live App Store build is 4.0. Builds 4.1 (14) and 4.1 (15) may already be uploaded. The next upload must be build 16 or App Store Connect will reject it as a duplicate.
+Version in this project: **4.1.1 (17)**. The live App Store build is 4.0. Builds 4.1 (14) and 4.1 (15) may already be uploaded, and 4.1 (16) was the previous project version. 4.1.1 is a new marketing version, so upload it as build 17. Do not upload another 4.1 build.
 
 ## How to safely ship changes
 
@@ -57,15 +57,15 @@ The browser gate is safe for installed apps: the page runs the simulator when it
 
    Xcode 27 only archives an iOS deployment target of 15.0 or newer. The App target is set to 15.0, and the Podfile `post_install` hook sets 15.0 on every pod target. The App target signing team is `9B9PTBR9A2`. A normal Archive in Xcode uses those settings; you do not need the `IPHONEOS_DEPLOYMENT_TARGET=15.0` and `DEVELOPMENT_TEAM=9B9PTBR9A2` overrides that were required to upload build 14. The next binary requires iOS 15 or later. Phones still on iOS 13 or 14 keep the already-installed app.
 
-   Build 14, linked with the iOS 27 SDK, crashed at launch on a real iPhone because the shell still used the AppDelegate `window` lifecycle. Info.plist now has a `UIApplicationSceneManifest`, and `SceneDelegate` hosts the Main storyboard (`CAPBridgeViewController`) and forwards URL opens and universal links to Capacitor's `ApplicationDelegateProxy`. This stays on Capacitor 6. A Capacitor upgrade was the riskier change: the crash is UIKit's scene check, and the Capacitor 6 bridge does not use the app delegate's window. StatusBar, Haptics, InAppReview, and cordova-plugin-purchase are unchanged. No `pod install` or `cap sync` is required for this fix. Archive scheme **App**, Release, as 4.1 (16).
+   Build 14, linked with the iOS 27 SDK, crashed at launch on a real iPhone because the shell still used the AppDelegate `window` lifecycle. Info.plist now has a `UIApplicationSceneManifest`, and `SceneDelegate` hosts the Main storyboard (`CAPBridgeViewController`) and forwards URL opens and universal links to Capacitor's `ApplicationDelegateProxy`. This stays on Capacitor 6. A Capacitor upgrade was the riskier change: the crash is UIKit's scene check, and the Capacitor 6 bridge does not use the app delegate's window. StatusBar, Haptics, InAppReview, and cordova-plugin-purchase are unchanged. Archive scheme **App**, Release, as 4.1.1 (17). `npx cap sync ios` is required before that archive so CocoaPods actually links `CapacitorCommunityInAppReview` (it is in the Podfile; `Podfile.lock` does not list it until sync).
 
 4. Scheme **App Staging** (configuration Staging) rewrites the bundled `server.url` to `https://rjlcevans.com/vision-simulator-staging/`. Run that on a device or upload it to TestFlight. Scheme **App**, Archive, configuration **Release**, stays on production. Do not upload an **App Staging** archive to the App Store.
 
-5. Test on iPhone and iPad: camera, a sample photo, free conditions, a Pro condition, Compare, Combine, purchase, and Restore. Then turn Compare on three separate times and confirm the system review dialog is allowed to appear (Apple may still choose not to show it).
+5. Test on iPhone and iPad: camera, a sample photo, free conditions, a Pro condition, Compare, Combine, purchase, and Restore. Also play both free challenges (the number plate and the blind spot). Finish one, dismiss it, and confirm the system review dialog is allowed to appear. The same ask can happen after the 3rd distinct condition, or right after a Pro purchase succeeds. It is once per install. Apple may still choose not to show it. It does not appear in Safari.
 
 6. Promote. Copy `vision-simulator-staging/` back onto `vision-simulator/` (or merge the branch that already has the final `vision-simulator/` files) and push `main`. Tag that commit, for example `vision-simulator-web-YYYY-MM-DD`, so you can find it later.
 
-7. Ship the new binary from scheme **App**, Release. In App Store Connect the version is 4.1 and the build is 16 (builds 14 and 15 may already be uploaded). Add review notes that the app now asks for a rating with `SKStoreReviewController` after the third Compare use, and that launch now uses the UIScene lifecycle.
+7. Ship the new binary from scheme **App**, Release. In App Store Connect create version **4.1.1** and upload build **17**. Add review notes that the app asks for a rating with `SKStoreReviewController` after a finished challenge, after the third condition, or after a Pro purchase, once per install, and that launch uses the UIScene lifecycle. The free challenges themselves ship with the website; they do not need a new binary. The review dialog does.
 
 ### Roll back
 
@@ -85,4 +85,4 @@ Someone who spoofs `window.Capacitor` in a desktop browser can still open the si
 
 ## Native review prompt
 
-`@capacitor-community/in-app-review` 6.0.0 (Capacitor 6) calls `SKStoreReviewController.requestReview()`. The web page counts Compare activations in `vs_compareUses` and calls the plugin once, on the third one, only if `Capacitor.isPluginAvailable('InAppReview')` is true. Apple still rate-limits the dialog. The prompt does not show in the simulator or in a browser.
+`@capacitor-community/in-app-review` 6.0.0 (Capacitor 6) calls `SKStoreReviewController.requestReview()`. The page asks once per install (`vs_reviewAsked`), and only if `Capacitor.isPluginAvailable('InAppReview')` is true. The moments that can ask are: finishing a free challenge, opening a 3rd distinct condition (`vs_condsSeen`; the first-run Cataract preview counts but does not ask by itself), or a Pro purchase just succeeding. It waits until the paywall, About sheet, and challenge are closed. Apple still rate-limits the dialog. The prompt does nothing on the plain website, and nothing in a binary that does not include the plugin.
