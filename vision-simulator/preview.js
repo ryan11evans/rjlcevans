@@ -1,6 +1,7 @@
 /*
  * One free look at a Pro simulation, on the live camera.
- * Ten seconds, then the unlock sheet. One preview per condition per install.
+ * Ten seconds, then Normal Vision again with the unlock sheet.
+ * The camera keeps streaming. One preview per condition per install.
  * If the camera is denied, the same preview runs on the tulip garden photo.
  * The filters are the app's own (see __vsPreviewApi). Nothing here sets a price.
  */
@@ -136,7 +137,10 @@
     hideHud();
     var api = window.__vsPreviewApi;
     if (!api) return;
-    api.freeze();
+    // Remove the effect only. freeze() used to stop the camera track and
+    // cancel the draw loop, which left the last filtered frame on screen
+    // for macular degeneration, glaucoma, and cataract alike.
+    if (typeof api.restoreLive === 'function') api.restoreLive();
     api.openUnlock(spec);
   }
 
@@ -244,7 +248,10 @@
       'html.preview-mode #backToSite{display:none !important;}',
       'html.is-browser .paywall-overlay.preview-unlock.open{display:flex !important;align-items:flex-end;padding:0;}',
       'html.preview-mode .paywall-overlay.preview-unlock .paywall-panel{width:100%;max-width:560px;border-radius:24px 24px 0 0;',
-      'padding-bottom:calc(18px + env(safe-area-inset-bottom));}'
+      'padding-bottom:calc(18px + env(safe-area-inset-bottom));}',
+      '.paywall-overlay.preview-unlock{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;',
+      'pointer-events:none;align-items:flex-end;padding:0;}',
+      '.paywall-overlay.preview-unlock .paywall-panel{pointer-events:auto;}'
     ].join('');
     var style = document.createElement('style');
     style.id = 'preview-style';
