@@ -2917,7 +2917,11 @@
       const lead = document.getElementById('paywallLead');
       if (title) title.textContent = spec.line;
       if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
-      if (!window.Capacitor) paywallBuy.textContent = 'Get the app';
+      if (!window.Capacitor) {
+        paywallBuy.textContent = 'Get the app';
+        const restore = document.getElementById('paywallRestore');
+        if (restore) restore.style.display = 'none';
+      }
       paywallNote.textContent = '';
       paywallOverlay.classList.add('open', 'preview-unlock');
     }

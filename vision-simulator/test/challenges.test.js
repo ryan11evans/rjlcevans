@@ -337,6 +337,20 @@ async function main() {
       assert.ok(during.center < during.corner * 0.45, 'the center is a dark scotoma, not a light blur, ' + during.center + ' vs ' + during.corner);
       assert.ok(during.corner > 80, 'the surrounding garden stays visible, got ' + during.corner);
       assert.ok(during.center < 55, 'the central scotoma is dense, got ' + during.center);
+      const span = await page.evaluate(() => {
+        const c = document.getElementById('stageCanvas');
+        const g = c.getContext('2d');
+        const y = c.height >> 1;
+        const lum = (x) => {
+          const d = g.getImageData(x, y, 1, 1).data;
+          return 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+        };
+        const edge = Math.max(lum(6), lum(c.width - 7));
+        let dark = 0;
+        for (let x = 0; x < c.width; x += 2) if (lum(x) < edge * 0.4) dark += 2;
+        return dark / c.width;
+      });
+      assert.ok(span > 0.32 && span < 0.55, 'scotoma should cover about 35–45% of the width, got ' + span);
       await shot(page, 'amd-preview-running.png');
       await page.waitForSelector('#paywallOverlay.open', { timeout: 5000 });
       assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what macular degeneration looks like.");
@@ -344,6 +358,7 @@ async function main() {
       const buy = await page.locator('#paywallBuy').innerText();
       assert.strictEqual(buy, 'Get the app');
       assert.ok(!/\$/.test(buy), 'paywall must not hardcode a price');
+      assert.strictEqual(await page.locator('#paywallRestore').isVisible(), false, 'Restore Purchases stays off the website');
       const features = await page.locator('.paywall-features').innerText();
       assert.ok(features.includes('All 10 conditions'));
       assert.ok(!features.includes('7 more'));

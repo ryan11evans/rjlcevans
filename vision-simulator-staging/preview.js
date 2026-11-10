@@ -10,9 +10,10 @@
   var SPECS = {
     amd: {
       cond: 'amd',
-      // Simulator Advanced preset: near-black central scotoma, sharp periphery.
-      // The Moderate preset is a lighter smudge, which reads as a grey blur on a photo.
-      params: { amdSize: 44, amdDistortion: 0.55 },
+      // End Stage preset: fully black central scotoma (about 12–15°),
+      // soft irregular edge, metamorphopsia around it, sharp periphery.
+      // Advanced is only ~15% of a phone frame wide, so it has no impact here.
+      params: { amdSize: 60, amdDistortion: 0.6 },
       label: 'Macular degeneration',
       line: "That's what macular degeneration looks like.",
       usedLabel: 'Unlock macular degeneration'
