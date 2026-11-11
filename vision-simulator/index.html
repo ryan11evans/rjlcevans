@@ -3604,6 +3604,17 @@ window.__vsBootSimulator = () => {
   // Native if the head script said so, if detection says so, or if detection
   // itself is missing. The only path that stays on the store gate is an
   // explicit "this is a browser" answer.
+  // A Cloudflare Pages preview can open the in-app layout with ?ui2=1 so the
+  // new controls can be tried on a phone. Production (rjlcevans.com) ignores
+  // that flag and keeps the store gate.
+  function pagesPreviewRequested() {
+    try {
+      if (new URLSearchParams(location.search).get('ui2') !== '1') return false;
+      return /\.pages\.dev$/i.test(location.hostname || '');
+    } catch (e) {
+      return false;
+    }
+  }
   function nativeSignalPresent() {
     if (document.documentElement.classList.contains('is-native')) return true;
     try {
@@ -3616,7 +3627,7 @@ window.__vsBootSimulator = () => {
 
   function tryBootSimulator() {
     if (window.__vsSimulatorBooted) return true;
-    if (!nativeSignalPresent()) return false;
+    if (!nativeSignalPresent() && !pagesPreviewRequested()) return false;
     cancelStoreRedirect();
     document.documentElement.classList.remove('is-browser');
     document.documentElement.classList.add('is-native');
