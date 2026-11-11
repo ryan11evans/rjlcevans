@@ -1215,6 +1215,10 @@ window.__vsBootSimulator = () => {
   'use strict';
   if (window.__vsSimulatorBooted) return;
   window.__vsSimulatorBooted = true;
+  // ?reset=1 clears the free-preview record so a phone can replay first launch.
+  try {
+    if (new URLSearchParams(location.search).get('reset') === '1') localStorage.removeItem('vs_previewUsed');
+  } catch (e) {}
 
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
