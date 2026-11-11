@@ -58,6 +58,9 @@ async function main() {
   const purchaseMock = () => {
     const chain = () => proxy;
     const proxy = new Proxy({}, { get: () => chain });
+    // These cases select conditions directly. Mark the one free look used
+    // so the first tap opens the unlock sheet instead of the 10s preview.
+    try { localStorage.setItem('vs_previewUsed', JSON.stringify(['amd', 'glaucoma', 'cataract'])); } catch (e) {}
     window.CdvPurchase = {
       store: { register: () => {}, when: () => proxy, get: () => null, owned: () => false, initialize: () => {} },
       ProductType: { NON_CONSUMABLE: 'non_consumable' },

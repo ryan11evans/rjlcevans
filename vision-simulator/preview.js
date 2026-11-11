@@ -119,8 +119,16 @@
       function tick() {
         if (canvas && canvas.width > 2) {
           try {
-            var ctx = canvas.getContext('2d');
-            var c = ctx.getImageData(canvas.width >> 1, canvas.height >> 1, 1, 1).data;
+            // Read a 1×1 copy so the full stage bitmap is not pulled back
+            // from the GPU on every frame while we wait for the first image.
+            if (!waitForFrame.probe) {
+              waitForFrame.probe = document.createElement('canvas');
+              waitForFrame.probe.width = waitForFrame.probe.height = 1;
+              waitForFrame.pctx = waitForFrame.probe.getContext('2d', { willReadFrequently: true });
+            }
+            var pctx = waitForFrame.pctx;
+            pctx.drawImage(canvas, canvas.width >> 1, canvas.height >> 1, 1, 1, 0, 0, 1, 1);
+            var c = pctx.getImageData(0, 0, 1, 1).data;
             if (c[0] + c[1] + c[2] > 12) { resolve(true); return; }
           } catch (e) { resolve(true); return; }
         }
@@ -144,11 +152,24 @@
     api.openUnlock(spec);
   }
 
-  function begin(kind) {
-    var spec = SPECS[kind];
+  function specFor(kind, override) {
+    var base = SPECS[kind];
+    if (!base) return null;
+    if (!override || !override.params) return base;
+    return {
+      cond: base.cond,
+      params: override.params,
+      label: override.label || base.label,
+      line: override.line || base.line,
+      usedLabel: base.usedLabel
+    };
+  }
+
+  function begin(kind, override) {
+    var spec = specFor(kind, override);
     var api = window.__vsPreviewApi;
     if (!spec || !api || running) return;
-    if (isUsed(kind)) { api.openUnlock(spec); return; }
+    if (isUsed(kind)) { api.openUnlock(SPECS[kind]); return; }
     running = true;
     api.enter();
     api.apply(spec);
@@ -190,8 +211,30 @@
       if (window.__vsPreviewApi) window.__vsPreviewApi.openUnlock(SPECS[pending.kind]);
       return;
     }
-    begin(pending.kind);
+    begin(pending.kind, pending.override);
   };
+
+  // In-app entry. override.params replaces the stored preset (the first-open
+  // look is advanced macular degeneration; the gate button stays end stage).
+  // A used condition opens the unlock sheet. The used list is vs_previewUsed.
+  window.__vsRunPreview = function (kind, override) {
+    if (!SPECS[kind]) return;
+    holdRedirect();
+    if (isUsed(kind)) {
+      if (window.__vsPreviewApi) window.__vsPreviewApi.openUnlock(SPECS[kind]);
+      else {
+        window.__vsPreviewPending = { mode: 'paywall', kind: kind };
+        if (typeof window.__vsBootForPreview === 'function') window.__vsBootForPreview();
+      }
+      return;
+    }
+    if (window.__vsPreviewApi) begin(kind, override);
+    else {
+      window.__vsPreviewPending = { mode: 'run', kind: kind, override: override || null };
+      if (typeof window.__vsBootForPreview === 'function') window.__vsBootForPreview();
+    }
+  };
+  window.__vsPreviewIsUsed = function (kind) { return isUsed(kind); };
 
   window.__vsPreviewOnClose = function () {
     if (!document.documentElement.classList.contains('preview-mode')) return;
@@ -241,7 +284,8 @@
       'box-shadow:0 8px 28px rgba(0,0,0,0.35);pointer-events:none;}',
       '.preview-hud[hidden]{display:none !important;}',
       '.preview-hud-name{font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#d4a574;}',
-      '.preview-hud-count{font-family:"VS Fraunces","Fraunces",Georgia,serif;font-size:44px;line-height:1;font-weight:500;color:#fff;}',
+      '.preview-hud{contain:layout;}',
+      '.preview-hud-count{font-family:"VS Fraunces","Fraunces",Georgia,serif;font-size:44px;line-height:1;font-weight:500;color:#fff;font-variant-numeric:tabular-nums;min-width:1.4ch;text-align:center;}',
       'html.preview-mode.is-browser .stage-wrap{display:block !important;position:fixed !important;inset:0;z-index:80;',
       'width:100% !important;height:100% !important;max-height:none !important;aspect-ratio:auto !important;margin:0 !important;border-radius:0;}',
       'html.is-browser:not(.preview-mode) body > .stage-wrap{display:none !important;}',

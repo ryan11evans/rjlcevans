@@ -508,7 +508,7 @@
   /* Sources: Camera / Upload as two equal buttons. Compare moves onto the viewer. */
   html.ui2 .wrap > .source-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 0; }
   html.ui2 .wrap > .source-row .btn { justify-content: center; min-height: 44px; border-radius: 12px; font-size: 15px; }
-  html.ui2 #compareToggle, html.ui2 #flipCam { display: none !important; }
+  html.ui2 #compareToggle { display: none !important; }
   html.ui2 #sampleRow > span { display: none; }
   html.ui2 #sampleRow .btn[data-sample] { min-height: 44px; }
 
@@ -652,6 +652,198 @@
     html.ui2 .paywall-overlay { align-items: center; padding: 24px; }
     html.ui2 .paywall-panel { border-radius: 24px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
   }
+  /* ===== Simple dock (ui2): picture, severity, condition row, four actions =====
+     Secondary things (previews, extras, photos, about, restore) live in sheets.
+     --vs-safe-* lets a screenshot fake the notch; a real iPhone uses env(). */
+  .cond-ico { display: none; }
+  .app-bar, .menu-label, .menu-foot { display: none; }
+  html.ui2 {
+    --safe-top: max(env(safe-area-inset-top), var(--vs-safe-top, 0px));
+    --safe-bot: max(env(safe-area-inset-bottom), var(--vs-safe-bottom, 0px));
+    --bar-h: calc(56px + var(--safe-bot));
+    --side-w: min(360px, 42vw);
+  }
+  html.ui2.is-native .app-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    z-index: 70;
+    left: 0; right: 0; bottom: 0;
+    height: var(--bar-h);
+    gap: 4px;
+    padding: 4px 8px var(--safe-bot);
+    background: #121820;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  }
+  html.ui2 .bar-btn, html.ui2 #compareSwitch.bar-btn {
+    appearance: none; border: none; background: transparent; color: rgba(255,255,255,0.78);
+    min-height: 50px; width: 100%; padding: 4px 2px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font: 600 12px/1.1 var(--ui-font); cursor: pointer;
+  }
+  html.ui2 .bar-ico, html.ui2 #compareSwitch .bar-ico { width: 22px; height: 22px; }
+  html.ui2 .bar-btn[aria-pressed="true"], html.ui2 #compareSwitch[aria-checked="true"] {
+    background: #fff; color: #121820;
+  }
+  html.ui2 #compareSwitch .vs-switch { display: none !important; }
+  html.ui2 #barCompareSlot { display: flex; min-width: 0; }
+  html.ui2.immersive .app-bar, html.ui2.preview-mode .app-bar, html.ui2.sheet-open .app-bar {
+    transform: translateY(120%); pointer-events: none;
+  }
+  html.ui2.immersive .wrap, html.ui2.preview-mode .wrap { transform: translateY(120%) !important; }
+  html.ui2.immersive .stage-wrap,
+  html.ui2.preview-mode .stage-wrap,
+  html.ui2.immersive.is-app .stage-wrap,
+  html.ui2.preview-mode.is-app .stage-wrap { bottom: 0 !important; right: 0 !important; transition: none !important; }
+  html.ui2.sheet-open .viewer-hud { opacity: 0; pointer-events: none; }
+  html.ui2 .wrap {
+    left: 0; right: 0; bottom: var(--bar-h) !important;
+    height: auto !important;
+    /* Leave a picture, then give the rest to the description. The bar sits
+       above the home indicator, so this box never slides under it. */
+    max-height: 60vh;
+    max-height: calc(100dvh - var(--bar-h) - var(--safe-top) - 26vh);
+    padding: 16px 0 0 !important; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: rgba(16, 20, 28, 0.97);
+  }
+  html.ui2 .wrap::before { position: absolute; top: 6px; left: 50%; margin: 0; transform: translateX(-50%); }
+  html.ui2 .wrap > .preview-block,
+  html.ui2 .wrap > .challenge-block,
+  html.ui2 .wrap > .samples-scroller,
+  html.ui2 .wrap > .source-row,
+  html.ui2 .wrap > .conditions-header,
+  html.ui2 .wrap > .section-title,
+  html.ui2 .wrap > footer,
+  html.ui2 .section-title { display: none !important; }
+  html.ui2 .controls {
+    order: 1; flex: 1 1 auto; min-height: 0; max-height: none;
+    overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 2px 16px 12px; margin: 0;
+  }
+  html.ui2 .clinical-note {
+    display: block; overflow: visible; -webkit-line-clamp: unset;
+    margin-top: 8px; white-space: normal; overflow-wrap: break-word;
+    word-break: normal; line-height: 1.45; font-size: 15px; text-overflow: clip;
+  }
+  html.ui2 .conditions-scroller {
+    order: 2; flex: 0 0 auto;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 8px 0 6px;
+  }
+  html.ui2 .conditions { gap: 6px; padding: 2px 12px 6px; scroll-padding-inline: 12px; }
+  html.ui2 .cond {
+    position: relative; flex-direction: column; justify-content: center; gap: 3px;
+    width: auto; min-width: 76px; min-height: 64px; padding: 7px 10px 6px;
+    border-radius: 16px; text-align: center; white-space: nowrap;
+    font-size: 12px; line-height: 1.15;
+  }
+  html.ui2 .cond-ico { display: block; width: 22px; height: 22px; }
+  html.ui2 .cond .name { font-size: 12px; font-weight: 600; }
+  html.ui2.is-app.pro-ready:not(.is-pro) .cond.locked .pro-lock {
+    position: absolute; top: 4px; right: 4px;
+    width: 14px; height: 14px; padding: 0; font-size: 0; line-height: 0;
+    background: transparent; color: currentColor;
+  }
+  html.ui2 .pro-lock::before { width: 11px; height: 12px; }
+  html.ui2 .stage-wrap, html.ui2.is-app .stage-wrap {
+    bottom: calc(var(--deck-h, 220px) + var(--bar-h) - 14px) !important;
+    right: 0 !important;
+  }
+  html.ui2 .viewer-hud {
+    top: calc(8px + var(--safe-top));
+    left: auto; right: calc(10px + env(safe-area-inset-right));
+    justify-content: flex-end;
+  }
+  html.ui2 #hudInfo, html.ui2 #hudCompare, html.ui2 #hudCamera { display: none !important; }
+  html.ui2 #flipCam.hud-btn {
+    width: 44px; height: 44px; padding: 0; border: none; border-radius: 999px;
+    background: rgba(20,24,32,0.55); color: #fff;
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  }
+  html.ui2 #flipCam .btn-ico { width: 20px; height: 20px; }
+  html.ui2 .compare-tag { top: calc(12px + var(--safe-top)); }
+  html.ui2 .ui2-toast { top: calc(22% + var(--safe-top)); }
+  html.ui2 .bar-btn:focus-visible, html.ui2 .cond:focus-visible, html.ui2 .preset:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  html.ui2.combine-on #barMore { box-shadow: inset 0 -2px 0 #34c759; }
+  html.ui2.combine-on .ctrl-group-label { display: block; margin: 8px 0 0; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); }
+  html.ui2 #moreSheet .preview-hero.is-used, html.ui2 #moreSheet .preview-alt.is-used { opacity: 0.8; }
+  /* Sheets */
+  html.ui2 .menu-label {
+    display: block; margin: 16px 4px 6px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  html.ui2 .menu-foot { display: block; margin: 14px 4px 0; font-size: 12px; line-height: 1.45; color: var(--ink-mute); }
+  html.ui2 #moreSheet .sheet-title, html.ui2 #photoSheet .sheet-title { font-size: 22px; margin: 12px 52px 4px 2px; }
+  html.ui2 #moreSheet .sheet-lead, html.ui2 #photoSheet .sheet-lead {
+    margin: 0 2px 12px; font-size: 14px; line-height: 1.4; color: var(--ink-dim);
+  }
+  html.ui2 #morePrimary .unlock-pro-btn {
+    display: none; width: 100%; min-height: 52px; justify-content: center;
+    border-radius: 14px; font-size: 16px; margin: 0 0 4px;
+    background: var(--accent); color: #1a1208; border-color: var(--accent);
+  }
+  html.ui2.is-app.pro-ready:not(.is-pro) #morePrimary .unlock-pro-btn { display: flex; }
+  html.ui2 #moreSheet .preview-block { margin: 0; }
+  html.ui2 #moreSheet .preview-hero, html.ui2 #moreSheet .preview-alt {
+    min-height: 52px; padding: 8px 14px; border-radius: 12px;
+    background: rgba(255,255,255,0.06); color: var(--ink); border: none; text-align: left;
+  }
+  html.ui2 #moreSheet .preview-hero .cc-kicker, html.ui2 #moreSheet .preview-alt .cc-kicker { color: var(--accent); }
+  html.ui2 #moreSheet .preview-hero .cc-name, html.ui2 #moreSheet .preview-alt .cc-name { font-size: 15px; font-weight: 600; color: inherit; }
+  html.ui2 #moreSheet .preview-row { grid-template-columns: 1fr; margin-top: 8px; }
+  html.ui2 #moreSheet .challenge-block { margin: 0; }
+  html.ui2 #moreSheet .challenge-row { grid-template-columns: 1fr; }
+  html.ui2 #moreSheet .challenge-card {
+    min-height: 52px; border-radius: 12px; background: rgba(255,255,255,0.06); border: none;
+  }
+  html.ui2 #moreView { border-radius: 12px; background: rgba(255,255,255,0.05); }
+  html.ui2 #moreView .combine-conditions-btn {
+    width: 100%; min-height: 52px; margin: 0; padding: 0 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 12px; background: transparent; color: var(--ink); font-size: 16px; font-weight: 500;
+  }
+  html.ui2 #photoSheet #sampleRow {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    overflow: visible; margin: 0; padding: 0;
+  }
+  html.ui2 #photoSheet .scroll-cue { display: none !important; }
+  html.ui2 #photoSheet #sampleRow .btn[data-sample] {
+    min-height: 64px; width: 100%; justify-content: flex-start; border-radius: 14px; color: var(--ink);
+  }
+  html.ui2 #photoSheet #sampleRow .btn[aria-pressed="true"] {
+    background: #fff; color: #121820; border-color: #fff;
+  }
+  html.ui2 #photoUploadHost .btn {
+    width: 100%; min-height: 52px; margin-top: 10px; justify-content: center;
+    border-radius: 14px; font-size: 16px;
+  }
+  @media (orientation: landscape) {
+    html.ui2.is-native .app-bar {
+      top: auto; left: auto; right: 0; bottom: 0; width: var(--side-w);
+      transform: none;
+    }
+    html.ui2 .wrap {
+      top: 0; left: auto; right: 0; bottom: var(--bar-h) !important;
+      width: var(--side-w); height: auto !important; max-height: none;
+      border-radius: 0; border-left: 1px solid rgba(255,255,255,0.08);
+    }
+    html.ui2 .controls { max-height: none; flex: 1 1 auto; }
+    html.ui2 .stage-wrap, html.ui2.is-app .stage-wrap {
+      right: var(--side-w) !important; bottom: 0 !important;
+    }
+    html.ui2.immersive .app-bar, html.ui2.preview-mode .app-bar { transform: translateX(120%) !important; }
+    html.ui2.immersive .wrap, html.ui2.preview-mode .wrap { transform: translateX(120%) !important; }
+    html.ui2.immersive .stage-wrap, html.ui2.preview-mode .stage-wrap,
+    html.ui2.immersive.is-app .stage-wrap, html.ui2.preview-mode.is-app .stage-wrap {
+      bottom: 0 !important; right: 0 !important;
+    }
+    html.ui2.sheet-open .app-bar { transform: none; opacity: 0; }
+  }
+
   /* Browser gate. The native app adds html.is-native before first paint and
      never sees this. A normal browser adds html.is-browser and the simulator
      markup stays in the DOM (so a late native signal can still boot it) but
@@ -785,10 +977,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
         </div>
       </div>
-      <div class="ui2-toast" id="ui2Toast" role="status" aria-live="polite">Drag the line to compare normal vs. cataract<br>Tap the picture for full screen</div>
+      <div class="ui2-toast" id="ui2Toast" role="status" aria-live="polite">Tap the picture for full screen</div>
       <div class="empty-state" id="emptyState">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
-        <div>Start the camera or upload an image to begin.</div>
+        <div>Tap Live for the camera, or Photo for a sample.</div>
       </div>
     </div>
   </div>
@@ -878,24 +1070,27 @@
   <h2 class="section-title">Select Condition</h2>
   <div class="conditions-header">
     <p class="conditions-hint">Swipe for every condition · tap to switch · Combine to layer several</p>
-    <button type="button" class="combine-conditions-btn compare-switch" id="compareSwitch" role="switch" aria-checked="false"><span>Compare</span><span class="vs-switch" aria-hidden="true"></span></button>
+    <button type="button" class="compare-switch bar-btn" id="compareSwitch" role="switch" aria-checked="false" aria-label="Compare normal and simulated">
+      <svg class="bar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>
+      <span>Compare</span>
+    </button>
     <button type="button" class="combine-conditions-btn" id="combineConditionsBtn" aria-pressed="false">Combine: Off</button>
     <button type="button" class="unlock-pro-btn" id="unlockProBtn">Unlock Pro</button>
     <button type="button" class="clear-conditions-btn" id="clearConditionsBtn">Clear all</button>
   </div>
   <div class="conditions-scroller" id="conditionsScroller">
     <div class="conditions" id="conditions" role="group" aria-label="Eye condition">
-      <button class="cond" data-cond="none" aria-pressed="true"><span class="name">Normal Vision</span><span class="latin">emmetropia</span></button>
-      <button class="cond" data-cond="myopia"><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
-      <button class="cond" data-cond="astigmatism"><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
-      <button class="cond" data-cond="cataract"><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
-      <button class="cond" data-cond="glaucoma"><span class="name">Glaucoma</span><span class="latin">peripheral loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="amd"><span class="name">AMD</span><span class="latin">central loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="diabetic"><span class="name">Diabetic Retinopathy</span><span class="latin">retinal damage</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="colorblind"><span class="name">Color Blindness</span><span class="latin">color vision deficiency</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="floaters"><span class="name">Floaters / PVD</span><span class="latin">vitreous opacities</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="rp"><span class="name">Retinitis Pigmentosa</span><span class="latin">rod photoreceptor loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
-      <button class="cond" data-cond="presbyopia"><span class="name">Presbyopia</span><span class="latin">near focus loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="none" aria-pressed="true" aria-label="Normal Vision"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/></svg><span class="name">Normal</span><span class="latin">emmetropia</span></button>
+      <button class="cond" data-cond="myopia" aria-label="Myopia"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M4 5c2 1 3 1 5 0M15 5c2 1 3 1 5 0" opacity=".7"/></svg><span class="name">Myopia</span><span class="latin">nearsighted</span></button>
+      <button class="cond" data-cond="astigmatism" aria-label="Astigmatism"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-28 12 12)"/></svg><span class="name">Astigmatism</span><span class="latin">irregular cornea</span></button>
+      <button class="cond" data-cond="cataract" aria-label="Cataract"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="6" fill="currentColor" opacity=".18" stroke="none"/></svg><span class="name">Cataract</span><span class="latin">lens opacity</span></button>
+      <button class="cond" data-cond="glaucoma" aria-label="Glaucoma"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke-width="3.2"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg><span class="name">Glaucoma</span><span class="latin">peripheral loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="amd" aria-label="AMD"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg><span class="name">AMD</span><span class="latin">central loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="diabetic" aria-label="Diabetic Retinopathy"><svg class="cond-ico" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="7" cy="8" r="1.5"/><circle cx="15" cy="6" r="1.2"/><circle cx="17" cy="13" r="1.7"/><circle cx="9" cy="16" r="1.3"/><circle cx="13" cy="11" r="1"/></svg><span class="name">Diabetic</span><span class="latin">retinal damage</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="colorblind" aria-label="Color Blindness"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="13" r="3.2"/><circle cx="15" cy="13" r="3.2"/><circle cx="12" cy="8.5" r="3.2"/></svg><span class="name">Color</span><span class="latin">color vision deficiency</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="floaters" aria-label="Floaters"><svg class="cond-ico" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="8" cy="9" r="1.6"/><circle cx="15" cy="7" r="1.1"/><circle cx="16" cy="15" r="2"/><circle cx="9" cy="16" r="1.2"/></svg><span class="name">Floaters</span><span class="latin">vitreous opacities</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="rp" aria-label="Retinitis Pigmentosa"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></svg><span class="name">RP</span><span class="latin">rod photoreceptor loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
+      <button class="cond" data-cond="presbyopia" aria-label="Presbyopia"><svg class="cond-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg><span class="name">Presbyopia</span><span class="latin">near focus loss</span><span class="pro-lock" aria-hidden="true">Pro</span></button>
     </div>
     <div class="scroll-cue" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -914,6 +1109,53 @@
   </footer>
 </div>
 
+<nav class="app-bar" id="appBar" aria-label="Main controls">
+  <button type="button" class="bar-btn" id="barLive" aria-pressed="false" aria-label="Start camera">
+    <svg class="bar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
+    <span>Live</span>
+  </button>
+  <button type="button" class="bar-btn" id="barPhoto" aria-expanded="false" aria-controls="photoSheet" aria-label="Photos">
+    <svg class="bar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3 16l5-4 4 3 3-2 6 5"/></svg>
+    <span>Photo</span>
+  </button>
+  <div id="barCompareSlot"></div>
+  <button type="button" class="bar-btn" id="barMore" aria-expanded="false" aria-haspopup="dialog" aria-controls="moreSheet">
+    <svg class="bar-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>
+    <span>More</span>
+  </button>
+</nav>
+
+<div class="sheet-overlay" id="photoSheet" role="dialog" aria-modal="true" aria-labelledby="photoTitle">
+  <div class="sheet-panel">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <button type="button" class="sheet-done" id="photoDone">Done</button>
+    <h3 class="sheet-title" id="photoTitle">Photo</h3>
+    <p class="sheet-lead">Try a built-in scene, or use a picture from your phone.</p>
+    <div id="photoHost"></div>
+    <div id="photoUploadHost"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="moreSheet" role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+  <div class="sheet-panel">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <button type="button" class="sheet-done" id="moreDone">Done</button>
+    <h3 class="sheet-title" id="moreTitle">More</h3>
+    <p class="sheet-lead">Extras and settings. The picture stays on the condition you picked.</p>
+    <div id="morePrimary"></div>
+    <p class="menu-label">Extras</p>
+    <div id="moreExtras"></div>
+    <p class="menu-label">View</p>
+    <div class="sheet-list" id="moreView"></div>
+    <p class="menu-label">About</p>
+    <div class="sheet-list">
+      <button type="button" id="moreAbout">About <span class="chev" aria-hidden="true">›</span></button>
+      <button type="button" id="moreRestore">Restore Purchases <span class="chev" aria-hidden="true">›</span></button>
+      <a href="https://rjlcevans.com/privacy" id="morePrivacy">Privacy Policy <span class="chev" aria-hidden="true">›</span></a>
+    </div>
+    <p class="menu-foot">For education only. Not a diagnosis or a vision test.</p>
+  </div>
+</div>
 
 <div class="sheet-overlay" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
   <div class="sheet-panel">
@@ -973,6 +1215,10 @@ window.__vsBootSimulator = () => {
   'use strict';
   if (window.__vsSimulatorBooted) return;
   window.__vsSimulatorBooted = true;
+  // ?reset=1 clears the free-preview record so a phone can replay first launch.
+  try {
+    if (new URLSearchParams(location.search).get('reset') === '1') localStorage.removeItem('vs_previewUsed');
+  } catch (e) {}
 
   const video = document.getElementById('video');
   const sourceCanvas = document.getElementById('sourceCanvas');
@@ -1069,6 +1315,10 @@ window.__vsBootSimulator = () => {
     iapStore.restorePurchases();
   });
 
+  let deviceSettled = null;
+  let firstOpenSettled = false;
+  let settleFirstOpen = function () {};
+
   if (isNativeApp) {
     // Cache last-known state so gating is correct instantly once pluginReady
     // flips true, before the store has a chance to check in over the network.
@@ -1078,7 +1328,11 @@ window.__vsBootSimulator = () => {
       // Builds that predate cordova-plugin-purchase stay fully unlocked.
       // Do not lock them: they cannot purchase or restore, and some of those
       // installs predate the IAP entirely. See vision-simulator-app/README.md.
-      if (!window.CdvPurchase) return;
+      if (!window.CdvPurchase) {
+        deviceSettled = 'full';
+        settleFirstOpen('full');
+        return;
+      }
       pluginReady = true;
       document.documentElement.classList.add('pro-ready');
       updateProUI(); // now that gating can actually be satisfied, lock by default until the store confirms ownership
@@ -1109,6 +1363,8 @@ window.__vsBootSimulator = () => {
       store.when().productUpdated(syncProStatus);
       store.when().receiptUpdated(syncProStatus);
       store.initialize([Platform.APPLE_APPSTORE]);
+      deviceSettled = isPro ? 'full' : 'gated';
+      settleFirstOpen(deviceSettled);
     });
   }
 
@@ -1192,8 +1448,20 @@ window.__vsBootSimulator = () => {
     if (currentSource === 'frozen') return;
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const newW = Math.max(1, Math.round(rect.width * dpr));
-    const newH = Math.max(1, Math.round(rect.height * dpr));
+    let newW = Math.max(1, Math.round(rect.width * dpr));
+    let newH = Math.max(1, Math.round(rect.height * dpr));
+    // Live filters are tuned for an 840px stage. A full-screen iPhone bitmap
+    // at 2× is tall enough that the AMD mesh and blurs miss 30fps. CSS scales
+    // this bitmap up to the screen; still photos keep the sharper size.
+    if (currentSource === 'camera') {
+      const cap = 840;
+      const long = Math.max(newW, newH);
+      if (long > cap) {
+        const s = cap / long;
+        newW = Math.max(1, Math.round(newW * s));
+        newH = Math.max(1, Math.round(newH * s));
+      }
+    }
     // Only resize the backing store if it actually changed — resizing clears the
     // canvas to transparent/black, so we avoid needless clears (and redraw after).
     if (newW !== stageCanvas.width || newH !== stageCanvas.height) {
@@ -1221,21 +1489,63 @@ window.__vsBootSimulator = () => {
   // Start/Stop share one toggle button, and Flip only makes sense while the
   // camera is actually the active source — keep them in sync here rather
   // than duplicating this in every place currentSource can change.
+  function updateSourceBar() {
+    const live = document.getElementById('barLive');
+    const photo = document.getElementById('barPhoto');
+    if (live) {
+      const on = currentSource === 'camera';
+      live.setAttribute('aria-pressed', on ? 'true' : 'false');
+      live.setAttribute('aria-label', on ? 'Stop camera' : 'Start camera');
+    }
+    if (photo) photo.setAttribute('aria-pressed', currentSource === 'image' ? 'true' : 'false');
+  }
   function updateCamUI() {
     const active = currentSource === 'camera';
     camToggle.classList.toggle('primary', !active);
     camToggle.classList.toggle('ghost', active);
     camToggleLabel.textContent = active ? 'Stop Camera' : 'Start Camera';
     flipBtn.style.display = active ? 'inline-flex' : 'none';
+    updateSourceBar();
+  }
+  function cameraConstraints() {
+    return {
+      audio: false,
+      video: {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        frameRate: { ideal: 30, max: 60 }
+      }
+    };
+  }
+  async function openCameraStream() {
+    const attempts = [
+      cameraConstraints(),
+      { audio: false, video: { facingMode: { ideal: facingMode }, frameRate: { ideal: 30, max: 60 } } },
+      { audio: false, video: { facingMode: { ideal: facingMode } } }
+    ];
+    let lastErr;
+    for (let i = 0; i < attempts.length; i++) {
+      try { return await navigator.mediaDevices.getUserMedia(attempts[i]); }
+      catch (err) { lastErr = err; }
+    }
+    throw lastErr;
+  }
+  function waitForVideoFrame() {
+    if (video.readyState >= 2 && video.videoWidth) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => { video.removeEventListener('loadeddata', done); resolve(); };
+      video.addEventListener('loadeddata', done);
+      setTimeout(done, 700);
+    });
   }
   async function startCamera() {
     try {
       stopCamera();
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: facingMode } }, audio: false
-      });
+      stream = await openCameraStream();
       video.srcObject = stream;
       await video.play();
+      await waitForVideoFrame();
       currentSource = 'camera';
       currentSampleKind = null;
       uploadedImage = null;
@@ -1247,9 +1557,17 @@ window.__vsBootSimulator = () => {
       alert('Camera unavailable: ' + err.message);
     }
   }
+  let _videoFrameId = 0;
+  function cancelLoop() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (_videoFrameId && video.cancelVideoFrameCallback) {
+      try { video.cancelVideoFrameCallback(_videoFrameId); } catch (e) {}
+      _videoFrameId = 0;
+    }
+  }
   function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    cancelLoop();
     if (currentSource === 'camera') {
       currentSource = null;
       ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
@@ -1273,8 +1591,10 @@ window.__vsBootSimulator = () => {
       uploadedImage = img;
       currentSource = 'image';
       emptyState.style.display = 'none';
+      sampleRow.querySelectorAll('[data-sample]').forEach(b => b.setAttribute('aria-pressed', 'false'));
       resizeStage();
       drawOnce();
+      updateSourceBar();
     };
     img.src = URL.createObjectURL(file);
   }
@@ -1288,7 +1608,12 @@ window.__vsBootSimulator = () => {
     } else return false;
 
     const stageW = stageCanvas.width, stageH = stageCanvas.height;
-    sourceCanvas.width = stageW; sourceCanvas.height = stageH;
+    // Assigning width clears and reallocates the bitmap. Doing that every
+    // camera frame is what made the preview look shaky.
+    if (sourceCanvas.width !== stageW || sourceCanvas.height !== stageH) {
+      sourceCanvas.width = stageW;
+      sourceCanvas.height = stageH;
+    }
 
     const stageRatio = stageW / stageH;
     const srcRatio = sw / sh;
@@ -1389,7 +1714,8 @@ window.__vsBootSimulator = () => {
     return [cur, cw, ch];
   }
   function _up(cur, cw, ch, dctx, dw, dh, a) {
-    dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = 'high';
+    dctx.imageSmoothingEnabled = true;
+    dctx.imageSmoothingQuality = currentSource === 'camera' ? 'low' : 'high';
     if (cw * 3 < dw) { // intermediate enlargement removes blocky bilinear artifacts
       const mw = cw * 3, mh = ch * 3, x = sizeTo(_bl[5], mw, mh);
       x.clearRect(0, 0, mw, mh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, mw, mh);
@@ -1607,10 +1933,12 @@ window.__vsBootSimulator = () => {
   // share edges exactly and there are no tile seams.
   let _warpKey = '', _warpGrid = null;
   function meshWarp(src, dctx, cx, cy, R, amt) {
-    const cells = 12, cs = (2 * R) / cells, n = cells + 1;
+    // Each cell is two clipped draws. 12×12 holds a still photo; on the live
+    // camera 8×8 is the same warp with about half the draw calls.
+    const cells = currentSource === 'camera' ? 8 : 12, cs = (2 * R) / cells, n = cells + 1;
     const A = amt * R * 0.2;
     const x0 = cx - R, y0 = cy - R;
-    const key = [cx, cy, R, amt].map(v => v.toFixed(2)).join('|');
+    const key = [cells, cx, cy, R, amt].map(v => typeof v === 'number' ? v.toFixed(2) : v).join('|');
     if (key !== _warpKey) {
       const disp = (x, y) => {
         const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
@@ -2068,7 +2396,15 @@ window.__vsBootSimulator = () => {
     // Final composited result is already in ctx from the last pass.
   }
 
+  let _lastVideoTime = -1;
   function render() {
+    // The camera often delivers 30fps while the display asks for 60. Drawing
+    // the same frame twice doubles the AMD mesh cost and looks uneven.
+    if (currentSource === 'camera' && video.readyState >= 2) {
+      const t = video.currentTime;
+      if (t > 0 && t === _lastVideoTime) return;
+      _lastVideoTime = t;
+    }
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
     clearOverlay();                 // we now draw floaters on the canvas, not SVG
@@ -2098,10 +2434,16 @@ window.__vsBootSimulator = () => {
 
   function loop() {
     render();
-    rafId = requestAnimationFrame(loop);
+    // Paint when the camera has a new frame. requestAnimationFrame would
+    // sample between frames and make a 30fps stream look uneven.
+    if (currentSource === 'camera' && typeof video.requestVideoFrameCallback === 'function') {
+      _videoFrameId = video.requestVideoFrameCallback(() => { _videoFrameId = 0; loop(); });
+    } else {
+      rafId = requestAnimationFrame(loop);
+    }
   }
   function drawOnce() {
-    if (rafId) cancelAnimationFrame(rafId);
+    cancelLoop();
     if (activeConditions.has('floaters') || currentSource === 'camera') {
       loop();
     } else {
@@ -2120,14 +2462,14 @@ window.__vsBootSimulator = () => {
       note: 'Light from distant objects focuses <strong>in front of</strong> the retina, leaving distance vision blurred while near vision remains clear. The presets below approximate uncorrected acuity at distance.',
       controls: () => [
         snellenPresetControl(),
-        sliderControl('blurSigma', 'Fine adjustment (blur σ)', 0, 40, 0.5)
+        sliderControl('blurSigma', 'Blur', 0, 40, 0.5)
       ]
     },
     astigmatism: {
       title: 'Astigmatism',
       note: 'An irregularly-curved cornea or lens causes light to focus along two different meridians, producing directional smearing. Cylinder and axis use minus-cylinder notation: axis 180 (with-the-rule) smears vertically, axis 90 (against-the-rule) smears horizontally, and oblique axes smear diagonally.',
       controls: () => [
-        sliderControl('astigMag', 'Cylinder (minus cyl)', 0.25, 6, 0.25, ' D'),
+        sliderControl('astigMag', 'Cylinder', 0.25, 6, 0.25, ' D'),
         sliderControl('axis', 'Axis', 0, 180, 1, '°')
       ]
     },
@@ -2148,7 +2490,7 @@ window.__vsBootSimulator = () => {
       note: 'Damage to the macula produces central field loss while peripheral vision is preserved. Patients often report difficulty recognizing faces, reading, and driving. Enable distortion to demonstrate metamorphopsia (wavy/bent straight lines on the Amsler grid).',
       controls: () => [
         amdStageControl(),
-        sliderControl('amdDistortion', 'Metamorphopsia', 0, 1, 0.05, '×')
+        sliderControl('amdDistortion', 'Distortion', 0, 1, 0.05, '×')
       ]
     },
     diabetic: {
@@ -2163,14 +2505,14 @@ window.__vsBootSimulator = () => {
       note: 'Inherited color blindness affects how cone cells distinguish hues. <strong>Red-green types (protan/deutan)</strong> are most common, affecting ~8% of men; <strong>blue-yellow (tritan)</strong> is rare. Severity 1.0 simulates dichromacy (the most complete form); lower values simulate anomalous trichromacy, the milder and more common form. Based on the Machado et al. (2009) model.',
       controls: () => [
         cvdTypeControl(),
-        sliderControl('cvdSeverity', 'Severity (1.0 = dichromacy)', 0.1, 1, 0.1, '×')
+        sliderControl('cvdSeverity', 'Severity', 0.1, 1, 0.1, '×')
       ]
     },
     floaters: {
       title: 'Floaters & Posterior Vitreous Detachment',
       note: 'Vitreous opacities — collagen condensations, often following posterior vitreous detachment — cast shadows on the retina. They drift with eye movement and are most visible against bright, uniform backgrounds.',
       controls: () => [
-        sliderControl('floaterCount', 'Number of floaters', 1, 25, 1, '', () => initFloaters(params.floaterCount))
+        sliderControl('floaterCount', 'How many', 1, 25, 1, '', () => initFloaters(params.floaterCount))
       ]
     },
     rp: {
@@ -2210,7 +2552,7 @@ window.__vsBootSimulator = () => {
   function snellenPresetControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
-    wrap.innerHTML = `<label>Snellen acuity preset</label><div class="presets" id="snellenPresets"></div>`;
+    wrap.innerHTML = `<label>Acuity</label><div class="presets" id="snellenPresets"></div>`;
     const presets = wrap.querySelector('#snellenPresets');
     Object.entries(snellenBlur).forEach(([label, sigma]) => {
       const b = document.createElement('button');
@@ -2234,7 +2576,7 @@ window.__vsBootSimulator = () => {
   function glaucomaStageControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
-    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="glaucomaStages"></div>`;
+    wrap.innerHTML = `<label>Stage</label><div class="presets" id="glaucomaStages"></div>`;
     const stages = [
       { v: 1, label: 'Mild' },
       { v: 2, label: 'Moderate' },
@@ -2261,7 +2603,7 @@ window.__vsBootSimulator = () => {
   function amdStageControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
-    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="amdStages"></div>`;
+    wrap.innerHTML = `<label>Stage</label><div class="presets" id="amdStages"></div>`;
     const stages = [
       { v: 12, label: 'Mild',      distortion: 0.35 },
       { v: 28, label: 'Moderate',  distortion: 0.45 },
@@ -2295,7 +2637,7 @@ window.__vsBootSimulator = () => {
   function cvdTypeControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
-    wrap.innerHTML = `<label>Deficiency type</label><div class="presets" id="cvdTypes"></div>`;
+    wrap.innerHTML = `<label>Type</label><div class="presets" id="cvdTypes"></div>`;
     const types = [
       { v: 'protan', label: 'Protan (red)' },
       { v: 'deutan', label: 'Deutan (green)' },
@@ -2321,7 +2663,7 @@ window.__vsBootSimulator = () => {
   function rpStageControl() {
     const wrap = document.createElement('div');
     wrap.className = 'ctrl';
-    wrap.innerHTML = `<label>Disease stage</label><div class="presets" id="rpStages"></div>`;
+    wrap.innerHTML = `<label>Stage</label><div class="presets" id="rpStages"></div>`;
     const stages = [
       { v: 1, label: 'Early' }, { v: 2, label: 'Moderate' },
       { v: 3, label: 'Advanced' }, { v: 4, label: 'End-stage' }
@@ -2414,6 +2756,19 @@ window.__vsBootSimulator = () => {
     if (clearBtn) clearBtn.classList.toggle('visible', active.length > 0);
 
     updateShareUrl();
+    syncDeckHeight();
+  }
+
+  let lastDeckH = 0;
+  function syncDeckHeight() {
+    if (!document.documentElement.classList.contains('ui2')) return;
+    const deck = document.querySelector('.wrap');
+    if (!deck) return;
+    const h = deck.offsetHeight;
+    if (!h || h === lastDeckH) return;
+    lastDeckH = h;
+    document.documentElement.style.setProperty('--deck-h', h + 'px');
+    resizeStage();
   }
 
   // Tiny haptic tap when toggling a condition — only fires inside the native
@@ -2476,6 +2831,7 @@ window.__vsBootSimulator = () => {
   function setCombineMode(on) {
     combineMode = on;
     combineBtn.setAttribute('aria-pressed', String(on));
+    document.documentElement.classList.toggle('combine-on', on);
     if (document.documentElement.classList.contains('ui2')) {
       combineBtn.setAttribute('role', 'switch');
       combineBtn.setAttribute('aria-checked', String(on));
@@ -2490,12 +2846,26 @@ window.__vsBootSimulator = () => {
     hapticTap();
   });
 
+  const FREE_LOOK = new Set(['amd', 'glaucoma', 'cataract']);
+  function previewsApply() {
+    if (isPro) return false;
+    if (pluginReady) return true;
+    return document.documentElement.classList.contains('pages-preview');
+  }
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
     const key = btn.dataset.cond;
     const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
     const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
+
+    // One free live look at AMD, glaucoma, or cataract. The next tap opens
+    // the unlock sheet. Pro, and builds with no purchase plugin, skip this.
+    if (key !== 'none' && FREE_LOOK.has(key) && previewsApply() && typeof window.__vsRunPreview === 'function') {
+      hapticTap();
+      window.__vsRunPreview(key);
+      return;
+    }
 
     if (key === 'none') {
       conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
@@ -2531,7 +2901,7 @@ window.__vsBootSimulator = () => {
     hapticTap();
     if (!alreadyOn && key !== 'none' && window.VisionReview) VisionReview.noteConditions(activeConditionKeys());
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+    btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'nearest', block: 'nearest' });
     buildControls();
     if (currentSource === 'image') drawOnce();
   });
@@ -2780,9 +3150,15 @@ window.__vsBootSimulator = () => {
     face: { x: 0.47, y: 0.36, ty: 0.48, maxZoom: 1.4 }   // between the eyes and mouth
   };
 
+  function markSample(kind) {
+    sampleRow.querySelectorAll('[data-sample]').forEach(b => {
+      b.setAttribute('aria-pressed', b.dataset.sample === kind ? 'true' : 'false');
+    });
+  }
   function loadSample(kind) {
     stopCamera();
     currentSampleKind = kind;
+    markSample(kind);
     const photoPath = PHOTO_SAMPLES[kind];
     if (photoPath) {
       const img = new Image();
@@ -2793,6 +3169,7 @@ window.__vsBootSimulator = () => {
         emptyState.style.display = 'none';
         resizeStage();
         drawOnce();
+        updateSourceBar();
       };
       img.onerror = () => _loadSampleProcedural(kind);
       img.src = photoPath;
@@ -2810,6 +3187,7 @@ window.__vsBootSimulator = () => {
       emptyState.style.display = 'none';
       resizeStage();
       drawOnce();
+      updateSourceBar();
     };
     img.src = c.toDataURL('image/png');
   }
@@ -2820,10 +3198,12 @@ window.__vsBootSimulator = () => {
   flipBtn.addEventListener('click', flipCamera);
   document.getElementById('upload').addEventListener('change', handleUpload);
 
+  let closePhotoSheet = () => {};
   sampleRow.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-sample]');
     if (!btn) return;
     loadSample(btn.dataset.sample);
+    closePhotoSheet();
   });
 
   function positionDivider() {
@@ -2916,6 +3296,69 @@ window.__vsBootSimulator = () => {
     const hudCompare = document.getElementById('hudCompare');
     const hudCamera = document.getElementById('hudCamera');
     const toast = document.getElementById('ui2Toast');
+    const compareSlot = document.getElementById('barCompareSlot');
+    const compareSwitchEl = document.getElementById('compareSwitch');
+    if (compareSlot && compareSwitchEl) compareSlot.appendChild(compareSwitchEl);
+    const photoHost = document.getElementById('photoHost');
+    if (photoHost && samplesScroller) photoHost.appendChild(samplesScroller);
+    const uploadLabel = document.querySelector('label.btn-file');
+    const photoUpload = document.getElementById('photoUploadHost');
+    if (photoUpload && uploadLabel) photoUpload.appendChild(uploadLabel);
+    const moreExtras = document.getElementById('moreExtras');
+    const challengeBlock = document.getElementById('challengeBlock');
+    if (moreExtras && challengeBlock) moreExtras.appendChild(challengeBlock);
+    const moreView = document.getElementById('moreView');
+    if (moreView && combineBtn) moreView.appendChild(combineBtn);
+    const morePrimary = document.getElementById('morePrimary');
+    const unlockBtn = document.getElementById('unlockProBtn');
+    if (morePrimary && unlockBtn) morePrimary.appendChild(unlockBtn);
+    const hudRight = document.querySelector('#viewerHud > div:last-child');
+    if (hudRight && flipBtn) {
+      hudRight.appendChild(flipBtn);
+      flipBtn.classList.add('hud-btn');
+      flipBtn.setAttribute('aria-label', 'Flip camera');
+    }
+    const photoSheet = document.getElementById('photoSheet');
+    const moreSheet = document.getElementById('moreSheet');
+    const openSheet = (sheet, btn) => {
+      sheet.classList.add('open');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+    };
+    const closeSheet = (sheet, btn) => {
+      sheet.classList.remove('open');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    };
+    closePhotoSheet = () => closeSheet(photoSheet, document.getElementById('barPhoto'));
+    const closeMoreSheet = () => closeSheet(moreSheet, document.getElementById('barMore'));
+    document.getElementById('barLive').addEventListener('click', () => camToggle.click());
+    document.getElementById('barPhoto').addEventListener('click', () => openSheet(photoSheet, document.getElementById('barPhoto')));
+    document.getElementById('photoDone').addEventListener('click', closePhotoSheet);
+    photoSheet.addEventListener('click', e => { if (e.target === photoSheet) closePhotoSheet(); });
+    document.getElementById('upload').addEventListener('change', () => closePhotoSheet(), true);
+    document.getElementById('barMore').addEventListener('click', () => openSheet(moreSheet, document.getElementById('barMore')));
+    document.getElementById('moreDone').addEventListener('click', closeMoreSheet);
+    moreSheet.addEventListener('click', e => {
+      if (e.target === moreSheet) { closeMoreSheet(); return; }
+      // A preview or extra takes over the screen, so the menu gets out of the way.
+      if (e.target.closest('[data-preview], [data-challenge]')) closeMoreSheet();
+    });
+    if (unlockBtn) unlockBtn.addEventListener('click', closeMoreSheet);
+    document.getElementById('moreAbout').addEventListener('click', () => {
+      closeMoreSheet();
+      document.getElementById('aboutOverlay').classList.add('open');
+    });
+    document.getElementById('moreRestore').addEventListener('click', () => {
+      closeMoreSheet();
+      openPaywall();
+      document.getElementById('paywallRestore').click();
+    });
+    const syncChrome = () => {
+      const open = document.querySelector('.paywall-overlay.open, #aboutOverlay.open, #photoSheet.open, #moreSheet.open, .challenge-overlay.open');
+      root.classList.toggle('sheet-open', !!open);
+    };
+    new MutationObserver(syncChrome).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) new ResizeObserver(() => syncDeckHeight()).observe(document.querySelector('.wrap'));
+    requestAnimationFrame(syncDeckHeight);
     // The viewer must not live inside the scrolling/transforming dock.
     document.body.insertBefore(stageWrap, document.querySelector('.wrap'));
     const relayout = () => { resizeStage(); if (currentSource === 'image') drawOnce(); };
@@ -2933,7 +3376,10 @@ window.__vsBootSimulator = () => {
       closeAbout(); openPaywall();
       document.getElementById('paywallRestore').click();
     });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAbout(); closePaywall(); } });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      closeAbout(); closePaywall(); closePhotoSheet(); closeMoreSheet();
+    });
     setCombineMode(combineMode); // render the switch
     document.querySelector('.wrap').setAttribute('aria-label', 'Controls');
     document.querySelector('.wrap').setAttribute('role', 'region');
@@ -2988,9 +3434,10 @@ window.__vsBootSimulator = () => {
     const dockTouchStart = e => {
       if (e.touches.length !== 1 || root.classList.contains('immersive')) { drag = null; return; }
       const t = e.touches[0], r = dock.getBoundingClientRect(), side = sideDock();
-      const onHandle = side ? false : t.clientY - r.top < 30;
+      const onHandle = side ? false : t.clientY - r.top < 22;
       const inHScroll = !!e.target.closest('#sampleRow, #conditions, input[type=range]');
-      drag = { x: t.clientX, y: t.clientY, t: Date.now(), side, onHandle, inHScroll,
+      const inControls = !!e.target.closest('#controlsPanel, #conditions');
+      drag = { x: t.clientX, y: t.clientY, t: Date.now(), side, onHandle, inHScroll, inControls,
                scrolled: dock.scrollTop > 0, active: false, d: 0, lastD: 0, lastT: Date.now(), v: 0 };
     };
     const dockTouchMove = e => {
@@ -3000,7 +3447,7 @@ window.__vsBootSimulator = () => {
         if (Math.hypot(dx, dy) < 8) return;
         const main = drag.side ? dx : dy, cross = drag.side ? dy : dx;
         const ok = main > 0 && Math.abs(main) > Math.abs(cross) * 1.2 &&
-          (drag.side ? !drag.inHScroll : (drag.onHandle || (!drag.scrolled && dock.scrollTop <= 0)));
+          (drag.side ? !drag.inHScroll : (drag.onHandle && !drag.inControls));
         if (!ok) { drag = null; return; }
         drag.active = true; drag.x = t.clientX; drag.y = t.clientY;
         dock.style.transition = 'none';
@@ -3038,27 +3485,52 @@ window.__vsBootSimulator = () => {
       }
     }, { passive: true });
     stageWrap.addEventListener('touchend', () => { up = null; });
-    // First run: never open on an empty black box — show a real simulation.
-    // (A reload keeps ?cond= in the URL; still show a picture, just keep that condition.)
-    if (!currentSource) {
-      loadSample('street');
-      if (!urlConds) setActiveConditions(['cataract']);
-      // Default state: Compare on, divider centered — Normal | Cataract.
-      compareSplit = 0.5;
-      setCompareMode(true);
-      const centerActive = () => {
-        const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
-        if (on) conditionsEl.scrollLeft = on.offsetLeft - (conditionsEl.clientWidth - on.offsetWidth) / 2;
-      };
-      centerActive();
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(centerActive); // chip widths change once fonts load
-      let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
-      if (!seen) {
-        setTimeout(() => toast.classList.add('show'), 600);
-        setTimeout(() => toast.classList.remove('show'), 4200);
-        try { localStorage.setItem('vs_ui2_hint', '1'); } catch (e) {}
+    // Returning and Pro users open on a picture. A new non-Pro user gets the
+    // moderate AMD preview instead; that decision waits until we know.
+    function showStarterScene() {
+      if (!currentSource) {
+        loadSample('street');
+        const userPicked = activeConditionKeys().length > 0;
+        if (!urlConds && !userPicked) setActiveConditions(['cataract']);
+        compareSplit = 0.5;
+        if (!userPicked) setCompareMode(true);
+        const centerActive = () => {
+          const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
+          if (!on) return;
+          const left = on.offsetLeft;
+          const right = left + on.offsetWidth;
+          const viewL = conditionsEl.scrollLeft;
+          const viewR = viewL + conditionsEl.clientWidth;
+          if (left < viewL + 8) conditionsEl.scrollLeft = Math.max(0, left - 12);
+          else if (right > viewR - 28) conditionsEl.scrollLeft = right - conditionsEl.clientWidth + 28;
+        };
+        centerActive();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(centerActive);
+        let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
+        if (!seen) {
+          setTimeout(() => toast.classList.add('show'), 600);
+          setTimeout(() => toast.classList.remove('show'), 4200);
+          try { localStorage.setItem('vs_ui2_hint', '1'); } catch (e) {}
+        }
       }
+      if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
     }
+    settleFirstOpen = function (mode) {
+      if (firstOpenSettled) return;
+      const amdSeen = window.__vsPreviewIsUsed && window.__vsPreviewIsUsed('amd');
+      if (mode === 'gated' && !amdSeen && typeof window.__vsRunPreview === 'function') {
+        firstOpenSettled = true;
+        // Advanced preset: dense near-black central scotoma. AMD's one free look.
+        window.__vsRunPreview('amd', {
+          params: { amdSize: 44, amdDistortion: 0.55 },
+          label: 'Advanced macular degeneration',
+          line: "That's what advanced macular degeneration looks like."
+        });
+        return;
+      }
+      firstOpenSettled = true;
+      showStarterScene();
+    };
   }
   updateConditionsScrollState();
   updateSamplesScrollState();
@@ -3076,7 +3548,7 @@ window.__vsBootSimulator = () => {
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     video.setAttribute('muted', '');
-    if (!rafId) loop();
+    if (!rafId && !_videoFrameId) loop();
     const pending = video.play();
     if (pending && typeof pending.catch === 'function') pending.catch(() => {});
   }
@@ -3093,9 +3565,7 @@ window.__vsBootSimulator = () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
       let next;
       try {
-        next = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facingMode } }, audio: false
-        });
+        next = await openCameraStream();
       } catch (e) {
         return false;
       }
@@ -3103,6 +3573,7 @@ window.__vsBootSimulator = () => {
       stream = next;
       video.srcObject = stream;
       try { await video.play(); } catch (e) {}
+      await waitForVideoFrame();
       currentSource = 'camera';
       currentSampleKind = null;
       uploadedImage = null;
@@ -3154,6 +3625,9 @@ window.__vsBootSimulator = () => {
       const stage = document.querySelector('.stage-wrap');
       if (stage && stage.parentElement !== document.body) document.body.insertBefore(stage, document.body.firstChild);
       if (root.classList.contains('ui2')) root.classList.add('immersive');
+      // Size the bitmap once the full-screen layout is in, before the filter
+      // loop starts, so the canvas is not rebuilt mid-preview.
+      resizeStage();
       requestAnimationFrame(() => { resizeStage(); if (currentSource === 'image') drawOnce(); });
     },
     leave() {
@@ -3170,7 +3644,7 @@ window.__vsBootSimulator = () => {
       const lead = document.getElementById('paywallLead');
       if (title) title.textContent = spec.line;
       if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
-      if (!window.Capacitor) {
+      if (!window.Capacitor && !document.documentElement.classList.contains('pages-preview')) {
         paywallBuy.textContent = 'Get the app';
         const restore = document.getElementById('paywallRestore');
         if (restore) restore.style.display = 'none';
@@ -3184,6 +3658,18 @@ window.__vsBootSimulator = () => {
     window.__vsConsumePreviewPending();
   }
 
+  if (document.documentElement.classList.contains('pages-preview')) {
+    settleFirstOpen('gated');
+  } else if (deviceSettled) {
+    settleFirstOpen(deviceSettled);
+  } else if (isPro || !isNativeApp) {
+    settleFirstOpen('full');
+  } else {
+    // deviceready normally arrives first and chooses the intro vs the picture.
+    // If it never arrives, still show a picture.
+    setTimeout(() => { if (!firstOpenSettled) settleFirstOpen('full'); }, 500);
+  }
+
   if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
 
   window.addEventListener('beforeunload', stopCamera);
@@ -3192,7 +3678,7 @@ window.__vsBootSimulator = () => {
 
 <script src="vision-review.js?v=20261110"></script>
 <script src="challenges.js?v=20261110"></script>
-<script src="preview.js?v=20261110c"></script>
+<script src="preview.js?v=20261111b"></script>
 <script>
   const STORE_URL = 'https://apps.apple.com/app/id6772865195';
   let storeRedirectTimer = null;
@@ -3253,6 +3739,17 @@ window.__vsBootSimulator = () => {
   // Native if the head script said so, if detection says so, or if detection
   // itself is missing. The only path that stays on the store gate is an
   // explicit "this is a browser" answer.
+  // A Cloudflare Pages preview can open the in-app layout with ?ui2=1 so the
+  // new controls can be tried on a phone. Production (rjlcevans.com) ignores
+  // that flag and keeps the store gate.
+  function pagesPreviewRequested() {
+    try {
+      if (new URLSearchParams(location.search).get('ui2') !== '1') return false;
+      return /\.pages\.dev$/i.test(location.hostname || '');
+    } catch (e) {
+      return false;
+    }
+  }
   function nativeSignalPresent() {
     if (document.documentElement.classList.contains('is-native')) return true;
     try {
@@ -3265,10 +3762,14 @@ window.__vsBootSimulator = () => {
 
   function tryBootSimulator() {
     if (window.__vsSimulatorBooted) return true;
-    if (!nativeSignalPresent()) return false;
+    if (!nativeSignalPresent() && !pagesPreviewRequested()) return false;
     cancelStoreRedirect();
     document.documentElement.classList.remove('is-browser');
     document.documentElement.classList.add('is-native');
+    // The phone layout is the app default. Capacitor does not need ?ui2=1.
+    // That flag only opens the same layout on a Pages preview in Safari.
+    if (window.Capacitor || pagesPreviewRequested()) document.documentElement.classList.add('ui2');
+    if (pagesPreviewRequested()) document.documentElement.classList.add('pages-preview');
     applyNativeChrome();
     if (typeof window.__vsBootSimulator === 'function') window.__vsBootSimulator();
     return true;
