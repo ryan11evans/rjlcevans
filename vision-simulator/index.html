@@ -691,10 +691,19 @@
   html.ui2.immersive .app-bar, html.ui2.preview-mode .app-bar, html.ui2.sheet-open .app-bar {
     transform: translateY(120%); pointer-events: none;
   }
+  html.ui2.immersive .wrap, html.ui2.preview-mode .wrap { transform: translateY(120%) !important; }
+  html.ui2.immersive .stage-wrap,
+  html.ui2.preview-mode .stage-wrap,
+  html.ui2.immersive.is-app .stage-wrap,
+  html.ui2.preview-mode.is-app .stage-wrap { bottom: 0 !important; right: 0 !important; }
   html.ui2.sheet-open .viewer-hud { opacity: 0; pointer-events: none; }
   html.ui2 .wrap {
     left: 0; right: 0; bottom: var(--bar-h) !important;
-    height: auto !important; max-height: min(44vh, 340px);
+    height: auto !important;
+    /* Leave a picture, then give the rest to the description. The bar sits
+       above the home indicator, so this box never slides under it. */
+    max-height: 60vh;
+    max-height: calc(100dvh - var(--bar-h) - var(--safe-top) - 26vh);
     padding: 16px 0 0 !important; overflow: hidden;
     display: flex; flex-direction: column;
     background: rgba(16, 20, 28, 0.97);
@@ -709,15 +718,15 @@
   html.ui2 .wrap > footer,
   html.ui2 .section-title { display: none !important; }
   html.ui2 .controls {
-    order: 1; flex: 0 1 auto; min-height: 0; max-height: 220px;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 2px 16px 6px; margin: 0;
+    order: 1; flex: 1 1 auto; min-height: 0; max-height: none;
+    overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 2px 16px 12px; margin: 0;
   }
   html.ui2 .clinical-note {
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; margin-top: 6px; cursor: pointer;
+    display: block; overflow: visible; -webkit-line-clamp: unset;
+    margin-top: 8px; white-space: normal; overflow-wrap: break-word;
+    word-break: normal; line-height: 1.45; font-size: 15px; text-overflow: clip;
   }
-  html.ui2 .clinical-note.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
   html.ui2 .conditions-scroller {
     order: 2; flex: 0 0 auto;
     border-top: 1px solid rgba(255,255,255,0.07);
@@ -826,7 +835,12 @@
     html.ui2 .stage-wrap, html.ui2.is-app .stage-wrap {
       right: var(--side-w) !important; bottom: 0 !important;
     }
-    html.ui2.immersive .app-bar, html.ui2.preview-mode .app-bar { transform: translateX(120%); }
+    html.ui2.immersive .app-bar, html.ui2.preview-mode .app-bar { transform: translateX(120%) !important; }
+    html.ui2.immersive .wrap, html.ui2.preview-mode .wrap { transform: translateX(120%) !important; }
+    html.ui2.immersive .stage-wrap, html.ui2.preview-mode .stage-wrap,
+    html.ui2.immersive.is-app .stage-wrap, html.ui2.preview-mode.is-app .stage-wrap {
+      bottom: 0 !important; right: 0 !important;
+    }
     html.ui2.sheet-open .app-bar { transform: none; opacity: 0; }
   }
 
@@ -1127,10 +1141,8 @@
     <div class="sheet-grab" aria-hidden="true"></div>
     <button type="button" class="sheet-done" id="moreDone">Done</button>
     <h3 class="sheet-title" id="moreTitle">More</h3>
-    <p class="sheet-lead">Previews, extras, and settings. The picture stays on the condition you picked.</p>
+    <p class="sheet-lead">Extras and settings. The picture stays on the condition you picked.</p>
     <div id="morePrimary"></div>
-    <p class="menu-label">Free 10-second preview</p>
-    <div id="morePreviews"></div>
     <p class="menu-label">Extras</p>
     <div id="moreExtras"></div>
     <p class="menu-label">View</p>
@@ -1299,6 +1311,10 @@ window.__vsBootSimulator = () => {
     iapStore.restorePurchases();
   });
 
+  let deviceSettled = null;
+  let firstOpenSettled = false;
+  let settleFirstOpen = function () {};
+
   if (isNativeApp) {
     // Cache last-known state so gating is correct instantly once pluginReady
     // flips true, before the store has a chance to check in over the network.
@@ -1308,7 +1324,11 @@ window.__vsBootSimulator = () => {
       // Builds that predate cordova-plugin-purchase stay fully unlocked.
       // Do not lock them: they cannot purchase or restore, and some of those
       // installs predate the IAP entirely. See vision-simulator-app/README.md.
-      if (!window.CdvPurchase) return;
+      if (!window.CdvPurchase) {
+        deviceSettled = 'full';
+        settleFirstOpen('full');
+        return;
+      }
       pluginReady = true;
       document.documentElement.classList.add('pro-ready');
       updateProUI(); // now that gating can actually be satisfied, lock by default until the store confirms ownership
@@ -1339,6 +1359,8 @@ window.__vsBootSimulator = () => {
       store.when().productUpdated(syncProStatus);
       store.when().receiptUpdated(syncProStatus);
       store.initialize([Platform.APPLE_APPSTORE]);
+      deviceSettled = isPro ? 'full' : 'gated';
+      settleFirstOpen(deviceSettled);
     });
   }
 
@@ -2657,7 +2679,6 @@ window.__vsBootSimulator = () => {
     if (clearBtn) clearBtn.classList.toggle('visible', active.length > 0);
 
     updateShareUrl();
-    if (document.documentElement.classList.contains('ui2')) clinicalNote.classList.remove('open');
     syncDeckHeight();
   }
 
@@ -2748,12 +2769,26 @@ window.__vsBootSimulator = () => {
     hapticTap();
   });
 
+  const FREE_LOOK = new Set(['amd', 'glaucoma', 'cataract']);
+  function previewsApply() {
+    if (isPro) return false;
+    if (pluginReady) return true;
+    return document.documentElement.classList.contains('pages-preview');
+  }
   conditionsEl.addEventListener('click', e => {
     const btn = e.target.closest('.cond');
     if (!btn) return;
     const key = btn.dataset.cond;
     const noneBtn = conditionsEl.querySelector('[data-cond="none"]');
     const alreadyOn = btn.getAttribute('aria-pressed') === 'true';
+
+    // One free live look at AMD, glaucoma, or cataract. The next tap opens
+    // the unlock sheet. Pro, and builds with no purchase plugin, skip this.
+    if (key !== 'none' && FREE_LOOK.has(key) && previewsApply() && typeof window.__vsRunPreview === 'function') {
+      hapticTap();
+      window.__vsRunPreview(key);
+      return;
+    }
 
     if (key === 'none') {
       conditionsEl.querySelectorAll('.cond').forEach(b => b.setAttribute('aria-pressed', 'false'));
@@ -3192,9 +3227,6 @@ window.__vsBootSimulator = () => {
     const uploadLabel = document.querySelector('label.btn-file');
     const photoUpload = document.getElementById('photoUploadHost');
     if (photoUpload && uploadLabel) photoUpload.appendChild(uploadLabel);
-    const morePreviews = document.getElementById('morePreviews');
-    const previewBlock = document.getElementById('previewBlock');
-    if (morePreviews && previewBlock) morePreviews.appendChild(previewBlock);
     const moreExtras = document.getElementById('moreExtras');
     const challengeBlock = document.getElementById('challengeBlock');
     if (moreExtras && challengeBlock) moreExtras.appendChild(challengeBlock);
@@ -3249,13 +3281,6 @@ window.__vsBootSimulator = () => {
     };
     new MutationObserver(syncChrome).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
     if (window.ResizeObserver) new ResizeObserver(() => syncDeckHeight()).observe(document.querySelector('.wrap'));
-    clinicalNote.setAttribute('title', 'Tap for the full explanation');
-    clinicalNote.addEventListener('click', () => {
-      clinicalNote.classList.toggle('open');
-      clinicalNote.setAttribute('aria-expanded', clinicalNote.classList.contains('open') ? 'true' : 'false');
-      lastDeckH = 0;
-      syncDeckHeight();
-    });
     requestAnimationFrame(syncDeckHeight);
     // The viewer must not live inside the scrolling/transforming dock.
     document.body.insertBefore(stageWrap, document.querySelector('.wrap'));
@@ -3383,33 +3408,52 @@ window.__vsBootSimulator = () => {
       }
     }, { passive: true });
     stageWrap.addEventListener('touchend', () => { up = null; });
-    // First run: never open on an empty black box — show a real simulation.
-    // (A reload keeps ?cond= in the URL; still show a picture, just keep that condition.)
-    if (!currentSource) {
-      loadSample('street');
-      if (!urlConds) setActiveConditions(['cataract']);
-      // Default state: Compare on, divider centered — Normal | Cataract.
-      compareSplit = 0.5;
-      setCompareMode(true);
-      const centerActive = () => {
-        const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
-        if (!on) return;
-        const left = on.offsetLeft;
-        const right = left + on.offsetWidth;
-        const viewL = conditionsEl.scrollLeft;
-        const viewR = viewL + conditionsEl.clientWidth;
-        if (left < viewL + 8) conditionsEl.scrollLeft = Math.max(0, left - 12);
-        else if (right > viewR - 28) conditionsEl.scrollLeft = right - conditionsEl.clientWidth + 28;
-      };
-      centerActive();
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(centerActive); // chip widths change once fonts load
-      let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
-      if (!seen) {
-        setTimeout(() => toast.classList.add('show'), 600);
-        setTimeout(() => toast.classList.remove('show'), 4200);
-        try { localStorage.setItem('vs_ui2_hint', '1'); } catch (e) {}
+    // Returning and Pro users open on a picture. A new non-Pro user gets the
+    // moderate AMD preview instead; that decision waits until we know.
+    function showStarterScene() {
+      if (!currentSource) {
+        loadSample('street');
+        const userPicked = activeConditionKeys().length > 0;
+        if (!urlConds && !userPicked) setActiveConditions(['cataract']);
+        compareSplit = 0.5;
+        if (!userPicked) setCompareMode(true);
+        const centerActive = () => {
+          const on = conditionsEl.querySelector('.cond[aria-pressed="true"]');
+          if (!on) return;
+          const left = on.offsetLeft;
+          const right = left + on.offsetWidth;
+          const viewL = conditionsEl.scrollLeft;
+          const viewR = viewL + conditionsEl.clientWidth;
+          if (left < viewL + 8) conditionsEl.scrollLeft = Math.max(0, left - 12);
+          else if (right > viewR - 28) conditionsEl.scrollLeft = right - conditionsEl.clientWidth + 28;
+        };
+        centerActive();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(centerActive);
+        let seen = false; try { seen = localStorage.getItem('vs_ui2_hint') === '1'; } catch (e) {}
+        if (!seen) {
+          setTimeout(() => toast.classList.add('show'), 600);
+          setTimeout(() => toast.classList.remove('show'), 4200);
+          try { localStorage.setItem('vs_ui2_hint', '1'); } catch (e) {}
+        }
       }
+      if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
     }
+    settleFirstOpen = function (mode) {
+      if (firstOpenSettled) return;
+      const amdSeen = window.__vsPreviewIsUsed && window.__vsPreviewIsUsed('amd');
+      if (mode === 'gated' && !amdSeen && typeof window.__vsRunPreview === 'function') {
+        firstOpenSettled = true;
+        // Moderate stage (about 28). This is AMD's one free look.
+        window.__vsRunPreview('amd', {
+          params: { amdSize: 28, amdDistortion: 0.45 },
+          label: 'Moderate macular degeneration',
+          line: "That's what moderate macular degeneration looks like."
+        });
+        return;
+      }
+      firstOpenSettled = true;
+      showStarterScene();
+    };
   }
   updateConditionsScrollState();
   updateSamplesScrollState();
@@ -3521,7 +3565,7 @@ window.__vsBootSimulator = () => {
       const lead = document.getElementById('paywallLead');
       if (title) title.textContent = spec.line;
       if (lead) { lead.hidden = false; lead.textContent = 'Unlock all 10 conditions.'; }
-      if (!window.Capacitor) {
+      if (!window.Capacitor && !document.documentElement.classList.contains('pages-preview')) {
         paywallBuy.textContent = 'Get the app';
         const restore = document.getElementById('paywallRestore');
         if (restore) restore.style.display = 'none';
@@ -3535,6 +3579,18 @@ window.__vsBootSimulator = () => {
     window.__vsConsumePreviewPending();
   }
 
+  if (document.documentElement.classList.contains('pages-preview')) {
+    settleFirstOpen('gated');
+  } else if (deviceSettled) {
+    settleFirstOpen(deviceSettled);
+  } else if (isPro || !isNativeApp) {
+    settleFirstOpen('full');
+  } else {
+    // deviceready normally arrives first and chooses the intro vs the picture.
+    // If it never arrives, still show a picture.
+    setTimeout(() => { if (!firstOpenSettled) settleFirstOpen('full'); }, 500);
+  }
+
   if (window.VisionReview) VisionReview.markSeen(activeConditionKeys());
 
   window.addEventListener('beforeunload', stopCamera);
@@ -3543,7 +3599,7 @@ window.__vsBootSimulator = () => {
 
 <script src="vision-review.js?v=20261110"></script>
 <script src="challenges.js?v=20261110"></script>
-<script src="preview.js?v=20261110c"></script>
+<script src="preview.js?v=20261111a"></script>
 <script>
   const STORE_URL = 'https://apps.apple.com/app/id6772865195';
   let storeRedirectTimer = null;
@@ -3631,6 +3687,10 @@ window.__vsBootSimulator = () => {
     cancelStoreRedirect();
     document.documentElement.classList.remove('is-browser');
     document.documentElement.classList.add('is-native');
+    // The phone layout is the app default. Capacitor does not need ?ui2=1.
+    // That flag only opens the same layout on a Pages preview in Safari.
+    if (window.Capacitor || pagesPreviewRequested()) document.documentElement.classList.add('ui2');
+    if (pagesPreviewRequested()) document.documentElement.classList.add('pages-preview');
     applyNativeChrome();
     if (typeof window.__vsBootSimulator === 'function') window.__vsBootSimulator();
     return true;

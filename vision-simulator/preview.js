@@ -144,11 +144,24 @@
     api.openUnlock(spec);
   }
 
-  function begin(kind) {
-    var spec = SPECS[kind];
+  function specFor(kind, override) {
+    var base = SPECS[kind];
+    if (!base) return null;
+    if (!override || !override.params) return base;
+    return {
+      cond: base.cond,
+      params: override.params,
+      label: override.label || base.label,
+      line: override.line || base.line,
+      usedLabel: base.usedLabel
+    };
+  }
+
+  function begin(kind, override) {
+    var spec = specFor(kind, override);
     var api = window.__vsPreviewApi;
     if (!spec || !api || running) return;
-    if (isUsed(kind)) { api.openUnlock(spec); return; }
+    if (isUsed(kind)) { api.openUnlock(SPECS[kind]); return; }
     running = true;
     api.enter();
     api.apply(spec);
@@ -190,8 +203,30 @@
       if (window.__vsPreviewApi) window.__vsPreviewApi.openUnlock(SPECS[pending.kind]);
       return;
     }
-    begin(pending.kind);
+    begin(pending.kind, pending.override);
   };
+
+  // In-app entry. override.params replaces the stored preset (the first-open
+  // look is moderate macular degeneration; the gate button stays end stage).
+  // A used condition opens the unlock sheet. The used list is vs_previewUsed.
+  window.__vsRunPreview = function (kind, override) {
+    if (!SPECS[kind]) return;
+    holdRedirect();
+    if (isUsed(kind)) {
+      if (window.__vsPreviewApi) window.__vsPreviewApi.openUnlock(SPECS[kind]);
+      else {
+        window.__vsPreviewPending = { mode: 'paywall', kind: kind };
+        if (typeof window.__vsBootForPreview === 'function') window.__vsBootForPreview();
+      }
+      return;
+    }
+    if (window.__vsPreviewApi) begin(kind, override);
+    else {
+      window.__vsPreviewPending = { mode: 'run', kind: kind, override: override || null };
+      if (typeof window.__vsBootForPreview === 'function') window.__vsBootForPreview();
+    }
+  };
+  window.__vsPreviewIsUsed = function (kind) { return isUsed(kind); };
 
   window.__vsPreviewOnClose = function () {
     if (!document.documentElement.classList.contains('preview-mode')) return;

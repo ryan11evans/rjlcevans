@@ -56,6 +56,8 @@ function reviewMock() {
 }
 
 function purchaseMock() {
+  // Skip the automatic first-open AMD preview so these cases can run their own.
+  try { localStorage.setItem('vs_previewUsed', JSON.stringify(['amd'])); } catch (e) {}
   const handlers = { productUpdated: [] };
   let owned = false;
   window.CdvPurchase = {
@@ -598,6 +600,84 @@ async function main() {
       await page.locator('#paywallLater').dispatchEvent('click');
       await page.waitForTimeout(1500);
       assert.strictEqual(await page.evaluate(() => window.__reviewCalls), 1);
+      await context.close();
+    }
+
+    // First open for a non-Pro user is a moderate AMD preview. It counts as
+    // AMD's one free look, then returns to Normal Vision. A later AMD tap
+    // opens the unlock sheet. Glaucoma still has its own first look.
+    {
+      const context = await browser.newContext(iphone);
+      await context.addInitScript(fakeLiveCamera);
+      await context.addInitScript(nativeShell);
+      await context.addInitScript(purchaseMock);
+      await context.addInitScript(() => {
+        localStorage.removeItem('vs_previewUsed');
+        window.__vsPreviewMs = 700;
+      });
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
+      await page.waitForSelector('#previewHud', { state: 'visible', timeout: 8000 });
+      assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Moderate macular degeneration');
+      await page.waitForSelector('#paywallOverlay.open', { timeout: 8000 });
+      assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what moderate macular degeneration looks like.");
+      assert.strictEqual(await page.locator('[data-cond="none"]').getAttribute('aria-pressed'), 'true');
+      const used = await page.evaluate(() => localStorage.getItem('vs_previewUsed'));
+      assert.ok(used.indexOf('amd') !== -1, used);
+      await page.locator('#paywallLater').dispatchEvent('click');
+      await page.locator('[data-cond="amd"]').dispatchEvent('click');
+      await page.waitForTimeout(200);
+      assert.strictEqual(await page.locator('#paywallOverlay').evaluate((el) => el.classList.contains('open')), true);
+      assert.strictEqual(await page.locator('#previewHud').evaluate((el) => el.hidden), true);
+      await page.locator('#paywallLater').dispatchEvent('click');
+      await page.locator('[data-cond="glaucoma"]').dispatchEvent('click');
+      await page.waitForSelector('#previewHud', { state: 'visible', timeout: 8000 });
+      assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Severe glaucoma');
+      assert.strictEqual(await page.locator('#moreSheet [data-preview]').count(), 0);
+      await context.close();
+    }
+
+    // Descriptions are fully wrapped. Nothing is clipped by an ellipsis, and
+    // the text stays above the bottom bar on a 375pt phone with a home indicator.
+    {
+      const narrow = Object.assign({}, phone, { viewport: { width: 375, height: 812 } });
+      const context = await browser.newContext(narrow);
+      await context.addInitScript(nativeShell);
+      await context.addInitScript(() => {
+        localStorage.setItem('vs_previewUsed', JSON.stringify(['amd', 'glaucoma', 'cataract']));
+      });
+      const page = await context.newPage();
+      await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
+      await page.addStyleTag({ content: 'html{--vs-safe-top:47px;--vs-safe-bottom:34px}' });
+      await page.locator('[data-cond="presbyopia"]').dispatchEvent('click');
+      await page.waitForTimeout(200);
+      const fit = await page.evaluate(() => {
+        const note = document.getElementById('clinicalNote');
+        const box = document.getElementById('controlsPanel');
+        const bar = document.getElementById('appBar').getBoundingClientRect();
+        box.scrollTop = box.scrollHeight;
+        const noteStyle = getComputedStyle(note);
+        const noteBox = note.getBoundingClientRect();
+        const controls = box.getBoundingClientRect();
+        return {
+          clamp: noteStyle.webkitLineClamp,
+          overflow: noteStyle.textOverflow,
+          text: note.innerText,
+          noteRight: noteBox.right,
+          controlsRight: controls.right,
+          controlsBottom: controls.bottom,
+          barTop: bar.top,
+          scrollWidth: note.scrollWidth,
+          clientWidth: note.clientWidth
+        };
+      });
+      assert.ok(fit.clamp === 'none' || fit.clamp === 'unset' || fit.clamp === '0', 'line clamp ' + fit.clamp);
+      assert.ok(fit.text.includes('progressive lenses'), fit.text.slice(-80));
+      assert.ok(!fit.text.includes('…'), 'description uses an ellipsis');
+      assert.ok(fit.controlsBottom <= fit.barTop + 1, 'description sits on the bottom bar');
+      assert.ok(fit.scrollWidth <= fit.clientWidth + 2, 'description overflows sideways');
+      await page.screenshot({ path: '/tmp/vs-desc-375.png' });
       await context.close();
     }
 
