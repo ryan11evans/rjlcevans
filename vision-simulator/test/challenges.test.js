@@ -619,9 +619,9 @@ async function main() {
       await page.goto(origin + '/index.html?stay=1', { waitUntil: 'domcontentloaded' });
       await page.evaluate(() => document.dispatchEvent(new Event('deviceready')));
       await page.waitForSelector('#previewHud', { state: 'visible', timeout: 8000 });
-      assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Moderate macular degeneration');
+      assert.strictEqual(await page.locator('#previewHudName').evaluate((el) => el.textContent), 'Advanced macular degeneration');
       await page.waitForSelector('#paywallOverlay.open', { timeout: 8000 });
-      assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what moderate macular degeneration looks like.");
+      assert.strictEqual(await page.locator('#paywallTitle').innerText(), "That's what advanced macular degeneration looks like.");
       assert.strictEqual(await page.locator('[data-cond="none"]').getAttribute('aria-pressed'), 'true');
       const used = await page.evaluate(() => localStorage.getItem('vs_previewUsed'));
       assert.ok(used.indexOf('amd') !== -1, used);

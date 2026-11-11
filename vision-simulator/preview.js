@@ -119,8 +119,16 @@
       function tick() {
         if (canvas && canvas.width > 2) {
           try {
-            var ctx = canvas.getContext('2d');
-            var c = ctx.getImageData(canvas.width >> 1, canvas.height >> 1, 1, 1).data;
+            // Read a 1×1 copy so the full stage bitmap is not pulled back
+            // from the GPU on every frame while we wait for the first image.
+            if (!waitForFrame.probe) {
+              waitForFrame.probe = document.createElement('canvas');
+              waitForFrame.probe.width = waitForFrame.probe.height = 1;
+              waitForFrame.pctx = waitForFrame.probe.getContext('2d', { willReadFrequently: true });
+            }
+            var pctx = waitForFrame.pctx;
+            pctx.drawImage(canvas, canvas.width >> 1, canvas.height >> 1, 1, 1, 0, 0, 1, 1);
+            var c = pctx.getImageData(0, 0, 1, 1).data;
             if (c[0] + c[1] + c[2] > 12) { resolve(true); return; }
           } catch (e) { resolve(true); return; }
         }
@@ -207,7 +215,7 @@
   };
 
   // In-app entry. override.params replaces the stored preset (the first-open
-  // look is moderate macular degeneration; the gate button stays end stage).
+  // look is advanced macular degeneration; the gate button stays end stage).
   // A used condition opens the unlock sheet. The used list is vs_previewUsed.
   window.__vsRunPreview = function (kind, override) {
     if (!SPECS[kind]) return;
@@ -276,7 +284,8 @@
       'box-shadow:0 8px 28px rgba(0,0,0,0.35);pointer-events:none;}',
       '.preview-hud[hidden]{display:none !important;}',
       '.preview-hud-name{font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#d4a574;}',
-      '.preview-hud-count{font-family:"VS Fraunces","Fraunces",Georgia,serif;font-size:44px;line-height:1;font-weight:500;color:#fff;}',
+      '.preview-hud{contain:layout;}',
+      '.preview-hud-count{font-family:"VS Fraunces","Fraunces",Georgia,serif;font-size:44px;line-height:1;font-weight:500;color:#fff;font-variant-numeric:tabular-nums;min-width:1.4ch;text-align:center;}',
       'html.preview-mode.is-browser .stage-wrap{display:block !important;position:fixed !important;inset:0;z-index:80;',
       'width:100% !important;height:100% !important;max-height:none !important;aspect-ratio:auto !important;margin:0 !important;border-radius:0;}',
       'html.is-browser:not(.preview-mode) body > .stage-wrap{display:none !important;}',

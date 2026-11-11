@@ -695,7 +695,7 @@
   html.ui2.immersive .stage-wrap,
   html.ui2.preview-mode .stage-wrap,
   html.ui2.immersive.is-app .stage-wrap,
-  html.ui2.preview-mode.is-app .stage-wrap { bottom: 0 !important; right: 0 !important; }
+  html.ui2.preview-mode.is-app .stage-wrap { bottom: 0 !important; right: 0 !important; transition: none !important; }
   html.ui2.sheet-open .viewer-hud { opacity: 0; pointer-events: none; }
   html.ui2 .wrap {
     left: 0; right: 0; bottom: var(--bar-h) !important;
@@ -1448,8 +1448,20 @@ window.__vsBootSimulator = () => {
     if (currentSource === 'frozen') return;
     const rect = stageCanvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const newW = Math.max(1, Math.round(rect.width * dpr));
-    const newH = Math.max(1, Math.round(rect.height * dpr));
+    let newW = Math.max(1, Math.round(rect.width * dpr));
+    let newH = Math.max(1, Math.round(rect.height * dpr));
+    // Live filters are tuned for an 840px stage. A full-screen iPhone bitmap
+    // at 2× is tall enough that the AMD mesh and blurs miss 30fps. CSS scales
+    // this bitmap up to the screen; still photos keep the sharper size.
+    if (currentSource === 'camera') {
+      const cap = 840;
+      const long = Math.max(newW, newH);
+      if (long > cap) {
+        const s = cap / long;
+        newW = Math.max(1, Math.round(newW * s));
+        newH = Math.max(1, Math.round(newH * s));
+      }
+    }
     // Only resize the backing store if it actually changed — resizing clears the
     // canvas to transparent/black, so we avoid needless clears (and redraw after).
     if (newW !== stageCanvas.width || newH !== stageCanvas.height) {
@@ -1495,14 +1507,45 @@ window.__vsBootSimulator = () => {
     flipBtn.style.display = active ? 'inline-flex' : 'none';
     updateSourceBar();
   }
+  function cameraConstraints() {
+    return {
+      audio: false,
+      video: {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        frameRate: { ideal: 30, max: 60 }
+      }
+    };
+  }
+  async function openCameraStream() {
+    const attempts = [
+      cameraConstraints(),
+      { audio: false, video: { facingMode: { ideal: facingMode }, frameRate: { ideal: 30, max: 60 } } },
+      { audio: false, video: { facingMode: { ideal: facingMode } } }
+    ];
+    let lastErr;
+    for (let i = 0; i < attempts.length; i++) {
+      try { return await navigator.mediaDevices.getUserMedia(attempts[i]); }
+      catch (err) { lastErr = err; }
+    }
+    throw lastErr;
+  }
+  function waitForVideoFrame() {
+    if (video.readyState >= 2 && video.videoWidth) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => { video.removeEventListener('loadeddata', done); resolve(); };
+      video.addEventListener('loadeddata', done);
+      setTimeout(done, 700);
+    });
+  }
   async function startCamera() {
     try {
       stopCamera();
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: facingMode } }, audio: false
-      });
+      stream = await openCameraStream();
       video.srcObject = stream;
       await video.play();
+      await waitForVideoFrame();
       currentSource = 'camera';
       currentSampleKind = null;
       uploadedImage = null;
@@ -1514,9 +1557,17 @@ window.__vsBootSimulator = () => {
       alert('Camera unavailable: ' + err.message);
     }
   }
+  let _videoFrameId = 0;
+  function cancelLoop() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (_videoFrameId && video.cancelVideoFrameCallback) {
+      try { video.cancelVideoFrameCallback(_videoFrameId); } catch (e) {}
+      _videoFrameId = 0;
+    }
+  }
   function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    cancelLoop();
     if (currentSource === 'camera') {
       currentSource = null;
       ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
@@ -1557,7 +1608,12 @@ window.__vsBootSimulator = () => {
     } else return false;
 
     const stageW = stageCanvas.width, stageH = stageCanvas.height;
-    sourceCanvas.width = stageW; sourceCanvas.height = stageH;
+    // Assigning width clears and reallocates the bitmap. Doing that every
+    // camera frame is what made the preview look shaky.
+    if (sourceCanvas.width !== stageW || sourceCanvas.height !== stageH) {
+      sourceCanvas.width = stageW;
+      sourceCanvas.height = stageH;
+    }
 
     const stageRatio = stageW / stageH;
     const srcRatio = sw / sh;
@@ -1658,7 +1714,8 @@ window.__vsBootSimulator = () => {
     return [cur, cw, ch];
   }
   function _up(cur, cw, ch, dctx, dw, dh, a) {
-    dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = 'high';
+    dctx.imageSmoothingEnabled = true;
+    dctx.imageSmoothingQuality = currentSource === 'camera' ? 'low' : 'high';
     if (cw * 3 < dw) { // intermediate enlargement removes blocky bilinear artifacts
       const mw = cw * 3, mh = ch * 3, x = sizeTo(_bl[5], mw, mh);
       x.clearRect(0, 0, mw, mh); x.drawImage(cur, 0, 0, cw, ch, 0, 0, mw, mh);
@@ -1876,10 +1933,12 @@ window.__vsBootSimulator = () => {
   // share edges exactly and there are no tile seams.
   let _warpKey = '', _warpGrid = null;
   function meshWarp(src, dctx, cx, cy, R, amt) {
-    const cells = 12, cs = (2 * R) / cells, n = cells + 1;
+    // Each cell is two clipped draws. 12×12 holds a still photo; on the live
+    // camera 8×8 is the same warp with about half the draw calls.
+    const cells = currentSource === 'camera' ? 8 : 12, cs = (2 * R) / cells, n = cells + 1;
     const A = amt * R * 0.2;
     const x0 = cx - R, y0 = cy - R;
-    const key = [cx, cy, R, amt].map(v => v.toFixed(2)).join('|');
+    const key = [cells, cx, cy, R, amt].map(v => typeof v === 'number' ? v.toFixed(2) : v).join('|');
     if (key !== _warpKey) {
       const disp = (x, y) => {
         const dx = x - cx, dy = y - cy, rr = Math.hypot(dx, dy) / R;
@@ -2337,7 +2396,15 @@ window.__vsBootSimulator = () => {
     // Final composited result is already in ctx from the last pass.
   }
 
+  let _lastVideoTime = -1;
   function render() {
+    // The camera often delivers 30fps while the display asks for 60. Drawing
+    // the same frame twice doubles the AMD mesh cost and looks uneven.
+    if (currentSource === 'camera' && video.readyState >= 2) {
+      const t = video.currentTime;
+      if (t > 0 && t === _lastVideoTime) return;
+      _lastVideoTime = t;
+    }
     if (!drawSourceToCanvas()) return;
     ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
     clearOverlay();                 // we now draw floaters on the canvas, not SVG
@@ -2367,10 +2434,16 @@ window.__vsBootSimulator = () => {
 
   function loop() {
     render();
-    rafId = requestAnimationFrame(loop);
+    // Paint when the camera has a new frame. requestAnimationFrame would
+    // sample between frames and make a 30fps stream look uneven.
+    if (currentSource === 'camera' && typeof video.requestVideoFrameCallback === 'function') {
+      _videoFrameId = video.requestVideoFrameCallback(() => { _videoFrameId = 0; loop(); });
+    } else {
+      rafId = requestAnimationFrame(loop);
+    }
   }
   function drawOnce() {
-    if (rafId) cancelAnimationFrame(rafId);
+    cancelLoop();
     if (activeConditions.has('floaters') || currentSource === 'camera') {
       loop();
     } else {
@@ -3447,11 +3520,11 @@ window.__vsBootSimulator = () => {
       const amdSeen = window.__vsPreviewIsUsed && window.__vsPreviewIsUsed('amd');
       if (mode === 'gated' && !amdSeen && typeof window.__vsRunPreview === 'function') {
         firstOpenSettled = true;
-        // Moderate stage (about 28). This is AMD's one free look.
+        // Advanced preset: dense near-black central scotoma. AMD's one free look.
         window.__vsRunPreview('amd', {
-          params: { amdSize: 28, amdDistortion: 0.45 },
-          label: 'Moderate macular degeneration',
-          line: "That's what moderate macular degeneration looks like."
+          params: { amdSize: 44, amdDistortion: 0.55 },
+          label: 'Advanced macular degeneration',
+          line: "That's what advanced macular degeneration looks like."
         });
         return;
       }
@@ -3475,7 +3548,7 @@ window.__vsBootSimulator = () => {
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     video.setAttribute('muted', '');
-    if (!rafId) loop();
+    if (!rafId && !_videoFrameId) loop();
     const pending = video.play();
     if (pending && typeof pending.catch === 'function') pending.catch(() => {});
   }
@@ -3492,9 +3565,7 @@ window.__vsBootSimulator = () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
       let next;
       try {
-        next = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facingMode } }, audio: false
-        });
+        next = await openCameraStream();
       } catch (e) {
         return false;
       }
@@ -3502,6 +3573,7 @@ window.__vsBootSimulator = () => {
       stream = next;
       video.srcObject = stream;
       try { await video.play(); } catch (e) {}
+      await waitForVideoFrame();
       currentSource = 'camera';
       currentSampleKind = null;
       uploadedImage = null;
@@ -3553,6 +3625,9 @@ window.__vsBootSimulator = () => {
       const stage = document.querySelector('.stage-wrap');
       if (stage && stage.parentElement !== document.body) document.body.insertBefore(stage, document.body.firstChild);
       if (root.classList.contains('ui2')) root.classList.add('immersive');
+      // Size the bitmap once the full-screen layout is in, before the filter
+      // loop starts, so the canvas is not rebuilt mid-preview.
+      resizeStage();
       requestAnimationFrame(() => { resizeStage(); if (currentSource === 'image') drawOnce(); });
     },
     leave() {
@@ -3603,7 +3678,7 @@ window.__vsBootSimulator = () => {
 
 <script src="vision-review.js?v=20261110"></script>
 <script src="challenges.js?v=20261110"></script>
-<script src="preview.js?v=20261111a"></script>
+<script src="preview.js?v=20261111b"></script>
 <script>
   const STORE_URL = 'https://apps.apple.com/app/id6772865195';
   let storeRedirectTimer = null;
